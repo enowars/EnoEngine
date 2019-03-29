@@ -1,0 +1,11 @@
+.git
+
+# from .gitignore
+.vs
+EnoEngine/bin
+EnoEngine/obj
+EnoCore/bin
+EnoCore/obj
+*.cfg
+*.code-workspace
+data

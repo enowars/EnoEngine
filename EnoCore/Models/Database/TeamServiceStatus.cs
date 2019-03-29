@@ -1,0 +1,29 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace EnoCore.Models
+{
+    public enum ServiceStatus
+    {
+        CheckerError,
+        Ok,
+        Recovering,
+        Mumble,
+        Down
+    }
+
+    public class RoundTeamServiceState
+    {
+        public long Id { get; set; }
+        public long FlagsLost { get; set; }
+        public long FlagsCaptured { get; set; }
+        public ServiceStatus Status { get; set; }
+        public long TeamId { get; set; }
+        public Team Team { get; set; }
+        public long ServiceId { get; set; }
+        public Service Service { get; set; }
+        public long GameRoundId { get; set; }
+        public Round GameRound { get; set; }
+    }
+}

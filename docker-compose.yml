@@ -1,0 +1,10 @@
+version: '2.3'
+services:
+  enoengine:
+    build: .
+    volumes:
+      - ./CTF.cfg:/service/EnoEngine/out/CTF.cfg
+      - ../data:/data
+    ports:
+      - "1337:1337"
+      - "8002:22"
