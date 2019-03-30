@@ -6,3 +6,5 @@ EnoCore/obj
 *.cfg
 *.code-workspace
 data
+obj
+bin
