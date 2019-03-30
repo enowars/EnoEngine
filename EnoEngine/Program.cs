@@ -23,7 +23,7 @@ namespace EnoEngine
 
         internal void Run()
         {
-            GameLoopTask = Task.Run(async () => await GameLoop());
+            GameLoopTask = GameLoop();
             GameLoopTask.Wait();
         }
 

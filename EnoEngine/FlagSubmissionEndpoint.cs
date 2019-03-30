@@ -32,7 +32,7 @@ namespace EnoEngine.FlagSubmission
                 while (!Token.IsCancellationRequested)
                 {
                     var client = await Listener.AcceptTcpClientAsync();
-                    var clientTask = Task.Run(async () => await HandleSubmissionClient(client));
+                    var clientTask = HandleSubmissionClient(client);
                 }
             }
             catch (TaskCanceledException) { }

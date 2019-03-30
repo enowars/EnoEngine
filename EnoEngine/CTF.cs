@@ -54,9 +54,9 @@ namespace EnoEngine.Game
                 await HandleRoundEnd(currentRound.Id -1);
 
                 // insert checker commands
-                var insertDeployNewFlagsTask = Task.Run(async () => await InsertDeployFlagsTasks(begin, currentFlags));
-                var insertRetrieveCurrentFlagsTask = Task.Run(async () => await InsertRetrieveCurrentFlagsTasks(q3, currentFlags));
-                var insertRetrieveOldFlagsTask = Task.Run(async () => await InsertRetrieveOldFlagsTasks(currentRound));
+                var insertDeployNewFlagsTask = InsertDeployFlagsTasks(begin, currentFlags);
+                var insertRetrieveCurrentFlagsTask = InsertRetrieveCurrentFlagsTasks(q3, currentFlags);
+                var insertRetrieveOldFlagsTask = InsertRetrieveOldFlagsTasks(currentRound);
 
                 // TODO start StoreNoise for current and old rounds
                 // TODO start Havok
