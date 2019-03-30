@@ -3,7 +3,7 @@ services:
   enoengine:
     build: .
     volumes:
-      - ./CTF.cfg:/service/EnoEngine/out/CTF.cfg
+      - ./ctf.json:/service/EnoEngine/out/ctf.json
       - ../data:/data
     ports:
       - "1337:1337"
