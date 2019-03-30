@@ -3,6 +3,7 @@ using EnoCore.Models;
 using EnoCore.Models.Database;
 using EnoCore.Models.Json;
 using EnoEngine.FlagSubmission;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RunProcessAsTask;
 using System;
@@ -23,6 +24,7 @@ namespace EnoEngine.Game
 
     class CTF : IFlagSubmissionHandler
     {
+        private static readonly ILogger Logger = EnoCoreUtils.Loggers.CreateLogger<CTF>();
         private readonly SemaphoreSlim Lock = new SemaphoreSlim(1);
         private readonly Random Rnd = new Random();
         private readonly CancellationToken Token;
@@ -54,9 +56,9 @@ namespace EnoEngine.Game
                 await HandleRoundEnd(currentRound.Id -1);
 
                 // insert checker commands
-                var insertDeployNewFlagsTask = InsertDeployFlagsTasks(begin, currentFlags);
-                var insertRetrieveCurrentFlagsTask = InsertRetrieveCurrentFlagsTasks(q3, currentFlags);
-                var insertRetrieveOldFlagsTask = InsertRetrieveOldFlagsTasks(currentRound);
+                var insertDeployNewFlagsTask = Task.Run(async () => await InsertDeployFlagsTasks(begin, currentFlags));
+                var insertRetrieveCurrentFlagsTask = Task.Run(async () => await InsertRetrieveCurrentFlagsTasks(q3, currentFlags));
+                var insertRetrieveOldFlagsTask = Task.Run(async () => await InsertRetrieveOldFlagsTasks(currentRound));
 
                 // TODO start StoreNoise for current and old rounds
                 // TODO start Havok
@@ -67,7 +69,7 @@ namespace EnoEngine.Game
             }
             catch (Exception e)
             {
-                Console.WriteLine($"StartNewRound failed: {EnoCoreUtils.FormatException(e)}");
+                Logger.LogError($"StartNewRound failed: {EnoCoreUtils.FormatException(e)}");
             }
             finally
             {

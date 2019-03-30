@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using EnoCore.Models.Json;
 using EnoCore.Models.Database;
+using Microsoft.Extensions.Logging;
 
 namespace EnoCore
 {
@@ -50,22 +51,11 @@ namespace EnoCore
 
     public class EnoDatabase
     {
-        public static void Migrate()
-        {
-            using (var ctx = new EnoEngineDBContext())
-            {
-                var pendingMigrations = ctx.Database.GetPendingMigrations().Count();
-                if (pendingMigrations > 0)
-                {
-                    Console.WriteLine($"Applying {pendingMigrations} migration(s)");
-                    ctx.Database.Migrate();
-                    ctx.SaveChanges();
-                }
-            }
-        }
+        private static readonly ILogger Logger = EnoCoreUtils.Loggers.CreateLogger<EnoDatabase>();
 
         public static DBInitializationResult ApplyConfig(JsonConfiguration config)
         {
+            Logger.LogTrace("ApplyConfig()");
             if (config.RoundLengthInSeconds <= 0)
                 return new DBInitializationResult
                 {
@@ -92,7 +82,7 @@ namespace EnoCore
                 var pendingMigrations = ctx.Database.GetPendingMigrations().Count();
                 if (pendingMigrations > 0)
                 {
-                    Console.WriteLine($"Applying {pendingMigrations} migration(s)");
+                    Logger.LogInformation($"Applying {pendingMigrations} migration(s)");
                     ctx.Database.Migrate();
                     ctx.SaveChanges();
                 }
@@ -254,7 +244,7 @@ namespace EnoCore
                     .SingleOrDefault();
                 if (dbTeam == null)
                 {
-                    Console.WriteLine($"New Team: {team.Name}({team.Id})");
+                    Logger.LogInformation($"New Team: {team.Name}({team.Id})");
                     ctx.Teams.Add(new Team()
                     {
                         VulnboxAddress = team.VulnboxAddress,
@@ -337,7 +327,7 @@ namespace EnoCore
                     .SingleOrDefault();
                 if (dbService == null)
                 {
-                    Console.WriteLine($"New Service: {service.Name}");
+                    Logger.LogInformation($"New Service: {service.Name}");
                     ctx.Services.Add(new Service()
                     {
                         Name = service.Name,
@@ -483,7 +473,7 @@ namespace EnoCore
             }
             team.ServiceLevelAgreementPoints = slaScore;
             team.TotalPoints += slaScore;
-            Console.WriteLine($"Team {team.Name}: SLA={slaScore}");
+            Logger.LogInformation($"Team {team.Name}: SLA={slaScore}");
         }
 
         private static void CalculateDefenseScore(EnoEngineDBContext ctx, Service[] services, long currentRoundId, Team team)
@@ -512,7 +502,7 @@ namespace EnoCore
             team.LostDefensePoints = teamDefenseScore;
             team.TotalPoints += teamDefenseScore;
             ctx.SaveChanges();
-            Console.WriteLine($"Team {team.Name}: Defense={teamDefenseScore}");
+            Logger.LogInformation($"Team {team.Name}: Defense={teamDefenseScore}");
         }
 
         private static void CalculateOffenseScore(EnoEngineDBContext ctx, Service[] services, long currentRoundId, Team team)
@@ -541,7 +531,7 @@ namespace EnoCore
             }
             team.AttackPoints = offenseScore;
             team.TotalPoints += offenseScore;
-            Console.WriteLine($"Team {team.Name}: Offense={offenseScore}");
+            Logger.LogInformation($"Team {team.Name}: Offense={offenseScore}");
         }
 
         private static ServiceStatus ComputeServiceStatus(EnoEngineDBContext ctx, Team team, Service service, long roundId)

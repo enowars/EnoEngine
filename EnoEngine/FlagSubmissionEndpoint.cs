@@ -1,5 +1,6 @@
 ﻿using EnoCore;
 using EnoEngine.Game;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,6 +14,7 @@ namespace EnoEngine.FlagSubmission
 {
     class FlagSubmissionEndpoint
     {
+        private static readonly ILogger Logger = EnoCoreUtils.Loggers.CreateLogger<FlagSubmissionEndpoint>();
         readonly CancellationToken Token;
         readonly TcpListener Listener = new TcpListener(IPAddress.Any, 1337);
         readonly IFlagSubmissionHandler Handler;
@@ -38,9 +40,9 @@ namespace EnoEngine.FlagSubmission
             catch (TaskCanceledException) { }
             catch (Exception e)
             {
-                Console.WriteLine($"FlagSubmissionEndpoint failed: {e.Message}\n{e.StackTrace}");
+                Logger.LogError($"FlagSubmissionEndpoint failed: {e.Message}\n{e.StackTrace}");
             }
-            Console.WriteLine("FlagSubmissionEndpoint finished");
+            Logger.LogDebug("FlagSubmissionEndpoint finished");
         }
 
         private static string FormatSubmissionResult(FlagSubmissionResult result)
@@ -73,7 +75,7 @@ namespace EnoEngine.FlagSubmission
                 string line = await reader.ReadLineAsync();
                 while (!Token.IsCancellationRequested && line != null)
                 {
-                    Console.WriteLine($"FlagSubmissionEndpoint received {line}");
+                    Logger.LogTrace($"FlagSubmissionEndpoint received {line}");
                     var endpoint = (IPEndPoint) client.Client.RemoteEndPoint;
                     var result = (await Handler.HandleFlagSubmission(line, endpoint.Address.ToString()));
                     var resultArray = Encoding.ASCII.GetBytes(FormatSubmissionResult(result) + "\n");
