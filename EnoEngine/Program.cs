@@ -56,13 +56,13 @@ namespace EnoEngine
 
         static int Main(string[] args)
         {
-            if (!File.Exists("CTF.cfg"))
+            if (!File.Exists("ctf.json"))
             {
-                Console.WriteLine("CTF.cfg file does not exist");
+                Console.WriteLine("Config (ctf.json) didn't exist. Creating...");
                 CreateConfig();
                 return 1;
             }
-            var content = File.ReadAllText("CTF.cfg");
+            var content = File.ReadAllText("ctf.json");
             Configuration = JsonConvert.DeserializeObject<JsonConfiguration>(content);
             var result = EnoDatabase.ApplyConfig(Configuration);
             if (result.Success)
@@ -80,7 +80,7 @@ namespace EnoEngine
 
         private static void CreateConfig()
         {
-            using (FileStream fs = File.Open("CTF.cfg", FileMode.Create))
+            using (FileStream fs = File.Open("ctf.json", FileMode.Create))
             {
                 using (StreamWriter sw = new StreamWriter(fs))
                 {
