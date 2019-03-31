@@ -4,7 +4,6 @@ EnoEngine/obj
 EnoCore/bin
 EnoCore/obj
 *.cfg
+*.json
 *.code-workspace
 data
-obj
-bin

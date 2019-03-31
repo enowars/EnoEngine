@@ -14,19 +14,25 @@ using EnoCore.Models.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 using Microsoft.Extensions.DependencyInjection;
+using System.Diagnostics;
 
 namespace EnoEngine
 {
     class Program
     {
         private static readonly ILogger Logger = EnoCoreUtils.Loggers.CreateLogger<Program>();
-        readonly CancellationTokenSource EngineCancelSource = new CancellationTokenSource();
+        private static readonly CancellationTokenSource EngineCancelSource = new CancellationTokenSource();
         public static JsonConfiguration Configuration { get; set; }
-        Task GameLoopTask;
         CTF EnoGame;
 
         public int Start()
         {
+            // Gracefully shutdown when CTRL+C is invoked
+            Console.CancelKeyPress += (s, e) => {
+                Logger.LogTrace("Shutting down EnoEngine");
+                e.Cancel = true;
+                EngineCancelSource.Cancel();
+            };
             if (!File.Exists("ctf.json"))
             {
                 Logger.LogCritical("Config (ctf.json) didn't exist. Creating...");
@@ -38,7 +44,7 @@ namespace EnoEngine
             var result = EnoDatabase.ApplyConfig(Configuration);
             if (result.Success)
             {
-                new Program().Run();
+                GameLoop().Wait();
                 return 0;
             }
             else
@@ -47,20 +53,6 @@ namespace EnoEngine
                 Logger.LogCritical($"Invalid configuration, exiting");
                 return 1;
             }
-        }
-
-        internal void Run()
-        {
-            GameLoopTask = GameLoop();
-            GameLoopTask.Wait();
-        }
-
-        internal void Shutdown()
-        {
-            Logger.LogInformation($"Shutting down EnoEngine");
-            EngineCancelSource.Cancel();
-            GameLoopTask.Wait();
-            Logger.LogTrace($"EnoEngine has shut down");
         }
 
         internal async Task GameLoop()
@@ -100,10 +92,10 @@ namespace EnoEngine
             }
         }
 
-        static int Main(string[] args)
+        public static void Main(string[] args)
         {
             EnoCoreUtils.InitLogging();
-            return new Program().Start();
+            new Program().Start();
         }
     }
 }

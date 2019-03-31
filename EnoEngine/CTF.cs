@@ -66,6 +66,7 @@ namespace EnoEngine.Game
                 await insertDeployNewFlagsTask;
                 await insertRetrieveCurrentFlagsTask;
                 await insertRetrieveOldFlagsTask;
+                Logger.LogInformation($"Round {currentRound.Id} has started");
             }
             catch (Exception e)
             {
