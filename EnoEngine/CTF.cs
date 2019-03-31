@@ -5,7 +5,6 @@ using EnoCore.Models.Json;
 using EnoEngine.FlagSubmission;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using RunProcessAsTask;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -121,7 +120,9 @@ namespace EnoEngine.Game
                     TaskType = "DeployFlag",
                     TeamName = flag.Owner.Name,
                     ServiceId = flag.ServiceId,
-                    TeamId = flag.OwnerId
+                    TeamId = flag.OwnerId,
+                    ServiceName = flag.Service.Name,
+                    CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New
                 });
                 firstFlagTime = firstFlagTime.AddSeconds(timeDiff);
             }
@@ -146,7 +147,9 @@ namespace EnoEngine.Game
                     StartTime = q3,
                     TaskIndex = flag.RoundOffset,
                     TaskType = "RetrieveFlag",
-                    TeamName = flag.Owner.Name
+                    TeamName = flag.Owner.Name,
+                    ServiceName = flag.Service.Name,
+                    CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New
                 });
                 q3 = q3.AddSeconds(timeDiff);
             }

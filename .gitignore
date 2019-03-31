@@ -1,8 +1,13 @@
 .vs
 EnoEngine/bin
 EnoEngine/obj
+EnoEngine/Properties
 EnoCore/bin
 EnoCore/obj
+EnoCore/Properties
+EnoLauncher/bin
+EnoLauncher/obj
+EnoLauncher/Properties
 *.cfg
 *.json
 *.code-workspace

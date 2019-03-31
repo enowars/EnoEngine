@@ -28,6 +28,8 @@ namespace EnoCore.Migrations
 
                     b.Property<int>("CheckerResult");
 
+                    b.Property<int>("CheckerTaskLaunchStatus");
+
                     b.Property<long>("CurrentRoundId");
 
                     b.Property<long>("MaxRunningTime");
@@ -37,6 +39,8 @@ namespace EnoCore.Migrations
                     b.Property<long>("RelatedRoundId");
 
                     b.Property<long>("ServiceId");
+
+                    b.Property<string>("ServiceName");
 
                     b.Property<DateTime>("StartTime");
 

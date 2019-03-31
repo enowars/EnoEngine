@@ -17,6 +17,7 @@ namespace EnoCore.Migrations
                     TaskType = table.Column<string>(nullable: true),
                     Address = table.Column<string>(nullable: true),
                     ServiceId = table.Column<long>(nullable: false),
+                    ServiceName = table.Column<string>(nullable: true),
                     TeamId = table.Column<long>(nullable: false),
                     TeamName = table.Column<string>(nullable: true),
                     RelatedRoundId = table.Column<long>(nullable: false),
@@ -25,7 +26,8 @@ namespace EnoCore.Migrations
                     StartTime = table.Column<DateTime>(nullable: false),
                     MaxRunningTime = table.Column<long>(nullable: false),
                     TaskIndex = table.Column<long>(nullable: false),
-                    CheckerResult = table.Column<int>(nullable: false)
+                    CheckerResult = table.Column<int>(nullable: false),
+                    CheckerTaskLaunchStatus = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {

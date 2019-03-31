@@ -77,6 +77,18 @@ namespace EnoCore
                     ErrorMessage = "CheckedRoundsPerRound must not be 0"
                 };
 
+            Migrate();
+            using (var ctx = new EnoEngineDBContext())
+            {
+                var migrationResult = FillDatabase(ctx, config);
+                if (migrationResult.Success)
+                    ctx.SaveChanges();
+                return migrationResult;
+            }
+        }
+
+        public static void Migrate()
+        {
             using (var ctx = new EnoEngineDBContext())
             {
                 var pendingMigrations = ctx.Database.GetPendingMigrations().Count();
@@ -86,10 +98,6 @@ namespace EnoCore
                     ctx.Database.Migrate();
                     ctx.SaveChanges();
                 }
-                var migrationResult = FillDatabase(ctx, config);
-                if (migrationResult.Success)
-                    ctx.SaveChanges();
-                return migrationResult;
             }
         }
 
@@ -118,6 +126,20 @@ namespace EnoCore
             {
                 ctx.AddRange(tasks);
                 await ctx.SaveChangesAsync();
+            }
+        }
+
+        public static async Task<List<CheckerTask>> RetrievePendingCheckerTasks(int maxAmount)
+        {
+            using (var ctx = new EnoEngineDBContext())
+            {
+                var tasks = await ctx.CheckerTasks
+                    .Where(t => t.CheckerTaskLaunchStatus == CheckerTaskLaunchStatus.New)
+                    .Take(maxAmount)
+                    .ToListAsync();
+                tasks.ForEach((t) => t.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Launched);
+                await ctx.SaveChangesAsync();
+                return tasks;
             }
         }
 
@@ -156,6 +178,7 @@ namespace EnoCore
                 var oldFlags = await ctx.Flags
                     .Where(f => f.GameRoundId + oldRoundsCount >= currentRound.Id)
                     .Include(f => f.Owner)
+                    .Include(f => f.Service)
                     .AsNoTracking()
                     .ToArrayAsync();
                 List<CheckerTask> oldFlagsCheckerTasks = new List<CheckerTask>(oldFlags.Count());
@@ -175,7 +198,9 @@ namespace EnoCore
                         TaskType = "RetrieveFlag",
                         TeamName = oldFlag.Owner.Name,
                         ServiceId = oldFlag.ServiceId,
-                        TeamId = oldFlag.OwnerId
+                        TeamId = oldFlag.OwnerId,
+                        ServiceName = oldFlag.Service.Name,
+                        CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New
                     };
                     oldFlagsCheckerTasks.Add(task);
                     time = time.AddSeconds(timeDiff);

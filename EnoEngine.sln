@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EnoEngine", "EnoEngine\EnoE
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EnoCore", "EnoCore\EnoCore.csproj", "{029F1DC6-3647-4088-8093-5737154CD457}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnoLauncher", "EnoLauncher\EnoLauncher.csproj", "{EA5A8FD3-BA74-48B4-9282-C7EAA77B166C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{029F1DC6-3647-4088-8093-5737154CD457}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{029F1DC6-3647-4088-8093-5737154CD457}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{029F1DC6-3647-4088-8093-5737154CD457}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EA5A8FD3-BA74-48B4-9282-C7EAA77B166C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA5A8FD3-BA74-48B4-9282-C7EAA77B166C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA5A8FD3-BA74-48B4-9282-C7EAA77B166C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA5A8FD3-BA74-48B4-9282-C7EAA77B166C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

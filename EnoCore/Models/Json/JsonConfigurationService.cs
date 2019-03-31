@@ -13,5 +13,6 @@ namespace EnoCore.Models.Json
         public int RunsPerNoise { get; set; }
         public int RunsPerHavok { get; set; }
         public int WeightFactor { get; set; }
+        public List<string> Checkers { get; set; } = new List<string>();
     }
 }
