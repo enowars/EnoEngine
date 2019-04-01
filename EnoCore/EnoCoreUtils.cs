@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using EnoCore.Models.Database;
 using EnoCore.Models.Json;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -17,6 +18,22 @@ namespace EnoCore
         private static readonly Random Random = new Random();
         private static readonly int IPV4_SUBNET_SIZE = 24;
         private static readonly int IPV6_SUBNET_SIZE = 64;
+
+        public static CheckerResult ParseCheckerResult(string result)
+        {
+            switch (result) {
+                case "INTERNAL_ERROR":
+                    return CheckerResult.CheckerError;
+                case "OK":
+                    return CheckerResult.Ok;
+                case "ENOWORKS":
+                    return CheckerResult.Mumble;
+                case "OFFLINE":
+                    return CheckerResult.Down;
+                default:
+                    return CheckerResult.CheckerError;
+            }
+        }
 
         public static string FormatException(Exception e)
         {

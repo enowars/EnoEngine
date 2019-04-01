@@ -47,6 +47,36 @@ namespace EnoCore
         {
             optionsBuilder.UseNpgsql($@"Server=127.0.0.1;Port=5432;Database=EnoDatabase;User Id=docker;Password=docker;");
         }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<CheckerTask>()
+                .HasIndex(ct => ct.Id);
+
+            modelBuilder.Entity<CheckerTask>()
+                .HasIndex(ct => ct.CheckerTaskLaunchStatus);
+
+            modelBuilder.Entity<Flag>()
+                .HasIndex(f => f.Id);
+
+            modelBuilder.Entity<Service>()
+                .HasIndex(s => s.Id);
+
+            modelBuilder.Entity<Team>()
+                .HasIndex(t => t.Id);
+
+            modelBuilder.Entity<Round>()
+                .HasIndex(r => r.Id);
+
+            modelBuilder.Entity<RoundTeamServiceState>()
+                .HasIndex(rtss => rtss.Id);
+
+            modelBuilder.Entity<SubmittedFlag>()
+                .HasIndex(sf => sf.Id);
+
+            modelBuilder.Entity<ServiceStats>()
+                .HasIndex(ss => ss.Id);
+        }
     }
 
     public class EnoDatabase
@@ -170,19 +200,20 @@ namespace EnoCore
             return newFlags;
         }
 
-        public static async Task InsertRetrieveOldFlagsTasks(Round currentRound, int oldRoundsCount, long roundLengthInSeconds)
+        public static async Task InsertRetrieveOldFlagsTasks(Round currentRound, int oldRoundsCount, int roundLengthInSeconds)
         {
-            long quarterRound = roundLengthInSeconds / 4;
+            int quarterRound = roundLengthInSeconds / 4;
             using (var ctx = new EnoEngineDBContext())
             {
                 var oldFlags = await ctx.Flags
                     .Where(f => f.GameRoundId + oldRoundsCount >= currentRound.Id)
+                    .Where(f => f.GameRoundId != currentRound.Id)
                     .Include(f => f.Owner)
                     .Include(f => f.Service)
                     .AsNoTracking()
                     .ToArrayAsync();
                 List<CheckerTask> oldFlagsCheckerTasks = new List<CheckerTask>(oldFlags.Count());
-                double timeDiff = oldFlags.Count() / quarterRound * 3;
+                double timeDiff = (double)quarterRound * 3 / oldFlags.Count();
                 DateTime time = currentRound.Begin;
                 foreach (var oldFlag in oldFlags)
                 {
@@ -195,7 +226,7 @@ namespace EnoCore
                         CurrentRoundId = currentRound.Id,
                         StartTime = time,
                         TaskIndex = oldFlag.RoundOffset,
-                        TaskType = "RetrieveFlag",
+                        TaskType = "getflag",
                         TeamName = oldFlag.Owner.Name,
                         ServiceId = oldFlag.ServiceId,
                         TeamId = oldFlag.OwnerId,
@@ -464,6 +495,19 @@ namespace EnoCore
             }
         }
 
+        public static async Task UpdateTaskCheckerTaskResult(long checkerTaskId, CheckerResult checkerResult)
+        {
+            using (var ctx = new EnoEngineDBContext())
+            {
+                var task = await ctx.CheckerTasks
+                    .Where(ct => ct.Id == checkerTaskId)
+                    .SingleAsync();
+                task.CheckerResult = checkerResult;
+                task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
+                await ctx.SaveChangesAsync();
+            }
+        }
+
         private static void CalculateTeamScore(EnoEngineDBContext ctx, Service[] services, long currentRoundId, Team team)
         {
             team.TotalPoints = 0;
@@ -572,11 +616,11 @@ namespace EnoCore
             {
                 switch (task.CheckerResult)
                 {
-                    case 2:
+                    case CheckerResult.Ok:
                         continue;
-                    case 3:
+                    case CheckerResult.Mumble:
                         return ServiceStatus.Mumble;
-                    case 4:
+                    case CheckerResult.Down:
                         return ServiceStatus.Down;
                     default:
                         return ServiceStatus.CheckerError;
@@ -595,7 +639,7 @@ namespace EnoCore
             {
                 switch (task.CheckerResult)
                 {
-                    case 2:
+                    case CheckerResult.Ok:
                         continue;
                     default:
                         return ServiceStatus.Recovering;

@@ -11,6 +11,14 @@ namespace EnoCore.Models.Database
         Done
     }
 
+    public enum CheckerResult
+    {
+        CheckerError,
+        Ok,
+        Mumble,
+        Down
+    }
+
     public class CheckerTask
     {
         public long Id { get; set; }
@@ -24,9 +32,9 @@ namespace EnoCore.Models.Database
         public long CurrentRoundId { get; set; }
         public string Payload { get; set; }
         public DateTime StartTime { get; set; }
-        public long MaxRunningTime { get; set; }
+        public int MaxRunningTime { get; set; }
         public long TaskIndex { get; set; }
-        public int CheckerResult { get; set; }
+        public CheckerResult CheckerResult { get; set; }
         public CheckerTaskLaunchStatus CheckerTaskLaunchStatus { get; set; }
 
         public CheckerTask()

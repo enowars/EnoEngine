@@ -24,7 +24,7 @@ namespace EnoCore.Migrations
                     CurrentRoundId = table.Column<long>(nullable: false),
                     Payload = table.Column<string>(nullable: true),
                     StartTime = table.Column<DateTime>(nullable: false),
-                    MaxRunningTime = table.Column<long>(nullable: false),
+                    MaxRunningTime = table.Column<int>(nullable: false),
                     TaskIndex = table.Column<long>(nullable: false),
                     CheckerResult = table.Column<int>(nullable: false),
                     CheckerTaskLaunchStatus = table.Column<int>(nullable: false)
@@ -223,9 +223,24 @@ namespace EnoCore.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_CheckerTasks_CheckerTaskLaunchStatus",
+                table: "CheckerTasks",
+                column: "CheckerTaskLaunchStatus");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CheckerTasks_Id",
+                table: "CheckerTasks",
+                column: "Id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Flags_GameRoundId",
                 table: "Flags",
                 column: "GameRoundId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Flags_Id",
+                table: "Flags",
+                column: "Id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Flags_OwnerId",
@@ -238,9 +253,19 @@ namespace EnoCore.Migrations
                 column: "ServiceId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Rounds_Id",
+                table: "Rounds",
+                column: "Id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_RoundTeamServiceStates_GameRoundId",
                 table: "RoundTeamServiceStates",
                 column: "GameRoundId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RoundTeamServiceStates_Id",
+                table: "RoundTeamServiceStates",
+                column: "Id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RoundTeamServiceStates_ServiceId",
@@ -251,6 +276,16 @@ namespace EnoCore.Migrations
                 name: "IX_RoundTeamServiceStates_TeamId",
                 table: "RoundTeamServiceStates",
                 column: "TeamId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Services_Id",
+                table: "Services",
+                column: "Id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ServiceStats_Id",
+                table: "ServiceStats",
+                column: "Id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ServiceStats_ServiceId",
@@ -273,9 +308,19 @@ namespace EnoCore.Migrations
                 column: "FlagId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_SubmittedFlags_Id",
+                table: "SubmittedFlags",
+                column: "Id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_SubmittedFlags_RoundId",
                 table: "SubmittedFlags",
                 column: "RoundId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Teams_Id",
+                table: "Teams",
+                column: "Id");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

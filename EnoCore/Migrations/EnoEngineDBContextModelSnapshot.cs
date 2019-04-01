@@ -32,7 +32,7 @@ namespace EnoCore.Migrations
 
                     b.Property<long>("CurrentRoundId");
 
-                    b.Property<long>("MaxRunningTime");
+                    b.Property<int>("MaxRunningTime");
 
                     b.Property<string>("Payload");
 
@@ -53,6 +53,10 @@ namespace EnoCore.Migrations
                     b.Property<string>("TeamName");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CheckerTaskLaunchStatus");
+
+                    b.HasIndex("Id");
 
                     b.ToTable("CheckerTasks");
                 });
@@ -75,6 +79,8 @@ namespace EnoCore.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("GameRoundId");
+
+                    b.HasIndex("Id");
 
                     b.HasIndex("OwnerId");
 
@@ -100,6 +106,8 @@ namespace EnoCore.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Id");
+
                     b.ToTable("Rounds");
                 });
 
@@ -124,6 +132,8 @@ namespace EnoCore.Migrations
 
                     b.HasIndex("GameRoundId");
 
+                    b.HasIndex("Id");
+
                     b.HasIndex("ServiceId");
 
                     b.HasIndex("TeamId");
@@ -143,6 +153,8 @@ namespace EnoCore.Migrations
                     b.Property<long>("ServiceStatsId");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Id");
 
                     b.ToTable("Services");
                 });
@@ -165,6 +177,8 @@ namespace EnoCore.Migrations
                     b.Property<long>("TeamId");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Id");
 
                     b.HasIndex("ServiceId");
 
@@ -191,6 +205,8 @@ namespace EnoCore.Migrations
                     b.HasIndex("AttackerTeamId");
 
                     b.HasIndex("FlagId");
+
+                    b.HasIndex("Id");
 
                     b.HasIndex("RoundId");
 
@@ -221,6 +237,8 @@ namespace EnoCore.Migrations
                     b.Property<string>("VulnboxAddress");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Id");
 
                     b.ToTable("Teams");
                 });

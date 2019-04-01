@@ -1,10 +1,12 @@
 ﻿using EnoCore;
+using EnoCore.Models.Database;
 using EnoCore.Models.Json;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
@@ -16,6 +18,7 @@ namespace EnoLauncher
     {
         private static readonly CancellationTokenSource LauncherCancelSource = new CancellationTokenSource();
         private static readonly ILogger Logger = EnoCoreUtils.Loggers.CreateLogger<Program>();
+        private static readonly HttpClient Client = new HttpClient();
         public static JsonConfiguration Configuration { get; set; }
 
         public void Start(Dictionary<string, JsonConfigurationService> servicesDict)
@@ -31,13 +34,37 @@ namespace EnoLauncher
                 var tasks = await EnoDatabase.RetrievePendingCheckerTasks(100);
                 foreach (var task in tasks)
                 {
-                    var t = Task.Run(() =>
+                    var t = Task.Run(async () =>
                     {
-                        var httpClient = new HttpClient();
-                        var request = new CheckerTaskRequest();
-                        var content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
-                        Logger.LogTrace($"Requesting CheckerTask {task.Id}");
-                        httpClient.PostAsync(new Uri(servicesDict[task.ServiceName].Checkers[0]), content);
+                        try
+                        {
+                            var cancelSource = new CancellationTokenSource();
+                            var now = DateTime.Now;
+                            var span = task.StartTime.Subtract(DateTime.Now);
+                            Logger.LogTrace($"Task {task.Id} ({task.TaskType}) for team {task.TeamName} waits {span} (MaxRunningTime {task.MaxRunningTime})");
+                            if (task.StartTime > now)
+                            {
+                                await Task.Delay(span);
+                            }
+                            cancelSource.CancelAfter(task.MaxRunningTime * 1000);
+                            var content = new StringContent(JsonConvert.SerializeObject(task), Encoding.UTF8, "application/json");
+                            var response = await Client.PostAsync(new Uri(servicesDict[task.ServiceName].Checkers[0] + "/" + task.TaskType), content, cancelSource.Token);
+                            if (response.StatusCode == HttpStatusCode.OK)
+                            {
+                                dynamic responseJson = JsonConvert.DeserializeObject(await response.Content.ReadAsStringAsync());
+                                string result = responseJson.result;
+                                await EnoDatabase.UpdateTaskCheckerTaskResult(task.Id, EnoCoreUtils.ParseCheckerResult(result));
+                            }
+                            else
+                            {
+                                await EnoDatabase.UpdateTaskCheckerTaskResult(task.Id, CheckerResult.CheckerError);
+                            }
+                        }
+                        catch(Exception e)
+                        {
+                            Logger.LogError($"CheckerTask {task.Id} failed: {EnoCoreUtils.FormatException(e)}");
+                            await EnoDatabase.UpdateTaskCheckerTaskResult(task.Id, CheckerResult.CheckerError);
+                        }
                     });
                 }
                 await Task.Delay(500, LauncherCancelSource.Token);

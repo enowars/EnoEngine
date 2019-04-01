@@ -102,9 +102,9 @@ namespace EnoEngine.Game
 
         private async Task InsertDeployFlagsTasks(DateTime firstFlagTime, IEnumerable<Flag> currentFlags)
         {
-            long maxRunningTime = Program.Configuration.RoundLengthInSeconds / 4;
-            var timeDiff = maxRunningTime - 5 / currentFlags.Count();
-            
+            int maxRunningTime = Program.Configuration.RoundLengthInSeconds / 4;
+            double timeDiff = (maxRunningTime - 5) / (double)currentFlags.Count();
+
             var tasks = new List<CheckerTask>(currentFlags.Count());
             foreach (var flag in currentFlags)
             {
@@ -117,7 +117,7 @@ namespace EnoEngine.Game
                     CurrentRoundId = flag.GameRoundId,
                     StartTime = firstFlagTime,
                     TaskIndex = flag.RoundOffset,
-                    TaskType = "DeployFlag",
+                    TaskType = "putflag",
                     TeamName = flag.Owner.Name,
                     ServiceId = flag.ServiceId,
                     TeamId = flag.OwnerId,
@@ -131,9 +131,8 @@ namespace EnoEngine.Game
 
         private async Task InsertRetrieveCurrentFlagsTasks(DateTime q3, IEnumerable<Flag> currentFlags)
         {
-            long maxRunningTime = Program.Configuration.RoundLengthInSeconds / 4;
-            var timeDiff = maxRunningTime - 5 / currentFlags.Count();
-            
+            int maxRunningTime = Program.Configuration.RoundLengthInSeconds / 4;
+            double timeDiff = (maxRunningTime - 5) / (double) currentFlags.Count();
             var tasks = new List<CheckerTask>(currentFlags.Count());
             foreach (var flag in currentFlags)
             {
@@ -146,9 +145,11 @@ namespace EnoEngine.Game
                     RelatedRoundId = flag.GameRoundId,
                     StartTime = q3,
                     TaskIndex = flag.RoundOffset,
-                    TaskType = "RetrieveFlag",
+                    TaskType = "getflag",
                     TeamName = flag.Owner.Name,
+                    TeamId = flag.OwnerId,
                     ServiceName = flag.Service.Name,
+                    ServiceId = flag.ServiceId,
                     CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New
                 });
                 q3 = q3.AddSeconds(timeDiff);
