@@ -22,6 +22,7 @@ namespace EnoCore
     public class EnoEngineConsoleLogger : ILogger
     {
         private readonly string ClassName;
+
         public EnoEngineConsoleLogger(string categoryName)
         {
             ClassName = categoryName;

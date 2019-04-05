@@ -42,6 +42,7 @@ namespace EnoCore
         public DbSet<RoundTeamServiceState> RoundTeamServiceStates { get; set; }
         public DbSet<SubmittedFlag> SubmittedFlags { get; set; }
         public DbSet<ServiceStats> ServiceStats { get; set; }
+        public DbSet<CheckerLogMessage> Logs { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -76,6 +77,15 @@ namespace EnoCore
 
             modelBuilder.Entity<ServiceStats>()
                 .HasIndex(ss => ss.Id);
+
+            modelBuilder.Entity<CheckerLogMessage>()
+                .HasIndex(ss => ss.Id);
+
+            modelBuilder.Entity<CheckerLogMessage>()
+                .HasIndex(ss => ss.Timestamp);
+
+            modelBuilder.Entity<CheckerLogMessage>()
+                .HasIndex(ss => ss.RelatedTaskId);
         }
     }
 
