@@ -156,6 +156,7 @@ namespace EnoEngine.Game
 
         private async Task HandleRoundEnd(long roundId)
         {
+            Logger.LogDebug($"Handling end of round {roundId}");
             if (roundId > 0)
             {
                 await EnoDatabase.RecordServiceStates(roundId);
