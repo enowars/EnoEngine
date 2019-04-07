@@ -48,11 +48,11 @@ namespace EnoEngine.Game
             {
                 // start the next round
                 (var currentRound, var currentFlags) = EnoDatabase.CreateNewRound(begin, q2, q3, q4, end);
-                EnoCoreUtils.GenerateCurrentScoreboard($"..{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}scoreboard.json");
                 long observedRounds = Program.Configuration.CheckedRoundsPerRound > currentRound.Id ? currentRound.Id : Program.Configuration.CheckedRoundsPerRound;
 
                 // start the evaluation TODO deferred?
                 await HandleRoundEnd(currentRound.Id -1);
+                EnoCoreUtils.GenerateCurrentScoreboard($"..{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}scoreboard.json");
 
                 // insert checker commands
                 var insertDeployNewFlagsTask = Task.Run(async () => await InsertDeployFlagsTasks(begin, currentFlags));

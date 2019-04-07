@@ -564,6 +564,7 @@ namespace EnoCore
                 foreach (var team in teams)
                 {
                     CalculateTeamScore(ctx, services, roundId, team);
+                    ctx.SaveChanges();
                 }
             }
         }
@@ -643,7 +644,6 @@ namespace EnoCore
             }
             team.LostDefensePoints = teamDefenseScore;
             team.TotalPoints += teamDefenseScore;
-            ctx.SaveChanges();
             Logger.LogInformation($"Team {team.Name}: Defense={teamDefenseScore}");
         }
 
