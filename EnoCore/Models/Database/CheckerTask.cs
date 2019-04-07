@@ -22,7 +22,7 @@ namespace EnoCore.Models.Database
 
     public class CheckerTask
     {
-        [JsonProperty("id")]
+        [JsonProperty("runId")]
         public long Id { get; set; }
         [JsonProperty("method")]
         public string TaskType { get; set; }
