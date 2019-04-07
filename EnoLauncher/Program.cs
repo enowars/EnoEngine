@@ -60,7 +60,7 @@ namespace EnoLauncher
                                 await EnoDatabase.UpdateTaskCheckerTaskResult(task.Id, CheckerResult.CheckerError);
                             }
                         }
-                        catch(Exception e)
+                        catch (Exception e)
                         {
                             Logger.LogError($"CheckerTask {task.Id} failed: {EnoCoreUtils.FormatException(e)}");
                             await EnoDatabase.UpdateTaskCheckerTaskResult(task.Id, CheckerResult.CheckerError);

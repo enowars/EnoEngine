@@ -47,8 +47,8 @@ namespace EnoCore
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            var databaseDomain = Environment.GetEnvironmentVariable("DATABASE_DOMAIN") ?? "enopostgres";
-            optionsBuilder.UseNpgsql($@"Server={databaseDomain};Port=5432;Database=EnoDatabase;User Id=docker;Password=docker;");
+            var databaseDomain = Environment.GetEnvironmentVariable("DATABASE_DOMAIN") ?? "localhost";
+            optionsBuilder.UseNpgsql($@"Server={databaseDomain};Port=5432;Database=EnoDatabase;User Id=docker;Password=docker;Timeout=15;SSL=false;SslMode=Disable;");
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -249,8 +249,12 @@ namespace EnoCore
         private static IEnumerable<Flag> GenerateFlagsForRound(EnoEngineDBContext ctx, Round round)
         {
             IList<Flag> newFlags = new List<Flag>();
-            var teams = ctx.Teams;
-            var services = ctx.Services;
+            var teams = ctx.Teams
+                .AsNoTracking()
+                .ToArray();
+            var services = ctx.Services
+                .AsNoTracking()
+                .ToArray();
             foreach (var team in teams)
             {
                 foreach (var service in services)
