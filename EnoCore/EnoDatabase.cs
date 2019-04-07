@@ -250,10 +250,8 @@ namespace EnoCore
         {
             IList<Flag> newFlags = new List<Flag>();
             var teams = ctx.Teams
-                .AsNoTracking()
                 .ToArray();
             var services = ctx.Services
-                .AsNoTracking()
                 .ToArray();
             foreach (var team in teams)
             {
