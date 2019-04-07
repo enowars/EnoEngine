@@ -34,6 +34,7 @@ namespace EnoCore
 
     internal class EnoEngineDBContext : DbContext
     {
+        private static readonly ILogger Logger = EnoCoreUtils.Loggers.CreateLogger<EnoEngineDBContext>();
         public DbSet<CheckerTask> CheckerTasks { get; set; }
         public DbSet<Flag> Flags { get; set; }
         public DbSet<Service> Services { get; set; }
@@ -77,6 +78,10 @@ namespace EnoCore
 
             modelBuilder.Entity<ServiceStats>()
                 .HasIndex(ss => ss.Id);
+
+            modelBuilder.Entity<SubmittedFlag>()
+                .HasIndex(sf => new { sf.AttackerTeamId, sf.FlagId })
+                .IsUnique();
 
             modelBuilder.Entity<CheckerLogMessage>()
                 .HasIndex(ss => ss.Id);
@@ -125,6 +130,63 @@ namespace EnoCore
                     ctx.SaveChanges();
                 return migrationResult;
             }
+        }
+
+        public static async Task<FlagSubmissionResult> InsertSubmittedFlag(string flag, string attackerSubmissionAddress, long flagValidityInRounds)
+        {
+            while(true)
+            {
+                try
+                {
+                    using (var ctx = new EnoEngineDBContext())
+                    {
+                        var dbFlag = await ctx.Flags
+                            .Where(f => f.StringRepresentation == flag)
+                            .Include(f => f.Owner)
+                            .AsNoTracking()
+                            .SingleOrDefaultAsync();
+                        var dbAttackerTeam = await ctx.Teams
+                            .Where(t => t.VulnboxAddress == attackerSubmissionAddress || t.GatewayAddress == attackerSubmissionAddress)
+                            .AsNoTracking()
+                            .SingleOrDefaultAsync();
+                        var currentRound = await ctx.Rounds
+                            .AsNoTracking()
+                            .LastOrDefaultAsync();
+
+                        if (dbFlag == null)
+                            return FlagSubmissionResult.Invalid;
+                        if (dbAttackerTeam == null)
+                            return FlagSubmissionResult.InvalidSenderError;
+                        if (dbFlag.Owner.TeamId == dbAttackerTeam.TeamId)
+                            return FlagSubmissionResult.Own;
+                        if (dbFlag.GameRoundId < currentRound.Id - flagValidityInRounds)
+                            return FlagSubmissionResult.Old;
+
+                        var submittedFlag = await ctx.SubmittedFlags
+                            .Where(f => f.FlagId == dbFlag.Id && f.AttackerTeamId == dbAttackerTeam.Id)
+                            .SingleOrDefaultAsync();
+
+                        if (submittedFlag != null)
+                        {
+                            submittedFlag.SubmissionsCount += 1;
+                            ctx.SaveChanges();
+                            return FlagSubmissionResult.Duplicate;
+                        }
+                        ctx.SubmittedFlags.Add(new SubmittedFlag()
+                        {
+                            FlagId = dbFlag.Id,
+                            AttackerTeamId = dbAttackerTeam.Id,
+                            SubmissionsCount = 1,
+                            RoundId = currentRound.Id
+                        });
+                        Console.WriteLine($"Team {dbAttackerTeam.Id} submitted a flag!");
+                        ctx.SaveChanges();
+                        return FlagSubmissionResult.Ok;
+                    }
+                }
+                catch (DbUpdateException) {}
+            }
+            
         }
 
         public static void Migrate()

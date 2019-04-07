@@ -6,7 +6,7 @@ namespace EnoCore.Models.Json
 {
     public class JsonConfiguration
     {
-        public int FlagValidityInRounds { get; set; }
+        public long FlagValidityInRounds { get; set; }
         public int CheckedRoundsPerRound { get; set; }
         public int RoundLengthInSeconds { get; set; }
         public List<JsonConfigurationTeam> Teams { get; set; } = new List<JsonConfigurationTeam>();

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Text;
 
 namespace EnoCore.Models
@@ -13,6 +14,7 @@ namespace EnoCore.Models
         public Team AttackerTeam { get; set; }
         public long RoundId { get; set; }
         public Round Round { get; set; }
+        [ConcurrencyCheck]
         public long SubmissionsCount { get; set; }
     }
 }

@@ -224,17 +224,19 @@ namespace EnoCore.Migrations
 
                     b.Property<long>("RoundId");
 
-                    b.Property<long>("SubmissionsCount");
+                    b.Property<long>("SubmissionsCount")
+                        .IsConcurrencyToken();
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AttackerTeamId");
 
                     b.HasIndex("FlagId");
 
                     b.HasIndex("Id");
 
                     b.HasIndex("RoundId");
+
+                    b.HasIndex("AttackerTeamId", "FlagId")
+                        .IsUnique();
 
                     b.ToTable("SubmittedFlags");
                 });

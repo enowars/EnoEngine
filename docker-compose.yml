@@ -1,10 +1,26 @@
-version: '2.3'
+version: '3.4'
+
 services:
-  enoengine:
-    build: .
+  enolauncher:
+    image: ${DOCKER_REGISTRY-}enolauncher
+    build:
+      context: .
+      dockerfile: EnoLauncher/Dockerfile
+  enopostgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: docker
+      POSTGRES_PASSWORD: docker
     volumes:
-      - ./ctf.json:/service/EnoEngine/out/ctf.json
-      - ../data:/data
+      - enowarspostgres:/var/lib/postgresql
     ports:
-      - "1337:1337"
-      - "8002:22"
+      - "127.0.0.1:5432:5432"
+  enoengine:
+    image: ${DOCKER_REGISTRY-}enoengine
+    build:
+      context: .
+      dockerfile: EnoEngine/Dockerfile
+
+volumes:
+  enowarspostgres:
+

@@ -336,11 +336,6 @@ namespace EnoCore.Migrations
                 column: "TeamId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_SubmittedFlags_AttackerTeamId",
-                table: "SubmittedFlags",
-                column: "AttackerTeamId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_SubmittedFlags_FlagId",
                 table: "SubmittedFlags",
                 column: "FlagId");
@@ -354,6 +349,12 @@ namespace EnoCore.Migrations
                 name: "IX_SubmittedFlags_RoundId",
                 table: "SubmittedFlags",
                 column: "RoundId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SubmittedFlags_AttackerTeamId_FlagId",
+                table: "SubmittedFlags",
+                columns: new[] { "AttackerTeamId", "FlagId" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Teams_Id",

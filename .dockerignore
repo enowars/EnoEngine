@@ -2,10 +2,8 @@
 
 # from .gitignore
 .vs
-EnoEngine/bin
-EnoEngine/obj
-EnoCore/bin
-EnoCore/obj
+*/bin/
+*/obj/
 *.cfg
 *.json
 *.code-workspace

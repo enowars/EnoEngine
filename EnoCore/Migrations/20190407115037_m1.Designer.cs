@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EnoCore.Migrations
 {
     [DbContext(typeof(EnoEngineDBContext))]
-    [Migration("20190405144720_m1")]
+    [Migration("20190407115037_m1")]
     partial class m1
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -226,17 +226,19 @@ namespace EnoCore.Migrations
 
                     b.Property<long>("RoundId");
 
-                    b.Property<long>("SubmissionsCount");
+                    b.Property<long>("SubmissionsCount")
+                        .IsConcurrencyToken();
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AttackerTeamId");
 
                     b.HasIndex("FlagId");
 
                     b.HasIndex("Id");
 
                     b.HasIndex("RoundId");
+
+                    b.HasIndex("AttackerTeamId", "FlagId")
+                        .IsUnique();
 
                     b.ToTable("SubmittedFlags");
                 });

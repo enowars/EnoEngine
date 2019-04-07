@@ -79,24 +79,16 @@ namespace EnoEngine.Game
 
         public async Task<FlagSubmissionResult> HandleFlagSubmission(string flag, string attackerSubmissionAddress)
         {
-            await Lock.WaitAsync(Token);
+            //TODO check signature
             try
             {
-                //return EnoEngineDBContext.HandleFlagSubmission(flag, attackerSubmissionAddress, (int) CurrentRoundId, Config.FlagValidityInRounds); TODO
-                return FlagSubmissionResult.UnknownError;
+                return await EnoDatabase.InsertSubmittedFlag(flag, attackerSubmissionAddress, Program.Configuration.FlagValidityInRounds);
             }
             catch (Exception e)
             {
-                Console.WriteLine("HandleFlabSubmission() failed: {0}\n{1}", e.Message, e.StackTrace);
-                if (e.InnerException != null)
-                {
-                    Console.WriteLine("Inner Exception: {0}\n{1}", e.InnerException.Message, e.InnerException.StackTrace);
-                }
+                Logger.LogError($"HandleFlabSubmission() failed: {EnoCoreUtils.FormatException(e)}");
+
                 return FlagSubmissionResult.UnknownError;
-            }
-            finally
-            {
-                Lock.Release();
             }
         }
 
