@@ -48,7 +48,7 @@ namespace EnoLauncher
                             }
                             cancelSource.CancelAfter(task.MaxRunningTime * 1000);
                             var content = new StringContent(JsonConvert.SerializeObject(task), Encoding.UTF8, "application/json");
-                            var response = await Client.PostAsync(new Uri(servicesDict[task.ServiceName].Checkers[0] + "/" + task.TaskType), content, cancelSource.Token);
+                            var response = await Client.PostAsync(new Uri(servicesDict[task.ServiceName].Checkers[0] + "/"), content, cancelSource.Token);
                             if (response.StatusCode == HttpStatusCode.OK)
                             {
                                 dynamic responseJson = JsonConvert.DeserializeObject(await response.Content.ReadAsStringAsync());
