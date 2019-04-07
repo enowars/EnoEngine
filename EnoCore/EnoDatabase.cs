@@ -48,7 +48,7 @@ namespace EnoCore
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             var databaseDomain = Environment.GetEnvironmentVariable("DATABASE_DOMAIN") ?? "localhost";
-            optionsBuilder.UseNpgsql($@"Server={databaseDomain};Port=5432;Database=EnoDatabase;User Id=docker;Password=docker;Timeout=15;SSL=false;SslMode=Disable;");
+            optionsBuilder.UseNpgsql($@"Server={databaseDomain};Port=5432;Database=EnoDatabase;User Id=docker;Password=docker;Timeout=15;SslMode=Disable;");
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
