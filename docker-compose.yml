@@ -2,7 +2,6 @@ version: '3.4'
 
 services:
   enolauncher:
-    image: ${DOCKER_REGISTRY-}enolauncher
     build:
       context: .
       dockerfile: EnoLauncher/Dockerfile
