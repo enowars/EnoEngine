@@ -1,10 +1,10 @@
 version: '3.4'
 
 services:
-  enolauncher:
-    build:
-      context: .
-      dockerfile: EnoLauncher/Dockerfile
+#  enolauncher:
+#    build:
+#      context: .
+#      dockerfile: EnoLauncher/Dockerfile
   enopostgres:
     image: postgres
     environment:
