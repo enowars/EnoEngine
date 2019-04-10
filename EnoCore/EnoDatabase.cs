@@ -247,8 +247,8 @@ namespace EnoCore
                     .Take(maxAmount)
                     .ToListAsync();
                 // TODO update launch status without delaying operation
-                //tasks.ForEach((t) => t.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Launched);
-                //await ctx.SaveChangesAsync();
+                tasks.ForEach((t) => t.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Launched);
+                await ctx.SaveChangesAsync();
                 return tasks;
             }
         }
