@@ -54,7 +54,7 @@ namespace EnoCore.Models.Database
         [JsonIgnore]
         public CheckerTaskLaunchStatus CheckerTaskLaunchStatus { get; set; }
         [NotMapped]
-        [JsonProperty("loggingEndpoint")]
+        [JsonProperty("logEndpoint")]
         public string EnoLogsDomain { get; set; } = "http://172.17.0.1:8080/api/insertLogs";
 
         public CheckerTask()
