@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 
 namespace EnoCore.Models.Database
@@ -52,6 +53,9 @@ namespace EnoCore.Models.Database
         public CheckerResult CheckerResult { get; set; }
         [JsonIgnore]
         public CheckerTaskLaunchStatus CheckerTaskLaunchStatus { get; set; }
+        [NotMapped]
+        [JsonProperty("loggingEndpoint")]
+        public string EnoLogsDomain { get; set; } = "http://172.17.0.1:8080/api/insertLogs";
 
         public CheckerTask()
         {

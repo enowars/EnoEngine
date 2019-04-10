@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EnoLauncher", "EnoLauncher\
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{71097623-44AE-4128-90CF-1CC9898F5B1A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnoLogs", "EnoLogs\EnoLogs.csproj", "{80E15EEE-5692-4840-9685-764BC4DAAEF6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{71097623-44AE-4128-90CF-1CC9898F5B1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{71097623-44AE-4128-90CF-1CC9898F5B1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{71097623-44AE-4128-90CF-1CC9898F5B1A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{80E15EEE-5692-4840-9685-764BC4DAAEF6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{80E15EEE-5692-4840-9685-764BC4DAAEF6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{80E15EEE-5692-4840-9685-764BC4DAAEF6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{80E15EEE-5692-4840-9685-764BC4DAAEF6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -759,5 +759,14 @@ namespace EnoCore
             
             return ServiceStatus.Ok;
         }
+
+        public static async Task InsertCheckerLogMessage(CheckerLogMessage value)
+        {
+            using (var ctx = new EnoEngineDBContext())
+            {
+                ctx.Logs.Add(value);
+                await ctx.SaveChangesAsync();
+            }
+        }
     }
 }
