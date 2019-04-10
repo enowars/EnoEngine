@@ -54,12 +54,16 @@ namespace EnoEngine.Game
                 await HandleRoundEnd(currentRound.Id -1);
                 EnoCoreUtils.GenerateCurrentScoreboard($"..{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}scoreboard.json");
 
-                // insert checker commands
+                // insert put tasks
                 var insertPutNewFlagsTask = Task.Run(async () => await InsertPutFlagsTasks(begin, currentFlags));
+                var insertPutNewNoisesTask = Task.Run(async () => await InsertPutNoisesTasks(begin, currentNoises));
+
+                // give the db some space TODO save the earliest tasks first
+                await Task.Delay(1000);
+
+                // insert get tasks
                 var insertRetrieveCurrentFlagsTask = Task.Run(async () => await InsertRetrieveCurrentFlagsTasks(q3, currentFlags));
                 var insertRetrieveOldFlagsTask = Task.Run(async () => await InsertRetrieveOldFlagsTasks(currentRound));
-
-                var insertPutNewNoisesTask = Task.Run(async () => await InsertPutNoisesTasks(begin, currentNoises));
                 var insertGetCurrentNoisesTask = Task.Run(async () => await InsertRetrieveCurrentNoisesTasks(q3, currentNoises));
 
                 // TODO start noise for old rounds
