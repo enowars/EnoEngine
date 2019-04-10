@@ -32,6 +32,7 @@ namespace EnoLauncher
             while (!LauncherCancelSource.IsCancellationRequested)
             {
                 var tasks = await EnoDatabase.RetrievePendingCheckerTasks(100);
+                Logger.LogTrace($"Scheduling {tasks.Count} tasks");
                 foreach (var task in tasks)
                 {
                     var t = Task.Run(async () =>
@@ -41,7 +42,10 @@ namespace EnoLauncher
                             var cancelSource = new CancellationTokenSource();
                             var now = DateTime.Now;
                             var span = task.StartTime.Subtract(DateTime.Now);
-                            Logger.LogTrace($"Task {task.Id} ({task.TaskType}) for team {task.TeamName} waits {span} (MaxRunningTime {task.MaxRunningTime})");
+                            if (span.TotalSeconds < -0.5)
+                            {
+                                Logger.LogWarning($"Task {task.Id} ({task.TaskType}) for team {task.TeamName} starts {span.TotalSeconds} too late");
+                            }
                             if (task.StartTime > now)
                             {
                                 await Task.Delay(span);
