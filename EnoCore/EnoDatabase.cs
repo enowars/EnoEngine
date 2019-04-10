@@ -37,6 +37,8 @@ namespace EnoCore
         private static readonly ILogger Logger = EnoCoreUtils.Loggers.CreateLogger<EnoEngineDBContext>();
         public DbSet<CheckerTask> CheckerTasks { get; set; }
         public DbSet<Flag> Flags { get; set; }
+        public DbSet<Noise> Noises { get; set; }
+        public DbSet<Havok> Havoks { get; set; }
         public DbSet<Service> Services { get; set; }
         public DbSet<Team> Teams { get; set; }
         public DbSet<Round> Rounds { get; set; }
@@ -60,6 +62,9 @@ namespace EnoCore
                 .HasIndex(ct => ct.CheckerTaskLaunchStatus);
 
             modelBuilder.Entity<Flag>()
+                .HasIndex(f => f.Id);
+
+            modelBuilder.Entity<Noise>()
                 .HasIndex(f => f.Id);
 
             modelBuilder.Entity<Service>()
@@ -204,7 +209,7 @@ namespace EnoCore
             }
         }
 
-        public static (Round, IEnumerable<Flag>) CreateNewRound(DateTime begin, DateTime q2, DateTime q3, DateTime q4, DateTime end)
+        public static (Round, IEnumerable<Flag>, IEnumerable<Noise>) CreateNewRound(DateTime begin, DateTime q2, DateTime q3, DateTime q4, DateTime end)
         {
             using (var ctx = new EnoEngineDBContext())
             {
@@ -218,8 +223,9 @@ namespace EnoCore
                 };
                 ctx.Rounds.Add(round);
                 var flags = GenerateFlagsForRound(ctx, round);
+                var noises = GenerateNoisesForRound(ctx, round);
                 ctx.SaveChanges();
-                return (round, flags);
+                return (round, flags, noises);
             }
         }
 
@@ -273,6 +279,35 @@ namespace EnoCore
             }
             ctx.Flags.AddRange(newFlags);
             return newFlags;
+        }
+
+        private static IEnumerable<Noise> GenerateNoisesForRound(EnoEngineDBContext ctx, Round round)
+        {
+            IList<Noise> newNoises = new List<Noise>();
+            var teams = ctx.Teams
+                .ToArray();
+            var services = ctx.Services
+                .ToArray();
+            foreach (var team in teams)
+            {
+                foreach (var service in services)
+                {
+                    for (int i = 0; i < service.FlagsPerRound; i++)
+                    {
+                        var noise = new Noise()
+                        {
+                            Owner = team,
+                            StringRepresentation = "ENO" + EnoCoreUtils.RandomString(31) + "=",
+                            Service = service,
+                            RoundOffset = i,
+                            GameRound = round
+                        };
+                        newNoises.Add(noise);
+                    }
+                }
+            }
+            ctx.Noises.AddRange(newNoises);
+            return newNoises;
         }
 
         public static async Task InsertRetrieveOldFlagsTasks(Round currentRound, int oldRoundsCount, int roundLengthInSeconds)

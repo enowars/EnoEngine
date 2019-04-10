@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EnoCore.Migrations
 {
     [DbContext(typeof(EnoEngineDBContext))]
-    [Migration("20190407115037_m1")]
+    [Migration("20190410145930_m1")]
     partial class m1
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -87,6 +87,58 @@ namespace EnoCore.Migrations
                     b.HasIndex("Id");
 
                     b.ToTable("CheckerTasks");
+                });
+
+            modelBuilder.Entity("EnoCore.Models.Database.Havok", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<long>("GameRoundId");
+
+                    b.Property<long>("OwnerId");
+
+                    b.Property<long>("ServiceId");
+
+                    b.Property<string>("StringRepresentation");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GameRoundId");
+
+                    b.HasIndex("OwnerId");
+
+                    b.HasIndex("ServiceId");
+
+                    b.ToTable("Havoks");
+                });
+
+            modelBuilder.Entity("EnoCore.Models.Database.Noise", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<long>("GameRoundId");
+
+                    b.Property<long>("OwnerId");
+
+                    b.Property<int>("RoundOffset");
+
+                    b.Property<long>("ServiceId");
+
+                    b.Property<string>("StringRepresentation");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GameRoundId");
+
+                    b.HasIndex("Id");
+
+                    b.HasIndex("OwnerId");
+
+                    b.HasIndex("ServiceId");
+
+                    b.ToTable("Noises");
                 });
 
             modelBuilder.Entity("EnoCore.Models.Flag", b =>
@@ -278,6 +330,42 @@ namespace EnoCore.Migrations
                     b.HasOne("EnoCore.Models.Database.CheckerTask", "RelatedTask")
                         .WithMany()
                         .HasForeignKey("RelatedTaskId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("EnoCore.Models.Database.Havok", b =>
+                {
+                    b.HasOne("EnoCore.Models.Round", "GameRound")
+                        .WithMany()
+                        .HasForeignKey("GameRoundId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("EnoCore.Models.Team", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("EnoCore.Models.Service", "Service")
+                        .WithMany()
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("EnoCore.Models.Database.Noise", b =>
+                {
+                    b.HasOne("EnoCore.Models.Round", "GameRound")
+                        .WithMany()
+                        .HasForeignKey("GameRoundId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("EnoCore.Models.Team", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("EnoCore.Models.Service", "Service")
+                        .WithMany()
+                        .HasForeignKey("ServiceId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 

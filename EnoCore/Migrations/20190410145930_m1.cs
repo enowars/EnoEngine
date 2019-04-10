@@ -146,6 +146,75 @@ namespace EnoCore.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Havoks",
+                columns: table => new
+                {
+                    Id = table.Column<long>(nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
+                    StringRepresentation = table.Column<string>(nullable: true),
+                    OwnerId = table.Column<long>(nullable: false),
+                    ServiceId = table.Column<long>(nullable: false),
+                    GameRoundId = table.Column<long>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Havoks", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Havoks_Rounds_GameRoundId",
+                        column: x => x.GameRoundId,
+                        principalTable: "Rounds",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Havoks_Teams_OwnerId",
+                        column: x => x.OwnerId,
+                        principalTable: "Teams",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Havoks_Services_ServiceId",
+                        column: x => x.ServiceId,
+                        principalTable: "Services",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Noises",
+                columns: table => new
+                {
+                    Id = table.Column<long>(nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
+                    StringRepresentation = table.Column<string>(nullable: true),
+                    OwnerId = table.Column<long>(nullable: false),
+                    ServiceId = table.Column<long>(nullable: false),
+                    RoundOffset = table.Column<int>(nullable: false),
+                    GameRoundId = table.Column<long>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Noises", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Noises_Rounds_GameRoundId",
+                        column: x => x.GameRoundId,
+                        principalTable: "Rounds",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Noises_Teams_OwnerId",
+                        column: x => x.OwnerId,
+                        principalTable: "Teams",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Noises_Services_ServiceId",
+                        column: x => x.ServiceId,
+                        principalTable: "Services",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "RoundTeamServiceStates",
                 columns: table => new
                 {
@@ -276,6 +345,21 @@ namespace EnoCore.Migrations
                 column: "ServiceId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Havoks_GameRoundId",
+                table: "Havoks",
+                column: "GameRoundId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Havoks_OwnerId",
+                table: "Havoks",
+                column: "OwnerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Havoks_ServiceId",
+                table: "Havoks",
+                column: "ServiceId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Logs_Id",
                 table: "Logs",
                 column: "Id");
@@ -289,6 +373,26 @@ namespace EnoCore.Migrations
                 name: "IX_Logs_Timestamp",
                 table: "Logs",
                 column: "Timestamp");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Noises_GameRoundId",
+                table: "Noises",
+                column: "GameRoundId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Noises_Id",
+                table: "Noises",
+                column: "Id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Noises_OwnerId",
+                table: "Noises",
+                column: "OwnerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Noises_ServiceId",
+                table: "Noises",
+                column: "ServiceId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Rounds_Id",
@@ -365,7 +469,13 @@ namespace EnoCore.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "Havoks");
+
+            migrationBuilder.DropTable(
                 name: "Logs");
+
+            migrationBuilder.DropTable(
+                name: "Noises");
 
             migrationBuilder.DropTable(
                 name: "RoundTeamServiceStates");

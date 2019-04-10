@@ -47,7 +47,7 @@ namespace EnoEngine.Game
             try
             {
                 // start the next round
-                (var currentRound, var currentFlags) = EnoDatabase.CreateNewRound(begin, q2, q3, q4, end);
+                (var currentRound, var currentFlags, var currentNoises) = EnoDatabase.CreateNewRound(begin, q2, q3, q4, end);
                 long observedRounds = Program.Configuration.CheckedRoundsPerRound > currentRound.Id ? currentRound.Id : Program.Configuration.CheckedRoundsPerRound;
 
                 // start the evaluation TODO deferred?
@@ -55,16 +55,23 @@ namespace EnoEngine.Game
                 EnoCoreUtils.GenerateCurrentScoreboard($"..{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}scoreboard.json");
 
                 // insert checker commands
-                var insertDeployNewFlagsTask = Task.Run(async () => await InsertDeployFlagsTasks(begin, currentFlags));
+                var insertPutNewFlagsTask = Task.Run(async () => await InsertPutFlagsTasks(begin, currentFlags));
                 var insertRetrieveCurrentFlagsTask = Task.Run(async () => await InsertRetrieveCurrentFlagsTasks(q3, currentFlags));
                 var insertRetrieveOldFlagsTask = Task.Run(async () => await InsertRetrieveOldFlagsTasks(currentRound));
 
-                // TODO start StoreNoise for current and old rounds
+                var insertPutNewNoisesTask = Task.Run(async () => await InsertPutNoisesTasks(begin, currentNoises));
+                var insertGetCurrentNoisesTask = Task.Run(async () => await InsertRetrieveCurrentNoisesTasks(q3, currentNoises));
+
+                // TODO start noise for old rounds
                 // TODO start Havok
 
-                await insertDeployNewFlagsTask;
+                //TODO await in trycatch, we want to wait for everything
+                await insertPutNewFlagsTask;
                 await insertRetrieveCurrentFlagsTask;
                 await insertRetrieveOldFlagsTask;
+
+                await insertPutNewNoisesTask;
+                await insertGetCurrentNoisesTask;
                 Logger.LogInformation($"Round {currentRound.Id} has started");
             }
             catch (Exception e)
@@ -92,7 +99,7 @@ namespace EnoEngine.Game
             }
         }
 
-        private async Task InsertDeployFlagsTasks(DateTime firstFlagTime, IEnumerable<Flag> currentFlags)
+        private async Task InsertPutFlagsTasks(DateTime firstFlagTime, IEnumerable<Flag> currentFlags)
         {
             int maxRunningTime = Program.Configuration.RoundLengthInSeconds / 4;
             double timeDiff = (maxRunningTime - 5) / (double)currentFlags.Count();
@@ -121,6 +128,35 @@ namespace EnoEngine.Game
             await EnoDatabase.InsertCheckerTasks(tasks);
         }
 
+        private async Task InsertPutNoisesTasks(DateTime firstFlagTime, IEnumerable<Noise> currentNoises)
+        {
+            int maxRunningTime = Program.Configuration.RoundLengthInSeconds / 4;
+            double timeDiff = (maxRunningTime - 5) / (double)currentNoises.Count();
+
+            var tasks = new List<CheckerTask>(currentNoises.Count());
+            foreach (var noise in currentNoises)
+            {
+                tasks.Add(new CheckerTask()
+                {
+                    Address = noise.Owner.VulnboxAddress,
+                    MaxRunningTime = maxRunningTime,
+                    Payload = noise.StringRepresentation,
+                    RelatedRoundId = noise.GameRoundId,
+                    CurrentRoundId = noise.GameRoundId,
+                    StartTime = firstFlagTime,
+                    TaskIndex = noise.RoundOffset,
+                    TaskType = "putnoise",
+                    TeamName = noise.Owner.Name,
+                    ServiceId = noise.ServiceId,
+                    TeamId = noise.OwnerId,
+                    ServiceName = noise.Service.Name,
+                    CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New
+                });
+                firstFlagTime = firstFlagTime.AddSeconds(timeDiff);
+            }
+            await EnoDatabase.InsertCheckerTasks(tasks);
+        }
+
         private async Task InsertRetrieveCurrentFlagsTasks(DateTime q3, IEnumerable<Flag> currentFlags)
         {
             int maxRunningTime = Program.Configuration.RoundLengthInSeconds / 4;
@@ -138,6 +174,34 @@ namespace EnoEngine.Game
                     StartTime = q3,
                     TaskIndex = flag.RoundOffset,
                     TaskType = "getflag",
+                    TeamName = flag.Owner.Name,
+                    TeamId = flag.OwnerId,
+                    ServiceName = flag.Service.Name,
+                    ServiceId = flag.ServiceId,
+                    CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New
+                });
+                q3 = q3.AddSeconds(timeDiff);
+            }
+            await EnoDatabase.InsertCheckerTasks(tasks);
+        }
+
+        private async Task InsertRetrieveCurrentNoisesTasks(DateTime q3, IEnumerable<Noise> currentNoise)
+        {
+            int maxRunningTime = Program.Configuration.RoundLengthInSeconds / 4;
+            double timeDiff = (maxRunningTime - 5) / (double)currentNoise.Count();
+            var tasks = new List<CheckerTask>(currentNoise.Count());
+            foreach (var flag in currentNoise)
+            {
+                tasks.Add(new CheckerTask()
+                {
+                    Address = flag.Owner.VulnboxAddress,
+                    MaxRunningTime = maxRunningTime,
+                    Payload = flag.StringRepresentation,
+                    CurrentRoundId = flag.GameRoundId,
+                    RelatedRoundId = flag.GameRoundId,
+                    StartTime = q3,
+                    TaskIndex = flag.RoundOffset,
+                    TaskType = "getnoise",
                     TeamName = flag.Owner.Name,
                     TeamId = flag.OwnerId,
                     ServiceName = flag.Service.Name,
