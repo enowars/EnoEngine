@@ -32,7 +32,10 @@ namespace EnoLauncher
             while (!LauncherCancelSource.IsCancellationRequested)
             {
                 var tasks = await EnoDatabase.RetrievePendingCheckerTasks(100);
-                Logger.LogTrace($"Scheduling {tasks.Count} tasks");
+                if (tasks.Count > 0)
+                {
+                    Logger.LogTrace($"Scheduling {tasks.Count} tasks");
+                }
                 foreach (var task in tasks)
                 {
                     var t = Task.Run(async () =>
