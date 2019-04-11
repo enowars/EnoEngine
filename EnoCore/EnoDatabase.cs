@@ -638,12 +638,14 @@ namespace EnoCore
                     .Where(rtss => rtss.TeamId == team.Id)
                     .Where(rtss => rtss.ServiceId == service.Id)
                     .Where(rtss => rtss.Status == ServiceStatus.Ok)
+                    .Where(rtss => rtss.GameRoundId <= currentRoundId)
                     .Count();
 
                 double recovers = ctx.RoundTeamServiceStates
                     .Where(rtss => rtss.TeamId == team.Id)
                     .Where(rtss => rtss.ServiceId == service.Id)
                     .Where(rtss => rtss.Status == ServiceStatus.Recovering)
+                    .Where(rtss => rtss.GameRoundId <= currentRoundId)
                     .Count();
 
                 double serviceSlaScore = (ups + 0.5 * recovers) * Math.Sqrt(teamsCount);
@@ -665,7 +667,8 @@ namespace EnoCore
                 double serviceDefenseScore = 0;
                 var ownedFlags = ctx.Flags
                     .Where(f => f.OwnerId == team.Id)
-                    .Where(f => f.ServiceId == service.Id);
+                    .Where(f => f.ServiceId == service.Id)
+                    .Where(f => f.GameRoundId <= currentRoundId);
 
                 foreach (var ownedFlag in ownedFlags)
                 {

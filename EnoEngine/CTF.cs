@@ -38,6 +38,7 @@ namespace EnoEngine.Game
         public async Task StartNewRound()
         {
             await Lock.WaitAsync(Token);
+            Logger.LogDebug("Starting new Round");
             double quatherLength = Program.Configuration.RoundLengthInSeconds / 4;
             DateTime begin = DateTime.Now;
             DateTime q2 = begin.AddSeconds(quatherLength);
@@ -51,7 +52,7 @@ namespace EnoEngine.Game
                 long observedRounds = Program.Configuration.CheckedRoundsPerRound > currentRound.Id ? currentRound.Id : Program.Configuration.CheckedRoundsPerRound;
 
                 // start the evaluation TODO deferred?
-                await HandleRoundEnd(currentRound.Id -1);
+                var handleOldRoundTask = HandleRoundEnd(currentRound.Id -1);
                 EnoCoreUtils.GenerateCurrentScoreboard($"..{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}scoreboard.json");
 
                 // insert put tasks
@@ -77,6 +78,8 @@ namespace EnoEngine.Game
                 await insertPutNewNoisesTask;
                 await insertGetCurrentNoisesTask;
                 Logger.LogInformation($"Round {currentRound.Id} has started");
+                await handleOldRoundTask;
+                Logger.LogInformation($"Scoreboard calculation complete");
             }
             catch (Exception e)
             {
