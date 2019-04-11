@@ -50,21 +50,21 @@ namespace EnoEngine.FlagSubmission
             switch (result)
             {
                 case FlagSubmissionResult.Ok:
-                    return "Ok";
+                    return "ok: Thx";
                 case FlagSubmissionResult.Invalid:
-                    return "You have submitted an invalid string!";
+                    return "invalid: You have submitted an invalid string!";
                 case FlagSubmissionResult.Duplicate:
-                    return "You have already sent this flag!";
+                    return "alreadysubmitted: You have already sent this flag!";
                 case FlagSubmissionResult.Own:
-                    return "This flag belongs to you!";
+                    return "ownflag: This flag belongs to you!";
                 case FlagSubmissionResult.Old:
-                    return "You have submitted an old flag!";
+                    return "old: You have submitted an old flag!";
                 case FlagSubmissionResult.UnknownError:
-                    return "An unexpected error occured :(";
+                    return "error: An unexpected error occured :(";
                 case FlagSubmissionResult.InvalidSenderError:
-                    return "Your IP address does not belong to any team's subnet!";
+                    return "illegal: Your IP address does not belong to any team's subnet!";
                 default:
-                    return "An even more unexpected rrror occured :(";
+                    return "error: An even more unexpected rrror occured :(";
             }
         }
 
