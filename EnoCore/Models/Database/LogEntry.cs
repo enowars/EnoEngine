@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 
 namespace EnoCore.Models.Database
@@ -20,8 +21,14 @@ namespace EnoCore.Models.Database
         [JsonProperty("message")]
         public string Message { get; set; }
         [JsonProperty("timestamp")]
-        public DateTime Timestamp { get; set; }
+        [NotMapped]
+        public string SentTimestamp { get; set; }
+        [JsonIgnore]
+        public DateTime Timestamp { get; set; } = new DateTime();
         [JsonProperty("severity")]
+        [NotMapped]
+        public string SentSeverity { get; set; }
+        [JsonIgnore]
         public LogSeverity Severity { get; set; }
         [JsonIgnore]
         public CheckerTask RelatedTask { get; set; }
