@@ -52,7 +52,7 @@ namespace EnoEngine.Game
                 long observedRounds = Program.Configuration.CheckedRoundsPerRound > currentRound.Id ? currentRound.Id : Program.Configuration.CheckedRoundsPerRound;
 
                 // start the evaluation TODO deferred?
-                var handleOldRoundTask = HandleRoundEnd(currentRound.Id -1);
+                var handleOldRoundTask = HandleRoundEnd(currentRound.Id - 1);
                 EnoCoreUtils.GenerateCurrentScoreboard($"..{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}scoreboard.json");
 
                 // insert put tasks

@@ -23,6 +23,7 @@ namespace EnoLauncher
 
         public void Start(Dictionary<string, JsonConfigurationService> servicesDict)
         {
+            Client.Timeout = new TimeSpan(0, 1, 0);
             LauncherLoop(servicesDict).Wait();
         }
 

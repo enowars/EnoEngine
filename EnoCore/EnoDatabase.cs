@@ -763,11 +763,11 @@ namespace EnoCore
             return ServiceStatus.Ok;
         }
 
-        public static async Task InsertCheckerLogMessage(CheckerLogMessage value)
+        public static async Task InsertCheckerLogMessages(IEnumerable<CheckerLogMessage> logs)
         {
             using (var ctx = new EnoEngineDBContext())
             {
-                ctx.Logs.Add(value);
+                ctx.Logs.AddRange(logs);
                 await ctx.SaveChangesAsync();
             }
         }
