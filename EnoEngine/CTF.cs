@@ -53,8 +53,6 @@ namespace EnoEngine.Game
 
                 // start the evaluation TODO deferred?
                 var handleOldRoundTask = HandleRoundEnd(currentRound.Id - 1);
-                EnoCoreUtils.GenerateCurrentScoreboard($"..{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}scoreboard.json");
-
                 // insert put tasks
                 var insertPutNewFlagsTask = Task.Run(async () => await InsertPutFlagsTasks(begin, currentFlags));
                 var insertPutNewNoisesTask = Task.Run(async () => await InsertPutNoisesTasks(begin, currentNoises));
@@ -79,6 +77,7 @@ namespace EnoEngine.Game
                 await insertGetCurrentNoisesTask;
                 Logger.LogInformation($"Round {currentRound.Id} has started");
                 await handleOldRoundTask;
+                EnoCoreUtils.GenerateCurrentScoreboard($"..{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}scoreboard.json");
                 Logger.LogInformation($"Scoreboard calculation complete");
             }
             catch (Exception e)
