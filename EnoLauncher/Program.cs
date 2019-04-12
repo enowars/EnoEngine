@@ -74,7 +74,10 @@ namespace EnoLauncher
                         }
                     });
                 }
-                await Task.Delay(50, LauncherCancelSource.Token);
+                if (tasks.Count == 0)
+                {
+                    await Task.Delay(50, LauncherCancelSource.Token);
+                }
             }
         }
 
