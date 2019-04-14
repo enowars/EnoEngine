@@ -34,7 +34,6 @@ namespace EnoCore
 
     internal class EnoEngineDBContext : DbContext
     {
-        private static readonly ILogger Logger = EnoCoreUtils.Loggers.CreateLogger<EnoEngineDBContext>();
         public DbSet<CheckerTask> CheckerTasks { get; set; }
         public DbSet<Flag> Flags { get; set; }
         public DbSet<Noise> Noises { get; set; }
@@ -45,7 +44,6 @@ namespace EnoCore
         public DbSet<RoundTeamServiceState> RoundTeamServiceStates { get; set; }
         public DbSet<SubmittedFlag> SubmittedFlags { get; set; }
         public DbSet<ServiceStats> ServiceStats { get; set; }
-        public DbSet<CheckerLogMessage> Logs { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -88,25 +86,17 @@ namespace EnoCore
             modelBuilder.Entity<SubmittedFlag>()
                 .HasIndex(sf => new { sf.AttackerTeamId, sf.FlagId })
                 .IsUnique();
-
-            modelBuilder.Entity<CheckerLogMessage>()
-                .HasIndex(ss => ss.Id);
-
-            modelBuilder.Entity<CheckerLogMessage>()
-                .HasIndex(ss => ss.Timestamp);
-
-            modelBuilder.Entity<CheckerLogMessage>()
-                .HasIndex(ss => ss.RelatedTaskId);
         }
     }
 
     public class EnoDatabase
     {
-        private static readonly ILogger Logger = EnoCoreUtils.Loggers.CreateLogger<EnoDatabase>();
-
-        public static DBInitializationResult ApplyConfig(JsonConfiguration config)
+        public static DBInitializationResult ApplyConfig(JsonConfiguration config, EnoLogger logger)
         {
-            Logger.LogTrace("ApplyConfig()");
+            logger.LogTrace(new EnoLogMessage() {
+                Function = "ApplyConfig",
+                Module = nameof(EnoDatabase)
+            });
             if (config.RoundLengthInSeconds <= 0)
                 return new DBInitializationResult
                 {
@@ -128,17 +118,17 @@ namespace EnoCore
                     ErrorMessage = "CheckedRoundsPerRound must not be 0"
                 };
 
-            Migrate();
+            Migrate(logger);
             using (var ctx = new EnoEngineDBContext())
             {
-                var migrationResult = FillDatabase(ctx, config);
+                var migrationResult = FillDatabase(ctx, config, logger);
                 if (migrationResult.Success)
                     ctx.SaveChanges();
                 return migrationResult;
             }
         }
 
-        public static async Task<FlagSubmissionResult> InsertSubmittedFlag(string flag, string attackerSubmissionAddress, long flagValidityInRounds)
+        public static async Task<FlagSubmissionResult> InsertSubmittedFlag(string flag, string attackerSubmissionAddress, long flagValidityInRounds) //TODO more logs
         {
             while(true)
             {
@@ -185,7 +175,6 @@ namespace EnoCore
                             SubmissionsCount = 1,
                             RoundId = currentRound.Id
                         });
-                        Console.WriteLine($"Team {dbAttackerTeam.Id} submitted a flag!");
                         ctx.SaveChanges();
                         return FlagSubmissionResult.Ok;
                     }
@@ -195,14 +184,18 @@ namespace EnoCore
             
         }
 
-        public static void Migrate()
+        public static void Migrate(EnoLogger logger)
         {
             using (var ctx = new EnoEngineDBContext())
             {
                 var pendingMigrations = ctx.Database.GetPendingMigrations().Count();
                 if (pendingMigrations > 0)
                 {
-                    Logger.LogInformation($"Applying {pendingMigrations} migration(s)");
+                    logger.LogInfo(new EnoLogMessage()
+                    {
+                        Message = $"Applying {pendingMigrations} migration(s)",
+                        Function = "Migrate"
+                    });
                     ctx.Database.Migrate();
                     ctx.SaveChanges();
                 }
@@ -372,7 +365,7 @@ namespace EnoCore
             }
         }
 
-        private static DBInitializationResult FillDatabase(EnoEngineDBContext ctx, JsonConfiguration config)
+        private static DBInitializationResult FillDatabase(EnoEngineDBContext ctx, JsonConfiguration config, EnoLogger logger)
         {
             var staleDbTeamIds = ctx.Teams.Select(t => t.TeamId).ToList();
 
@@ -411,7 +404,12 @@ namespace EnoCore
                     .SingleOrDefault();
                 if (dbTeam == null)
                 {
-                    Logger.LogInformation($"New Team: {team.Name}({team.Id})");
+                    logger.LogInfo(new EnoLogMessage()
+                    {
+                        Message = $"Adding team {team.Name}({team.Id})",
+                        Module = nameof(EnoDatabase),
+                        TeamName = team.Name
+                    });
                     ctx.Teams.Add(new Team()
                     {
                         VulnboxAddress = team.VulnboxAddress,
@@ -494,7 +492,12 @@ namespace EnoCore
                     .SingleOrDefault();
                 if (dbService == null)
                 {
-                    Logger.LogInformation($"New Service: {service.Name}");
+                    logger.LogInfo(new EnoLogMessage()
+                    {
+                        Message = $"Adding service {service.Name}",
+                        Module = nameof(EnoDatabase),
+                        ServiceName = service.Name
+                    });
                     ctx.Services.Add(new Service()
                     {
                         Name = service.Name,
@@ -656,7 +659,6 @@ namespace EnoCore
             }
             team.ServiceLevelAgreementPoints = slaScore;
             team.TotalPoints += slaScore;
-            Logger.LogInformation($"Team {team.Name}: SLA={slaScore}");
         }
 
         private static void CalculateDefenseScore(EnoEngineDBContext ctx, Service[] services, long currentRoundId, Team team)
@@ -685,7 +687,6 @@ namespace EnoCore
             }
             team.LostDefensePoints = teamDefenseScore;
             team.TotalPoints += teamDefenseScore;
-            Logger.LogInformation($"Team {team.Name}: Defense={teamDefenseScore}");
         }
 
         private static void CalculateOffenseScore(EnoEngineDBContext ctx, Service[] services, long currentRoundId, Team team)
@@ -714,7 +715,6 @@ namespace EnoCore
             }
             team.AttackPoints = offenseScore;
             team.TotalPoints += offenseScore;
-            Logger.LogInformation($"Team {team.Name}: Offense={offenseScore}");
         }
 
         private static ServiceStatus ComputeServiceStatus(EnoEngineDBContext ctx, Team team, Service service, long roundId)
@@ -761,15 +761,6 @@ namespace EnoCore
             }
             
             return ServiceStatus.Ok;
-        }
-
-        public static async Task InsertCheckerLogMessages(IEnumerable<CheckerLogMessage> logs)
-        {
-            using (var ctx = new EnoEngineDBContext())
-            {
-                ctx.Logs.AddRange(logs);
-                await ctx.SaveChangesAsync();
-            }
         }
     }
 }

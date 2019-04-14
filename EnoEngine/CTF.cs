@@ -23,9 +23,8 @@ namespace EnoEngine.Game
 
     class CTF : IFlagSubmissionHandler
     {
-        private static readonly ILogger Logger = EnoCoreUtils.Loggers.CreateLogger<CTF>();
+        private static readonly EnoLogger Logger = new EnoLogger(nameof(EnoEngine));
         private readonly SemaphoreSlim Lock = new SemaphoreSlim(1);
-        private readonly Random Rnd = new Random();
         private readonly CancellationToken Token;
         private readonly Task FlagSubmissionEndpointTask;
         
@@ -38,7 +37,12 @@ namespace EnoEngine.Game
         public async Task StartNewRound()
         {
             await Lock.WaitAsync(Token);
-            Logger.LogDebug("Starting new Round");
+            Logger.LogDebug(new EnoLogMessage()
+            {
+                Module = nameof(CTF),
+                Function = nameof(StartNewRound),
+                Message = "Starting new Round"
+            });
             double quatherLength = Program.Configuration.RoundLengthInSeconds / 4;
             DateTime begin = DateTime.Now;
             DateTime q2 = begin.AddSeconds(quatherLength);
@@ -75,14 +79,31 @@ namespace EnoEngine.Game
 
                 await insertPutNewNoisesTask;
                 await insertGetCurrentNoisesTask;
-                Logger.LogInformation($"Round {currentRound.Id} has started");
+                Logger.LogInfo(new EnoLogMessage()
+                {
+                    Module = nameof(CTF),
+                    Function = nameof(StartNewRound),
+                    RoundId = currentRound.Id,
+                    Message = $"Round {currentRound.Id} has started"
+                });
                 await handleOldRoundTask;
                 EnoCoreUtils.GenerateCurrentScoreboard($"..{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}scoreboard.json");
-                Logger.LogInformation($"Scoreboard calculation complete");
+                Logger.LogInfo(new EnoLogMessage()
+                {
+                    Module = nameof(CTF),
+                    Function = nameof(StartNewRound),
+                    RoundId = currentRound.Id-1,
+                    Message = $"Scoreboard calculation complete"
+                });
             }
             catch (Exception e)
             {
-                Logger.LogError($"StartNewRound failed: {EnoCoreUtils.FormatException(e)}");
+                Logger.LogError(new EnoLogMessage()//TODO link to round
+                {
+                    Module = nameof(CTF),
+                    Function = nameof(StartNewRound), 
+                    Message = $"StartNewRound failed: {EnoCoreUtils.FormatException(e)}"
+                });
             }
             finally
             {
@@ -99,8 +120,12 @@ namespace EnoEngine.Game
             }
             catch (Exception e)
             {
-                Logger.LogError($"HandleFlabSubmission() failed: {EnoCoreUtils.FormatException(e)}");
-
+                Logger.LogError(new EnoLogMessage()
+                {
+                    Module = nameof(CTF),
+                    Function = nameof(HandleFlagSubmission),
+                    Message = $"HandleFlabSubmission() failed: {EnoCoreUtils.FormatException(e)}"
+                });
                 return FlagSubmissionResult.UnknownError;
             }
         }
@@ -226,9 +251,14 @@ namespace EnoEngine.Game
 
         private async Task HandleRoundEnd(long roundId)
         {
-            Logger.LogDebug($"Handling end of round {roundId}");
             if (roundId > 0)
             {
+                Logger.LogTrace(new EnoLogMessage()
+                {
+                    Module = nameof(CTF),
+                    Function = nameof(HandleRoundEnd),
+                    RoundId = roundId,
+                });
                 await EnoDatabase.RecordServiceStates(roundId);
                 EnoDatabase.CalculatedAllPoints(roundId);
             }

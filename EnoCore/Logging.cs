@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using EnoCore.Models.Json;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -6,43 +8,55 @@ using System.Text;
 
 namespace EnoCore
 {
-    class EnoEngineConsoleLoggerProvider : ILoggerProvider
+    public class EnoLogger
     {
-        public ILogger CreateLogger(string categoryName)
+        private readonly string Tool;
+
+        public EnoLogger(string tool)
         {
-            return new EnoEngineConsoleLogger(categoryName);
+            Tool = tool;
         }
 
-        public void Dispose()
+        public void LogTrace(EnoLogMessage message)
         {
-
-        }
-    }
-
-    public class EnoEngineConsoleLogger : ILogger
-    {
-        private readonly string ClassName;
-
-        public EnoEngineConsoleLogger(string categoryName)
-        {
-            ClassName = categoryName;
+            message.Severity = "TRACE";
+            Log(message);
         }
 
-        public IDisposable BeginScope<TState>(TState state)
+        public void LogDebug(EnoLogMessage message)
         {
-            throw new NotImplementedException();
+            message.Severity = "DEBUG";
+            Log(message);
         }
 
-        public bool IsEnabled(LogLevel logLevel)
+        public void LogInfo(EnoLogMessage message)
         {
-            return true;
+            message.Severity = "INFO";
+            Log(message);
         }
 
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+        public void LogWarning(EnoLogMessage message)
         {
-            var line = string.Format("{0:s} [{1}] [{2}] ", DateTime.UtcNow, logLevel, ClassName) + formatter(state, exception);
-            Debug.WriteLine(line);
-            Console.WriteLine(line);
+            message.Severity = "WARNING";
+            Log(message);
+        }
+
+        public void LogError(EnoLogMessage message)
+        {
+            message.Severity = "ERROR";
+            Log(message);
+        }
+
+        public void LogFatal(EnoLogMessage message)
+        {
+            message.Severity = "FATAL";
+            Log(message);
+        }
+
+        private void Log(EnoLogMessage message)
+        {
+            message.Tool = Tool;
+            Console.WriteLine(JsonConvert.SerializeObject(message));
         }
     }
 }

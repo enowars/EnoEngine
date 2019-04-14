@@ -20,7 +20,7 @@ namespace EnoEngine
 {
     class Program
     {
-        private static readonly ILogger Logger = EnoCoreUtils.Loggers.CreateLogger<Program>();
+        private static readonly EnoLogger Logger = new EnoLogger(nameof(EnoEngine));
         private static readonly CancellationTokenSource EngineCancelSource = new CancellationTokenSource();
         public static JsonConfiguration Configuration { get; set; }
         CTF EnoGame;
@@ -29,19 +29,29 @@ namespace EnoEngine
         {
             // Gracefully shutdown when CTRL+C is invoked
             Console.CancelKeyPress += (s, e) => {
-                Logger.LogTrace("Shutting down EnoEngine");
+                Logger.LogInfo(new EnoLogMessage()
+                {
+                    Module = nameof(EnoEngine),
+                    Function = nameof(Start),
+                    Message = "Shutting down EnoEngine"
+                });
                 e.Cancel = true;
                 EngineCancelSource.Cancel();
             };
             if (!File.Exists("ctf.json"))
             {
-                Logger.LogCritical("Config (ctf.json) didn't exist. Creating...");
+                Logger.LogFatal(new EnoLogMessage()
+                {
+                    Module = nameof(EnoEngine),
+                    Function = nameof(Start),
+                    Message = "Config (ctf.json) didn't exist. Creating sample and exiting"
+                });
                 CreateConfig();
                 return 1;
             }
             var content = File.ReadAllText("ctf.json");
             Configuration = JsonConvert.DeserializeObject<JsonConfiguration>(content);
-            var result = EnoDatabase.ApplyConfig(Configuration);
+            var result = EnoDatabase.ApplyConfig(Configuration, Logger);
             if (result.Success)
             {
                 GameLoop().Wait();
@@ -49,8 +59,12 @@ namespace EnoEngine
             }
             else
             {
-                Logger.LogCritical(result.ErrorMessage);
-                Logger.LogCritical($"Invalid configuration, exiting");
+                Logger.LogFatal(new EnoLogMessage()
+                {
+                    Module = nameof(EnoEngine),
+                    Function = nameof(Start),
+                    Message = $"Invalid configuration, exiting ({result.ErrorMessage}"
+                });
                 return 1;
             }
         }
@@ -69,9 +83,19 @@ namespace EnoEngine
             catch (OperationCanceledException) { }
             catch (Exception e)
             {
-                Logger.LogError($"GameLoop failed: {EnoCoreUtils.FormatException(e)}");
+                Logger.LogError(new EnoLogMessage()
+                {
+                    Module = nameof(EnoEngine),
+                    Function = nameof(GameLoop),
+                    Message = $"GameLoop failed: {EnoCoreUtils.FormatException(e)}"
+                });
             }
-            Logger.LogTrace("GameLoop finished");
+            Logger.LogInfo(new EnoLogMessage()
+            {
+                Module = nameof(EnoEngine),
+                Function = nameof(GameLoop),
+                Message = "GameLoop finished"
+            });
         }
 
         private static void CreateConfig()
@@ -94,7 +118,12 @@ namespace EnoEngine
 
         public static void Main(string[] args)
         {
-            EnoCoreUtils.InitLogging();
+            Logger.LogInfo(new EnoLogMessage()
+            {
+                Module = nameof(EnoEngine),
+                Function = nameof(Main),
+                Message = "EnoEngine starting"
+            });
             new Program().Start();
         }
     }

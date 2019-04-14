@@ -14,7 +14,6 @@ namespace EnoCore
 {
     public class EnoCoreUtils
     {
-        public static readonly LoggerFactory Loggers = new LoggerFactory();
         private static readonly Random Random = new Random();
         private static readonly int IPV4_SUBNET_SIZE = 24;
         private static readonly int IPV6_SUBNET_SIZE = 64;
@@ -43,11 +42,6 @@ namespace EnoCore
                 fancy += $"\nInnerException:\n{FormatException(e.InnerException)}";
             }
             return fancy;
-        }
-
-        public static void InitLogging()
-        {
-            EnoCoreUtils.Loggers.AddProvider(new EnoEngineConsoleLoggerProvider());
         }
 
         public static void GenerateCurrentScoreboard(string path)

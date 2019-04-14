@@ -19,32 +19,6 @@ namespace EnoCore.Migrations
                 .HasAnnotation("ProductVersion", "2.2.3-servicing-35854")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            modelBuilder.Entity("EnoCore.Models.Database.CheckerLogMessage", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<string>("Message");
-
-                    b.Property<string>("Origin");
-
-                    b.Property<long>("RelatedTaskId");
-
-                    b.Property<int>("Severity");
-
-                    b.Property<DateTime>("Timestamp");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Id");
-
-                    b.HasIndex("RelatedTaskId");
-
-                    b.HasIndex("Timestamp");
-
-                    b.ToTable("Logs");
-                });
-
             modelBuilder.Entity("EnoCore.Models.Database.CheckerTask", b =>
                 {
                     b.Property<long>("Id")
@@ -63,6 +37,8 @@ namespace EnoCore.Migrations
                     b.Property<string>("Payload");
 
                     b.Property<long>("RelatedRoundId");
+
+                    b.Property<long>("RoundLength");
 
                     b.Property<long>("ServiceId");
 
@@ -321,14 +297,6 @@ namespace EnoCore.Migrations
                     b.HasIndex("Id");
 
                     b.ToTable("Teams");
-                });
-
-            modelBuilder.Entity("EnoCore.Models.Database.CheckerLogMessage", b =>
-                {
-                    b.HasOne("EnoCore.Models.Database.CheckerTask", "RelatedTask")
-                        .WithMany()
-                        .HasForeignKey("RelatedTaskId")
-                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("EnoCore.Models.Database.Havok", b =>

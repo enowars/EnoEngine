@@ -25,6 +25,7 @@ namespace EnoCore.Migrations
                     Payload = table.Column<string>(nullable: true),
                     StartTime = table.Column<DateTime>(nullable: false),
                     MaxRunningTime = table.Column<int>(nullable: false),
+                    RoundLength = table.Column<long>(nullable: false),
                     TaskIndex = table.Column<long>(nullable: false),
                     CheckerResult = table.Column<int>(nullable: false),
                     CheckerTaskLaunchStatus = table.Column<int>(nullable: false)
@@ -85,29 +86,6 @@ namespace EnoCore.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Teams", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Logs",
-                columns: table => new
-                {
-                    Id = table.Column<long>(nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
-                    Message = table.Column<string>(nullable: true),
-                    Timestamp = table.Column<DateTime>(nullable: false),
-                    Severity = table.Column<int>(nullable: false),
-                    RelatedTaskId = table.Column<long>(nullable: false),
-                    Origin = table.Column<string>(nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Logs", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Logs_CheckerTasks_RelatedTaskId",
-                        column: x => x.RelatedTaskId,
-                        principalTable: "CheckerTasks",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -360,21 +338,6 @@ namespace EnoCore.Migrations
                 column: "ServiceId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Logs_Id",
-                table: "Logs",
-                column: "Id");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Logs_RelatedTaskId",
-                table: "Logs",
-                column: "RelatedTaskId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Logs_Timestamp",
-                table: "Logs",
-                column: "Timestamp");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Noises_GameRoundId",
                 table: "Noises",
                 column: "GameRoundId");
@@ -469,10 +432,10 @@ namespace EnoCore.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Havoks");
+                name: "CheckerTasks");
 
             migrationBuilder.DropTable(
-                name: "Logs");
+                name: "Havoks");
 
             migrationBuilder.DropTable(
                 name: "Noises");
@@ -485,9 +448,6 @@ namespace EnoCore.Migrations
 
             migrationBuilder.DropTable(
                 name: "SubmittedFlags");
-
-            migrationBuilder.DropTable(
-                name: "CheckerTasks");
 
             migrationBuilder.DropTable(
                 name: "Flags");
