@@ -58,6 +58,7 @@ namespace EnoCore
             message.Tool = Tool;
             message.Timestamp = DateTime.Now.ToString(); //TODO chose a date format
             Debug.WriteLine(JsonConvert.SerializeObject(message));
+            Console.WriteLine(JsonConvert.SerializeObject(message));
         }
     }
 }
