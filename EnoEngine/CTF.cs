@@ -152,7 +152,8 @@ namespace EnoEngine.Game
                     ServiceId = flag.ServiceId,
                     TeamId = flag.OwnerId,
                     ServiceName = flag.Service.Name,
-                    CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New
+                    CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New,
+                    RoundLength = Program.Configuration.RoundLengthInSeconds
                 });
                 firstFlagTime = firstFlagTime.AddSeconds(timeDiff);
             }
@@ -181,7 +182,8 @@ namespace EnoEngine.Game
                     ServiceId = noise.ServiceId,
                     TeamId = noise.OwnerId,
                     ServiceName = noise.Service.Name,
-                    CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New
+                    CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New,
+                    RoundLength = Program.Configuration.RoundLengthInSeconds
                 });
                 firstFlagTime = firstFlagTime.AddSeconds(timeDiff);
             }
@@ -209,7 +211,8 @@ namespace EnoEngine.Game
                     TeamId = flag.OwnerId,
                     ServiceName = flag.Service.Name,
                     ServiceId = flag.ServiceId,
-                    CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New
+                    CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New,
+                    RoundLength = Program.Configuration.RoundLengthInSeconds
                 });
                 q3 = q3.AddSeconds(timeDiff);
             }
@@ -237,7 +240,8 @@ namespace EnoEngine.Game
                     TeamId = flag.OwnerId,
                     ServiceName = flag.Service.Name,
                     ServiceId = flag.ServiceId,
-                    CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New
+                    CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New,
+                    RoundLength = Program.Configuration.RoundLengthInSeconds
                 });
                 q3 = q3.AddSeconds(timeDiff);
             }

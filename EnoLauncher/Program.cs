@@ -29,7 +29,7 @@ namespace EnoLauncher
 
         public void Start()
         {
-            Client.Timeout = new TimeSpan(0, 1, 0);
+            Client.Timeout = new TimeSpan(0, 30, 0);
             LauncherLoop().Wait();
         }
 

@@ -335,7 +335,8 @@ namespace EnoCore
                         ServiceId = oldFlag.ServiceId,
                         TeamId = oldFlag.OwnerId,
                         ServiceName = oldFlag.Service.Name,
-                        CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New
+                        CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New,
+                        RoundLength = roundLengthInSeconds
                     };
                     oldFlagsCheckerTasks.Add(task);
                     time = time.AddSeconds(timeDiff);
