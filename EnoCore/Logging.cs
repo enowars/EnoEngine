@@ -56,6 +56,7 @@ namespace EnoCore
         private void Log(EnoLogMessage message)
         {
             message.Tool = Tool;
+            message.Timestamp = DateTime.Now.ToString(); //TODO chose a date format
             Console.WriteLine(JsonConvert.SerializeObject(message));
         }
     }
