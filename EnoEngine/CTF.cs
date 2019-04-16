@@ -93,7 +93,7 @@ namespace EnoEngine.Game
                     Module = nameof(CTF),
                     Function = nameof(StartNewRound),
                     RoundId = currentRound.Id-1,
-                    Message = $"Scoreboard calculation complete"
+                    Message = $"Scoreboard calculation for round {currentRound.Id - 1} complete"
                 });
             }
             catch (Exception e)
