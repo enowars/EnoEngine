@@ -49,7 +49,7 @@ namespace EnoLauncher
                 }
                 foreach (var task in tasks)
                 {
-                    var t = LaunchCheckerTask(task);
+                    var t = Task.Run(async () => await LaunchCheckerTask(task));
                 }
                 if (tasks.Count == 0)
                 {
@@ -65,7 +65,7 @@ namespace EnoLauncher
                 var message = EnoLogMessage.FromCheckerTask(task);
                 message.Module = nameof(EnoLauncher);
                 message.Function = nameof(LaunchCheckerTask);
-                message.Message = $"LaunchCheckerTask for task {task.Id}";
+                message.Message = $"LaunchCheckerTask for task {task.Id} ({task.TaskType}, currentRound={task.CurrentRoundId}, relatedRound={task.RelatedRoundId})";
                 Logger.LogTrace(message);
                 var cancelSource = new CancellationTokenSource();
                 var now = DateTime.Now;
@@ -79,14 +79,17 @@ namespace EnoLauncher
                 {
                     await Task.Delay(span);
                 }
-                cancelSource.CancelAfter(task.MaxRunningTime * 1000);
                 var content = new StringContent(JsonConvert.SerializeObject(task), Encoding.UTF8, "application/json");
-                message.Message = $"LaunchCheckerTask {task.Id} POSTing to checker";
+                message.Message = $"LaunchCheckerTask {task.Id} POSTing {task.TaskType} to checker";
                 Logger.LogTrace(message);
+                cancelSource.CancelAfter(task.MaxRunningTime * 1000);
                 var response = await Client.PostAsync(new Uri(ServicesDict[task.ServiceName].Checkers[0] + "/"), content, cancelSource.Token);
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
-                    dynamic responseJson = JsonConvert.DeserializeObject(await response.Content.ReadAsStringAsync());
+                    var responseString = await response.Content.ReadAsStringAsync();
+                    message.Message = $"LaunchCheckerTask received {responseString}";
+                    Logger.LogTrace(message);
+                    dynamic responseJson = JsonConvert.DeserializeObject(responseString);
                     string result = responseJson.result;
                     var checkerResult = EnoCoreUtils.ParseCheckerResult(result);
                     message.Message = $"LaunchCheckerTask {task.Id} returned {checkerResult}";
@@ -95,7 +98,7 @@ namespace EnoLauncher
                 }
                 else
                 {
-                    message.Message = $"LaunchCheckerTask {task.Id} returned error code {response.StatusCode}";
+                    message.Message = $"LaunchCheckerTask {task.Id} returned {response.StatusCode} ({(int) response.StatusCode})";
                     Logger.LogError(message);
                     await EnoDatabase.UpdateTaskCheckerTaskResult(task.Id, CheckerResult.CheckerError);
                 }
