@@ -262,7 +262,7 @@ namespace EnoCore
                         var flag = new Flag()
                         {
                             Owner = team,
-                            StringRepresentation = "ENO" + EnoCoreUtils.RandomString(31) + "=",
+                            StringRepresentation = EnoCoreUtils.GenerateSignedFlag((int) round.Id, (int) team.Id),
                             Service = service,
                             RoundOffset = i,
                             GameRound = round
@@ -291,7 +291,7 @@ namespace EnoCore
                         var noise = new Noise()
                         {
                             Owner = team,
-                            StringRepresentation = "ENO" + EnoCoreUtils.RandomString(31) + "=",
+                            StringRepresentation = EnoCoreUtils.GenerateSignedNoise((int)round.Id, (int)team.Id),
                             Service = service,
                             RoundOffset = i,
                             GameRound = round

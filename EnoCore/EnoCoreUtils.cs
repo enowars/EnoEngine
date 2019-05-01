@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Security.Cryptography;
 using System.Text;
 using EnoCore.Models.Database;
 using EnoCore.Models.Json;
@@ -14,9 +15,13 @@ namespace EnoCore
 {
     public class EnoCoreUtils
     {
-        private static readonly Random Random = new Random();
+        private static readonly RNGCryptoServiceProvider Random = new RNGCryptoServiceProvider();
+        private static readonly int ENTROPY_IN_BYTES = 8;
         private static readonly int IPV4_SUBNET_SIZE = 24;
         private static readonly int IPV6_SUBNET_SIZE = 64;
+        private static readonly byte[] FLAG_SIGNING_KEY = Encoding.ASCII.GetBytes("suchasecretstornkkeytheywillneverguess");
+        private static readonly byte[] NOISE_SIGNING_KEY = Encoding.ASCII.GetBytes("anotherstrenksecrettheyvref24tr");
+
 
         public static CheckerResult ParseCheckerResult(string result)
         {
@@ -78,11 +83,51 @@ namespace EnoCore
             return true;
         }
 
-        internal static string RandomString(int length)
+        internal static string GenerateSignedFlag(int roundId, int teamid)
         {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            return new string(Enumerable.Repeat(chars, length)
-                .Select(s => s[Random.Next(s.Length)]).ToArray());
+            using (HMACSHA1 hmacsha1 = new HMACSHA1(FLAG_SIGNING_KEY))
+            {
+                return GeneratedSignedString(hmacsha1, roundId, teamid);
+            }
+        }
+
+        internal static string GenerateSignedNoise(int roundId, int teamId)
+        {
+            using (HMACSHA1 hmacsha1 = new HMACSHA1(NOISE_SIGNING_KEY))
+            {
+                return GeneratedSignedString(hmacsha1, roundId, teamId);
+            }
+        }
+
+        public static bool IsValidFlag(string input)
+        {
+            try
+            {
+                var flag = input.Substring(3);
+                var flagBytes = Convert.FromBase64String(flag);
+                var flagContent = new ArraySegment<byte>(flagBytes, 0, sizeof(int) + ENTROPY_IN_BYTES);
+                var flagSignature = new ArraySegment<byte>(flagBytes, sizeof(int) + ENTROPY_IN_BYTES,
+                                                           flagBytes.Length - sizeof(int) - ENTROPY_IN_BYTES);
+                using (HMACSHA1 hmacsha1 = new HMACSHA1(FLAG_SIGNING_KEY))
+                {
+                    byte[] hash = hmacsha1.ComputeHash(flagBytes, 0, sizeof(int) + ENTROPY_IN_BYTES);
+                    return flagSignature.SequenceEqual(hash);
+                }
+            }
+            catch (Exception) { }
+            return false;
+        }
+
+        private static string GeneratedSignedString(HMAC hmac, int roundId, int teamId)
+        {
+            byte[] flagContent = new byte[sizeof(int) + ENTROPY_IN_BYTES];
+            Random.GetBytes(flagContent, sizeof(int), ENTROPY_IN_BYTES);
+            BitConverter.GetBytes(roundId).CopyTo(flagContent, 0);
+            byte[] flagSignature = hmac.ComputeHash(flagContent);
+            byte[] flag = new byte[flagContent.Length + flagSignature.Length];
+            flagContent.CopyTo(flag, 0);
+            flagSignature.CopyTo(flag, flagContent.Length);
+            return "ENO" + Convert.ToBase64String(flag);
         }
     }
 }

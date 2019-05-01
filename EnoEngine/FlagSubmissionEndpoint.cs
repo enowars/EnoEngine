@@ -87,7 +87,7 @@ namespace EnoEngine.FlagSubmission
                 while (!Token.IsCancellationRequested && line != null)
                 {
                     var endpoint = (IPEndPoint) client.Client.RemoteEndPoint;
-                    var result = (await Handler.HandleFlagSubmission(line, endpoint.Address.ToString()));
+                    var result = await Handler.HandleFlagSubmission(line, endpoint.Address.ToString());
                     var resultArray = Encoding.ASCII.GetBytes(FormatSubmissionResult(result) + "\n");
                     await client.GetStream().WriteAsync(resultArray, 0, resultArray.Length);
                     line = await reader.ReadLineAsync();

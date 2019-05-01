@@ -112,8 +112,11 @@ namespace EnoEngine.Game
         }
 
         public async Task<FlagSubmissionResult> HandleFlagSubmission(string flag, string attackerSubmissionAddress)
-        {
-            //TODO check signature
+        { 
+            if (!EnoCoreUtils.IsValidFlag(flag))
+            {
+                return FlagSubmissionResult.Invalid;
+            }
             try
             {
                 return await EnoDatabase.InsertSubmittedFlag(flag, attackerSubmissionAddress, Program.Configuration.FlagValidityInRounds);
