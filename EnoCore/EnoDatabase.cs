@@ -94,6 +94,7 @@ namespace EnoCore
         public static DBInitializationResult ApplyConfig(JsonConfiguration config, EnoLogger logger)
         {
             logger.LogTrace(new EnoLogMessage() {
+                Message = "Applying configuration to database",
                 Function = "ApplyConfig",
                 Module = nameof(EnoDatabase)
             });
@@ -198,6 +199,14 @@ namespace EnoCore
                     });
                     ctx.Database.Migrate();
                     ctx.SaveChanges();
+                }
+                else
+                {
+                    logger.LogDebug(new EnoLogMessage()
+                    {
+                        Message = $"No pending migrations",
+                        Function = "Migrate"
+                    });
                 }
             }
         }

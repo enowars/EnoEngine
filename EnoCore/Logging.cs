@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 
 namespace EnoCore
@@ -56,7 +57,7 @@ namespace EnoCore
         private void Log(EnoLogMessage message)
         {
             message.Tool = Tool;
-            message.Timestamp = DateTime.Now.ToString(); //TODO chose a date format
+            message.Timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture);
             Debug.WriteLine(JsonConvert.SerializeObject(message));
             Console.WriteLine(message.Message);
         }
