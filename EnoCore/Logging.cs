@@ -57,7 +57,7 @@ namespace EnoCore
         private void Log(EnoLogMessage message)
         {
             message.Tool = Tool;
-            message.Timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture);
+            message.Timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture);
             Debug.WriteLine(JsonConvert.SerializeObject(message));
             Console.WriteLine(message.Message);
         }
