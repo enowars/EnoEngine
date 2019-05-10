@@ -48,7 +48,10 @@ namespace EnoCore
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             var databaseDomain = Environment.GetEnvironmentVariable("DATABASE_DOMAIN") ?? "localhost";
-            optionsBuilder.UseNpgsql($@"Server={databaseDomain};Port=5432;Database=EnoDatabase;User Id=docker;Password=docker;Timeout=15;SslMode=Disable;");
+            optionsBuilder
+                .UseNpgsql(
+                    $@"Server={databaseDomain};Port=5432;Database=EnoDatabase;User Id=docker;Password=docker;Timeout=15;SslMode=Disable;",
+                    options => options.EnableRetryOnFailure());
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -235,6 +238,7 @@ namespace EnoCore
         {
             using (var ctx = new EnoEngineDBContext())
             {
+                await RetryConnection(ctx);
                 ctx.AddRange(tasks);
                 await ctx.SaveChangesAsync();
             }
@@ -244,6 +248,7 @@ namespace EnoCore
         {
             using (var ctx = new EnoEngineDBContext())
             {
+                await RetryConnection(ctx);
                 var tasks = await ctx.CheckerTasks
                     .Where(t => t.CheckerTaskLaunchStatus == CheckerTaskLaunchStatus.New)
                     .Take(maxAmount)
@@ -318,6 +323,7 @@ namespace EnoCore
             int quarterRound = roundLengthInSeconds / 4;
             using (var ctx = new EnoEngineDBContext())
             {
+                await RetryConnection(ctx);
                 var oldFlags = await ctx.Flags
                     .Where(f => f.GameRoundId + oldRoundsCount >= currentRound.Id)
                     .Where(f => f.GameRoundId != currentRound.Id)
@@ -771,6 +777,19 @@ namespace EnoCore
             }
             
             return ServiceStatus.Ok;
+        }
+
+        private static async Task RetryConnection(EnoEngineDBContext ctx)
+        {
+            for (int i = 0; i < 100; i++)
+            {
+                try
+                {
+                    await ctx.Database.OpenConnectionAsync();
+                    break;
+                }
+                catch (Exception) { }
+            }
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using EnoCore.Models.Json;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -59,7 +58,7 @@ namespace EnoCore
             message.Tool = Tool;
             message.Timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture);
             Debug.WriteLine(JsonConvert.SerializeObject(message));
-            Console.WriteLine(message.Message);
+            Console.WriteLine($"{message.Timestamp} {message.Message}");
         }
     }
 }

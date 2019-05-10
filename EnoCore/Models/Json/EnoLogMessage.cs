@@ -43,7 +43,7 @@ namespace EnoCore.Models.Json
                 Flag = task.Payload,
                 RoundId = task.CurrentRoundId,
                 TeamName = task.TeamName,
-                Timestamp = DateTime.Now.ToLongTimeString(),
+                Timestamp = DateTime.UtcNow.ToLongTimeString(),
                 CheckerTaskId = task.Id,
                 FlagIndex = task.TaskIndex,
                 ServiceName = task.ServiceName

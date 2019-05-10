@@ -6,6 +6,8 @@ using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using EnoCore.Models.Database;
 using EnoCore.Models.Json;
 using Microsoft.Extensions.Logging;
@@ -128,6 +130,17 @@ namespace EnoCore
             flagContent.CopyTo(flag, 0);
             flagSignature.CopyTo(flag, flagContent.Length);
             return "ENO" + Convert.ToBase64String(flag);
+        }
+
+        public static async Task DelayUntil(DateTime time, CancellationToken token)
+        {
+            var now = DateTime.UtcNow;
+            if (now > time)
+            {
+                return;
+            }
+            var diff = time - now;
+            await Task.Delay(diff, token);
         }
     }
 }

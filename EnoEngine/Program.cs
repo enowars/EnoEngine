@@ -76,8 +76,8 @@ namespace EnoEngine
                 EnoGame = new CTF(EngineCancelSource.Token);
                 while (!EngineCancelSource.IsCancellationRequested)
                 {
-                    await EnoGame.StartNewRound();
-                    await Task.Delay(Configuration.RoundLengthInSeconds * 1000, EngineCancelSource.Token);
+                    var end = await EnoGame.StartNewRound();
+                    await EnoCoreUtils.DelayUntil(end, EngineCancelSource.Token);
                 }
             }
             catch (OperationCanceledException) { }

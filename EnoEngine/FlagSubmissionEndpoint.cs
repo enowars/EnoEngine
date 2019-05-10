@@ -38,6 +38,7 @@ namespace EnoEngine.FlagSubmission
                     var clientTask = HandleSubmissionClient(client);
                 }
             }
+            catch (ObjectDisposedException) { }
             catch (TaskCanceledException) { }
             catch (Exception e)
             {

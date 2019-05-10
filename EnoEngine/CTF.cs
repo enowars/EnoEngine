@@ -34,7 +34,7 @@ namespace EnoEngine.Game
             FlagSubmissionEndpointTask = new FlagSubmissionEndpoint(this, token).Run();
         }
 
-        public async Task StartNewRound()
+        public async Task<DateTime> StartNewRound()
         {
             await Lock.WaitAsync(Token);
             Logger.LogDebug(new EnoLogMessage()
@@ -44,7 +44,7 @@ namespace EnoEngine.Game
                 Message = "Starting new Round"
             });
             double quatherLength = Program.Configuration.RoundLengthInSeconds / 4;
-            DateTime begin = DateTime.Now;
+            DateTime begin = DateTime.UtcNow;
             DateTime q2 = begin.AddSeconds(quatherLength);
             DateTime q3 = begin.AddSeconds(quatherLength * 2);
             DateTime q4 = begin.AddSeconds(quatherLength * 3);
@@ -55,8 +55,9 @@ namespace EnoEngine.Game
                 (var currentRound, var currentFlags, var currentNoises) = EnoDatabase.CreateNewRound(begin, q2, q3, q4, end);
                 long observedRounds = Program.Configuration.CheckedRoundsPerRound > currentRound.Id ? currentRound.Id : Program.Configuration.CheckedRoundsPerRound;
 
-                // start the evaluation TODO deferred?
-                var handleOldRoundTask = HandleRoundEnd(currentRound.Id - 1);
+                // start the evaluation
+                var handleOldRoundTask = Task.Run(async () => await HandleRoundEnd(currentRound.Id - 1));
+
                 // insert put tasks
                 var insertPutNewFlagsTask = Task.Run(async () => await InsertPutFlagsTasks(begin, currentFlags));
                 var insertPutNewNoisesTask = Task.Run(async () => await InsertPutNoisesTasks(begin, currentNoises));
@@ -84,16 +85,15 @@ namespace EnoEngine.Game
                     Module = nameof(CTF),
                     Function = nameof(StartNewRound),
                     RoundId = currentRound.Id,
-                    Message = $"Round {currentRound.Id} has started"
+                    Message = $"All checker tasks for {currentRound.Id} are created"
                 });
-                await handleOldRoundTask;
-                EnoCoreUtils.GenerateCurrentScoreboard($"..{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}scoreboard.json");
+                var oldRoundHandlingFinished = await handleOldRoundTask;
                 Logger.LogInfo(new EnoLogMessage()
                 {
                     Module = nameof(CTF),
                     Function = nameof(StartNewRound),
                     RoundId = currentRound.Id-1,
-                    Message = $"Scoreboard calculation for round {currentRound.Id - 1} complete"
+                    Message = $"Scoreboard calculation for round {currentRound.Id - 1} complete ({(oldRoundHandlingFinished - begin).ToString()})"
                 });
             }
             catch (Exception e)
@@ -109,6 +109,7 @@ namespace EnoEngine.Game
             {
                 Lock.Release();
             }
+            return end;
         }
 
         public async Task<FlagSubmissionResult> HandleFlagSubmission(string flag, string attackerSubmissionAddress)
@@ -256,19 +257,15 @@ namespace EnoEngine.Game
             await EnoDatabase.InsertRetrieveOldFlagsTasks(currentRound, Program.Configuration.CheckedRoundsPerRound - 1, Program.Configuration.RoundLengthInSeconds);
         }
 
-        private async Task HandleRoundEnd(long roundId)
+        private async Task<DateTime> HandleRoundEnd(long roundId)
         {
             if (roundId > 0)
             {
-                Logger.LogTrace(new EnoLogMessage()
-                {
-                    Module = nameof(CTF),
-                    Function = nameof(HandleRoundEnd),
-                    RoundId = roundId,
-                });
                 await EnoDatabase.RecordServiceStates(roundId);
                 EnoDatabase.CalculatedAllPoints(roundId);
             }
+            EnoCoreUtils.GenerateCurrentScoreboard($"..{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}scoreboard.json");
+            return DateTime.UtcNow;
         }
     }
 }
