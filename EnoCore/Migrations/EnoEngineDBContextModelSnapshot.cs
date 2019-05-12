@@ -58,6 +58,8 @@ namespace EnoCore.Migrations
 
                     b.HasIndex("CheckerTaskLaunchStatus");
 
+                    b.HasIndex("CurrentRoundId");
+
                     b.HasIndex("Id");
 
                     b.ToTable("CheckerTasks");
@@ -285,8 +287,6 @@ namespace EnoCore.Migrations
                     b.Property<double>("ServiceLevelAgreementPoints");
 
                     b.Property<long>("ServiceStatsId");
-
-                    b.Property<long>("TeamId");
 
                     b.Property<double>("TotalPoints");
 

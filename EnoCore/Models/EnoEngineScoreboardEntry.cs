@@ -10,7 +10,7 @@ namespace EnoCore.Models
         private readonly Team Team;
 
         public string Name { get => Team.Name; }
-        public long TeamId { get => Team.TeamId; }
+        public long TeamId { get => Team.Id; }
         public double TotalPoints { get => Team.TotalPoints; }
         public double AttackPoints { get => Team.AttackPoints; }
         public double LostDefensePoints { get => Team.LostDefensePoints; }

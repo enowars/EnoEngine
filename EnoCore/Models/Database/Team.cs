@@ -7,7 +7,6 @@ namespace EnoCore.Models
     public class Team
     {
         public long Id { get; set; }
-        public long TeamId { get; set; }
         public string Name { get; set; }
         public string VulnboxAddress { get; set; }
         public string GatewayAddress { get; set; }

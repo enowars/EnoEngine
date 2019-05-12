@@ -4,6 +4,7 @@ using EnoCore.Models.Json;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -16,12 +17,16 @@ namespace EnoLauncher
 {
     class Program
     {
+        private const int TASK_UPDATE_BATCH_SIZE = 500;
+        private static readonly ConcurrentQueue<CheckerTask> ResultsQueue = new ConcurrentQueue<CheckerTask>();
         private static readonly CancellationTokenSource LauncherCancelSource = new CancellationTokenSource();
         private static readonly EnoLogger Logger = new EnoLogger(nameof(EnoLauncher));
         private static readonly HttpClient Client = new HttpClient();
-        private readonly Dictionary<string, JsonConfigurationService> ServicesDict;
-        public static JsonConfiguration Configuration { get; set; }
+        private static readonly Task UpdateDatabaseTask = Task.Run(async () => await UpdateDatabase());
 
+        private readonly Dictionary<string, JsonConfigurationService> ServicesDict;
+
+        public static JsonConfiguration Configuration { get; set; }
         public Program(Dictionary<string, JsonConfigurationService> servicesDict)
         {
             ServicesDict = servicesDict;
@@ -29,7 +34,7 @@ namespace EnoLauncher
 
         public void Start()
         {
-            Client.Timeout = new TimeSpan(0, 30, 0);
+            Client.Timeout = new TimeSpan(0, 1, 0);
             LauncherLoop().Wait();
         }
 
@@ -86,7 +91,7 @@ namespace EnoLauncher
                 var response = await Client.PostAsync(new Uri(ServicesDict[task.ServiceName].Checkers[0] + "/"), content, cancelSource.Token);
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
-                    var responseString = await response.Content.ReadAsStringAsync();
+                    var responseString = (await response.Content.ReadAsStringAsync()).TrimEnd(Environment.NewLine.ToCharArray());
                     message.Message = $"LaunchCheckerTask received {responseString}";
                     Logger.LogTrace(message);
                     dynamic responseJson = JsonConvert.DeserializeObject(responseString);
@@ -94,13 +99,17 @@ namespace EnoLauncher
                     var checkerResult = EnoCoreUtils.ParseCheckerResult(result);
                     message.Message = $"LaunchCheckerTask {task.Id} returned {checkerResult}";
                     Logger.LogTrace(message);
-                    await EnoDatabase.UpdateTaskCheckerTaskResult(task.Id, checkerResult);
+                    task.CheckerResult = checkerResult;
+                    task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
+                    ResultsQueue.Enqueue(task);
                 }
                 else
                 {
                     message.Message = $"LaunchCheckerTask {task.Id} returned {response.StatusCode} ({(int) response.StatusCode})";
                     Logger.LogError(message);
-                    await EnoDatabase.UpdateTaskCheckerTaskResult(task.Id, CheckerResult.CheckerError);
+                    task.CheckerResult = CheckerResult.CheckerError;
+                    task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
+                    ResultsQueue.Enqueue(task);
                 }
             }
             catch (Exception e)
@@ -110,7 +119,9 @@ namespace EnoLauncher
                 message.Function = nameof(LaunchCheckerTask);
                 message.Message = $"{nameof(LaunchCheckerTask)} failed: {EnoCoreUtils.FormatException(e)}";
                 Logger.LogError(message);
-                await EnoDatabase.UpdateTaskCheckerTaskResult(task.Id, CheckerResult.CheckerError);
+                task.CheckerResult = CheckerResult.CheckerError;
+                task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
+                ResultsQueue.Enqueue(task);
             }
         }
 
@@ -141,6 +152,45 @@ namespace EnoLauncher
                     Module = nameof(EnoLauncher),
                     Function = nameof(Main),
                     Message = $"EnoLauncher failed: {EnoCoreUtils.FormatException(e)}"
+                });
+            }
+        }
+
+        static async Task UpdateDatabase()
+        {
+            try
+            {
+                while (!LauncherCancelSource.IsCancellationRequested)
+                {
+                    CheckerTask[] results = new CheckerTask[TASK_UPDATE_BATCH_SIZE];
+                    int i = 0;
+                    while (i < TASK_UPDATE_BATCH_SIZE)
+                    {
+                        if (ResultsQueue.TryDequeue(out var result))
+                        {
+                            results[i] = result;
+                            i += 1;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                    await EnoDatabase.UpdateTaskCheckerTaskResults(results.AsMemory(0, i));
+                    if (i != TASK_UPDATE_BATCH_SIZE)
+                    {
+                        await Task.Delay(1);
+                    }
+                }
+            }
+            catch (TaskCanceledException) { }
+            catch (Exception e)
+            {
+                Logger.LogFatal(new EnoLogMessage()
+                {
+                    Module = nameof(EnoLauncher),
+                    Function = nameof(UpdateDatabase),
+                    Message = $"UpdateDatabase failed: {EnoCoreUtils.FormatException(e)}"
                 });
             }
         }

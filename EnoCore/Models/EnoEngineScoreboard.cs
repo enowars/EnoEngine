@@ -8,7 +8,7 @@ namespace EnoCore.Models
     {
         private readonly Round Round;
 
-        public long CurrentRound { get => Round.Id; }
+        public long CurrentRound { get => Round?.Id ?? 0; }
         public List<EnoEngineScoreboardEntry> Teams { get; set; } = new List<EnoEngineScoreboardEntry>();
         public Dictionary<long, EnoEngineScoreboardService> Services { get; } = new Dictionary<long, EnoEngineScoreboardService>();
 

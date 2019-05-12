@@ -51,11 +51,12 @@ namespace EnoCore
             return fancy;
         }
 
-        public static void GenerateCurrentScoreboard(string path)
+        public static void GenerateCurrentScoreboard(string path, long roundId)
         {
-            var scoreboard = EnoDatabase.GetCurrentScoreboard();
+            var scoreboard = EnoDatabase.GetCurrentScoreboard(roundId);
             var json = JsonConvert.SerializeObject(scoreboard);
-            File.WriteAllText(path, json);
+            File.WriteAllText($"{path}scoreboard{roundId}.json", json);
+            File.WriteAllText($"{path}scoreboard.json", json);
         }
 
         public static bool IsSameSubnet(string ipA, string ipB)

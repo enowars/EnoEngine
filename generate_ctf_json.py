@@ -7,7 +7,7 @@ config = '''{
 for i in range(256):
     config += '''{
         "Id": '''+str(i+1)+''',
-        "Name": "teamname",
+        "Name": "teamname'''+str(i+1)+'''",
         "VulnboxAddress": "::1",
         "GatewayAddress": "::1"
     },'''
@@ -21,7 +21,7 @@ config += '''],
         "RunsPerNoise": 1,
         "RunsPerHavok": 0,
         "WeightFactor": 1,
-        "Checkers": ["http://127.0.0.1:5001"]
+        "Checkers": ["http://127.0.0.1:3031"]
     },{
         "Name": "teapot",
         "FlagsPerRound": 1,
@@ -30,7 +30,7 @@ config += '''],
         "RunsPerNoise": 1,
         "RunsPerHavok": 0,
         "WeightFactor": 1,
-        "Checkers": ["http://127.0.0.1:4002"]
+        "Checkers": ["http://127.0.0.1:3031"]
     },{
         "Name": "secretstore",
         "FlagsPerRound": 1,
@@ -39,7 +39,7 @@ config += '''],
         "RunsPerNoise": 1,
         "RunsPerHavok": 0,
         "WeightFactor": 1,
-        "Checkers": ["http://127.0.0.1:1711"]
+        "Checkers": ["http://127.0.0.1:3031"]
     },{
         "Name": "socks",
         "FlagsPerRound": 1,
@@ -48,7 +48,7 @@ config += '''],
         "RunsPerNoise": 1,
         "RunsPerHavok": 0,
         "WeightFactor": 1,
-        "Checkers": ["http://127.0.0.1:3025"]
+        "Checkers": ["http://127.0.0.1:3031"]
     },{
         "Name": "faustnotes",
         "FlagsPerRound": 1,
@@ -57,7 +57,7 @@ config += '''],
         "RunsPerNoise": 1,
         "RunsPerHavok": 0,
         "WeightFactor": 1,
-        "Checkers": ["http://127.0.0.1:7457"]
+        "Checkers": ["http://127.0.0.1:3031"]
     },{
         "Name": "pie",
         "FlagsPerRound": 1,
@@ -66,7 +66,7 @@ config += '''],
         "RunsPerNoise": 1,
         "RunsPerHavok": 0,
         "WeightFactor": 1,
-        "Checkers": ["http://127.0.0.1:2342"]
+        "Checkers": ["http://127.0.0.1:3031"]
     },{
         "Name": "taskk33per",
         "FlagsPerRound": 1,
@@ -84,7 +84,7 @@ config += '''],
         "RunsPerNoise": 1,
         "RunsPerHavok": 0,
         "WeightFactor": 1,
-        "Checkers": ["http://127.0.0.1:41414"]
+        "Checkers": ["http://127.0.0.1:3031"]
     }]
 }'''
 print(config)

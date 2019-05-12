@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using EnoCore.Models.Json;
 using EnoCore.Models.Database;
 using Microsoft.Extensions.Logging;
+using System.Runtime.InteropServices;
 
 namespace EnoCore
 {
@@ -62,6 +63,9 @@ namespace EnoCore
             modelBuilder.Entity<CheckerTask>()
                 .HasIndex(ct => ct.CheckerTaskLaunchStatus);
 
+            modelBuilder.Entity<CheckerTask>()
+                .HasIndex(ct => ct.CurrentRoundId);
+
             modelBuilder.Entity<Flag>()
                 .HasIndex(f => f.Id);
 
@@ -79,6 +83,9 @@ namespace EnoCore
 
             modelBuilder.Entity<RoundTeamServiceState>()
                 .HasIndex(rtss => rtss.Id);
+
+            modelBuilder.Entity<RoundTeamServiceState>()
+                .HasIndex(rtss => rtss.GameRoundId);
 
             modelBuilder.Entity<SubmittedFlag>()
                 .HasIndex(sf => sf.Id);
@@ -157,7 +164,7 @@ namespace EnoCore
                             return FlagSubmissionResult.Invalid;
                         if (dbAttackerTeam == null)
                             return FlagSubmissionResult.InvalidSenderError;
-                        if (dbFlag.Owner.TeamId == dbAttackerTeam.TeamId)
+                        if (dbFlag.Owner.Id == dbAttackerTeam.Id)
                             return FlagSubmissionResult.Own;
                         if (dbFlag.GameRoundId < currentRound.Id - flagValidityInRounds)
                             return FlagSubmissionResult.Old;
@@ -361,12 +368,15 @@ namespace EnoCore
             }
         }
 
-        internal static EnoEngineScoreboard GetCurrentScoreboard()
+        internal static EnoEngineScoreboard GetCurrentScoreboard(long roundId)
         {
             using (var ctx = new EnoEngineDBContext())
             {
                 var teams = ctx.Teams.AsNoTracking().OrderByDescending(t => t.TotalPoints).ToList();
-                var round = ctx.Rounds.AsNoTracking().Last();
+                var round = ctx.Rounds
+                    .AsNoTracking()
+                    .Where(r => r.Id == roundId)
+                    .LastOrDefault();
                 var services = ctx.Services.AsNoTracking().ToList();
                 var scoreboard = new EnoEngineScoreboard(round, services);
                 foreach (var team in teams)
@@ -383,7 +393,7 @@ namespace EnoCore
 
         private static DBInitializationResult FillDatabase(EnoEngineDBContext ctx, JsonConfiguration config, EnoLogger logger)
         {
-            var staleDbTeamIds = ctx.Teams.Select(t => t.TeamId).ToList();
+            var staleDbTeamIds = ctx.Teams.Select(t => t.Id).ToList();
 
             // insert (valid!) teams
             foreach (var team in config.Teams)
@@ -416,7 +426,7 @@ namespace EnoCore
 
                 // check if team is already present
                 var dbTeam = ctx.Teams
-                    .Where(t => t.TeamId == team.Id)
+                    .Where(t => t.Id == team.Id)
                     .SingleOrDefault();
                 if (dbTeam == null)
                 {
@@ -431,7 +441,7 @@ namespace EnoCore
                         VulnboxAddress = team.VulnboxAddress,
                         GatewayAddress = team.GatewayAddress,
                         Name = team.Name,
-                        TeamId = team.Id
+                        Id = team.Id
                     });
                 }
                 else
@@ -439,7 +449,7 @@ namespace EnoCore
                     dbTeam.VulnboxAddress = team.VulnboxAddress;
                     dbTeam.GatewayAddress = team.GatewayAddress;
                     dbTeam.Name = team.Name;
-                    dbTeam.TeamId = team.Id;
+                    dbTeam.Id = team.Id;
                     staleDbTeamIds.Remove(team.Id);
                 }
             }
@@ -580,6 +590,7 @@ namespace EnoCore
         {
             using (var ctx = new EnoEngineDBContext())
             {
+                await RetryConnection(ctx);
                 var round = await ctx.Rounds
                     .Where(r => r.Id == roundId)
                     .AsNoTracking()
@@ -591,7 +602,7 @@ namespace EnoCore
                 {
                     foreach (var service in services)
                     {
-                        var reportedStatus = ComputeServiceStatus(ctx, team, service, roundId);
+                        var reportedStatus = await ComputeServiceStatus(ctx, team, service, roundId);
                         var roundTeamServiceState = new RoundTeamServiceState()
                         {
                             FlagsCaptured = 0,
@@ -603,81 +614,91 @@ namespace EnoCore
                         };
                         ctx.RoundTeamServiceStates.Add(roundTeamServiceState);
 
-                        var dbGlobalTeamServiceStats = ctx.ServiceStats
-                           .Where(ss => ss.TeamId == team.TeamId && ss.ServiceId == service.Id)
-                           .Single().Status = reportedStatus;
+                        (await ctx.ServiceStats
+                           .Where(ss => ss.TeamId == team.Id && ss.ServiceId == service.Id)
+                           .SingleAsync()).Status = reportedStatus;
                     }
                 }
                 await ctx.SaveChangesAsync();
             }
         }
 
-        public static void CalculatedAllPoints(long roundId)
+        public static async Task CalculatedAllPoints(long roundId)
         {
             using (var ctx = new EnoEngineDBContext())
             {
+                await RetryConnection(ctx);
                 var services = ctx.Services.ToArray();
-                var teams = ctx.Teams;
+                var teams = await ctx.Teams
+                    .AsNoTracking()
+                    .ToArrayAsync();
+                var tasks = new Task[teams.Length];
+                int i = 0;
                 foreach (var team in teams)
                 {
-                    CalculateTeamScore(ctx, services, roundId, team);
-                    ctx.SaveChanges();
+                    tasks[i] = Task.Run(async () => await CalculateTeamScore(services, roundId, team));
+                    i += 1;
                 }
+                await Task.WhenAll(tasks);
             }
         }
 
-        public static async Task UpdateTaskCheckerTaskResult(long checkerTaskId, CheckerResult checkerResult)
+        public static async Task UpdateTaskCheckerTaskResults(Memory<CheckerTask> tasks)
         {
             using (var ctx = new EnoEngineDBContext())
             {
-                var task = await ctx.CheckerTasks
-                    .Where(ct => ct.Id == checkerTaskId)
-                    .SingleAsync();
-                task.CheckerResult = checkerResult;
-                task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
+                await RetryConnection(ctx);
+                var tasksEnumerable = MemoryMarshal.ToEnumerable<CheckerTask>(tasks);
+                ctx.UpdateRange(tasksEnumerable);
                 await ctx.SaveChangesAsync();
             }
         }
 
-        private static void CalculateTeamScore(EnoEngineDBContext ctx, Service[] services, long currentRoundId, Team team)
+        private static async Task CalculateTeamScore(Service[] services, long currentRoundId, Team team)
         {
-            team.TotalPoints = 0;
-            CalculateOffenseScore(ctx, services, currentRoundId, team);
-            CalculateDefenseScore(ctx, services, currentRoundId, team);
-            CalculateSLAScore(ctx, services, currentRoundId, team);
+            using (var ctx = new EnoEngineDBContext())
+            {
+                await RetryConnection(ctx);
+                team = await ctx.Teams.SingleAsync(t => t.Id == team.Id);
+                team.TotalPoints = 0;
+                await CalculateOffenseScore(ctx, services, currentRoundId, team);
+                await CalculateDefenseScore(ctx, services, currentRoundId, team);
+                await CalculateSLAScore(ctx, services, currentRoundId, team);
+                await ctx.SaveChangesAsync();
+            }
         }
 
-        private static void CalculateSLAScore(EnoEngineDBContext ctx, Service[] services, long currentRoundId, Team team)
+        private static async Task CalculateSLAScore(EnoEngineDBContext ctx, Service[] services, long currentRoundId, Team team)
         {
             double slaScore = 0;
             double teamsCount = ctx.Teams.Count();
             foreach (var service in services)
             {
-                double ups = ctx.RoundTeamServiceStates
+                double ups = await ctx.RoundTeamServiceStates
+                    .Where(rtss => rtss.GameRoundId <= currentRoundId)
                     .Where(rtss => rtss.TeamId == team.Id)
                     .Where(rtss => rtss.ServiceId == service.Id)
                     .Where(rtss => rtss.Status == ServiceStatus.Ok)
-                    .Where(rtss => rtss.GameRoundId <= currentRoundId)
-                    .Count();
+                    .CountAsync();
 
-                double recovers = ctx.RoundTeamServiceStates
+                double recovers = await ctx.RoundTeamServiceStates
+                    .Where(rtss => rtss.GameRoundId <= currentRoundId)
                     .Where(rtss => rtss.TeamId == team.Id)
                     .Where(rtss => rtss.ServiceId == service.Id)
                     .Where(rtss => rtss.Status == ServiceStatus.Recovering)
-                    .Where(rtss => rtss.GameRoundId <= currentRoundId)
-                    .Count();
+                    .CountAsync();
 
                 double serviceSlaScore = (ups + 0.5 * recovers) * Math.Sqrt(teamsCount);
                 slaScore += serviceSlaScore;
-                ctx.ServiceStats
+                (await ctx.ServiceStats
                     .Where(ss => ss.TeamId == team.Id && ss.ServiceId == service.Id)
-                    .Single().ServiceLevelAgreementPoints = serviceSlaScore;
+                    .SingleAsync()).ServiceLevelAgreementPoints = serviceSlaScore;
             }
             team.ServiceLevelAgreementPoints = slaScore;
             team.TotalPoints += slaScore;
         }
 
-        private static void CalculateDefenseScore(EnoEngineDBContext ctx, Service[] services, long currentRoundId, Team team)
+        private static async Task CalculateDefenseScore(EnoEngineDBContext ctx, Service[] services, long currentRoundId, Team team)
         {
             double teamDefenseScore = 0;
             foreach (var service in services)
@@ -690,22 +711,22 @@ namespace EnoCore
 
                 foreach (var ownedFlag in ownedFlags)
                 {
-                    double allCapturesOfFlag = ctx.SubmittedFlags
+                    double allCapturesOfFlag = (await ctx.SubmittedFlags
                         .Where(f => f.FlagId == ownedFlag.Id)
-                        .Count();
+                        .CountAsync());
 
                     serviceDefenseScore -= Math.Pow(allCapturesOfFlag, 0.75);
                 }
                 teamDefenseScore += serviceDefenseScore;
-                ctx.ServiceStats
+                (await ctx.ServiceStats
                     .Where(ss => ss.TeamId == team.Id && ss.ServiceId == service.Id)
-                    .Single().LostDefensePoints = serviceDefenseScore;
+                    .SingleAsync()).LostDefensePoints = serviceDefenseScore;
             }
             team.LostDefensePoints = teamDefenseScore;
             team.TotalPoints += teamDefenseScore;
         }
 
-        private static void CalculateOffenseScore(EnoEngineDBContext ctx, Service[] services, long currentRoundId, Team team)
+        private static async Task CalculateOffenseScore(EnoEngineDBContext ctx, Service[] services, long currentRoundId, Team team)
         {
             double offenseScore = 0;
             foreach (var service in services)
@@ -718,30 +739,30 @@ namespace EnoCore
                 double serviceOffenseScore = flagsCapturedByTeam.Count();
                 foreach (var submittedFlag in flagsCapturedByTeam)
                 {
-                    double capturesOfFlag = ctx.Flags
+                    double capturesOfFlag = await ctx.Flags
                         .Where(f => f.Id == submittedFlag.FlagId)
-                        .Count();
+                        .CountAsync();
                     serviceOffenseScore += Math.Pow(1 / capturesOfFlag, 0.75);
                 }
 
                 offenseScore += serviceOffenseScore;
-                var dbGlobalTeamServiceStats = ctx.ServiceStats
+                (await ctx.ServiceStats
                     .Where(ss => ss.TeamId == team.Id && ss.ServiceId == service.Id)
-                    .Single().AttackPoints = serviceOffenseScore;
+                    .SingleAsync()).AttackPoints = serviceOffenseScore;
             }
             team.AttackPoints = offenseScore;
             team.TotalPoints += offenseScore;
         }
 
-        private static ServiceStatus ComputeServiceStatus(EnoEngineDBContext ctx, Team team, Service service, long roundId)
+        private static async Task<ServiceStatus> ComputeServiceStatus(EnoEngineDBContext ctx, Team team, Service service, long roundId)
         {
-            var currentRoundTasks = ctx.CheckerTasks
-                .Where(ct => ct.RelatedRoundId == roundId)
+            var currentRoundTasks = await ctx.CheckerTasks
                 .Where(ct => ct.CurrentRoundId == roundId)
+                .Where(ct => ct.RelatedRoundId == roundId)
                 .Where(ct => ct.TeamId == team.Id)
                 .Where(ct => ct.ServiceId == service.Id)
                 .AsNoTracking()
-                .ToArray();
+                .ToArrayAsync();
             foreach (var task in currentRoundTasks)
             {
                 switch (task.CheckerResult)
@@ -788,7 +809,10 @@ namespace EnoCore
                     await ctx.Database.OpenConnectionAsync();
                     break;
                 }
-                catch (Exception) { }
+                catch (Exception)
+                {
+                    await Task.Delay(1);
+                }
             }
         }
     }

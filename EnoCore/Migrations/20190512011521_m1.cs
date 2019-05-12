@@ -73,7 +73,6 @@ namespace EnoCore.Migrations
                 {
                     Id = table.Column<long>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
-                    TeamId = table.Column<long>(nullable: false),
                     Name = table.Column<string>(nullable: true),
                     VulnboxAddress = table.Column<string>(nullable: true),
                     GatewayAddress = table.Column<string>(nullable: true),
@@ -296,6 +295,11 @@ namespace EnoCore.Migrations
                 name: "IX_CheckerTasks_CheckerTaskLaunchStatus",
                 table: "CheckerTasks",
                 column: "CheckerTaskLaunchStatus");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CheckerTasks_CurrentRoundId",
+                table: "CheckerTasks",
+                column: "CurrentRoundId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CheckerTasks_Id",

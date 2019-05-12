@@ -85,7 +85,7 @@ namespace EnoEngine.Game
                     Module = nameof(CTF),
                     Function = nameof(StartNewRound),
                     RoundId = currentRound.Id,
-                    Message = $"All checker tasks for {currentRound.Id} are created"
+                    Message = $"All checker tasks for round {currentRound.Id} are created"
                 });
                 var oldRoundHandlingFinished = await handleOldRoundTask;
                 Logger.LogInfo(new EnoLogMessage()
@@ -262,9 +262,9 @@ namespace EnoEngine.Game
             if (roundId > 0)
             {
                 await EnoDatabase.RecordServiceStates(roundId);
-                EnoDatabase.CalculatedAllPoints(roundId);
+                await EnoDatabase.CalculatedAllPoints(roundId);
             }
-            EnoCoreUtils.GenerateCurrentScoreboard($"..{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}scoreboard.json");
+            EnoCoreUtils.GenerateCurrentScoreboard($"..{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}", roundId);
             return DateTime.UtcNow;
         }
     }
