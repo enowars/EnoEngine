@@ -402,7 +402,7 @@ namespace EnoCore
                     return new DBInitializationResult
                     {
                         Success = false,
-                        ErrorMessage = "Team must not have a null name"
+                        ErrorMessage = "Team name must not be null"
                     };
 
                 if (team.VulnboxAddress == null)
@@ -460,10 +460,15 @@ namespace EnoCore
                     ErrorMessage = $"Stale team in database: {staleDbTeamIds[0]}"
                 };
             //insert (valid!) services
-            long i = 1;
             var staleDbServiceIds = ctx.Services.Select(t => t.Id).ToList();
             foreach (var service in config.Services)
             {
+                if (service.Id == 0)
+                    return new DBInitializationResult
+                    {
+                        Success = false,
+                        ErrorMessage = "Service must have a valid Id"
+                    };
                 if (service.Name == null)
                     return new DBInitializationResult
                     {
@@ -514,7 +519,7 @@ namespace EnoCore
                         ErrorMessage = $"Service {service.Name}: FlagsPerRound < 1"
                     };
                 var dbService = ctx.Services
-                    .Where(s => s.Id == i)
+                    .Where(s => s.Id == service.Id)
                     .SingleOrDefault();
                 if (dbService == null)
                 {
@@ -545,7 +550,6 @@ namespace EnoCore
                         };
                     }
                 }
-                i++;
             }
             if (staleDbServiceIds.Count() > 0)
             {

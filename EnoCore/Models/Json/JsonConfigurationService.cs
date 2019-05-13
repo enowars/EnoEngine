@@ -6,6 +6,7 @@ namespace EnoCore.Models.Json
 {
     public class JsonConfigurationService
     {
+        public int Id { get; set; }
         public string Name { get; set; }
         public int FlagsPerRound { get; set; }
         public int RunsPerFlag { get; set; }
