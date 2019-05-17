@@ -172,10 +172,6 @@ namespace EnoCore.Migrations
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<long>("FlagsCaptured");
-
-                    b.Property<long>("FlagsLost");
-
                     b.Property<long>("GameRoundId");
 
                     b.Property<long>("ServiceId");
@@ -205,6 +201,8 @@ namespace EnoCore.Migrations
                     b.Property<int>("FlagsPerRound");
 
                     b.Property<string>("Name");
+
+                    b.Property<int>("NoisesPerRound");
 
                     b.Property<long>("ServiceStatsId");
 
@@ -278,8 +276,6 @@ namespace EnoCore.Migrations
 
                     b.Property<double>("AttackPoints");
 
-                    b.Property<string>("GatewayAddress");
-
                     b.Property<double>("LostDefensePoints");
 
                     b.Property<string>("Name");
@@ -288,9 +284,9 @@ namespace EnoCore.Migrations
 
                     b.Property<long>("ServiceStatsId");
 
-                    b.Property<double>("TotalPoints");
+                    b.Property<string>("TeamSubnet");
 
-                    b.Property<string>("VulnboxAddress");
+                    b.Property<double>("TotalPoints");
 
                     b.HasKey("Id");
 

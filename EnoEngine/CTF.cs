@@ -26,12 +26,11 @@ namespace EnoEngine.Game
         private static readonly EnoLogger Logger = new EnoLogger(nameof(EnoEngine));
         private readonly SemaphoreSlim Lock = new SemaphoreSlim(1);
         private readonly CancellationToken Token;
-        private readonly Task FlagSubmissionEndpointTask;
         
         public CTF(CancellationToken token)
         {
             Token = token;
-            FlagSubmissionEndpointTask = new FlagSubmissionEndpoint(this, token).Run();
+            Task.Run(async () => await new FlagSubmissionEndpoint(this, token).Run());
         }
 
         public async Task<DateTime> StartNewRound()
@@ -120,7 +119,7 @@ namespace EnoEngine.Game
             }
             try
             {
-                return await EnoDatabase.InsertSubmittedFlag(flag, attackerSubmissionAddress, Program.Configuration.FlagValidityInRounds);
+                return await EnoDatabase.InsertSubmittedFlag(flag, attackerSubmissionAddress, Program.Configuration);
             }
             catch (Exception e)
             {
@@ -144,7 +143,7 @@ namespace EnoEngine.Game
             {
                 tasks.Add(new CheckerTask()
                 {
-                    Address = flag.Owner.VulnboxAddress,
+                    Address = $"service{flag.ServiceId}.team{flag.OwnerId}.{Program.Configuration.DnsSuffix}",
                     MaxRunningTime = maxRunningTime,
                     Payload = flag.StringRepresentation,
                     RelatedRoundId = flag.GameRoundId,
@@ -174,7 +173,7 @@ namespace EnoEngine.Game
             {
                 tasks.Add(new CheckerTask()
                 {
-                    Address = noise.Owner.VulnboxAddress,
+                    Address = $"service{noise.ServiceId}.team{noise.OwnerId}.{Program.Configuration.DnsSuffix}",
                     MaxRunningTime = maxRunningTime,
                     Payload = noise.StringRepresentation,
                     RelatedRoundId = noise.GameRoundId,
@@ -203,7 +202,7 @@ namespace EnoEngine.Game
             {
                 tasks.Add(new CheckerTask()
                 {
-                    Address = flag.Owner.VulnboxAddress,
+                    Address = $"service{flag.ServiceId}.team{flag.OwnerId}.{Program.Configuration.DnsSuffix}",
                     MaxRunningTime = maxRunningTime,
                     Payload = flag.StringRepresentation,
                     CurrentRoundId = flag.GameRoundId,
@@ -232,7 +231,7 @@ namespace EnoEngine.Game
             {
                 tasks.Add(new CheckerTask()
                 {
-                    Address = flag.Owner.VulnboxAddress,
+                    Address = $"service{flag.ServiceId}.team{flag.OwnerId}.{Program.Configuration.DnsSuffix}",
                     MaxRunningTime = maxRunningTime,
                     Payload = flag.StringRepresentation,
                     CurrentRoundId = flag.GameRoundId,
@@ -254,7 +253,7 @@ namespace EnoEngine.Game
 
         private async Task InsertRetrieveOldFlagsTasks(Round currentRound)
         {
-            await EnoDatabase.InsertRetrieveOldFlagsTasks(currentRound, Program.Configuration.CheckedRoundsPerRound - 1, Program.Configuration.RoundLengthInSeconds);
+            await EnoDatabase.InsertRetrieveOldFlagsTasks(currentRound, Program.Configuration.CheckedRoundsPerRound - 1, Program.Configuration);
         }
 
         private async Task<DateTime> HandleRoundEnd(long roundId)

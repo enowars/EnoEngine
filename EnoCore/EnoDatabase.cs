@@ -139,8 +139,9 @@ namespace EnoCore
             }
         }
 
-        public static async Task<FlagSubmissionResult> InsertSubmittedFlag(string flag, string attackerSubmissionAddress, long flagValidityInRounds) //TODO more logs
+        public static async Task<FlagSubmissionResult> InsertSubmittedFlag(string flag, string attackerSubmissionAddress, JsonConfiguration config) //TODO more logs
         {
+            string subnet = attackerSubmissionAddress.Substring(0, config.TeamSubnetStringLength);
             while(true)
             {
                 try
@@ -153,7 +154,7 @@ namespace EnoCore
                             .AsNoTracking()
                             .SingleOrDefaultAsync();
                         var dbAttackerTeam = await ctx.Teams
-                            .Where(t => t.VulnboxAddress == attackerSubmissionAddress || t.GatewayAddress == attackerSubmissionAddress)
+                            .Where(t => t.TeamSubnet == subnet)
                             .AsNoTracking()
                             .SingleOrDefaultAsync();
                         var currentRound = await ctx.Rounds
@@ -166,7 +167,7 @@ namespace EnoCore
                             return FlagSubmissionResult.InvalidSenderError;
                         if (dbFlag.Owner.Id == dbAttackerTeam.Id)
                             return FlagSubmissionResult.Own;
-                        if (dbFlag.GameRoundId < currentRound.Id - flagValidityInRounds)
+                        if (dbFlag.GameRoundId < currentRound.Id - config.FlagValidityInRounds)
                             return FlagSubmissionResult.Old;
 
                         var submittedFlag = await ctx.SubmittedFlags
@@ -192,7 +193,6 @@ namespace EnoCore
                 }
                 catch (DbUpdateException) {}
             }
-            
         }
 
         public static void Migrate(EnoLogger logger)
@@ -325,9 +325,9 @@ namespace EnoCore
             return newNoises;
         }
 
-        public static async Task InsertRetrieveOldFlagsTasks(Round currentRound, int oldRoundsCount, int roundLengthInSeconds)
+        public static async Task InsertRetrieveOldFlagsTasks(Round currentRound, int oldRoundsCount, JsonConfiguration config)
         {
-            int quarterRound = roundLengthInSeconds / 4;
+            int quarterRound = config.RoundLengthInSeconds / 4;
             using (var ctx = new EnoEngineDBContext())
             {
                 await RetryConnection(ctx);
@@ -345,7 +345,7 @@ namespace EnoCore
                 {
                     var task = new CheckerTask()
                     {
-                        Address = oldFlag.Owner.VulnboxAddress,
+                        Address = $"service{oldFlag.ServiceId}.team{oldFlag.OwnerId}.{config.DnsSuffix}",
                         MaxRunningTime = quarterRound,
                         Payload = oldFlag.StringRepresentation,
                         RelatedRoundId = oldFlag.GameRoundId,
@@ -358,7 +358,7 @@ namespace EnoCore
                         TeamId = oldFlag.OwnerId,
                         ServiceName = oldFlag.Service.Name,
                         CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New,
-                        RoundLength = roundLengthInSeconds
+                        RoundLength = config.RoundLengthInSeconds
                     };
                     oldFlagsCheckerTasks.Add(task);
                     time = time.AddSeconds(timeDiff);
@@ -405,18 +405,13 @@ namespace EnoCore
                         ErrorMessage = "Team name must not be null"
                     };
 
-                if (team.VulnboxAddress == null)
+                if (team.TeamSubnet == null)
                     return new DBInitializationResult
                     {
                         Success = false,
-                        ErrorMessage = "Team vulnbox address must not be null"
+                        ErrorMessage = "Team subnet must not be null"
                     };
-                if (team.GatewayAddress == null)
-                    return new DBInitializationResult
-                    {
-                        Success = false,
-                        ErrorMessage = "Team gateway address must not be null"
-                    };
+
                 if (team.Id == 0)
                     return new DBInitializationResult
                     {
@@ -438,16 +433,14 @@ namespace EnoCore
                     });
                     ctx.Teams.Add(new Team()
                     {
-                        VulnboxAddress = team.VulnboxAddress,
-                        GatewayAddress = team.GatewayAddress,
+                        TeamSubnet = team.TeamSubnet,
                         Name = team.Name,
                         Id = team.Id
                     });
                 }
                 else
                 {
-                    dbTeam.VulnboxAddress = team.VulnboxAddress;
-                    dbTeam.GatewayAddress = team.GatewayAddress;
+                    dbTeam.TeamSubnet = team.TeamSubnet;
                     dbTeam.Name = team.Name;
                     dbTeam.Id = team.Id;
                     staleDbTeamIds.Remove(team.Id);
@@ -609,8 +602,6 @@ namespace EnoCore
                         var reportedStatus = await ComputeServiceStatus(ctx, team, service, roundId);
                         var roundTeamServiceState = new RoundTeamServiceState()
                         {
-                            FlagsCaptured = 0,
-                            FlagsLost = 0,
                             GameRoundId = round.Id,
                             ServiceId = service.Id,
                             TeamId = team.Id,
@@ -737,6 +728,7 @@ namespace EnoCore
             {
                 var flagsCapturedByTeam = ctx.SubmittedFlags
                     .Where(f => f.AttackerTeamId == team.Id)
+                    .Where(f => f.RoundId <= currentRoundId)
                     .Include(f => f.Flag)
                     .Where(f => f.Flag.ServiceId == service.Id);
 

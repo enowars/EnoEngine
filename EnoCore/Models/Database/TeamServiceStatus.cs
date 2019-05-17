@@ -16,8 +16,6 @@ namespace EnoCore.Models
     public class RoundTeamServiceState
     {
         public long Id { get; set; }
-        public long FlagsLost { get; set; }
-        public long FlagsCaptured { get; set; }
         public ServiceStatus Status { get; set; }
         public long TeamId { get; set; }
         public Team Team { get; set; }

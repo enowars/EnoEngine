@@ -2,14 +2,15 @@ config = '''{
     "FlagValidityInRounds": 2,
     "CheckedRoundsPerRound": 3,
     "RoundLengthInSeconds": 60,
+    "DnsSuffix": "eno.host",
+    "TeamSubnetStringLength": 12,
     "Teams": ['''
 
 for i in range(256):
     config += '''{
         "Id": '''+str(i+1)+''',
         "Name": "teamname'''+str(i+1)+'''",
-        "VulnboxAddress": "[::1]",
-        "GatewayAddress": "[::1]"
+        "TeamSubnet": "fc80:1337:'''+str(i+1)+''':"
     },'''
 config = config[:-1]
 config += '''],
@@ -22,7 +23,7 @@ config += '''],
         "RunsPerNoise": 1,
         "RunsPerHavok": 0,
         "WeightFactor": 1,
-        "Checkers": ["http://127.0.0.1:3031"]
+        "Checkers": ["http:/[::]:3031"]
     },{
         "Id": 2,
         "Name": "teapot",
@@ -32,7 +33,7 @@ config += '''],
         "RunsPerNoise": 1,
         "RunsPerHavok": 0,
         "WeightFactor": 1,
-        "Checkers": ["http://127.0.0.1:3031"]
+        "Checkers": ["http://[::]:3031"]
     },{
         "Id": 3,
         "Name": "secretstore",
@@ -42,7 +43,7 @@ config += '''],
         "RunsPerNoise": 1,
         "RunsPerHavok": 0,
         "WeightFactor": 1,
-        "Checkers": ["http://127.0.0.1:3031"]
+        "Checkers": ["http://[::]:3031"]
     },{
         "Id": 4,
         "Name": "socks",
@@ -52,7 +53,7 @@ config += '''],
         "RunsPerNoise": 1,
         "RunsPerHavok": 0,
         "WeightFactor": 1,
-        "Checkers": ["http://127.0.0.1:3031"]
+        "Checkers": ["http://[::]:3031"]
     },{
         "Id": 5,
         "Name": "faustnotes",
@@ -62,7 +63,7 @@ config += '''],
         "RunsPerNoise": 1,
         "RunsPerHavok": 0,
         "WeightFactor": 1,
-        "Checkers": ["http://127.0.0.1:3031"]
+        "Checkers": ["http://[::]:3031"]
     },{
         "Id": 6,
         "Name": "pie",
@@ -72,7 +73,7 @@ config += '''],
         "RunsPerNoise": 1,
         "RunsPerHavok": 0,
         "WeightFactor": 1,
-        "Checkers": ["http://127.0.0.1:3031"]
+        "Checkers": ["http://[::]:3031"]
     },{
         "Id": 7,
         "Name": "taskk33per",
@@ -82,7 +83,7 @@ config += '''],
         "RunsPerNoise": 1,
         "RunsPerHavok": 0,
         "WeightFactor": 1,
-        "Checkers": ["http://127.0.0.1:3031"]
+        "Checkers": ["http://[::]:3031"]
     },{
         "Id": 8,
         "Name": "broadcast",
@@ -92,7 +93,7 @@ config += '''],
         "RunsPerNoise": 1,
         "RunsPerHavok": 0,
         "WeightFactor": 1,
-        "Checkers": ["http://127.0.0.1:3031"]
+        "Checkers": ["http://[::]:3031"]
     }]
 }'''
 print(config)

@@ -9,6 +9,8 @@ namespace EnoCore.Models.Json
         public long FlagValidityInRounds { get; set; }
         public int CheckedRoundsPerRound { get; set; }
         public int RoundLengthInSeconds { get; set; }
+        public string DnsSuffix { get; set; }
+        public int TeamSubnetStringLength { get; set; }
         public List<JsonConfigurationTeam> Teams { get; set; } = new List<JsonConfigurationTeam>();
         public List<JsonConfigurationService> Services { get; set; } = new List<JsonConfigurationService>();
     }

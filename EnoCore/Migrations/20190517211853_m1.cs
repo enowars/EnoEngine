@@ -60,6 +60,7 @@ namespace EnoCore.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     Name = table.Column<string>(nullable: true),
                     FlagsPerRound = table.Column<int>(nullable: false),
+                    NoisesPerRound = table.Column<int>(nullable: false),
                     ServiceStatsId = table.Column<long>(nullable: false)
                 },
                 constraints: table =>
@@ -74,8 +75,7 @@ namespace EnoCore.Migrations
                     Id = table.Column<long>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     Name = table.Column<string>(nullable: true),
-                    VulnboxAddress = table.Column<string>(nullable: true),
-                    GatewayAddress = table.Column<string>(nullable: true),
+                    TeamSubnet = table.Column<string>(nullable: true),
                     TotalPoints = table.Column<double>(nullable: false),
                     AttackPoints = table.Column<double>(nullable: false),
                     LostDefensePoints = table.Column<double>(nullable: false),
@@ -197,8 +197,6 @@ namespace EnoCore.Migrations
                 {
                     Id = table.Column<long>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
-                    FlagsLost = table.Column<long>(nullable: false),
-                    FlagsCaptured = table.Column<long>(nullable: false),
                     Status = table.Column<int>(nullable: false),
                     TeamId = table.Column<long>(nullable: false),
                     ServiceId = table.Column<long>(nullable: false),

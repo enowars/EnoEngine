@@ -8,8 +8,7 @@ namespace EnoCore.Models
     {
         public long Id { get; set; }
         public string Name { get; set; }
-        public string VulnboxAddress { get; set; }
-        public string GatewayAddress { get; set; }
+        public string TeamSubnet { get; set; }
         public double TotalPoints { get; set; }
         public double AttackPoints { get; set; }
         public double LostDefensePoints { get; set; }

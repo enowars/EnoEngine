@@ -19,8 +19,6 @@ namespace EnoCore
     {
         private static readonly RNGCryptoServiceProvider Random = new RNGCryptoServiceProvider();
         private static readonly int ENTROPY_IN_BYTES = 8;
-        private static readonly int IPV4_SUBNET_SIZE = 24;
-        private static readonly int IPV6_SUBNET_SIZE = 64;
         private static readonly byte[] FLAG_SIGNING_KEY = Encoding.ASCII.GetBytes("suchasecretstornkkeytheywillneverguess");
         private static readonly byte[] NOISE_SIGNING_KEY = Encoding.ASCII.GetBytes("anotherstrenksecrettheyvref24tr");
 
@@ -57,33 +55,6 @@ namespace EnoCore
             var json = JsonConvert.SerializeObject(scoreboard);
             File.WriteAllText($"{path}scoreboard{roundId}.json", json);
             File.WriteAllText($"{path}scoreboard.json", json);
-        }
-
-        public static bool IsSameSubnet(string ipA, string ipB)
-        {
-            IPAddress addressA = IPAddress.Parse(ipA);
-            IPAddress addressB = IPAddress.Parse(ipB);
-            return IsSameSubnet(addressA, addressB);
-        }
-
-        public static bool IsSameSubnet(IPAddress ipA, IPAddress ipB)
-        {
-            var a = new BitArray(ipA.GetAddressBytes());
-            var b = new BitArray(ipB.GetAddressBytes());
-
-            if (a.Length != b.Length)
-                return false;
-            int subnetLength;
-            if (a.Length == 32)
-                subnetLength = IPV4_SUBNET_SIZE;
-            else
-                subnetLength = IPV6_SUBNET_SIZE;
-            for (int i = 0; i < subnetLength; i++)
-            {
-                if (a[i] != b[i])
-                    return false;
-            }
-            return true;
         }
 
         internal static string GenerateSignedFlag(int roundId, int teamid)
