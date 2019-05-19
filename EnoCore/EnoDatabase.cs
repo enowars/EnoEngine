@@ -307,7 +307,7 @@ namespace EnoCore
             {
                 foreach (var service in services)
                 {
-                    for (int i = 0; i < service.FlagsPerRound; i++)
+                    for (int i = 0; i < service.NoisesPerRound; i++)
                     {
                         var noise = new Noise()
                         {
@@ -525,7 +525,8 @@ namespace EnoCore
                     ctx.Services.Add(new Service()
                     {
                         Name = service.Name,
-                        FlagsPerRound = service.FlagsPerRound
+                        FlagsPerRound = service.FlagsPerRound,
+                        NoisesPerRound = service.NoisesPerRound
                     });
                 }
                 else
