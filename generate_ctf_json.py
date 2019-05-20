@@ -3,14 +3,14 @@ config = '''{
     "CheckedRoundsPerRound": 3,
     "RoundLengthInSeconds": 60,
     "DnsSuffix": "eno.host",
-    "TeamSubnetStringLength": 12,
+    "TeamSubnetBytesLength": 6,
     "Teams": ['''
 
 for i in range(256):
     config += '''{
         "Id": '''+str(i+1)+''',
         "Name": "teamname'''+str(i+1)+'''",
-        "TeamSubnet": "fc80:1337:'''+str(i+1)+''':"
+        "TeamSubnet": "fc80:1337:'''+str(i+1)+'''::"
     },'''
 config = config[:-1]
 config += '''],

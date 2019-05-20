@@ -17,7 +17,7 @@ namespace EnoEngine.FlagSubmission
     {
         private static readonly EnoLogger Logger = new EnoLogger(nameof(EnoEngine));
         readonly CancellationToken Token;
-        readonly TcpListener Listener = new TcpListener(IPAddress.Any, 1337);
+        readonly TcpListener Listener = new TcpListener(IPAddress.IPv6Any, 1337);
         readonly IFlagSubmissionHandler Handler;
 
         public FlagSubmissionEndpoint(IFlagSubmissionHandler handler, CancellationToken token)
@@ -82,13 +82,18 @@ namespace EnoEngine.FlagSubmission
 
         public async Task HandleSubmissionClient(TcpClient client)
         {
+            var attackerAddress = ((IPEndPoint) client.Client.RemoteEndPoint).Address.GetAddressBytes();
+            var attackerPrefix = new byte[Program.Configuration.TeamSubnetBytesLength];
+            Array.Copy(attackerAddress, attackerPrefix, Program.Configuration.TeamSubnetBytesLength);
+            var attackerPrefixString = BitConverter.ToString(attackerPrefix);
+
             using (StreamReader reader = new StreamReader(client.GetStream()))
             {
                 string line = await reader.ReadLineAsync();
                 while (!Token.IsCancellationRequested && line != null)
                 {
                     var endpoint = (IPEndPoint) client.Client.RemoteEndPoint;
-                    var result = await Handler.HandleFlagSubmission(line, endpoint.Address.ToString());
+                    var result = await Handler.HandleFlagSubmission(line, attackerPrefixString);
                     var resultArray = Encoding.ASCII.GetBytes(FormatSubmissionResult(result) + "\n");
                     await client.GetStream().WriteAsync(resultArray, 0, resultArray.Length);
                     line = await reader.ReadLineAsync();

@@ -114,5 +114,13 @@ namespace EnoCore
             var diff = time - now;
             await Task.Delay(diff, token);
         }
+
+        internal static string ExtractSubnet(string subnetIP, int subnetBytesLength)
+        {
+            var ip = IPAddress.Parse(subnetIP);
+            byte[] teamSubnet = new byte[subnetBytesLength];
+            Array.Copy(ip.GetAddressBytes(), teamSubnet, subnetBytesLength);
+            return BitConverter.ToString(teamSubnet);
+        }
     }
 }

@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,7 +19,7 @@ namespace EnoEngine.Game
 {
     interface IFlagSubmissionHandler
     {
-        Task<FlagSubmissionResult> HandleFlagSubmission(string flag, string attackerSubmissionAddress);
+        Task<FlagSubmissionResult> HandleFlagSubmission(string flag, string attackerAddressPrefix);
     }
 
     class CTF : IFlagSubmissionHandler
@@ -111,7 +112,7 @@ namespace EnoEngine.Game
             return end;
         }
 
-        public async Task<FlagSubmissionResult> HandleFlagSubmission(string flag, string attackerSubmissionAddress)
+        public async Task<FlagSubmissionResult> HandleFlagSubmission(string flag, string attackerAddressPrefix)
         { 
             if (!EnoCoreUtils.IsValidFlag(flag))
             {
@@ -119,7 +120,7 @@ namespace EnoEngine.Game
             }
             try
             {
-                return await EnoDatabase.InsertSubmittedFlag(flag, attackerSubmissionAddress, Program.Configuration);
+                return await EnoDatabase.InsertSubmittedFlag(flag, attackerAddressPrefix, Program.Configuration);
             }
             catch (Exception e)
             {

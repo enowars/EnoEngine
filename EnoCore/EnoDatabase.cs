@@ -139,10 +139,10 @@ namespace EnoCore
             }
         }
 
-        public static async Task<FlagSubmissionResult> InsertSubmittedFlag(string flag, string attackerSubmissionAddress, JsonConfiguration config) //TODO more logs
+        public static async Task<FlagSubmissionResult> InsertSubmittedFlag(string flag, string attackerAddressPrefix, JsonConfiguration config) //TODO more logs
         {
-            string subnet = attackerSubmissionAddress.Substring(0, config.TeamSubnetStringLength);
-            while(true)
+
+            while (true)
             {
                 try
                 {
@@ -154,7 +154,7 @@ namespace EnoCore
                             .AsNoTracking()
                             .SingleOrDefaultAsync();
                         var dbAttackerTeam = await ctx.Teams
-                            .Where(t => t.TeamSubnet == subnet)
+                            .Where(t => t.TeamSubnet == attackerAddressPrefix)
                             .AsNoTracking()
                             .SingleOrDefaultAsync();
                         var currentRound = await ctx.Rounds
@@ -419,6 +419,8 @@ namespace EnoCore
                         ErrorMessage = "Team must have a valid Id"
                     };
 
+                string teamSubnet = EnoCoreUtils.ExtractSubnet(team.TeamSubnet, config.TeamSubnetBytesLength);
+
                 // check if team is already present
                 var dbTeam = ctx.Teams
                     .Where(t => t.Id == team.Id)
@@ -433,14 +435,14 @@ namespace EnoCore
                     });
                     ctx.Teams.Add(new Team()
                     {
-                        TeamSubnet = team.TeamSubnet,
+                        TeamSubnet = teamSubnet,
                         Name = team.Name,
                         Id = team.Id
                     });
                 }
                 else
                 {
-                    dbTeam.TeamSubnet = team.TeamSubnet;
+                    dbTeam.TeamSubnet = teamSubnet;
                     dbTeam.Name = team.Name;
                     dbTeam.Id = team.Id;
                     staleDbTeamIds.Remove(team.Id);
