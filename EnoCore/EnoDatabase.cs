@@ -625,19 +625,22 @@ namespace EnoCore
         {
             using (var ctx = new EnoEngineDBContext())
             {
-                await RetryConnection(ctx);
+                int maxTasks = 16;
+                //await RetryConnection(ctx); //Should not be necessary with limited Task pool.
                 var services = ctx.Services.ToArray();
                 var teams = await ctx.Teams
                     .AsNoTracking()
                     .ToArrayAsync();
-                var tasks = new Task[teams.Length];
-                int i = 0;
+                var tasks = new HashSet<Task>();
                 foreach (var team in teams)
-                {
-                    tasks[i] = Task.Run(async () => await CalculateTeamScore(services, roundId, team));
-                    i += 1;
+                {   
+                    if(tasks.Count < maxTasks){ //If there are less Tasks then max allowed Task, spawn a new one.
+                        tasks.Add(Task.Run(async () => await CalculateTeamScore(services, roundId, team)));
+                    }
+                    else{ //Wait for any Task to finish when max allowed Tasks are active.
+                        await Task.WhenAny(tasks);
+                    }
                 }
-                await Task.WhenAll(tasks);
             }
         }
 
@@ -656,7 +659,7 @@ namespace EnoCore
         {
             using (var ctx = new EnoEngineDBContext())
             {
-                await RetryConnection(ctx);
+                //await RetryConnection(ctx);
                 team = await ctx.Teams.SingleAsync(t => t.Id == team.Id);
                 team.TotalPoints = 0;
                 await CalculateOffenseScore(ctx, services, currentRoundId, team);
