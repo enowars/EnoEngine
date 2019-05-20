@@ -638,7 +638,8 @@ namespace EnoCore
                         tasks.Add(Task.Run(async () => await CalculateTeamScore(services, roundId, team)));
                     }
                     else{ //Wait for any Task to finish when max allowed Tasks are active.
-                        await Task.WhenAny(tasks);
+                        Task finished = await Task.WhenAny(tasks);
+                        tasks.Remove(finished);
                     }
                 }
             }
