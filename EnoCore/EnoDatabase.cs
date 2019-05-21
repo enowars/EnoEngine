@@ -101,8 +101,11 @@ namespace EnoCore
 
     public class EnoDatabase
     {
-        public static DBInitializationResult ApplyConfig(JsonConfiguration config, EnoLogger logger)
+        private static EnoLogger logger;
+        public static DBInitializationResult ApplyConfig(JsonConfiguration config, EnoLogger enologger)
         {
+            logger = enologger;
+
             logger.LogTrace(new EnoLogMessage() {
                 Message = "Applying configuration to database",
                 Function = "ApplyConfig",
@@ -420,7 +423,7 @@ namespace EnoCore
                     };
 
                 string teamSubnet = EnoCoreUtils.ExtractSubnet(team.TeamSubnet, config.TeamSubnetBytesLength);
-
+                
                 // check if team is already present
                 var dbTeam = ctx.Teams
                     .Where(t => t.Id == team.Id)
@@ -626,7 +629,7 @@ namespace EnoCore
             using (var ctx = new EnoEngineDBContext())
             {
                 int maxTasks = 16;
-                //await RetryConnection(ctx); //Should not be necessary with limited Task pool.
+                await RetryConnection(ctx); //Should not be necessary with limited Task pool.
                 var services = ctx.Services.ToArray();
                 var teams = await ctx.Teams
                     .AsNoTracking()
@@ -660,7 +663,7 @@ namespace EnoCore
         {
             using (var ctx = new EnoEngineDBContext())
             {
-                //await RetryConnection(ctx);
+                await RetryConnection(ctx);
                 team = await ctx.Teams.SingleAsync(t => t.Id == team.Id);
                 team.TotalPoints = 0;
                 await CalculateOffenseScore(ctx, services, currentRoundId, team);
@@ -814,6 +817,11 @@ namespace EnoCore
                 }
                 catch (Exception)
                 {
+                    logger.LogWarning(new EnoLogMessage() {
+                        Message = "Connection to database failed, reconnect...",
+                        Function = "RetryConnection",
+                        Module = nameof(EnoDatabase)
+                    });
                     await Task.Delay(1);
                 }
             }
