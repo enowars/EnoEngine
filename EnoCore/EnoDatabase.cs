@@ -101,14 +101,12 @@ namespace EnoCore
 
     public class EnoDatabase
     {
-        private static EnoLogger logger;
-        public static DBInitializationResult ApplyConfig(JsonConfiguration config, EnoLogger enologger)
+        private static readonly EnoLogger Logger = new EnoLogger(nameof(EnoDatabase));
+        public static DBInitializationResult ApplyConfig(JsonConfiguration config)
         {
-            logger = enologger;
-
-            logger.LogTrace(new EnoLogMessage() {
+            Logger.LogTrace(new EnoLogMessage() {
                 Message = "Applying configuration to database",
-                Function = "ApplyConfig",
+                Function = nameof(ApplyConfig),
                 Module = nameof(EnoDatabase)
             });
             if (config.RoundLengthInSeconds <= 0)
@@ -132,10 +130,10 @@ namespace EnoCore
                     ErrorMessage = "CheckedRoundsPerRound must not be 0"
                 };
 
-            Migrate(logger);
+            Migrate();
             using (var ctx = new EnoEngineDBContext())
             {
-                var migrationResult = FillDatabase(ctx, config, logger);
+                var migrationResult = FillDatabase(ctx, config);
                 if (migrationResult.Success)
                     ctx.SaveChanges();
                 return migrationResult;
@@ -198,27 +196,29 @@ namespace EnoCore
             }
         }
 
-        public static void Migrate(EnoLogger logger)
+        public static void Migrate()
         {
             using (var ctx = new EnoEngineDBContext())
             {
                 var pendingMigrations = ctx.Database.GetPendingMigrations().Count();
                 if (pendingMigrations > 0)
                 {
-                    logger.LogInfo(new EnoLogMessage()
+                    Logger.LogInfo(new EnoLogMessage()
                     {
                         Message = $"Applying {pendingMigrations} migration(s)",
-                        Function = "Migrate"
+                        Function = nameof(Migrate),
+                        Module = nameof(EnoDatabase)
                     });
                     ctx.Database.Migrate();
                     ctx.SaveChanges();
                 }
                 else
                 {
-                    logger.LogDebug(new EnoLogMessage()
+                    Logger.LogDebug(new EnoLogMessage()
                     {
                         Message = $"No pending migrations",
-                        Function = "Migrate"
+                        Function = nameof(Migrate),
+                        Module = nameof(EnoDatabase)
                     });
                 }
             }
@@ -394,7 +394,7 @@ namespace EnoCore
             }
         }
 
-        private static DBInitializationResult FillDatabase(EnoEngineDBContext ctx, JsonConfiguration config, EnoLogger logger)
+        private static DBInitializationResult FillDatabase(EnoEngineDBContext ctx, JsonConfiguration config)
         {
             var staleDbTeamIds = ctx.Teams.Select(t => t.Id).ToList();
 
@@ -423,18 +423,19 @@ namespace EnoCore
                     };
 
                 string teamSubnet = EnoCoreUtils.ExtractSubnet(team.TeamSubnet, config.TeamSubnetBytesLength);
-                
+
                 // check if team is already present
                 var dbTeam = ctx.Teams
                     .Where(t => t.Id == team.Id)
                     .SingleOrDefault();
                 if (dbTeam == null)
                 {
-                    logger.LogInfo(new EnoLogMessage()
+                    Logger.LogInfo(new EnoLogMessage()
                     {
                         Message = $"Adding team {team.Name}({team.Id})",
                         Module = nameof(EnoDatabase),
-                        TeamName = team.Name
+                        TeamName = team.Name,
+                        Function = nameof(FillDatabase),
                     });
                     ctx.Teams.Add(new Team()
                     {
@@ -521,10 +522,11 @@ namespace EnoCore
                     .SingleOrDefault();
                 if (dbService == null)
                 {
-                    logger.LogInfo(new EnoLogMessage()
+                    Logger.LogInfo(new EnoLogMessage()
                     {
                         Message = $"Adding service {service.Name}",
                         Module = nameof(EnoDatabase),
+                        Function = nameof(FillDatabase),
                         ServiceName = service.Name
                     });
                     ctx.Services.Add(new Service()
@@ -815,10 +817,10 @@ namespace EnoCore
                     await ctx.Database.OpenConnectionAsync();
                     break;
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    logger.LogWarning(new EnoLogMessage() {
-                        Message = "Connection to database failed, reconnect...",
+                    Logger.LogWarning(new EnoLogMessage() {
+                        Message = $"Connection to database failed: {EnoCoreUtils.FormatException(e)}",
                         Function = "RetryConnection",
                         Module = nameof(EnoDatabase)
                     });

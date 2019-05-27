@@ -135,7 +135,7 @@ namespace EnoLauncher
                     Function = nameof(Main),
                     Message = $"EnoLauncher starting"
                 });
-                EnoDatabase.Migrate(Logger);
+                EnoDatabase.Migrate();
                 var content = File.ReadAllText("ctf.json");
                 Configuration = JsonConvert.DeserializeObject<JsonConfiguration>(content);
                 var servicesDict = new Dictionary<string, JsonConfigurationService>();
