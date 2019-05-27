@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using AsyncFriendlyStackTrace;
 using EnoCore.Models.Database;
 using EnoCore.Models.Json;
 using Microsoft.Extensions.Logging;
@@ -41,12 +42,7 @@ namespace EnoCore
 
         public static string FormatException(Exception e)
         {
-            string fancy = $"{e.Message} ({e.GetType()})\n{e.StackTrace}";
-            if (e.InnerException != null)
-            {
-                fancy += $"\nInnerException:\n{FormatException(e.InnerException)}";
-            }
-            return fancy;
+            return e.ToAsyncString();
         }
 
         public static void GenerateCurrentScoreboard(string path, long roundId)

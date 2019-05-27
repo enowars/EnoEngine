@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AsyncFriendlyStackTrace" Version="1.6.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="2.2.3" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.2.0" />
