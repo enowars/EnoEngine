@@ -22,7 +22,7 @@ namespace EnoLauncher
         private static readonly CancellationTokenSource LauncherCancelSource = new CancellationTokenSource();
         private static readonly EnoLogger Logger = new EnoLogger(nameof(EnoLauncher));
         private static readonly HttpClient Client = new HttpClient();
-        private static readonly Task UpdateDatabaseTask = Task.Run(async () => await UpdateDatabase());
+        private static Task UpdateDatabaseTask;
 
         private readonly Dictionary<string, JsonConfigurationService> ServicesDict;
 
@@ -40,6 +40,7 @@ namespace EnoLauncher
 
         public async Task LauncherLoop()
         {
+            UpdateDatabaseTask = Task.Run(async () => await UpdateDatabase());
             while (!LauncherCancelSource.IsCancellationRequested)
             {
                 var tasks = await EnoDatabase.RetrievePendingCheckerTasks(100);
