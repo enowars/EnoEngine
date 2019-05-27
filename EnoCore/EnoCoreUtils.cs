@@ -12,7 +12,6 @@ using EnoCore.Models.Database;
 using EnoCore.Models.Json;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Nito.AsyncEx.AsyncDiagnostics;
 
 namespace EnoCore
 {
@@ -42,7 +41,12 @@ namespace EnoCore
 
         public static string FormatException(Exception e)
         {
-            return e.ToAsyncDiagnosticString();
+            string fancy = $"{e.Message} ({e.GetType()})\n{e.StackTrace}";
+            if (e.InnerException != null)
+            {
+                fancy += $"\nInnerException:\n{FormatException(e.InnerException)}";
+            }
+            return fancy;
         }
 
         public static void GenerateCurrentScoreboard(string path, long roundId)
