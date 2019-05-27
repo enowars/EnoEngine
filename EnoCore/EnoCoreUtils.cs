@@ -8,11 +8,11 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using AsyncFriendlyStackTrace;
 using EnoCore.Models.Database;
 using EnoCore.Models.Json;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Nito.AsyncEx.AsyncDiagnostics;
 
 namespace EnoCore
 {
@@ -42,7 +42,7 @@ namespace EnoCore
 
         public static string FormatException(Exception e)
         {
-            return e.ToAsyncString();
+            return e.ToAsyncDiagnosticString();
         }
 
         public static void GenerateCurrentScoreboard(string path, long roundId)
