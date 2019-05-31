@@ -14,6 +14,7 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Random;
 
 namespace EnoEngine.Game
 {
@@ -27,6 +28,8 @@ namespace EnoEngine.Game
         private static readonly EnoLogger Logger = new EnoLogger(nameof(EnoEngine));
         private readonly SemaphoreSlim Lock = new SemaphoreSlim(1);
         private readonly CancellationToken Token;
+
+        private Random rng = new Random();
         
         public CTF(CancellationToken token)
         {
@@ -161,6 +164,7 @@ namespace EnoEngine.Game
                 });
                 firstFlagTime = firstFlagTime.AddSeconds(timeDiff);
             }
+            tasks = tasks.OrderBy(x => rng.Next()).ToList();
             await EnoDatabase.InsertCheckerTasks(tasks);
         }
 
@@ -191,6 +195,7 @@ namespace EnoEngine.Game
                 });
                 firstFlagTime = firstFlagTime.AddSeconds(timeDiff);
             }
+            tasks = tasks.OrderBy(x => rng.Next()).ToList();
             await EnoDatabase.InsertCheckerTasks(tasks);
         }
 
@@ -220,6 +225,7 @@ namespace EnoEngine.Game
                 });
                 q3 = q3.AddSeconds(timeDiff);
             }
+            tasks = tasks.OrderBy(x => rng.Next()).ToList();
             await EnoDatabase.InsertCheckerTasks(tasks);
         }
 
@@ -249,6 +255,7 @@ namespace EnoEngine.Game
                 });
                 q3 = q3.AddSeconds(timeDiff);
             }
+            tasks = tasks.OrderBy(x => rng.Next()).ToList();
             await EnoDatabase.InsertCheckerTasks(tasks);
         }
 
