@@ -14,7 +14,7 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Random;
+using System.Security.Cryptography;
 
 namespace EnoEngine.Game
 {
@@ -23,14 +23,39 @@ namespace EnoEngine.Game
         Task<FlagSubmissionResult> HandleFlagSubmission(string flag, string attackerAddressPrefix);
     }
 
+    ///
+    /// code used from https://devblogs.microsoft.com/pfxteam/getting-random-numbers-in-a-thread-safe-way/
+    public static class ThreadSafeRandom
+    {
+        private static RNGCryptoServiceProvider _global = new RNGCryptoServiceProvider();
+        [ThreadStatic]
+        private static Random _local;
+
+        public static int Next()
+        {
+            Random inst = _local;
+            if (inst == null)
+            {
+                byte[] buffer = new byte[4];
+                _global.GetBytes(buffer);
+                _local = inst = new Random(
+                    BitConverter.ToInt32(buffer, 0));
+            }
+            return inst.Next();
+        }
+
+        public static int Next(int n) {
+            return Next() % n;
+        }
+    }
+
+
     class CTF : IFlagSubmissionHandler
     {
         private static readonly EnoLogger Logger = new EnoLogger(nameof(EnoEngine));
         private readonly SemaphoreSlim Lock = new SemaphoreSlim(1);
         private readonly CancellationToken Token;
 
-        private Random rng = new Random();
-        
         public CTF(CancellationToken token)
         {
             Token = token;
@@ -164,7 +189,7 @@ namespace EnoEngine.Game
                 });
                 firstFlagTime = firstFlagTime.AddSeconds(timeDiff);
             }
-            tasks = tasks.OrderBy(x => rng.Next()).ToList();
+            tasks = Shuffle(tasks).ToList();
             await EnoDatabase.InsertCheckerTasks(tasks);
         }
 
@@ -195,7 +220,7 @@ namespace EnoEngine.Game
                 });
                 firstFlagTime = firstFlagTime.AddSeconds(timeDiff);
             }
-            tasks = tasks.OrderBy(x => rng.Next()).ToList();
+            tasks = Shuffle(tasks).ToList();
             await EnoDatabase.InsertCheckerTasks(tasks);
         }
 
@@ -225,7 +250,7 @@ namespace EnoEngine.Game
                 });
                 q3 = q3.AddSeconds(timeDiff);
             }
-            tasks = tasks.OrderBy(x => rng.Next()).ToList();
+            tasks = Shuffle(tasks).ToList();
             await EnoDatabase.InsertCheckerTasks(tasks);
         }
 
@@ -255,7 +280,7 @@ namespace EnoEngine.Game
                 });
                 q3 = q3.AddSeconds(timeDiff);
             }
-            tasks = tasks.OrderBy(x => rng.Next()).ToList();
+            tasks = Shuffle(tasks).ToList();
             await EnoDatabase.InsertCheckerTasks(tasks);
         }
 
@@ -273,6 +298,22 @@ namespace EnoEngine.Game
             }
             EnoCoreUtils.GenerateCurrentScoreboard($"..{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}", roundId);
             return DateTime.UtcNow;
+        }
+
+        ///
+        /// code taken from https://stackoverflow.com/questions/1287567/is-using-random-and-orderby-a-good-shuffle-algorithm/1287572#1287572
+        private static IEnumerable<T> Shuffle<T>(IEnumerable<T> source)
+        {
+            T[] elements = source.ToArray();
+            for (int i = elements.Length - 1; i >= 0; i--)
+            {
+                // Swap element "i" with a random earlier element it (or itself)
+                // ... except we don't really need to swap it fully, as we can
+                // return it immediately, and afterwards it's irrelevant.
+                int swapIndex = ThreadSafeRandom.Next(i + 1);
+                yield return elements[swapIndex];
+                elements[swapIndex] = elements[i];
+            }
         }
     }
 }
