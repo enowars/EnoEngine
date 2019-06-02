@@ -211,6 +211,12 @@ namespace EnoCore
                     });
                     ctx.Database.Migrate();
                     ctx.SaveChanges();
+                    Logger.LogDebug(new EnoLogMessage()
+                    {
+                        Message = $"Database migration complete",
+                        Function = nameof(Migrate),
+                        Module = nameof(EnoDatabase)
+                    });
                 }
                 else
                 {

@@ -40,6 +40,12 @@ namespace EnoLauncher
 
         public async Task LauncherLoop()
         {
+            Logger.LogInfo(new EnoLogMessage()
+            {
+                Module = nameof(EnoLauncher),
+                Function = nameof(LauncherLoop),
+                Message = $"LauncherLoop starting"
+            });
             UpdateDatabaseTask = Task.Run(async () => await UpdateDatabase());
             while (!LauncherCancelSource.IsCancellationRequested)
             {
@@ -112,6 +118,17 @@ namespace EnoLauncher
                     task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
                     ResultsQueue.Enqueue(task);
                 }
+            }
+            catch (TaskCanceledException e)
+            {
+                var message = EnoLogMessage.FromCheckerTask(task);
+                message.Module = nameof(EnoLauncher);
+                message.Function = nameof(LaunchCheckerTask);
+                message.Message = $"{nameof(LaunchCheckerTask)} {task.Id} was cancelled: {EnoCoreUtils.FormatException(e)}";
+                Logger.LogTrace(message);
+                task.CheckerResult = CheckerResult.Down;
+                task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
+                ResultsQueue.Enqueue(task);
             }
             catch (Exception e)
             {
