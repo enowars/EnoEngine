@@ -645,14 +645,17 @@ namespace EnoCore
                 var tasks = new HashSet<Task>();
                 foreach (var team in teams)
                 {   
-                    if(tasks.Count < maxTasks){ //If there are less Tasks then max allowed Task, spawn a new one.
+                    if (tasks.Count < maxTasks) //If there are less Tasks then max allowed Task, spawn a new one.
+                    {
                         tasks.Add(Task.Run(async () => await CalculateTeamScore(services, roundId, team)));
                     }
-                    else{ //Wait for any Task to finish when max allowed Tasks are active.
+                    else //Wait for any Task to finish when max allowed Tasks are active.
+                    {
                         Task finished = await Task.WhenAny(tasks);
                         tasks.Remove(finished);
                     }
                 }
+                await Task.WhenAll(tasks);
             }
         }
 
