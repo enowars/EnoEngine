@@ -30,7 +30,7 @@ namespace EnoCore
                     return CheckerResult.CheckerError;
                 case "OK":
                     return CheckerResult.Ok;
-                case "ENOWORKS":
+                case "MUMBLE":
                     return CheckerResult.Mumble;
                 case "OFFLINE":
                     return CheckerResult.Down;

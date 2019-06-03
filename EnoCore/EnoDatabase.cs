@@ -653,6 +653,7 @@ namespace EnoCore
                     {
                         Task finished = await Task.WhenAny(tasks);
                         tasks.Remove(finished);
+                        tasks.Add(Task.Run(async () => await CalculateTeamScore(services, roundId, team)));
                     }
                 }
                 await Task.WhenAll(tasks);
