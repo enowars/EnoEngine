@@ -56,12 +56,12 @@ namespace EnoCore.Migrations
                 name: "Services",
                 columns: table => new
                 {
-                    Id = table.Column<long>(nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
+                    Id = table.Column<long>(nullable: false),
                     Name = table.Column<string>(nullable: true),
                     FlagsPerRound = table.Column<int>(nullable: false),
                     NoisesPerRound = table.Column<int>(nullable: false),
-                    ServiceStatsId = table.Column<long>(nullable: false)
+                    ServiceStatsId = table.Column<long>(nullable: false),
+                    Active = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -72,15 +72,15 @@ namespace EnoCore.Migrations
                 name: "Teams",
                 columns: table => new
                 {
-                    Id = table.Column<long>(nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
+                    Id = table.Column<long>(nullable: false),
                     Name = table.Column<string>(nullable: true),
                     TeamSubnet = table.Column<string>(nullable: true),
                     TotalPoints = table.Column<double>(nullable: false),
                     AttackPoints = table.Column<double>(nullable: false),
                     LostDefensePoints = table.Column<double>(nullable: false),
                     ServiceLevelAgreementPoints = table.Column<double>(nullable: false),
-                    ServiceStatsId = table.Column<long>(nullable: false)
+                    ServiceStatsId = table.Column<long>(nullable: false),
+                    Active = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {

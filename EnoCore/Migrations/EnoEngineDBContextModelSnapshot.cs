@@ -195,8 +195,9 @@ namespace EnoCore.Migrations
 
             modelBuilder.Entity("EnoCore.Models.Service", b =>
                 {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd();
+                    b.Property<long>("Id");
+
+                    b.Property<bool>("Active");
 
                     b.Property<int>("FlagsPerRound");
 
@@ -271,8 +272,9 @@ namespace EnoCore.Migrations
 
             modelBuilder.Entity("EnoCore.Models.Team", b =>
                 {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd();
+                    b.Property<long>("Id");
+
+                    b.Property<bool>("Active");
 
                     b.Property<double>("AttackPoints");
 

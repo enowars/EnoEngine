@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EnoCore.Migrations
 {
     [DbContext(typeof(EnoEngineDBContext))]
-    [Migration("20190517211853_m1")]
+    [Migration("20190604221312_m1")]
     partial class m1
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -197,8 +197,9 @@ namespace EnoCore.Migrations
 
             modelBuilder.Entity("EnoCore.Models.Service", b =>
                 {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd();
+                    b.Property<long>("Id");
+
+                    b.Property<bool>("Active");
 
                     b.Property<int>("FlagsPerRound");
 
@@ -273,8 +274,9 @@ namespace EnoCore.Migrations
 
             modelBuilder.Entity("EnoCore.Models.Team", b =>
                 {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd();
+                    b.Property<long>("Id");
+
+                    b.Property<bool>("Active");
 
                     b.Property<double>("AttackPoints");
 

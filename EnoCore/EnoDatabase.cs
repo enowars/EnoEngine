@@ -544,18 +544,10 @@ namespace EnoCore
                 }
                 else
                 {
-                    if (dbService.Name == service.Name)
-                    {
-                        staleDbServiceIds.Remove(dbService.Id);
-                    }
-                    else
-                    {
-                        return new DBInitializationResult()
-                        {
-                            Success = false,
-                            ErrorMessage = $"Services in db and config diverge: ({dbService.Name} != {service.Name}"
-                        };
-                    }
+                    dbService.Name = service.Name;
+                    dbService.FlagsPerRound = service.FlagsPerRound;
+                    dbService.NoisesPerRound = service.NoisesPerRound;
+                    staleDbServiceIds.Remove(dbService.Id);
                 }
             }
             if (staleDbServiceIds.Count() > 0)
