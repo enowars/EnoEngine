@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EnoCore.Models.Database;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -15,6 +16,7 @@ namespace EnoCore.Models
         public int RoundOffset { get; set; }
         public long GameRoundId { get; set; }
         public Round GameRound { get; set; }
+        public List<CheckerTask> CheckerTasks { get; set; }
 
         public override string ToString()
         {
