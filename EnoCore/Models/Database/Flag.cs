@@ -16,7 +16,8 @@ namespace EnoCore.Models
         public int RoundOffset { get; set; }
         public long GameRoundId { get; set; }
         public Round GameRound { get; set; }
-        public List<CheckerTask> CheckerTasks { get; set; }
+        public CheckerTask PutTask { get; set; }
+        public long? PutTaskId { get; set; }
 
         public override string ToString()
         {

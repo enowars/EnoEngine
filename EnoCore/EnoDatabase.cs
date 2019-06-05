@@ -69,6 +69,12 @@ namespace EnoCore
             modelBuilder.Entity<Flag>()
                 .HasIndex(f => f.Id);
 
+            modelBuilder.Entity<Flag>()
+                .HasIndex(f => f.GameRoundId);
+
+            modelBuilder.Entity<Flag>()
+                .HasIndex(f => f.PutTaskId);
+
             modelBuilder.Entity<Noise>()
                 .HasIndex(f => f.Id);
 
@@ -334,6 +340,49 @@ namespace EnoCore
             return newNoises;
         }
 
+        public static async Task InsertPutFlagsTasks(long roundId, DateTime firstFlagTime, JsonConfiguration config)
+        {
+            using (var ctx = new EnoEngineDBContext())
+            {
+                var currentFlags = await ctx.Flags
+                    .Where(f => f.GameRoundId == roundId)
+                    .Include(f => f.Service)
+                    .Include(f => f.Owner)
+                    .ToArrayAsync();
+
+                int maxRunningTime = config.RoundLengthInSeconds / 4;
+                double timeDiff = (maxRunningTime - 5) / (double)currentFlags.Count();
+                var tasks = new CheckerTask[currentFlags.Count()];
+                int i = 0;
+                foreach (var flag in currentFlags)
+                {
+                    var checkerTask = new CheckerTask()
+                    {
+                        Address = $"service{flag.ServiceId}.team{flag.OwnerId}.{config.DnsSuffix}",
+                        MaxRunningTime = maxRunningTime,
+                        Payload = flag.StringRepresentation,
+                        RelatedRoundId = flag.GameRoundId,
+                        CurrentRoundId = flag.GameRoundId,
+                        StartTime = firstFlagTime,
+                        TaskIndex = flag.RoundOffset,
+                        TaskType = "putflag",
+                        TeamName = flag.Owner.Name,
+                        ServiceId = flag.ServiceId,
+                        TeamId = flag.OwnerId,
+                        ServiceName = flag.Service.Name,
+                        CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New,
+                        RoundLength = config.RoundLengthInSeconds
+                    };
+                    tasks[i] = checkerTask;
+                    flag.PutTask = checkerTask;
+                    firstFlagTime = firstFlagTime.AddSeconds(timeDiff);
+                    i++;
+                }
+                ctx.AddRange(tasks);
+                await ctx.SaveChangesAsync();
+            }
+        }
+
         public static async Task InsertRetrieveOldFlagsTasks(Round currentRound, int oldRoundsCount, JsonConfiguration config)
         {
             int quarterRound = config.RoundLengthInSeconds / 4;
@@ -343,6 +392,9 @@ namespace EnoCore
                 var oldFlags = await ctx.Flags
                     .Where(f => f.GameRoundId + oldRoundsCount >= currentRound.Id)
                     .Where(f => f.GameRoundId != currentRound.Id)
+                    .Where(f => f.PutTaskId != null)
+                    .Include(f => f.PutTask)
+                    .Where(f => f.PutTask.CheckerResult != CheckerResult.CheckerError)
                     .Include(f => f.Owner)
                     .Include(f => f.Service)
                     .AsNoTracking()

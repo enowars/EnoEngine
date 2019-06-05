@@ -126,6 +126,8 @@ namespace EnoCore.Migrations
 
                     b.Property<long>("OwnerId");
 
+                    b.Property<long?>("PutTaskId");
+
                     b.Property<int>("RoundOffset");
 
                     b.Property<long>("ServiceId");
@@ -139,6 +141,8 @@ namespace EnoCore.Migrations
                     b.HasIndex("Id");
 
                     b.HasIndex("OwnerId");
+
+                    b.HasIndex("PutTaskId");
 
                     b.HasIndex("ServiceId");
 
@@ -346,6 +350,10 @@ namespace EnoCore.Migrations
                         .WithMany()
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("EnoCore.Models.Database.CheckerTask", "PutTask")
+                        .WithMany()
+                        .HasForeignKey("PutTaskId");
 
                     b.HasOne("EnoCore.Models.Service", "Service")
                         .WithMany()

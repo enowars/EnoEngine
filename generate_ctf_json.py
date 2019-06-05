@@ -21,7 +21,7 @@ config += '''],
         "NoisesPerRound": 0,
         "HavoksPerRound": 0,
         "WeightFactor": 1,
-        "Checkers": ["http:/[::]:3031"]
+        "Checkers": ["http://[::1]:3031"]
     },{
         "Id": 2,
         "Name": "teapot",
@@ -29,7 +29,7 @@ config += '''],
         "NoisesPerRound": 0,
         "HavoksPerRound": 0,
         "WeightFactor": 1,
-        "Checkers": ["http://[::]:3031"]
+        "Checkers": ["http://[::1]:3031"]
     },{
         "Id": 3,
         "Name": "secretstore",
@@ -37,7 +37,7 @@ config += '''],
         "NoisesPerRound": 0,
         "HavoksPerRound": 0,
         "WeightFactor": 1,
-        "Checkers": ["http://[::]:3031"]
+        "Checkers": ["http://[::1]:3031"]
     },{
         "Id": 4,
         "Name": "socks",
@@ -45,7 +45,7 @@ config += '''],
         "NoisesPerRound": 0,
         "HavoksPerRound": 0,
         "WeightFactor": 1,
-        "Checkers": ["http://[::]:3031"]
+        "Checkers": ["http://[::1]:3031"]
     },{
         "Id": 5,
         "Name": "faustnotes",
@@ -53,7 +53,7 @@ config += '''],
         "NoisesPerRound": 1,
         "HavoksPerRound": 0,
         "WeightFactor": 1,
-        "Checkers": ["http://[::]:3031"]
+        "Checkers": ["http://[::1]:3031"]
     },{
         "Id": 6,
         "Name": "pie",
@@ -61,7 +61,7 @@ config += '''],
         "NoisesPerRound": 1,
         "HavoksPerRound": 0,
         "WeightFactor": 1,
-        "Checkers": ["http://[::]:3031"]
+        "Checkers": ["http://[::1]:3031"]
     },{
         "Id": 7,
         "Name": "taskk33per",
@@ -69,7 +69,7 @@ config += '''],
         "NoisesPerRound": 1,
         "HavoksPerRound": 0,
         "WeightFactor": 1,
-        "Checkers": ["http://[::]:3031"]
+        "Checkers": ["http://[::1]:3031"]
     },{
         "Id": 8,
         "Name": "broadcast",
@@ -77,7 +77,7 @@ config += '''],
         "NoisesPerRound": 1,
         "HavoksPerRound": 0,
         "WeightFactor": 1,
-        "Checkers": ["http://[::]:3031"]
+        "Checkers": ["http://[::1]:3031"]
     }]
 }'''
 print(config)

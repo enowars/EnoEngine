@@ -1036,7 +1036,7 @@
         "NoisesPerRound": 0,
         "HavoksPerRound": 0,
         "WeightFactor": 1,
-        "Checkers": ["http:/[::]:3031"]
+        "Checkers": ["http://[::1]:3031"]
     },{
         "Id": 2,
         "Name": "teapot",
@@ -1044,7 +1044,7 @@
         "NoisesPerRound": 0,
         "HavoksPerRound": 0,
         "WeightFactor": 1,
-        "Checkers": ["http://[::]:3031"]
+        "Checkers": ["http://[::1]:3031"]
     },{
         "Id": 3,
         "Name": "secretstore",
@@ -1052,7 +1052,7 @@
         "NoisesPerRound": 0,
         "HavoksPerRound": 0,
         "WeightFactor": 1,
-        "Checkers": ["http://[::]:3031"]
+        "Checkers": ["http://[::1]:3031"]
     },{
         "Id": 4,
         "Name": "socks",
@@ -1060,7 +1060,7 @@
         "NoisesPerRound": 0,
         "HavoksPerRound": 0,
         "WeightFactor": 1,
-        "Checkers": ["http://[::]:3031"]
+        "Checkers": ["http://[::1]:3031"]
     },{
         "Id": 5,
         "Name": "faustnotes",
@@ -1068,7 +1068,7 @@
         "NoisesPerRound": 1,
         "HavoksPerRound": 0,
         "WeightFactor": 1,
-        "Checkers": ["http://[::]:3031"]
+        "Checkers": ["http://[::1]:3031"]
     },{
         "Id": 6,
         "Name": "pie",
@@ -1076,7 +1076,7 @@
         "NoisesPerRound": 1,
         "HavoksPerRound": 0,
         "WeightFactor": 1,
-        "Checkers": ["http://[::]:3031"]
+        "Checkers": ["http://[::1]:3031"]
     },{
         "Id": 7,
         "Name": "taskk33per",
@@ -1084,7 +1084,7 @@
         "NoisesPerRound": 1,
         "HavoksPerRound": 0,
         "WeightFactor": 1,
-        "Checkers": ["http://[::]:3031"]
+        "Checkers": ["http://[::1]:3031"]
     },{
         "Id": 8,
         "Name": "broadcast",
@@ -1092,6 +1092,6 @@
         "NoisesPerRound": 1,
         "HavoksPerRound": 0,
         "WeightFactor": 1,
-        "Checkers": ["http://[::]:3031"]
+        "Checkers": ["http://[::1]:3031"]
     }]
 }

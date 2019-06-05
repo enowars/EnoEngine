@@ -98,7 +98,8 @@ namespace EnoCore.Migrations
                     OwnerId = table.Column<long>(nullable: false),
                     ServiceId = table.Column<long>(nullable: false),
                     RoundOffset = table.Column<int>(nullable: false),
-                    GameRoundId = table.Column<long>(nullable: false)
+                    GameRoundId = table.Column<long>(nullable: false),
+                    PutTaskId = table.Column<long>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -115,6 +116,12 @@ namespace EnoCore.Migrations
                         principalTable: "Teams",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Flags_CheckerTasks_PutTaskId",
+                        column: x => x.PutTaskId,
+                        principalTable: "CheckerTasks",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Flags_Services_ServiceId",
                         column: x => x.ServiceId,
@@ -321,6 +328,11 @@ namespace EnoCore.Migrations
                 column: "OwnerId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Flags_PutTaskId",
+                table: "Flags",
+                column: "PutTaskId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Flags_ServiceId",
                 table: "Flags",
                 column: "ServiceId");
@@ -435,9 +447,6 @@ namespace EnoCore.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "CheckerTasks");
-
-            migrationBuilder.DropTable(
                 name: "Havoks");
 
             migrationBuilder.DropTable(
@@ -460,6 +469,9 @@ namespace EnoCore.Migrations
 
             migrationBuilder.DropTable(
                 name: "Teams");
+
+            migrationBuilder.DropTable(
+                name: "CheckerTasks");
 
             migrationBuilder.DropTable(
                 name: "Services");

@@ -27,7 +27,7 @@ namespace EnoEngine.Game
     /// code used from https://devblogs.microsoft.com/pfxteam/getting-random-numbers-in-a-thread-safe-way/
     public static class ThreadSafeRandom
     {
-        private static RNGCryptoServiceProvider _global = new RNGCryptoServiceProvider();
+        private static readonly RNGCryptoServiceProvider _global = new RNGCryptoServiceProvider();
         [ThreadStatic]
         private static Random _local;
 
@@ -87,7 +87,7 @@ namespace EnoEngine.Game
                 var handleOldRoundTask = Task.Run(async () => await HandleRoundEnd(currentRound.Id - 1));
 
                 // insert put tasks
-                var insertPutNewFlagsTask = Task.Run(async () => await InsertPutFlagsTasks(begin, currentFlags));
+                var insertPutNewFlagsTask = Task.Run(async () => await EnoDatabase.InsertPutFlagsTasks(currentRound.Id, begin, Program.Configuration));
                 var insertPutNewNoisesTask = Task.Run(async () => await InsertPutNoisesTasks(begin, currentNoises));
 
                 // give the db some space TODO save the earliest tasks first
@@ -162,36 +162,7 @@ namespace EnoEngine.Game
             }
         }
 
-        private async Task InsertPutFlagsTasks(DateTime firstFlagTime, IEnumerable<Flag> currentFlags)
-        {
-            int maxRunningTime = Program.Configuration.RoundLengthInSeconds / 4;
-            double timeDiff = (maxRunningTime - 5) / (double)currentFlags.Count();
 
-            var tasks = new List<CheckerTask>(currentFlags.Count());
-            foreach (var flag in currentFlags)
-            {
-                tasks.Add(new CheckerTask()
-                {
-                    Address = $"service{flag.ServiceId}.team{flag.OwnerId}.{Program.Configuration.DnsSuffix}",
-                    MaxRunningTime = maxRunningTime,
-                    Payload = flag.StringRepresentation,
-                    RelatedRoundId = flag.GameRoundId,
-                    CurrentRoundId = flag.GameRoundId,
-                    StartTime = firstFlagTime,
-                    TaskIndex = flag.RoundOffset,
-                    TaskType = "putflag",
-                    TeamName = flag.Owner.Name,
-                    ServiceId = flag.ServiceId,
-                    TeamId = flag.OwnerId,
-                    ServiceName = flag.Service.Name,
-                    CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New,
-                    RoundLength = Program.Configuration.RoundLengthInSeconds
-                });
-                firstFlagTime = firstFlagTime.AddSeconds(timeDiff);
-            }
-            tasks = Shuffle(tasks).ToList();
-            await EnoDatabase.InsertCheckerTasks(tasks);
-        }
 
         private async Task InsertPutNoisesTasks(DateTime firstFlagTime, IEnumerable<Noise> currentNoises)
         {
