@@ -201,6 +201,8 @@ namespace EnoCore.Migrations
 
                     b.Property<int>("FlagsPerRound");
 
+                    b.Property<int>("HavoksPerRound");
+
                     b.Property<string>("Name");
 
                     b.Property<int>("NoisesPerRound");

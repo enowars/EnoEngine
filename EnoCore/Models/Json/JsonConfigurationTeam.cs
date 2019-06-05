@@ -9,5 +9,6 @@ namespace EnoCore.Models.Json
         public string Name { get; set; }
         public string TeamSubnet { get; set; }
         public long Id { get; set; }
+        public bool Active { get; set; }
     }
 }

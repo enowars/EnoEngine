@@ -12,6 +12,7 @@ namespace EnoCore.Models
         public string Name { get; set; }
         public int FlagsPerRound { get; set; }
         public int NoisesPerRound { get; set; }
+        public int HavoksPerRound { get; set; }
         public long ServiceStatsId { get; set; }
         public List<ServiceStats> ServiceStats { get; set; }
         public bool Active { get; set; }

@@ -447,7 +447,8 @@ namespace EnoCore
                     {
                         TeamSubnet = teamSubnet,
                         Name = team.Name,
-                        Id = team.Id
+                        Id = team.Id,
+                        Active = team.Active
                     });
                 }
                 else
@@ -455,6 +456,7 @@ namespace EnoCore
                     dbTeam.TeamSubnet = teamSubnet;
                     dbTeam.Name = team.Name;
                     dbTeam.Id = team.Id;
+                    dbTeam.Active = team.Active;
                     staleDbTeamIds.Remove(team.Id);
                 }
             }
@@ -493,23 +495,11 @@ namespace EnoCore
                         Success = false,
                         ErrorMessage = $"Service {service.Name}: NoisesPerRound < 0"
                     };
-                if (service.RunsPerFlag < 1)
+                if (service.HavoksPerRound < 0)
                     return new DBInitializationResult
                     {
                         Success = false,
-                        ErrorMessage = $"Service {service.Name}: RunsPerFlag < 1"
-                    };
-                if (service.RunsPerNoise < 1)
-                    return new DBInitializationResult
-                    {
-                        Success = false,
-                        ErrorMessage = $"Service {service.Name}: RunsPerNoise < 1"
-                    };
-                if (service.RunsPerHavok < 0)
-                    return new DBInitializationResult
-                    {
-                        Success = false,
-                        ErrorMessage = $"Service {service.Name}: RunsPerHavok < 0"
+                        ErrorMessage = $"Service {service.Name}: HavoksPerRound < 0"
                     };
                 if (service.WeightFactor <= 0)
                     return new DBInitializationResult
@@ -537,9 +527,12 @@ namespace EnoCore
                     });
                     ctx.Services.Add(new Service()
                     {
+                        Id = service.Id,
                         Name = service.Name,
                         FlagsPerRound = service.FlagsPerRound,
-                        NoisesPerRound = service.NoisesPerRound
+                        NoisesPerRound = service.NoisesPerRound,
+                        HavoksPerRound = service.HavoksPerRound,
+                        Active = service.Active
                     });
                 }
                 else
@@ -547,6 +540,8 @@ namespace EnoCore
                     dbService.Name = service.Name;
                     dbService.FlagsPerRound = service.FlagsPerRound;
                     dbService.NoisesPerRound = service.NoisesPerRound;
+                    dbService.HavoksPerRound = service.HavoksPerRound;
+                    dbService.Active = service.Active;
                     staleDbServiceIds.Remove(dbService.Id);
                 }
             }

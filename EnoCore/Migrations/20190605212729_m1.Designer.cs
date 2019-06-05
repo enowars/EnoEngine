@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EnoCore.Migrations
 {
     [DbContext(typeof(EnoEngineDBContext))]
-    [Migration("20190604221312_m1")]
+    [Migration("20190605212729_m1")]
     partial class m1
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -202,6 +202,8 @@ namespace EnoCore.Migrations
                     b.Property<bool>("Active");
 
                     b.Property<int>("FlagsPerRound");
+
+                    b.Property<int>("HavoksPerRound");
 
                     b.Property<string>("Name");
 

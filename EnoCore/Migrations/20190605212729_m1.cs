@@ -60,6 +60,7 @@ namespace EnoCore.Migrations
                     Name = table.Column<string>(nullable: true),
                     FlagsPerRound = table.Column<int>(nullable: false),
                     NoisesPerRound = table.Column<int>(nullable: false),
+                    HavoksPerRound = table.Column<int>(nullable: false),
                     ServiceStatsId = table.Column<long>(nullable: false),
                     Active = table.Column<bool>(nullable: false)
                 },
