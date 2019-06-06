@@ -80,7 +80,7 @@ namespace EnoEngine.Game
             try
             {
                 // start the next round
-                (var currentRound, var currentFlags, var currentNoises) = EnoDatabase.CreateNewRound(begin, q2, q3, q4, end);
+                (var currentRound, var currentFlags, var currentNoises, var currentHavoks) = await EnoDatabase.CreateNewRound(begin, q2, q3, q4, end);
                 long observedRounds = Program.Configuration.CheckedRoundsPerRound > currentRound.Id ? currentRound.Id : Program.Configuration.CheckedRoundsPerRound;
 
                 // start the evaluation
@@ -89,6 +89,7 @@ namespace EnoEngine.Game
                 // insert put tasks
                 var insertPutNewFlagsTask = Task.Run(async () => await EnoDatabase.InsertPutFlagsTasks(currentRound.Id, begin, Program.Configuration));
                 var insertPutNewNoisesTask = Task.Run(async () => await InsertPutNoisesTasks(begin, currentNoises));
+                var insertHavoksTask = Task.Run(async () => await EnoDatabase.InsertHavoksTasks(currentRound.Id, begin, Program.Configuration));
 
                 // give the db some space TODO save the earliest tasks first
                 await Task.Delay(1000);
@@ -108,6 +109,8 @@ namespace EnoEngine.Game
 
                 await insertPutNewNoisesTask;
                 await insertGetCurrentNoisesTask;
+
+                await insertHavoksTask;
                 Logger.LogInfo(new EnoLogMessage()
                 {
                     Module = nameof(CTF),

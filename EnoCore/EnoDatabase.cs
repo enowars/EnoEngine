@@ -108,6 +108,7 @@ namespace EnoCore
     public class EnoDatabase
     {
         private static readonly EnoLogger Logger = new EnoLogger(nameof(EnoDatabase));
+
         public static DBInitializationResult ApplyConfig(JsonConfiguration config)
         {
             Logger.LogTrace(new EnoLogMessage() {
@@ -236,7 +237,7 @@ namespace EnoCore
             }
         }
 
-        public static (Round, IEnumerable<Flag>, IEnumerable<Noise>) CreateNewRound(DateTime begin, DateTime q2, DateTime q3, DateTime q4, DateTime end)
+        public static async Task<(Round, List<Flag>, List<Noise>, List<Havok>)> CreateNewRound(DateTime begin, DateTime q2, DateTime q3, DateTime q4, DateTime end)
         {
             using (var ctx = new EnoEngineDBContext())
             {
@@ -249,10 +250,15 @@ namespace EnoCore
                     End = end
                 };
                 ctx.Rounds.Add(round);
-                var flags = GenerateFlagsForRound(ctx, round);
-                var noises = GenerateNoisesForRound(ctx, round);
+                var teams = await ctx.Teams
+                    .ToArrayAsync();
+                var services = await ctx.Services
+                    .ToArrayAsync();
+                var flags = GenerateFlagsForRound(ctx, round, teams, services);
+                var noises = GenerateNoisesForRound(ctx, round, teams, services);
+                var havoks = GenerateHavoksForRound(ctx, round, teams, services);
                 ctx.SaveChanges();
-                return (round, flags, noises);
+                return (round, flags, noises, havoks);
             }
         }
 
@@ -282,13 +288,9 @@ namespace EnoCore
             }
         }
 
-        private static IEnumerable<Flag> GenerateFlagsForRound(EnoEngineDBContext ctx, Round round)
+        private static List<Flag> GenerateFlagsForRound(EnoEngineDBContext ctx, Round round, Team[] teams, Service[] services)
         {
-            IList<Flag> newFlags = new List<Flag>();
-            var teams = ctx.Teams
-                .ToArray();
-            var services = ctx.Services
-                .ToArray();
+            List<Flag> newFlags = new List<Flag>();
             foreach (var team in teams)
             {
                 foreach (var service in services)
@@ -311,13 +313,9 @@ namespace EnoCore
             return newFlags;
         }
 
-        private static IEnumerable<Noise> GenerateNoisesForRound(EnoEngineDBContext ctx, Round round)
+        private static List<Noise> GenerateNoisesForRound(EnoEngineDBContext ctx, Round round, Team[] teams, Service[] services)
         {
-            IList<Noise> newNoises = new List<Noise>();
-            var teams = ctx.Teams
-                .ToArray();
-            var services = ctx.Services
-                .ToArray();
+            List<Noise> newNoises = new List<Noise>();
             foreach (var team in teams)
             {
                 foreach (var service in services)
@@ -340,10 +338,32 @@ namespace EnoCore
             return newNoises;
         }
 
+        private static List<Havok> GenerateHavoksForRound(EnoEngineDBContext ctx, Round round, Team[] teams, Service[] services)
+        {
+            List<Havok> newHavoks = new List<Havok>();
+            foreach (var team in teams)
+            {
+                foreach (var service in services)
+                {
+                    var havok = new Havok()
+                    {
+                        Owner = team,
+                        StringRepresentation = EnoCoreUtils.GenerateSignedNoise((int)round.Id, (int)team.Id),
+                        Service = service,
+                        GameRound = round
+                    };
+                    newHavoks.Add(havok);
+                }
+            }
+            ctx.Havoks.AddRange(newHavoks);
+            return newHavoks;
+        }
+
         public static async Task InsertPutFlagsTasks(long roundId, DateTime firstFlagTime, JsonConfiguration config)
         {
             using (var ctx = new EnoEngineDBContext())
             {
+                await RetryConnection(ctx);
                 var currentFlags = await ctx.Flags
                     .Where(f => f.GameRoundId == roundId)
                     .Include(f => f.Service)
@@ -379,6 +399,46 @@ namespace EnoCore
                     i++;
                 }
                 ctx.AddRange(tasks);
+                await ctx.SaveChangesAsync();
+            }
+        }
+
+        public static async Task InsertHavoksTasks(long roundId, DateTime begin, JsonConfiguration config)
+        {
+            int quarterRound = config.RoundLengthInSeconds / 4;
+            using (var ctx = new EnoEngineDBContext())
+            {
+                await RetryConnection(ctx);
+                var currentHavoks = await ctx.Havoks
+                    .Where(f => f.GameRoundId == roundId)
+                    .Include(f => f.Service)
+                    .Include(f => f.Owner)
+                    .ToArrayAsync();
+                double timeDiff = (double)quarterRound * 3 / currentHavoks.Count();
+                List<CheckerTask> havokTasks = new List<CheckerTask>(currentHavoks.Count());
+                foreach (var havok in currentHavoks)
+                {
+                    var task = new CheckerTask()
+                    {
+                        Address = $"service{havok.ServiceId}.team{havok.OwnerId}.{config.DnsSuffix}",
+                        MaxRunningTime = quarterRound,
+                        Payload = havok.StringRepresentation,
+                        RelatedRoundId = havok.GameRoundId,
+                        CurrentRoundId = roundId,
+                        StartTime = begin,
+                        TaskIndex = 0,
+                        TaskType = "havok",
+                        TeamName = havok.Owner.Name,
+                        ServiceId = havok.ServiceId,
+                        TeamId = havok.OwnerId,
+                        ServiceName = havok.Service.Name,
+                        CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New,
+                        RoundLength = config.RoundLengthInSeconds
+                    };
+                    havokTasks.Add(task);
+                    begin = begin.AddSeconds(timeDiff);
+                }
+                ctx.CheckerTasks.AddRange(havokTasks);
                 await ctx.SaveChangesAsync();
             }
         }
