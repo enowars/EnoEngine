@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EnoCore.Migrations
 {
     [DbContext(typeof(EnoEngineDBContext))]
-    [Migration("20190605225915_m1")]
+    [Migration("20190609194126_m1")]
     partial class m1
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -64,10 +64,12 @@ namespace EnoCore.Migrations
 
                     b.HasIndex("Id");
 
+                    b.HasIndex("StartTime");
+
                     b.ToTable("CheckerTasks");
                 });
 
-            modelBuilder.Entity("EnoCore.Models.Database.Havok", b =>
+            modelBuilder.Entity("EnoCore.Models.Database.Havoc", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd();
@@ -88,7 +90,7 @@ namespace EnoCore.Migrations
 
                     b.HasIndex("ServiceId");
 
-                    b.ToTable("Havoks");
+                    b.ToTable("Havocs");
                 });
 
             modelBuilder.Entity("EnoCore.Models.Database.Noise", b =>
@@ -207,7 +209,7 @@ namespace EnoCore.Migrations
 
                     b.Property<int>("FlagsPerRound");
 
-                    b.Property<int>("HavoksPerRound");
+                    b.Property<int>("HavocsPerRound");
 
                     b.Property<string>("Name");
 
@@ -305,7 +307,7 @@ namespace EnoCore.Migrations
                     b.ToTable("Teams");
                 });
 
-            modelBuilder.Entity("EnoCore.Models.Database.Havok", b =>
+            modelBuilder.Entity("EnoCore.Models.Database.Havoc", b =>
                 {
                     b.HasOne("EnoCore.Models.Round", "GameRound")
                         .WithMany()

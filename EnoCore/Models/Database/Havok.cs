@@ -4,7 +4,7 @@ using System.Text;
 
 namespace EnoCore.Models.Database
 {
-    public class Havok
+    public class Havoc
     {
         public long Id { get; set; }
         public string StringRepresentation { get; set; }

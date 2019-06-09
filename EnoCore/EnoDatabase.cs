@@ -38,7 +38,7 @@ namespace EnoCore
         public DbSet<CheckerTask> CheckerTasks { get; set; }
         public DbSet<Flag> Flags { get; set; }
         public DbSet<Noise> Noises { get; set; }
-        public DbSet<Havok> Havoks { get; set; }
+        public DbSet<Havoc> Havocs { get; set; }
         public DbSet<Service> Services { get; set; }
         public DbSet<Team> Teams { get; set; }
         public DbSet<Round> Rounds { get; set; }
@@ -65,6 +65,9 @@ namespace EnoCore
 
             modelBuilder.Entity<CheckerTask>()
                 .HasIndex(ct => ct.CurrentRoundId);
+
+            modelBuilder.Entity<CheckerTask>()
+                .HasIndex(ct => ct.StartTime);
 
             modelBuilder.Entity<Flag>()
                 .HasIndex(f => f.Id);
@@ -237,7 +240,7 @@ namespace EnoCore
             }
         }
 
-        public static async Task<(Round, List<Flag>, List<Noise>, List<Havok>)> CreateNewRound(DateTime begin, DateTime q2, DateTime q3, DateTime q4, DateTime end)
+        public static async Task<(Round, List<Flag>, List<Noise>, List<Havoc>)> CreateNewRound(DateTime begin, DateTime q2, DateTime q3, DateTime q4, DateTime end)
         {
             using (var ctx = new EnoEngineDBContext())
             {
@@ -256,9 +259,9 @@ namespace EnoCore
                     .ToArrayAsync();
                 var flags = GenerateFlagsForRound(ctx, round, teams, services);
                 var noises = GenerateNoisesForRound(ctx, round, teams, services);
-                var havoks = GenerateHavoksForRound(ctx, round, teams, services);
+                var havocs = GenerateHavocsForRound(ctx, round, teams, services);
                 ctx.SaveChanges();
-                return (round, flags, noises, havoks);
+                return (round, flags, noises, havocs);
             }
         }
 
@@ -279,6 +282,7 @@ namespace EnoCore
                 await RetryConnection(ctx);
                 var tasks = await ctx.CheckerTasks
                     .Where(t => t.CheckerTaskLaunchStatus == CheckerTaskLaunchStatus.New)
+                    .OrderBy(t => t.StartTime)
                     .Take(maxAmount)
                     .ToListAsync();
                 // TODO update launch status without delaying operation
@@ -338,25 +342,25 @@ namespace EnoCore
             return newNoises;
         }
 
-        private static List<Havok> GenerateHavoksForRound(EnoEngineDBContext ctx, Round round, Team[] teams, Service[] services)
+        private static List<Havoc> GenerateHavocsForRound(EnoEngineDBContext ctx, Round round, Team[] teams, Service[] services)
         {
-            List<Havok> newHavoks = new List<Havok>();
+            List<Havoc> newHavocs = new List<Havoc>();
             foreach (var team in teams)
             {
                 foreach (var service in services)
                 {
-                    var havok = new Havok()
+                    var havoc = new Havoc()
                     {
                         Owner = team,
                         StringRepresentation = EnoCoreUtils.GenerateSignedNoise((int)round.Id, (int)team.Id),
                         Service = service,
                         GameRound = round
                     };
-                    newHavoks.Add(havok);
+                    newHavocs.Add(havoc);
                 }
             }
-            ctx.Havoks.AddRange(newHavoks);
-            return newHavoks;
+            ctx.Havocs.AddRange(newHavocs);
+            return newHavocs;
         }
 
         public static async Task InsertPutFlagsTasks(long roundId, DateTime firstFlagTime, JsonConfiguration config)
@@ -443,46 +447,46 @@ namespace EnoCore
             await InsertCheckerTasks(tasks);
         }
 
-        public static async Task InsertHavoksTasks(long roundId, DateTime begin, JsonConfiguration config)
+        public static async Task InsertHavocsTasks(long roundId, DateTime begin, JsonConfiguration config)
         {
             int quarterRound = config.RoundLengthInSeconds / 4;
             using (var ctx = new EnoEngineDBContext())
             {
                 await RetryConnection(ctx);
-                var currentHavoks = await ctx.Havoks
+                var currentHavocs = await ctx.Havocs
                     .Where(f => f.GameRoundId == roundId)
                     .Include(f => f.Service)
                     .Include(f => f.Owner)
                     .ToArrayAsync();
-                double timeDiff = (double)quarterRound * 3 / currentHavoks.Count();
-                List<CheckerTask> havokTasks = new List<CheckerTask>(currentHavoks.Count());
-                foreach (var havok in currentHavoks)
+                double timeDiff = (double)quarterRound * 3 / currentHavocs.Count();
+                List<CheckerTask> havocTasks = new List<CheckerTask>(currentHavocs.Count());
+                foreach (var havoc in currentHavocs)
                 {
                     var task = new CheckerTask()
                     {
-                        Address = $"service{havok.ServiceId}.team{havok.OwnerId}.{config.DnsSuffix}",
+                        Address = $"service{havoc.ServiceId}.team{havoc.OwnerId}.{config.DnsSuffix}",
                         MaxRunningTime = quarterRound,
-                        Payload = havok.StringRepresentation,
-                        RelatedRoundId = havok.GameRoundId,
+                        Payload = havoc.StringRepresentation,
+                        RelatedRoundId = havoc.GameRoundId,
                         CurrentRoundId = roundId,
                         StartTime = begin,
                         TaskIndex = 0,
-                        TaskType = "havok",
-                        TeamName = havok.Owner.Name,
-                        ServiceId = havok.ServiceId,
-                        TeamId = havok.OwnerId,
-                        ServiceName = havok.Service.Name,
+                        TaskType = "havoc",
+                        TeamName = havoc.Owner.Name,
+                        ServiceId = havoc.ServiceId,
+                        TeamId = havoc.OwnerId,
+                        ServiceName = havoc.Service.Name,
                         CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New,
                         RoundLength = config.RoundLengthInSeconds
                     };
-                    havokTasks.Add(task);
+                    havocTasks.Add(task);
                     begin = begin.AddSeconds(timeDiff);
                 }
-                var tasks_start_time = havokTasks.Select(x => x.StartTime).ToList();
+                var tasks_start_time = havocTasks.Select(x => x.StartTime).ToList();
                 tasks_start_time = EnoCoreUtils.Shuffle(tasks_start_time).ToList();
-                havokTasks = tasks_start_time.Zip(havokTasks, (a,b) => {b.StartTime = a; return b;}).ToList();
+                havocTasks = tasks_start_time.Zip(havocTasks, (a,b) => {b.StartTime = a; return b;}).ToList();
 
-                ctx.CheckerTasks.AddRange(havokTasks);
+                ctx.CheckerTasks.AddRange(havocTasks);
                 await ctx.SaveChangesAsync();
             }
         }
@@ -723,11 +727,11 @@ namespace EnoCore
                         Success = false,
                         ErrorMessage = $"Service {service.Name}: NoisesPerRound < 0"
                     };
-                if (service.HavoksPerRound < 0)
+                if (service.HavocsPerRound < 0)
                     return new DBInitializationResult
                     {
                         Success = false,
-                        ErrorMessage = $"Service {service.Name}: HavoksPerRound < 0"
+                        ErrorMessage = $"Service {service.Name}: HavocsPerRound < 0"
                     };
                 if (service.WeightFactor <= 0)
                     return new DBInitializationResult
@@ -759,7 +763,7 @@ namespace EnoCore
                         Name = service.Name,
                         FlagsPerRound = service.FlagsPerRound,
                         NoisesPerRound = service.NoisesPerRound,
-                        HavoksPerRound = service.HavoksPerRound,
+                        HavocsPerRound = service.HavocsPerRound,
                         Active = service.Active
                     });
                 }
@@ -768,7 +772,7 @@ namespace EnoCore
                     dbService.Name = service.Name;
                     dbService.FlagsPerRound = service.FlagsPerRound;
                     dbService.NoisesPerRound = service.NoisesPerRound;
-                    dbService.HavoksPerRound = service.HavoksPerRound;
+                    dbService.HavocsPerRound = service.HavocsPerRound;
                     dbService.Active = service.Active;
                     staleDbServiceIds.Remove(dbService.Id);
                 }

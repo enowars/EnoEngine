@@ -60,7 +60,7 @@ namespace EnoCore.Migrations
                     Name = table.Column<string>(nullable: true),
                     FlagsPerRound = table.Column<int>(nullable: false),
                     NoisesPerRound = table.Column<int>(nullable: false),
-                    HavoksPerRound = table.Column<int>(nullable: false),
+                    HavocsPerRound = table.Column<int>(nullable: false),
                     ServiceStatsId = table.Column<long>(nullable: false),
                     Active = table.Column<bool>(nullable: false)
                 },
@@ -131,7 +131,7 @@ namespace EnoCore.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Havoks",
+                name: "Havocs",
                 columns: table => new
                 {
                     Id = table.Column<long>(nullable: false)
@@ -143,21 +143,21 @@ namespace EnoCore.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Havoks", x => x.Id);
+                    table.PrimaryKey("PK_Havocs", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Havoks_Rounds_GameRoundId",
+                        name: "FK_Havocs_Rounds_GameRoundId",
                         column: x => x.GameRoundId,
                         principalTable: "Rounds",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Havoks_Teams_OwnerId",
+                        name: "FK_Havocs_Teams_OwnerId",
                         column: x => x.OwnerId,
                         principalTable: "Teams",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Havoks_Services_ServiceId",
+                        name: "FK_Havocs_Services_ServiceId",
                         column: x => x.ServiceId,
                         principalTable: "Services",
                         principalColumn: "Id",
@@ -313,6 +313,11 @@ namespace EnoCore.Migrations
                 column: "Id");
 
             migrationBuilder.CreateIndex(
+                name: "IX_CheckerTasks_StartTime",
+                table: "CheckerTasks",
+                column: "StartTime");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Flags_GameRoundId",
                 table: "Flags",
                 column: "GameRoundId");
@@ -338,18 +343,18 @@ namespace EnoCore.Migrations
                 column: "ServiceId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Havoks_GameRoundId",
-                table: "Havoks",
+                name: "IX_Havocs_GameRoundId",
+                table: "Havocs",
                 column: "GameRoundId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Havoks_OwnerId",
-                table: "Havoks",
+                name: "IX_Havocs_OwnerId",
+                table: "Havocs",
                 column: "OwnerId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Havoks_ServiceId",
-                table: "Havoks",
+                name: "IX_Havocs_ServiceId",
+                table: "Havocs",
                 column: "ServiceId");
 
             migrationBuilder.CreateIndex(
@@ -447,7 +452,7 @@ namespace EnoCore.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Havoks");
+                name: "Havocs");
 
             migrationBuilder.DropTable(
                 name: "Noises");

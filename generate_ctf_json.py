@@ -10,7 +10,7 @@ for i in range(256):
     config += '''{
         "Id": '''+str(i+1)+''',
         "Name": "teamname'''+str(i+1)+'''",
-        "TeamSubnet": "fc80:1337:'''+str(i+1)+'''::"
+        "TeamSubnet": "fd00:1337:'''+str(i+1)+'''::"
     },'''
 config = config[:-1]
 config += '''],
@@ -19,7 +19,7 @@ config += '''],
         "Name": "WASP",
         "FlagsPerRound": 2,
         "NoisesPerRound": 0,
-        "HavoksPerRound": 0,
+        "HavocsPerRound": 0,
         "WeightFactor": 1,
         "Checkers": ["http://[::1]:3031"]
     },{
@@ -27,7 +27,7 @@ config += '''],
         "Name": "teapot",
         "FlagsPerRound": 1,
         "NoisesPerRound": 0,
-        "HavoksPerRound": 0,
+        "HavocsPerRound": 0,
         "WeightFactor": 1,
         "Checkers": ["http://[::1]:3031"]
     },{
@@ -35,7 +35,7 @@ config += '''],
         "Name": "secretstore",
         "FlagsPerRound": 1,
         "NoisesPerRound": 0,
-        "HavoksPerRound": 0,
+        "HavocsPerRound": 0,
         "WeightFactor": 1,
         "Checkers": ["http://[::1]:3031"]
     },{
@@ -43,7 +43,7 @@ config += '''],
         "Name": "socks",
         "FlagsPerRound": 1,
         "NoisesPerRound": 0,
-        "HavoksPerRound": 0,
+        "HavocsPerRound": 0,
         "WeightFactor": 1,
         "Checkers": ["http://[::1]:3031"]
     },{
@@ -51,7 +51,7 @@ config += '''],
         "Name": "faustnotes",
         "FlagsPerRound": 1,
         "NoisesPerRound": 1,
-        "HavoksPerRound": 0,
+        "HavocsPerRound": 0,
         "WeightFactor": 1,
         "Checkers": ["http://[::1]:3031"]
     },{
@@ -59,7 +59,7 @@ config += '''],
         "Name": "pie",
         "FlagsPerRound": 1,
         "NoisesPerRound": 1,
-        "HavoksPerRound": 0,
+        "HavocsPerRound": 0,
         "WeightFactor": 1,
         "Checkers": ["http://[::1]:3031"]
     },{
@@ -67,7 +67,7 @@ config += '''],
         "Name": "taskk33per",
         "FlagsPerRound": 1,
         "NoisesPerRound": 1,
-        "HavoksPerRound": 0,
+        "HavocsPerRound": 0,
         "WeightFactor": 1,
         "Checkers": ["http://[::1]:3031"]
     },{
@@ -75,7 +75,7 @@ config += '''],
         "Name": "broadcast",
         "FlagsPerRound": 2,
         "NoisesPerRound": 1,
-        "HavoksPerRound": 0,
+        "HavocsPerRound": 0,
         "WeightFactor": 1,
         "Checkers": ["http://[::1]:3031"]
     }]
