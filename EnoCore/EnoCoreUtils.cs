@@ -15,6 +15,33 @@ using Newtonsoft.Json;
 
 namespace EnoCore
 {
+
+    ///
+    /// code used from https://devblogs.microsoft.com/pfxteam/getting-random-numbers-in-a-thread-safe-way/
+    public static class ThreadSafeRandom
+    {
+        private static readonly RNGCryptoServiceProvider _global = new RNGCryptoServiceProvider();
+        [ThreadStatic]
+        private static Random _local;
+
+        public static int Next()
+        {
+            Random inst = _local;
+            if (inst == null)
+            {
+                byte[] buffer = new byte[4];
+                _global.GetBytes(buffer);
+                _local = inst = new Random(
+                    BitConverter.ToInt32(buffer, 0));
+            }
+            return inst.Next();
+        }
+
+        public static int Next(int n) {
+            return Next() % n;
+        }
+    }
+
     public class EnoCoreUtils
     {
         private static readonly RNGCryptoServiceProvider Random = new RNGCryptoServiceProvider();
@@ -121,6 +148,22 @@ namespace EnoCore
             byte[] teamSubnet = new byte[subnetBytesLength];
             Array.Copy(ip.GetAddressBytes(), teamSubnet, subnetBytesLength);
             return BitConverter.ToString(teamSubnet);
+        }
+
+        ///
+        /// code taken from https://stackoverflow.com/questions/1287567/is-using-random-and-orderby-a-good-shuffle-algorithm/1287572#1287572
+        public static IEnumerable<T> Shuffle<T>(IEnumerable<T> source)
+        {
+            T[] elements = source.ToArray();
+            for (int i = elements.Length - 1; i >= 0; i--)
+            {
+                // Swap element "i" with a random earlier element it (or itself)
+                // ... except we don't really need to swap it fully, as we can
+                // return it immediately, and afterwards it's irrelevant.
+                int swapIndex = ThreadSafeRandom.Next(i + 1);
+                yield return elements[swapIndex];
+                elements[swapIndex] = elements[i];
+            }
         }
     }
 }

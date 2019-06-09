@@ -1,4 +1,4 @@
-﻿using EnoCore.Models;
+using EnoCore.Models;
 using Microsoft.EntityFrameworkCore;
 using EnoCore;
 using System;
@@ -398,6 +398,11 @@ namespace EnoCore
                     firstFlagTime = firstFlagTime.AddSeconds(timeDiff);
                     i++;
                 }
+
+                var tasks_start_time = tasks.Select(x => x.StartTime).ToList();
+                tasks_start_time = EnoCoreUtils.Shuffle(tasks_start_time).ToList();
+                tasks = tasks_start_time.Zip(tasks, (a,b) => {b.StartTime = a; return b;}).ToArray();
+
                 ctx.AddRange(tasks);
                 await ctx.SaveChangesAsync();
             }
@@ -430,6 +435,11 @@ namespace EnoCore
                 });
                 firstFlagTime = firstFlagTime.AddSeconds(timeDiff);
             }
+
+            var tasks_start_time = tasks.Select(x => x.StartTime).ToList();
+            tasks_start_time = EnoCoreUtils.Shuffle(tasks_start_time).ToList();
+            tasks = tasks_start_time.Zip(tasks, (a,b) => {b.StartTime = a; return b;}).ToList();
+
             await InsertCheckerTasks(tasks);
         }
 
@@ -468,6 +478,10 @@ namespace EnoCore
                     havokTasks.Add(task);
                     begin = begin.AddSeconds(timeDiff);
                 }
+                var tasks_start_time = havokTasks.Select(x => x.StartTime).ToList();
+                tasks_start_time = EnoCoreUtils.Shuffle(tasks_start_time).ToList();
+                havokTasks = tasks_start_time.Zip(havokTasks, (a,b) => {b.StartTime = a; return b;}).ToList();
+
                 ctx.CheckerTasks.AddRange(havokTasks);
                 await ctx.SaveChangesAsync();
             }
@@ -499,6 +513,10 @@ namespace EnoCore
                 });
                 q3 = q3.AddSeconds(timeDiff);
             }
+            var tasks_start_time = tasks.Select(x => x.StartTime).ToList();
+            tasks_start_time = EnoCoreUtils.Shuffle(tasks_start_time).ToList();
+            tasks = tasks_start_time.Zip(tasks, (a,b) => {b.StartTime = a; return b;}).ToList();
+
             await InsertCheckerTasks(tasks);
         }
 
@@ -543,6 +561,11 @@ namespace EnoCore
                     oldFlagsCheckerTasks.Add(task);
                     time = time.AddSeconds(timeDiff);
                 }
+
+                var tasks_start_time = oldFlagsCheckerTasks.Select(x => x.StartTime).ToList();
+                tasks_start_time = EnoCoreUtils.Shuffle(tasks_start_time).ToList();
+                oldFlagsCheckerTasks = tasks_start_time.Zip(oldFlagsCheckerTasks, (a,b) => {b.StartTime = a; return b;}).ToList();
+
                 ctx.CheckerTasks.AddRange(oldFlagsCheckerTasks);
                 await ctx.SaveChangesAsync();
             }
@@ -574,6 +597,11 @@ namespace EnoCore
                 });
                 q3 = q3.AddSeconds(timeDiff);
             }
+
+            var tasks_start_time = tasks.Select(x => x.StartTime).ToList();
+            tasks_start_time = EnoCoreUtils.Shuffle(tasks_start_time).ToList();
+            tasks = tasks_start_time.Zip(tasks, (a,b) => {b.StartTime = a; return b;}).ToList();
+
             await InsertCheckerTasks(tasks);
         }
 
