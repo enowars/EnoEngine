@@ -13,6 +13,6 @@ namespace EnoCore.Models.Json
         public int HavocsPerRound { get; set; }
         public int WeightFactor { get; set; }
         public bool Active { get; set; }
-        public List<string> Checkers { get; set; } = new List<string>();
+        public string[] Checkers { get; set; }
     }
 }

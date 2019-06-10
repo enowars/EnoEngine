@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EnoCore.Migrations
 {
     [DbContext(typeof(EnoEngineDBContext))]
-    [Migration("20190609194126_m1")]
+    [Migration("20190610111117_m1")]
     partial class m1
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -31,6 +31,8 @@ namespace EnoCore.Migrations
                     b.Property<int>("CheckerResult");
 
                     b.Property<int>("CheckerTaskLaunchStatus");
+
+                    b.Property<string>("CheckerUrl");
 
                     b.Property<long>("CurrentRoundId");
 

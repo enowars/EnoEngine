@@ -24,14 +24,6 @@ namespace EnoLauncher
         private static readonly HttpClient Client = new HttpClient();
         private static Task UpdateDatabaseTask;
 
-        private readonly Dictionary<string, JsonConfigurationService> ServicesDict;
-
-        public static JsonConfiguration Configuration { get; set; }
-        public Program(Dictionary<string, JsonConfigurationService> servicesDict)
-        {
-            ServicesDict = servicesDict;
-        }
-
         public void Start()
         {
             Client.Timeout = new TimeSpan(0, 1, 0);
@@ -95,7 +87,7 @@ namespace EnoLauncher
                 message.Message = $"LaunchCheckerTask {task.Id} POSTing {task.TaskType} to checker";
                 Logger.LogTrace(message);
                 cancelSource.CancelAfter(task.MaxRunningTime * 1000);
-                var response = await Client.PostAsync(new Uri(ServicesDict[task.ServiceName].Checkers[0] + "/"), content, cancelSource.Token);
+                var response = await Client.PostAsync(new Uri(task.CheckerUrl), content, cancelSource.Token);
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
                     var responseString = (await response.Content.ReadAsStringAsync()).TrimEnd(Environment.NewLine.ToCharArray());
@@ -155,13 +147,7 @@ namespace EnoLauncher
                 });
                 EnoDatabase.Migrate();
                 var content = File.ReadAllText("ctf.json");
-                Configuration = JsonConvert.DeserializeObject<JsonConfiguration>(content);
-                var servicesDict = new Dictionary<string, JsonConfigurationService>();
-                foreach (var service in Configuration.Services)
-                {
-                    servicesDict.Add(service.Name, service);
-                }
-                new Program(servicesDict).Start();
+                new Program().Start();
             }
             catch (Exception e)
             {

@@ -380,9 +380,11 @@ namespace EnoCore
                 int i = 0;
                 foreach (var flag in currentFlags)
                 {
+                    var checkers = config.Checkers[flag.ServiceId];
                     var checkerTask = new CheckerTask()
                     {
                         Address = $"service{flag.ServiceId}.team{flag.OwnerId}.{config.DnsSuffix}",
+                        CheckerUrl = checkers[i % checkers.Length],
                         MaxRunningTime = maxRunningTime,
                         Payload = flag.StringRepresentation,
                         RelatedRoundId = flag.GameRoundId,
@@ -418,11 +420,14 @@ namespace EnoCore
             double timeDiff = (maxRunningTime - 5) / (double)currentNoises.Count();
 
             var tasks = new List<CheckerTask>(currentNoises.Count());
+            int i = 0;
             foreach (var noise in currentNoises)
             {
+                var checkers = config.Checkers[noise.ServiceId];
                 tasks.Add(new CheckerTask()
                 {
                     Address = $"service{noise.ServiceId}.team{noise.OwnerId}.{config.DnsSuffix}",
+                    CheckerUrl = checkers[i % checkers.Length],
                     MaxRunningTime = maxRunningTime,
                     Payload = noise.StringRepresentation,
                     RelatedRoundId = noise.GameRoundId,
@@ -438,6 +443,7 @@ namespace EnoCore
                     RoundLength = config.RoundLengthInSeconds
                 });
                 firstFlagTime = firstFlagTime.AddSeconds(timeDiff);
+                i++;
             }
 
             var tasks_start_time = tasks.Select(x => x.StartTime).ToList();
@@ -460,11 +466,14 @@ namespace EnoCore
                     .ToArrayAsync();
                 double timeDiff = (double)quarterRound * 3 / currentHavocs.Count();
                 List<CheckerTask> havocTasks = new List<CheckerTask>(currentHavocs.Count());
+                int i = 0;
                 foreach (var havoc in currentHavocs)
                 {
+                    var checkers = config.Checkers[havoc.ServiceId];
                     var task = new CheckerTask()
                     {
                         Address = $"service{havoc.ServiceId}.team{havoc.OwnerId}.{config.DnsSuffix}",
+                        CheckerUrl = checkers[i % checkers.Length],
                         MaxRunningTime = quarterRound,
                         Payload = havoc.StringRepresentation,
                         RelatedRoundId = havoc.GameRoundId,
@@ -481,6 +490,7 @@ namespace EnoCore
                     };
                     havocTasks.Add(task);
                     begin = begin.AddSeconds(timeDiff);
+                    i++;
                 }
                 var tasks_start_time = havocTasks.Select(x => x.StartTime).ToList();
                 tasks_start_time = EnoCoreUtils.Shuffle(tasks_start_time).ToList();
@@ -496,11 +506,14 @@ namespace EnoCore
             int maxRunningTime = config.RoundLengthInSeconds / 4;
             double timeDiff = (maxRunningTime - 5) / (double)currentFlags.Count();
             var tasks = new List<CheckerTask>(currentFlags.Count());
+            int i = 0;
             foreach (var flag in currentFlags)
             {
+                var checkers = config.Checkers[flag.ServiceId];
                 tasks.Add(new CheckerTask()
                 {
                     Address = $"service{flag.ServiceId}.team{flag.OwnerId}.{config.DnsSuffix}",
+                    CheckerUrl = checkers[i % checkers.Length],
                     MaxRunningTime = maxRunningTime,
                     Payload = flag.StringRepresentation,
                     CurrentRoundId = flag.GameRoundId,
@@ -516,6 +529,7 @@ namespace EnoCore
                     RoundLength = config.RoundLengthInSeconds
                 });
                 q3 = q3.AddSeconds(timeDiff);
+                i++;
             }
             var tasks_start_time = tasks.Select(x => x.StartTime).ToList();
             tasks_start_time = EnoCoreUtils.Shuffle(tasks_start_time).ToList();
@@ -543,11 +557,14 @@ namespace EnoCore
                 List<CheckerTask> oldFlagsCheckerTasks = new List<CheckerTask>(oldFlags.Count());
                 double timeDiff = (double)quarterRound * 3 / oldFlags.Count();
                 DateTime time = currentRound.Begin;
+                int i = 0;
                 foreach (var oldFlag in oldFlags)
                 {
+                    var checkers = config.Checkers[oldFlag.ServiceId];
                     var task = new CheckerTask()
                     {
                         Address = $"service{oldFlag.ServiceId}.team{oldFlag.OwnerId}.{config.DnsSuffix}",
+                        CheckerUrl = checkers[i % checkers.Length],
                         MaxRunningTime = quarterRound,
                         Payload = oldFlag.StringRepresentation,
                         RelatedRoundId = oldFlag.GameRoundId,
@@ -564,6 +581,7 @@ namespace EnoCore
                     };
                     oldFlagsCheckerTasks.Add(task);
                     time = time.AddSeconds(timeDiff);
+                    i++;
                 }
 
                 var tasks_start_time = oldFlagsCheckerTasks.Select(x => x.StartTime).ToList();
@@ -580,11 +598,14 @@ namespace EnoCore
             int maxRunningTime = config.RoundLengthInSeconds / 4;
             double timeDiff = (maxRunningTime - 5) / (double)currentNoise.Count();
             var tasks = new List<CheckerTask>(currentNoise.Count());
+            int i = 0;
             foreach (var flag in currentNoise)
             {
+                var checkers = config.Checkers[flag.ServiceId];
                 tasks.Add(new CheckerTask()
                 {
                     Address = $"service{flag.ServiceId}.team{flag.OwnerId}.{config.DnsSuffix}",
+                    CheckerUrl = checkers[i % checkers.Length],
                     MaxRunningTime = maxRunningTime,
                     Payload = flag.StringRepresentation,
                     CurrentRoundId = flag.GameRoundId,
@@ -600,6 +621,7 @@ namespace EnoCore
                     RoundLength = config.RoundLengthInSeconds
                 });
                 q3 = q3.AddSeconds(timeDiff);
+                i++;
             }
 
             var tasks_start_time = tasks.Select(x => x.StartTime).ToList();

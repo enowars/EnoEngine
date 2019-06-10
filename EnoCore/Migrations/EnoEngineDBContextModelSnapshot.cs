@@ -30,6 +30,8 @@ namespace EnoCore.Migrations
 
                     b.Property<int>("CheckerTaskLaunchStatus");
 
+                    b.Property<string>("CheckerUrl");
+
                     b.Property<long>("CurrentRoundId");
 
                     b.Property<int>("MaxRunningTime");

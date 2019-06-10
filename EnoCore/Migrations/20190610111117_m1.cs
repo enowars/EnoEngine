@@ -14,6 +14,7 @@ namespace EnoCore.Migrations
                 {
                     Id = table.Column<long>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
+                    CheckerUrl = table.Column<string>(nullable: true),
                     TaskType = table.Column<string>(nullable: true),
                     Address = table.Column<string>(nullable: true),
                     ServiceId = table.Column<long>(nullable: false),

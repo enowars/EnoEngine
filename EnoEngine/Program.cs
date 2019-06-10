@@ -52,6 +52,7 @@ namespace EnoEngine
             var content = File.ReadAllText("ctf.json");
             Configuration = JsonConvert.DeserializeObject<JsonConfiguration>(content);
             var result = EnoDatabase.ApplyConfig(Configuration);
+            Configuration.BuildCheckersDict();
             if (result.Success)
             {
                 GameLoop().Wait();

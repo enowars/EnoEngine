@@ -25,6 +25,7 @@ namespace EnoCore.Models.Database
     {
         [JsonProperty("runId")]
         public long Id { get; set; }
+        public string CheckerUrl { get; set; }
         [JsonProperty("method")]
         public string TaskType { get; set; }
         [JsonProperty("address")]
