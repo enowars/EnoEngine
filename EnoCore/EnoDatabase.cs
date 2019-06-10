@@ -1022,6 +1022,12 @@ namespace EnoCore
                 .Where(ct => ct.ServiceId == service.Id)
                 .AsNoTracking()
                 .ToArrayAsync();
+
+            if (currentRoundTasks.Length == 0)
+            {
+                return ServiceStatus.CheckerError;
+            }
+            ServiceStatus bestServiceStatus = ServiceStatus.Ok;
             foreach (var task in currentRoundTasks)
             {
                 switch (task.CheckerResult)
@@ -1029,12 +1035,24 @@ namespace EnoCore
                     case CheckerResult.Ok:
                         continue;
                     case CheckerResult.Mumble:
-                        return ServiceStatus.Mumble;
+                        if (bestServiceStatus == ServiceStatus.Ok)
+                        {
+                            bestServiceStatus = ServiceStatus.Mumble;
+                        }
+                        continue;
                     case CheckerResult.Down:
-                        return ServiceStatus.Down;
+                        if (bestServiceStatus == ServiceStatus.Ok || bestServiceStatus == ServiceStatus.Mumble)
+                        {
+                            bestServiceStatus = ServiceStatus.Down;
+                        }
+                        continue;
                     default:
                         return ServiceStatus.CheckerError;
                 }
+            }
+            if (bestServiceStatus != ServiceStatus.Ok)
+            {
+                return bestServiceStatus;
             }
 
             // Current round was Ok, let's check the old ones
