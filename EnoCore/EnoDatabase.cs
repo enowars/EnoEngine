@@ -349,14 +349,17 @@ namespace EnoCore
             {
                 foreach (var service in services)
                 {
-                    var havoc = new Havoc()
+                    for (int i = 0; i < service.HavocsPerRound; i++)
                     {
-                        Owner = team,
-                        StringRepresentation = EnoCoreUtils.GenerateSignedNoise((int)round.Id, (int)team.Id),
-                        Service = service,
-                        GameRound = round
-                    };
-                    newHavocs.Add(havoc);
+                        var havoc = new Havoc()
+                        {
+                            Owner = team,
+                            StringRepresentation = EnoCoreUtils.GenerateSignedNoise((int)round.Id, (int)team.Id),
+                            Service = service,
+                            GameRound = round
+                        };
+                        newHavocs.Add(havoc);
+                    }
                 }
             }
             ctx.Havocs.AddRange(newHavocs);
