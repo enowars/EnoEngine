@@ -1,10 +1,14 @@
 version: '3.4'
 
 services:
-#  enolauncher:
-#    build:
-#      context: .
-#      dockerfile: EnoLauncher/Dockerfile
+  enolauncher:
+    environment:
+      - DATABASE_DOMAIN=enopostgres
+    build:
+      context: .
+      dockerfile: EnoLauncher/Dockerfile
+    volumes:
+      - ./ctf.json:/app/ctf.json
   enopostgres:
     image: postgres
     environment:
@@ -14,11 +18,15 @@ services:
       - enowarspostgres:/var/lib/postgresql
     ports:
       - "127.0.0.1:5432:5432"
-#  enoengine:
-#    image: ${DOCKER_REGISTRY-}enoengine
-#    build:
-#      context: .
-#      dockerfile: EnoEngine/Dockerfile
+  enoengine:
+    image: ${DOCKER_REGISTRY-}enoengine
+    environment:
+      - DATABASE_DOMAIN=enopostgres
+    build:
+      context: .
+      dockerfile: EnoEngine/Dockerfile
+    volumes:
+      - ./ctf.json:/app/ctf.json
 
 volumes:
   enowarspostgres:
