@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EnoCore.Migrations
 {
     [DbContext(typeof(EnoEngineDBContext))]
-    [Migration("20190610111117_m1")]
+    [Migration("20190613143204_m1")]
     partial class m1
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -121,6 +121,36 @@ namespace EnoCore.Migrations
                     b.HasIndex("ServiceId");
 
                     b.ToTable("Noises");
+                });
+
+            modelBuilder.Entity("EnoCore.Models.Database.ServiceStatsSnapshot", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<double>("AttackPoints");
+
+                    b.Property<double>("LostDefensePoints");
+
+                    b.Property<long>("RoundId");
+
+                    b.Property<long>("ServiceId");
+
+                    b.Property<double>("ServiceLevelAgreementPoints");
+
+                    b.Property<int>("Status");
+
+                    b.Property<long>("TeamId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoundId");
+
+                    b.HasIndex("ServiceId");
+
+                    b.HasIndex("TeamId");
+
+                    b.ToTable("ServiceStatsSnapshots");
                 });
 
             modelBuilder.Entity("EnoCore.Models.Flag", b =>
@@ -342,6 +372,24 @@ namespace EnoCore.Migrations
                     b.HasOne("EnoCore.Models.Service", "Service")
                         .WithMany()
                         .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("EnoCore.Models.Database.ServiceStatsSnapshot", b =>
+                {
+                    b.HasOne("EnoCore.Models.Round", "Round")
+                        .WithMany()
+                        .HasForeignKey("RoundId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("EnoCore.Models.Service", "Service")
+                        .WithMany()
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("EnoCore.Models.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 

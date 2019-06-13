@@ -45,6 +45,7 @@ namespace EnoCore
         public DbSet<RoundTeamServiceState> RoundTeamServiceStates { get; set; }
         public DbSet<SubmittedFlag> SubmittedFlags { get; set; }
         public DbSet<ServiceStats> ServiceStats { get; set; }
+        public DbSet<ServiceStatsSnapshot> ServiceStatsSnapshots { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -831,7 +832,6 @@ namespace EnoCore
                             Service = service,
                             Status = ServiceStatus.Down
                         });
-
                     }
                 }
             }
@@ -876,7 +876,7 @@ namespace EnoCore
             }
         }
 
-        public static async Task CalculatedAllPoints(long roundId)
+        public static async Task CalculatedAllPoints(long roundId, JsonConfiguration config)
         {
             using (var ctx = new EnoEngineDBContext())
             {
@@ -891,13 +891,13 @@ namespace EnoCore
                 {   
                     if (tasks.Count < maxTasks) //If there are less Tasks then max allowed Task, spawn a new one.
                     {
-                        tasks.Add(Task.Run(async () => await CalculateTeamScore(services, roundId, team)));
+                        tasks.Add(Task.Run(async () => await CalculateTeamScore(services, roundId, team, config)));
                     }
                     else //Wait for any Task to finish when max allowed Tasks are active.
                     {
                         Task finished = await Task.WhenAny(tasks);
                         tasks.Remove(finished);
-                        tasks.Add(Task.Run(async () => await CalculateTeamScore(services, roundId, team)));
+                        tasks.Add(Task.Run(async () => await CalculateTeamScore(services, roundId, team, config)));
                     }
                 }
                 await Task.WhenAll(tasks);
@@ -915,102 +915,225 @@ namespace EnoCore
             }
         }
 
-        private static async Task CalculateTeamScore(Service[] services, long currentRoundId, Team team)
+        private static async Task CalculateTeamScore(Service[] services, long currentRoundId, Team team, JsonConfiguration config)
         {
+            long newLatestSnapshotRoundId = Math.Max(0, currentRoundId - config.FlagValidityInRounds - 1);
             using (var ctx = new EnoEngineDBContext())
             {
                 await RetryConnection(ctx);
                 team = await ctx.Teams.SingleAsync(t => t.Id == team.Id);
+                if (newLatestSnapshotRoundId > 0)
+                {
+                    foreach (var service in services)
+                    {
+                        ctx.ServiceStatsSnapshots.Add(new ServiceStatsSnapshot()
+                        {
+                            AttackPoints = 0,
+                            LostDefensePoints = 0,
+                            RoundId = newLatestSnapshotRoundId,
+                            ServiceId = service.Id,
+                            ServiceLevelAgreementPoints = 0,
+                            Status = ServiceStatus.CheckerError,
+                            TeamId = team.Id
+                        });
+                    }
+                    await ctx.SaveChangesAsync();
+                }
                 team.TotalPoints = 0;
-                await CalculateOffenseScore(ctx, services, currentRoundId, team);
-                await CalculateDefenseScore(ctx, services, currentRoundId, team);
-                await CalculateSLAScore(ctx, services, currentRoundId, team);
+                await CalculateOffenseScore(ctx, services, currentRoundId, team, newLatestSnapshotRoundId);
+                await CalculateDefenseScore(ctx, services, currentRoundId, team, newLatestSnapshotRoundId);
+                await CalculateSLAScore(ctx, services, currentRoundId, team, newLatestSnapshotRoundId);
                 await ctx.SaveChangesAsync();
             }
         }
 
-        private static async Task CalculateSLAScore(EnoEngineDBContext ctx, Service[] services, long currentRoundId, Team team)
+        private static async Task CalculateSLAScore(EnoEngineDBContext ctx, Service[] services, long currentRoundId, Team team, long newLatestSnapshotRoundId)
         {
             double slaScore = 0;
             double teamsCount = ctx.Teams.Count();
             foreach (var service in services)
             {
-                double ups = await ctx.RoundTeamServiceStates
-                    .Where(rtss => rtss.GameRoundId <= currentRoundId)
+                var oldSnapshot = await ctx.ServiceStatsSnapshots
+                    .Where(sss => sss.TeamId == team.Id)
+                    .Where(sss => sss.ServiceId == service.Id)
+                    .OrderByDescending(sss => sss.RoundId)
+                    .Skip(1)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync();
+                var oldSnapshotRoundId = oldSnapshot?.RoundId ?? 0;
+                var oldSnapshotSlaCore = oldSnapshot?.ServiceLevelAgreementPoints ?? 0;
+
+                double upsBetweenSnapshots = await ctx.RoundTeamServiceStates
+                    .Where(rtss => rtss.GameRoundId > oldSnapshotRoundId)
+                    .Where(rtss => rtss.GameRoundId <= newLatestSnapshotRoundId)
                     .Where(rtss => rtss.TeamId == team.Id)
                     .Where(rtss => rtss.ServiceId == service.Id)
                     .Where(rtss => rtss.Status == ServiceStatus.Ok)
                     .CountAsync();
-
-                double recovers = await ctx.RoundTeamServiceStates
-                    .Where(rtss => rtss.GameRoundId <= currentRoundId)
+                double recoversBetweenSnapshots = await ctx.RoundTeamServiceStates
+                    .Where(rtss => rtss.GameRoundId > oldSnapshotRoundId)
+                    .Where(rtss => rtss.GameRoundId <= newLatestSnapshotRoundId)
                     .Where(rtss => rtss.TeamId == team.Id)
                     .Where(rtss => rtss.ServiceId == service.Id)
                     .Where(rtss => rtss.Status == ServiceStatus.Recovering)
                     .CountAsync();
 
-                double serviceSlaScore = (ups + 0.5 * recovers) * Math.Sqrt(teamsCount);
+                double upsAfterNewSnapshot = await ctx.RoundTeamServiceStates
+                    .Where(f => f.GameRoundId <= currentRoundId)
+                    .Where(f => f.GameRoundId > newLatestSnapshotRoundId)
+                    .Where(rtss => rtss.TeamId == team.Id)
+                    .Where(rtss => rtss.ServiceId == service.Id)
+                    .Where(rtss => rtss.Status == ServiceStatus.Ok)
+                    .CountAsync();
+                double recoversAfterNewSnapshot = await ctx.RoundTeamServiceStates
+                    .Where(f => f.GameRoundId <= currentRoundId)
+                    .Where(f => f.GameRoundId > newLatestSnapshotRoundId)
+                    .Where(rtss => rtss.TeamId == team.Id)
+                    .Where(rtss => rtss.ServiceId == service.Id)
+                    .Where(rtss => rtss.Status == ServiceStatus.Recovering)
+                    .CountAsync();
+
+                double newSnapshotSlaScore = oldSnapshotSlaCore + (upsBetweenSnapshots + 0.5 * recoversBetweenSnapshots) * Math.Sqrt(teamsCount);
+                double serviceSlaScore = newSnapshotSlaScore + (upsAfterNewSnapshot + 0.5 * recoversAfterNewSnapshot) * Math.Sqrt(teamsCount);
                 slaScore += serviceSlaScore;
                 (await ctx.ServiceStats
                     .Where(ss => ss.TeamId == team.Id && ss.ServiceId == service.Id)
                     .SingleAsync()).ServiceLevelAgreementPoints = serviceSlaScore;
+
+                if (newLatestSnapshotRoundId > oldSnapshotRoundId)
+                {
+                    (await ctx.ServiceStatsSnapshots
+                        .Where(ss => ss.TeamId == team.Id && ss.ServiceId == service.Id)
+                        .Where(sss => sss.RoundId == newLatestSnapshotRoundId)
+                        .SingleAsync()).ServiceLevelAgreementPoints = newSnapshotSlaScore;
+                }
             }
             team.ServiceLevelAgreementPoints = slaScore;
             team.TotalPoints += slaScore;
         }
 
-        private static async Task CalculateDefenseScore(EnoEngineDBContext ctx, Service[] services, long currentRoundId, Team team)
+        private static async Task CalculateDefenseScore(EnoEngineDBContext ctx, Service[] services, long currentRoundId, Team team, long newLatestSnapshotRoundId)
         {
             double teamDefenseScore = 0;
             foreach (var service in services)
             {
-                double serviceDefenseScore = 0;
-                var ownedFlags = ctx.Flags
+                var oldSnapshot = await ctx.ServiceStatsSnapshots
+                    .Where(sss => sss.TeamId == team.Id)
+                    .Where(sss => sss.ServiceId == service.Id)
+                    .OrderByDescending(sss => sss.RoundId)
+                    .Skip(1)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync();
+                var oldSnapshotRoundId = oldSnapshot?.RoundId ?? 0;
+                var oldSnapshotLostDefPoints = oldSnapshot?.LostDefensePoints ?? 0;
+
+                var ownedFlagsBetweenSnapshots = await ctx.Flags
+                    .Where(f => f.GameRoundId > oldSnapshotRoundId)
+                    .Where(f => f.GameRoundId <= newLatestSnapshotRoundId)
                     .Where(f => f.OwnerId == team.Id)
                     .Where(f => f.ServiceId == service.Id)
-                    .Where(f => f.GameRoundId <= currentRoundId);
+                    .ToArrayAsync();
+                var ownedFlagsAfterNewSnapshot = await ctx.Flags
+                    .Where(f => f.GameRoundId <= currentRoundId)
+                    .Where(f => f.GameRoundId > newLatestSnapshotRoundId)
+                    .Where(f => f.OwnerId == team.Id)
+                    .Where(f => f.ServiceId == service.Id)
+                    .ToArrayAsync();
 
-                foreach (var ownedFlag in ownedFlags)
+                double newSnapshotDefenseScore = oldSnapshotLostDefPoints;
+                foreach (var ownedFlag in ownedFlagsBetweenSnapshots)
                 {
-                    double allCapturesOfFlag = (await ctx.SubmittedFlags
+                    double allCapturesOfFlag = await ctx.SubmittedFlags
                         .Where(f => f.FlagId == ownedFlag.Id)
-                        .CountAsync());
+                        .CountAsync();
+                    newSnapshotDefenseScore -= Math.Pow(allCapturesOfFlag, 0.75);
+                }
 
+                double serviceDefenseScore = newSnapshotDefenseScore;
+                foreach (var ownedFlag in ownedFlagsAfterNewSnapshot)
+                {
+                    double allCapturesOfFlag = await ctx.SubmittedFlags
+                        .Where(f => f.FlagId == ownedFlag.Id)
+                        .CountAsync();
                     serviceDefenseScore -= Math.Pow(allCapturesOfFlag, 0.75);
                 }
+
                 teamDefenseScore += serviceDefenseScore;
                 (await ctx.ServiceStats
                     .Where(ss => ss.TeamId == team.Id && ss.ServiceId == service.Id)
                     .SingleAsync()).LostDefensePoints = serviceDefenseScore;
+
+                if (newLatestSnapshotRoundId > oldSnapshotRoundId)
+                {
+                    (await ctx.ServiceStatsSnapshots
+                        .Where(ss => ss.TeamId == team.Id && ss.ServiceId == service.Id)
+                        .Where(sss => sss.RoundId == newLatestSnapshotRoundId)
+                        .SingleAsync()).LostDefensePoints = newSnapshotDefenseScore;
+                }
             }
             team.LostDefensePoints = teamDefenseScore;
             team.TotalPoints += teamDefenseScore;
         }
 
-        private static async Task CalculateOffenseScore(EnoEngineDBContext ctx, Service[] services, long currentRoundId, Team team)
+        private static async Task CalculateOffenseScore(EnoEngineDBContext ctx, Service[] services, long currentRoundId, Team team, long newLatestSnapshotRoundId)
         {
             double offenseScore = 0;
             foreach (var service in services)
             {
-                var flagsCapturedByTeam = ctx.SubmittedFlags
-                    .Where(f => f.AttackerTeamId == team.Id)
-                    .Where(f => f.RoundId <= currentRoundId)
-                    .Include(f => f.Flag)
-                    .Where(f => f.Flag.ServiceId == service.Id);
+                var oldSnapshot = await ctx.ServiceStatsSnapshots
+                    .Where(sss => sss.TeamId == team.Id)
+                    .Where(sss => sss.ServiceId == service.Id)
+                    .OrderByDescending(sss => sss.RoundId)
+                    .Skip(1)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync();
+                var oldSnapshotRoundId = oldSnapshot?.RoundId ?? 0;
+                var oldSnapshotAttackPoints = oldSnapshot?.AttackPoints ?? 0;
 
-                double serviceOffenseScore = flagsCapturedByTeam.Count();
-                foreach (var submittedFlag in flagsCapturedByTeam)
+                var flagsCapturedByTeamBetweenSnapshots = await ctx.SubmittedFlags
+                    .Where(f => f.AttackerTeamId == team.Id)
+                    .Where(f => f.RoundId > oldSnapshotRoundId)
+                    .Where(f => f.RoundId <= newLatestSnapshotRoundId)
+                    .Include(f => f.Flag)
+                    .Where(f => f.Flag.ServiceId == service.Id)
+                    .ToArrayAsync();
+                var flagsCapturedByTeamAfterNewSnapshot = await ctx.SubmittedFlags
+                    .Where(f => f.RoundId <= currentRoundId)
+                    .Where(f => f.RoundId > newLatestSnapshotRoundId)
+                    .Where(f => f.AttackerTeamId == team.Id)
+                    .Include(f => f.Flag)
+                    .Where(f => f.Flag.ServiceId == service.Id)
+                    .ToArrayAsync();
+
+                double newSnapshotOffenseScore = oldSnapshotAttackPoints + flagsCapturedByTeamBetweenSnapshots.Length;
+                foreach (var submittedFlag in flagsCapturedByTeamBetweenSnapshots)
                 {
                     double capturesOfFlag = await ctx.Flags
                         .Where(f => f.Id == submittedFlag.FlagId)
                         .CountAsync();
-                    serviceOffenseScore += Math.Pow(1 / capturesOfFlag, 0.75);
+                    newSnapshotOffenseScore += Math.Pow(1 / capturesOfFlag, 0.75);
+                }
+                double serviceOffenseScore = newSnapshotOffenseScore + flagsCapturedByTeamAfterNewSnapshot.Length;
+                foreach (var submittedFlag in flagsCapturedByTeamAfterNewSnapshot)
+                {
+                    double capturesOfFlag = await ctx.Flags
+                        .Where(f => f.Id == submittedFlag.FlagId)
+                        .CountAsync();
+                    newSnapshotOffenseScore += Math.Pow(1 / capturesOfFlag, 0.75);
                 }
 
                 offenseScore += serviceOffenseScore;
                 (await ctx.ServiceStats
                     .Where(ss => ss.TeamId == team.Id && ss.ServiceId == service.Id)
                     .SingleAsync()).AttackPoints = serviceOffenseScore;
+
+                if (newLatestSnapshotRoundId > oldSnapshotRoundId)
+                {
+                    (await ctx.ServiceStatsSnapshots
+                        .Where(ss => ss.TeamId == team.Id && ss.ServiceId == service.Id)
+                        .Where(sss => sss.RoundId == newLatestSnapshotRoundId)
+                        .SingleAsync()).AttackPoints = newSnapshotOffenseScore;
+                }
             }
             team.AttackPoints = offenseScore;
             team.TotalPoints += offenseScore;

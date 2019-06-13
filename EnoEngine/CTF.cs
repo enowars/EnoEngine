@@ -47,7 +47,7 @@ namespace EnoEngine.Game
                 long observedRounds = Program.Configuration.CheckedRoundsPerRound > currentRound.Id ? currentRound.Id : Program.Configuration.CheckedRoundsPerRound;
 
                 // start the evaluation
-                var handleOldRoundTask = Task.Run(async () => await HandleRoundEnd(currentRound.Id - 1));
+                var handleOldRoundTask = Task.Run(async () => await HandleRoundEnd(currentRound.Id - 1, Program.Configuration));
 
                 // insert put tasks
                 var insertPutNewFlagsTask = Task.Run(async () => await EnoDatabase.InsertPutFlagsTasks(currentRound.Id, begin, Program.Configuration));
@@ -127,12 +127,12 @@ namespace EnoEngine.Game
             }
         }
 
-        private async Task<DateTime> HandleRoundEnd(long roundId)
+        private async Task<DateTime> HandleRoundEnd(long roundId, JsonConfiguration config)
         {
             if (roundId > 0)
             {
                 await EnoDatabase.RecordServiceStates(roundId);
-                await EnoDatabase.CalculatedAllPoints(roundId);
+                await EnoDatabase.CalculatedAllPoints(roundId, config);
             }
             EnoCoreUtils.GenerateCurrentScoreboard($"..{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}", roundId);
             return DateTime.UtcNow;

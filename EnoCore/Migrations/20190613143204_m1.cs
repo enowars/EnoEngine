@@ -265,6 +265,43 @@ namespace EnoCore.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ServiceStatsSnapshots",
+                columns: table => new
+                {
+                    Id = table.Column<long>(nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
+                    TeamId = table.Column<long>(nullable: false),
+                    ServiceId = table.Column<long>(nullable: false),
+                    AttackPoints = table.Column<double>(nullable: false),
+                    LostDefensePoints = table.Column<double>(nullable: false),
+                    ServiceLevelAgreementPoints = table.Column<double>(nullable: false),
+                    Status = table.Column<int>(nullable: false),
+                    RoundId = table.Column<long>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ServiceStatsSnapshots", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ServiceStatsSnapshots_Rounds_RoundId",
+                        column: x => x.RoundId,
+                        principalTable: "Rounds",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ServiceStatsSnapshots_Services_ServiceId",
+                        column: x => x.ServiceId,
+                        principalTable: "Services",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ServiceStatsSnapshots_Teams_TeamId",
+                        column: x => x.TeamId,
+                        principalTable: "Teams",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "SubmittedFlags",
                 columns: table => new
                 {
@@ -424,6 +461,21 @@ namespace EnoCore.Migrations
                 column: "TeamId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ServiceStatsSnapshots_RoundId",
+                table: "ServiceStatsSnapshots",
+                column: "RoundId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ServiceStatsSnapshots_ServiceId",
+                table: "ServiceStatsSnapshots",
+                column: "ServiceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ServiceStatsSnapshots_TeamId",
+                table: "ServiceStatsSnapshots",
+                column: "TeamId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_SubmittedFlags_FlagId",
                 table: "SubmittedFlags",
                 column: "FlagId");
@@ -463,6 +515,9 @@ namespace EnoCore.Migrations
 
             migrationBuilder.DropTable(
                 name: "ServiceStats");
+
+            migrationBuilder.DropTable(
+                name: "ServiceStatsSnapshots");
 
             migrationBuilder.DropTable(
                 name: "SubmittedFlags");
