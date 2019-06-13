@@ -13,6 +13,7 @@ using EnoCore.Models.Json;
 using EnoCore.Models.Database;
 using Microsoft.Extensions.Logging;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 namespace EnoCore
 {
@@ -897,7 +898,11 @@ namespace EnoCore
 
                 foreach (var service in services)
                 {
+                    Stopwatch stopWatch = new Stopwatch();
+                    TimeSpan ts = stopWatch.Elapsed;
                     await CalculateServiceScores(teams, roundId, service, newLatestSnapshotRoundId);
+                    stopWatch.Stop();
+                    Console.WriteLine($"CalculateServiceScores {service.Name} too {stopWatch.Elapsed}");
                 }
 
                 // calculate the total points
@@ -983,7 +988,6 @@ namespace EnoCore
                     .AsNoTracking()
                     .ToArrayAsync();
 
-                await RetryConnection(ctx);
                 var tasks = new HashSet<Task>();
                 var teamserviceStats = new TeamServiceStates[teams.Length];
                 for (int i = 0; i < teams.Length; i++)
