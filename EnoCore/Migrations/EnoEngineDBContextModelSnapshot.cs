@@ -136,8 +136,6 @@ namespace EnoCore.Migrations
 
                     b.Property<double>("ServiceLevelAgreementPoints");
 
-                    b.Property<int>("Status");
-
                     b.Property<long>("TeamId");
 
                     b.HasKey("Id");

@@ -275,7 +275,6 @@ namespace EnoCore.Migrations
                     AttackPoints = table.Column<double>(nullable: false),
                     LostDefensePoints = table.Column<double>(nullable: false),
                     ServiceLevelAgreementPoints = table.Column<double>(nullable: false),
-                    Status = table.Column<int>(nullable: false),
                     RoundId = table.Column<long>(nullable: false)
                 },
                 constraints: table =>
