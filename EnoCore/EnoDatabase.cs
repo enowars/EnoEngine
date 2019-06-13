@@ -850,6 +850,8 @@ namespace EnoCore
 
         public static async Task RecordServiceStates(long roundId)
         {
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
             using (var ctx = new EnoEngineDBContext())
             {
                 await RetryConnection(ctx);
@@ -881,6 +883,8 @@ namespace EnoCore
                 }
                 await ctx.SaveChangesAsync();
             }
+            stopWatch.Stop();
+            Console.WriteLine($"RecordServiceStates took {stopWatch.Elapsed.TotalMilliseconds}ms");
         }
 
         public static async Task CalculatedAllPoints(long roundId, JsonConfiguration config)
@@ -899,10 +903,10 @@ namespace EnoCore
                 foreach (var service in services)
                 {
                     Stopwatch stopWatch = new Stopwatch();
-                    TimeSpan ts = stopWatch.Elapsed;
+                    stopWatch.Start();
                     await CalculateServiceScores(teams, roundId, service, newLatestSnapshotRoundId);
                     stopWatch.Stop();
-                    Console.WriteLine($"CalculateServiceScores {service.Name} too {stopWatch.Elapsed}");
+                    Console.WriteLine($"CalculateServiceScores {service.Name} took {stopWatch.Elapsed.TotalMilliseconds}ms");
                 }
 
                 // calculate the total points
