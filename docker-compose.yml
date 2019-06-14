@@ -27,7 +27,7 @@ services:
       dockerfile: EnoEngine/Dockerfile
     volumes:
       - ./ctf.json:/app/ctf.json
-
+      - ./data:/data
 volumes:
   enowarspostgres:
 
