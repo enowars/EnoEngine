@@ -135,10 +135,9 @@ namespace EnoEngine
                 Function = nameof(Main),
                 Message = "EnoEngine starting"
             });
-            var databaseDomain = Environment.GetEnvironmentVariable("DATABASE_DOMAIN") ?? "localhost";
             var serviceProvider = new ServiceCollection()
                 .AddDbContextPool<EnoDatabaseContext>(options => { options.UseNpgsql(
-                    $@"Server={databaseDomain};Port=5432;Database=EnoDatabase;User Id=docker;Password=docker;Timeout=15;SslMode=Disable;",
+                    EnoCoreUtils.PostgresConnectionString,
                     pgoptions => pgoptions.EnableRetryOnFailure());
                 }, 90)
                 .AddScoped<IEnoDatabase, EnoDatabase>()

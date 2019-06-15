@@ -137,7 +137,6 @@ namespace EnoCore.Migrations
                 {
                     Id = table.Column<long>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
-                    StringRepresentation = table.Column<string>(nullable: true),
                     OwnerId = table.Column<long>(nullable: false),
                     ServiceId = table.Column<long>(nullable: false),
                     GameRoundId = table.Column<long>(nullable: false)
@@ -340,16 +339,6 @@ namespace EnoCore.Migrations
                 column: "CheckerTaskLaunchStatus");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CheckerTasks_CurrentRoundId",
-                table: "CheckerTasks",
-                column: "CurrentRoundId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CheckerTasks_Id",
-                table: "CheckerTasks",
-                column: "Id");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_CheckerTasks_StartTime",
                 table: "CheckerTasks",
                 column: "StartTime");
@@ -358,11 +347,6 @@ namespace EnoCore.Migrations
                 name: "IX_Flags_GameRoundId",
                 table: "Flags",
                 column: "GameRoundId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Flags_Id",
-                table: "Flags",
-                column: "Id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Flags_OwnerId",
@@ -400,11 +384,6 @@ namespace EnoCore.Migrations
                 column: "GameRoundId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Noises_Id",
-                table: "Noises",
-                column: "Id");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Noises_OwnerId",
                 table: "Noises",
                 column: "OwnerId");
@@ -415,19 +394,9 @@ namespace EnoCore.Migrations
                 column: "ServiceId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Rounds_Id",
-                table: "Rounds",
-                column: "Id");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_RoundTeamServiceStates_GameRoundId",
                 table: "RoundTeamServiceStates",
                 column: "GameRoundId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_RoundTeamServiceStates_Id",
-                table: "RoundTeamServiceStates",
-                column: "Id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RoundTeamServiceStates_ServiceId",
@@ -438,16 +407,6 @@ namespace EnoCore.Migrations
                 name: "IX_RoundTeamServiceStates_TeamId",
                 table: "RoundTeamServiceStates",
                 column: "TeamId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Services_Id",
-                table: "Services",
-                column: "Id");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ServiceStats_Id",
-                table: "ServiceStats",
-                column: "Id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ServiceStats_ServiceId",
@@ -480,11 +439,6 @@ namespace EnoCore.Migrations
                 column: "FlagId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_SubmittedFlags_Id",
-                table: "SubmittedFlags",
-                column: "Id");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_SubmittedFlags_RoundId",
                 table: "SubmittedFlags",
                 column: "RoundId");
@@ -494,11 +448,6 @@ namespace EnoCore.Migrations
                 table: "SubmittedFlags",
                 columns: new[] { "AttackerTeamId", "FlagId" },
                 unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Teams_Id",
-                table: "Teams",
-                column: "Id");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

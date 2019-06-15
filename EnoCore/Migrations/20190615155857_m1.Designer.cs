@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EnoCore.Migrations
 {
     [DbContext(typeof(EnoDatabaseContext))]
-    [Migration("20190613195103_m1")]
+    [Migration("20190615155857_m1")]
     partial class m1
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -62,10 +62,6 @@ namespace EnoCore.Migrations
 
                     b.HasIndex("CheckerTaskLaunchStatus");
 
-                    b.HasIndex("CurrentRoundId");
-
-                    b.HasIndex("Id");
-
                     b.HasIndex("StartTime");
 
                     b.ToTable("CheckerTasks");
@@ -81,8 +77,6 @@ namespace EnoCore.Migrations
                     b.Property<long>("OwnerId");
 
                     b.Property<long>("ServiceId");
-
-                    b.Property<string>("StringRepresentation");
 
                     b.HasKey("Id");
 
@@ -113,8 +107,6 @@ namespace EnoCore.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("GameRoundId");
-
-                    b.HasIndex("Id");
 
                     b.HasIndex("OwnerId");
 
@@ -172,8 +164,6 @@ namespace EnoCore.Migrations
 
                     b.HasIndex("GameRoundId");
 
-                    b.HasIndex("Id");
-
                     b.HasIndex("OwnerId");
 
                     b.HasIndex("PutTaskId");
@@ -200,8 +190,6 @@ namespace EnoCore.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Id");
-
                     b.ToTable("Rounds");
                 });
 
@@ -221,8 +209,6 @@ namespace EnoCore.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("GameRoundId");
-
-                    b.HasIndex("Id");
 
                     b.HasIndex("ServiceId");
 
@@ -249,8 +235,6 @@ namespace EnoCore.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Id");
-
                     b.ToTable("Services");
                 });
 
@@ -272,8 +256,6 @@ namespace EnoCore.Migrations
                     b.Property<long>("TeamId");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Id");
 
                     b.HasIndex("ServiceId");
 
@@ -299,8 +281,6 @@ namespace EnoCore.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("FlagId");
-
-                    b.HasIndex("Id");
 
                     b.HasIndex("RoundId");
 
@@ -331,8 +311,6 @@ namespace EnoCore.Migrations
                     b.Property<double>("TotalPoints");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Id");
 
                     b.ToTable("Teams");
                 });

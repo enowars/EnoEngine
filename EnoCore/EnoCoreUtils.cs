@@ -49,6 +49,8 @@ namespace EnoCore
         private static readonly int ENTROPY_IN_BYTES = 8;
         private static readonly byte[] FLAG_SIGNING_KEY = Encoding.ASCII.GetBytes("suchasecretstornkkeytheywillneverguess");
         private static readonly byte[] NOISE_SIGNING_KEY = Encoding.ASCII.GetBytes("anotherstrenksecrettheyvref24tr");
+        public static string PostgresDomain => Environment.GetEnvironmentVariable("DATABASE_DOMAIN") ?? "localhost";
+        public static string PostgresConnectionString => $@"Server={PostgresDomain};Port=5432;Database=EnoDatabase;User Id=docker;Password=docker;Timeout=15;SslMode=Disable;";
 
 
         public static CheckerResult ParseCheckerResult(string result)
@@ -163,6 +165,21 @@ namespace EnoCore
                 int swapIndex = ThreadSafeRandom.Next(i + 1);
                 yield return elements[swapIndex];
                 elements[swapIndex] = elements[i];
+            }
+        }
+
+        public static ServiceStatus CheckerResultToServiceStatus(CheckerResult checkerResult)
+        {
+            switch (checkerResult)
+            {
+                case CheckerResult.Ok:
+                    return ServiceStatus.Ok;
+                case CheckerResult.Mumble:
+                    return ServiceStatus.Mumble;
+                case CheckerResult.Down:
+                    return ServiceStatus.Down;
+                default:
+                    return ServiceStatus.CheckerError;
             }
         }
     }

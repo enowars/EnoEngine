@@ -2,6 +2,7 @@
 using EnoCore.Models.Database;
 using EnoCore.Models.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,16 @@ using System.Threading.Tasks;
 
 namespace EnoCore
 {
+    public class EnoDatabaseContextFactory : IDesignTimeDbContextFactory<EnoDatabaseContext>
+    {
+        public EnoDatabaseContext CreateDbContext(string[] args)
+        {
+            var optionsBuilder = new DbContextOptionsBuilder<EnoDatabaseContext>();
+            optionsBuilder.UseNpgsql(EnoCoreUtils.PostgresConnectionString, pgoptions => pgoptions.EnableRetryOnFailure());
+            return new EnoDatabaseContext(optionsBuilder.Options);
+        }
+    }
+
     public class EnoDatabaseContext : DbContext
     {
         public DbSet<CheckerTask> CheckerTasks { get; set; }
@@ -24,56 +35,15 @@ namespace EnoCore
         public DbSet<ServiceStats> ServiceStats { get; set; }
         public DbSet<ServiceStatsSnapshot> ServiceStatsSnapshots { get; set; }
 
-        public EnoDatabaseContext(DbContextOptions<EnoDatabaseContext> options) : base(options)
-        {
-        }
+        public EnoDatabaseContext(DbContextOptions<EnoDatabaseContext> options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<CheckerTask>()
-                .HasIndex(ct => ct.Id);
-
-            modelBuilder.Entity<CheckerTask>()
                 .HasIndex(ct => ct.CheckerTaskLaunchStatus);
 
             modelBuilder.Entity<CheckerTask>()
-                .HasIndex(ct => ct.CurrentRoundId);
-
-            modelBuilder.Entity<CheckerTask>()
                 .HasIndex(ct => ct.StartTime);
-
-            modelBuilder.Entity<Flag>()
-                .HasIndex(f => f.Id);
-
-            modelBuilder.Entity<Flag>()
-                .HasIndex(f => f.GameRoundId);
-
-            modelBuilder.Entity<Flag>()
-                .HasIndex(f => f.PutTaskId);
-
-            modelBuilder.Entity<Noise>()
-                .HasIndex(f => f.Id);
-
-            modelBuilder.Entity<Service>()
-                .HasIndex(s => s.Id);
-
-            modelBuilder.Entity<Team>()
-                .HasIndex(t => t.Id);
-
-            modelBuilder.Entity<Round>()
-                .HasIndex(r => r.Id);
-
-            modelBuilder.Entity<RoundTeamServiceState>()
-                .HasIndex(rtss => rtss.Id);
-
-            modelBuilder.Entity<RoundTeamServiceState>()
-                .HasIndex(rtss => rtss.GameRoundId);
-
-            modelBuilder.Entity<SubmittedFlag>()
-                .HasIndex(sf => sf.Id);
-
-            modelBuilder.Entity<ServiceStats>()
-                .HasIndex(ss => ss.Id);
 
             modelBuilder.Entity<SubmittedFlag>()
                 .HasIndex(sf => new { sf.AttackerTeamId, sf.FlagId })

@@ -15,10 +15,10 @@ namespace EnoCore.Models.Database
 
     public enum CheckerResult
     {
-        CheckerError,
         Ok,
         Mumble,
-        Down
+        Down,
+        CheckerError
     }
 
     public class CheckerTask
