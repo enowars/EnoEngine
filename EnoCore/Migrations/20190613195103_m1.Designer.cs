@@ -9,7 +9,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace EnoCore.Migrations
 {
-    [DbContext(typeof(EnoEngineDBContext))]
+    [DbContext(typeof(EnoDatabaseContext))]
     [Migration("20190613195103_m1")]
     partial class m1
     {

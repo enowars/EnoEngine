@@ -15,6 +15,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 using Microsoft.Extensions.DependencyInjection;
 using System.Diagnostics;
+using System.ComponentModel;
+using Microsoft.EntityFrameworkCore;
 
 namespace EnoEngine
 {
@@ -23,7 +25,15 @@ namespace EnoEngine
         private static readonly EnoLogger Logger = new EnoLogger(nameof(EnoEngine));
         private static readonly CancellationTokenSource EngineCancelSource = new CancellationTokenSource();
         public static JsonConfiguration Configuration { get; set; }
-        CTF EnoGame;
+
+        readonly CTF EnoGame;
+        readonly ServiceProvider ServiceProvider;
+
+        public Program(ServiceProvider serviceProvider)
+        {
+            ServiceProvider = serviceProvider;
+            EnoGame = new CTF(serviceProvider, EngineCancelSource.Token);
+        }
 
         public int Start()
         {
@@ -51,7 +61,8 @@ namespace EnoEngine
             }
             var content = File.ReadAllText("ctf.json");
             Configuration = JsonConvert.DeserializeObject<JsonConfiguration>(content);
-            var result = EnoDatabase.ApplyConfig(Configuration);
+            var db = ServiceProvider.CreateScope().ServiceProvider.GetRequiredService<IEnoDatabase>();
+            var result = db.ApplyConfig(Configuration);
             Configuration.BuildCheckersDict();
             if (result.Success)
             {
@@ -64,7 +75,7 @@ namespace EnoEngine
                 {
                     Module = nameof(EnoEngine),
                     Function = nameof(Start),
-                    Message = $"Invalid configuration, exiting ({result.ErrorMessage}"
+                    Message = $"Invalid configuration, exiting ({result.ErrorMessage})"
                 });
                 return 1;
             }
@@ -74,7 +85,6 @@ namespace EnoEngine
         {
             try
             {
-                EnoGame = new CTF(EngineCancelSource.Token);
                 while (!EngineCancelSource.IsCancellationRequested)
                 {
                     var end = await EnoGame.StartNewRound();
@@ -125,7 +135,15 @@ namespace EnoEngine
                 Function = nameof(Main),
                 Message = "EnoEngine starting"
             });
-            new Program().Start();
+            var databaseDomain = Environment.GetEnvironmentVariable("DATABASE_DOMAIN") ?? "localhost";
+            var serviceProvider = new ServiceCollection()
+                .AddDbContextPool<EnoDatabaseContext>(options => { options.UseNpgsql(
+                    $@"Server={databaseDomain};Port=5432;Database=EnoDatabase;User Id=docker;Password=docker;Timeout=15;SslMode=Disable;",
+                    pgoptions => pgoptions.EnableRetryOnFailure());
+                }, 90)
+                .AddScoped<IEnoDatabase, EnoDatabase>()
+                .BuildServiceProvider(validateScopes: true);
+            new Program(serviceProvider).Start();
         }
     }
 }

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace EnoCore.Models.Database
 {
-    class ServiceStatsSnapshot
+    public class ServiceStatsSnapshot
     {
         public long Id { get; set; }
         public long TeamId { get; set; }

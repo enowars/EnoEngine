@@ -14,6 +14,7 @@ using EnoCore.Models.Database;
 using Microsoft.Extensions.Logging;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace EnoCore
 {
@@ -34,95 +35,48 @@ namespace EnoCore
         public string ErrorMessage;
     }
 
-    internal class TeamServiceStates
+    public class TeamServiceStates
     {
         public long Ups { get; set; }
         public long Recoverings { get; set; }
     }
 
-    internal class EnoEngineDBContext : DbContext
+    public interface IEnoDatabase
     {
-        public DbSet<CheckerTask> CheckerTasks { get; set; }
-        public DbSet<Flag> Flags { get; set; }
-        public DbSet<Noise> Noises { get; set; }
-        public DbSet<Havoc> Havocs { get; set; }
-        public DbSet<Service> Services { get; set; }
-        public DbSet<Team> Teams { get; set; }
-        public DbSet<Round> Rounds { get; set; }
-        public DbSet<RoundTeamServiceState> RoundTeamServiceStates { get; set; }
-        public DbSet<SubmittedFlag> SubmittedFlags { get; set; }
-        public DbSet<ServiceStats> ServiceStats { get; set; }
-        public DbSet<ServiceStatsSnapshot> ServiceStatsSnapshots { get; set; }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            var databaseDomain = Environment.GetEnvironmentVariable("DATABASE_DOMAIN") ?? "localhost";
-            optionsBuilder
-                .UseNpgsql(
-                    $@"Server={databaseDomain};Port=5432;Database=EnoDatabase;User Id=docker;Password=docker;Timeout=15;SslMode=Disable;",
-                    options => options.EnableRetryOnFailure());
-        }
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<CheckerTask>()
-                .HasIndex(ct => ct.Id);
-
-            modelBuilder.Entity<CheckerTask>()
-                .HasIndex(ct => ct.CheckerTaskLaunchStatus);
-
-            modelBuilder.Entity<CheckerTask>()
-                .HasIndex(ct => ct.CurrentRoundId);
-
-            modelBuilder.Entity<CheckerTask>()
-                .HasIndex(ct => ct.StartTime);
-
-            modelBuilder.Entity<Flag>()
-                .HasIndex(f => f.Id);
-
-            modelBuilder.Entity<Flag>()
-                .HasIndex(f => f.GameRoundId);
-
-            modelBuilder.Entity<Flag>()
-                .HasIndex(f => f.PutTaskId);
-
-            modelBuilder.Entity<Noise>()
-                .HasIndex(f => f.Id);
-
-            modelBuilder.Entity<Service>()
-                .HasIndex(s => s.Id);
-
-            modelBuilder.Entity<Team>()
-                .HasIndex(t => t.Id);
-
-            modelBuilder.Entity<Round>()
-                .HasIndex(r => r.Id);
-
-            modelBuilder.Entity<RoundTeamServiceState>()
-                .HasIndex(rtss => rtss.Id);
-
-            modelBuilder.Entity<RoundTeamServiceState>()
-                .HasIndex(rtss => rtss.GameRoundId);
-
-            modelBuilder.Entity<SubmittedFlag>()
-                .HasIndex(sf => sf.Id);
-
-            modelBuilder.Entity<ServiceStats>()
-                .HasIndex(ss => ss.Id);
-
-            modelBuilder.Entity<SubmittedFlag>()
-                .HasIndex(sf => new { sf.AttackerTeamId, sf.FlagId })
-                .IsUnique();
-        }
+        DBInitializationResult ApplyConfig(JsonConfiguration configuration);
+        Task<FlagSubmissionResult> InsertSubmittedFlag(string flag, string attackerAddressPrefix, JsonConfiguration config);
+        Task<(Round, List<Flag>, List<Noise>, List<Havoc>)> CreateNewRound(DateTime begin, DateTime q2, DateTime q3, DateTime q4, DateTime end);
+        Task RecordServiceStates(long roundId);
+        Task InsertPutFlagsTasks(long roundId, DateTime firstFlagTime, JsonConfiguration config);
+        Task InsertPutNoisesTasks(DateTime firstFlagTime, IEnumerable<Noise> currentNoises, JsonConfiguration config);
+        Task InsertHavocsTasks(long roundId, DateTime begin, JsonConfiguration config);
+        Task InsertRetrieveCurrentFlagsTasks(DateTime q3, IEnumerable<Flag> currentFlags, JsonConfiguration config);
+        Task InsertRetrieveOldFlagsTasks(Round currentRound, int oldRoundsCount, JsonConfiguration config);
+        Task InsertRetrieveCurrentNoisesTasks(DateTime q3, IEnumerable<Noise> currentNoise, JsonConfiguration config);
+        Task<List<CheckerTask>> RetrievePendingCheckerTasks(int maxAmount);
+        Task CalculatedAllPoints(ServiceProvider serviceProvider, long roundId, JsonConfiguration config);
+        EnoEngineScoreboard GetCurrentScoreboard(long roundId);
+        Task UpdateTeamServiceStatsAndFillSnapshot(Service service, long teamsCount, long roundId, long teamId,
+            ServiceStatsSnapshot oldSnapshot, ServiceStatsSnapshot newSnapshot,
+            TeamServiceStates stableServiceState, TeamServiceStates volatileServiceState);
+        void Migrate();
+        Task UpdateTaskCheckerTaskResults(Memory<CheckerTask> tasks);
     }
 
-    public class EnoDatabase
+    public class EnoDatabase : IEnoDatabase
     {
         private static readonly EnoLogger Logger = new EnoLogger(nameof(EnoDatabase));
+        private readonly EnoDatabaseContext _context;
 
-        public static DBInitializationResult ApplyConfig(JsonConfiguration config)
+        public EnoDatabase(EnoDatabaseContext context)
         {
-            Logger.LogTrace(new EnoLogMessage() {
+            _context = context;
+        }
+
+        public DBInitializationResult ApplyConfig(JsonConfiguration config)
+        {
+            Logger.LogTrace(new EnoLogMessage()
+            {
                 Message = "Applying configuration to database",
                 Function = nameof(ApplyConfig),
                 Module = nameof(EnoDatabase)
@@ -149,525 +103,43 @@ namespace EnoCore
                 };
 
             Migrate();
-            using (var ctx = new EnoEngineDBContext())
-            {
-                var migrationResult = FillDatabase(ctx, config);
-                if (migrationResult.Success)
-                    ctx.SaveChanges();
-                return migrationResult;
-            }
+            return FillDatabase(config);
         }
 
-        public static async Task<FlagSubmissionResult> InsertSubmittedFlag(string flag, string attackerAddressPrefix, JsonConfiguration config) //TODO more logs
+        public void Migrate()
         {
-
-            while (true)
+            var pendingMigrations = _context.Database.GetPendingMigrations().Count();
+            if (pendingMigrations > 0)
             {
-                try
+                Logger.LogInfo(new EnoLogMessage()
                 {
-                    using (var ctx = new EnoEngineDBContext())
-                    {
-                        var dbFlag = await ctx.Flags
-                            .Where(f => f.StringRepresentation == flag)
-                            .Include(f => f.Owner)
-                            .AsNoTracking()
-                            .SingleOrDefaultAsync();
-                        var dbAttackerTeam = await ctx.Teams
-                            .Where(t => t.TeamSubnet == attackerAddressPrefix)
-                            .AsNoTracking()
-                            .SingleOrDefaultAsync();
-                        var currentRound = await ctx.Rounds
-                            .AsNoTracking()
-                            .LastOrDefaultAsync();
-
-                        if (dbFlag == null)
-                            return FlagSubmissionResult.Invalid;
-                        if (dbAttackerTeam == null)
-                            return FlagSubmissionResult.InvalidSenderError;
-                        if (dbFlag.Owner.Id == dbAttackerTeam.Id)
-                            return FlagSubmissionResult.Own;
-                        if (dbFlag.GameRoundId < currentRound.Id - config.FlagValidityInRounds)
-                            return FlagSubmissionResult.Old;
-
-                        var submittedFlag = await ctx.SubmittedFlags
-                            .Where(f => f.FlagId == dbFlag.Id && f.AttackerTeamId == dbAttackerTeam.Id)
-                            .SingleOrDefaultAsync();
-
-                        if (submittedFlag != null)
-                        {
-                            submittedFlag.SubmissionsCount += 1;
-                            ctx.SaveChanges();
-                            return FlagSubmissionResult.Duplicate;
-                        }
-                        ctx.SubmittedFlags.Add(new SubmittedFlag()
-                        {
-                            FlagId = dbFlag.Id,
-                            AttackerTeamId = dbAttackerTeam.Id,
-                            SubmissionsCount = 1,
-                            RoundId = currentRound.Id
-                        });
-                        ctx.SaveChanges();
-                        return FlagSubmissionResult.Ok;
-                    }
-                }
-                catch (DbUpdateException) {}
-            }
-        }
-
-        public static void Migrate()
-        {
-            using (var ctx = new EnoEngineDBContext())
-            {
-                var pendingMigrations = ctx.Database.GetPendingMigrations().Count();
-                if (pendingMigrations > 0)
-                {
-                    Logger.LogInfo(new EnoLogMessage()
-                    {
-                        Message = $"Applying {pendingMigrations} migration(s)",
-                        Function = nameof(Migrate),
-                        Module = nameof(EnoDatabase)
-                    });
-                    ctx.Database.Migrate();
-                    ctx.SaveChanges();
-                    Logger.LogDebug(new EnoLogMessage()
-                    {
-                        Message = $"Database migration complete",
-                        Function = nameof(Migrate),
-                        Module = nameof(EnoDatabase)
-                    });
-                }
-                else
-                {
-                    Logger.LogDebug(new EnoLogMessage()
-                    {
-                        Message = $"No pending migrations",
-                        Function = nameof(Migrate),
-                        Module = nameof(EnoDatabase)
-                    });
-                }
-            }
-        }
-
-        public static async Task<(Round, List<Flag>, List<Noise>, List<Havoc>)> CreateNewRound(DateTime begin, DateTime q2, DateTime q3, DateTime q4, DateTime end)
-        {
-            using (var ctx = new EnoEngineDBContext())
-            {
-                var round = new Round()
-                {
-                    Begin = begin,
-                    Quarter2 = q2,
-                    Quarter3 = q3,
-                    Quarter4 = q4,
-                    End = end
-                };
-                ctx.Rounds.Add(round);
-                var teams = await ctx.Teams
-                    .ToArrayAsync();
-                var services = await ctx.Services
-                    .ToArrayAsync();
-                var flags = GenerateFlagsForRound(ctx, round, teams, services);
-                var noises = GenerateNoisesForRound(ctx, round, teams, services);
-                var havocs = GenerateHavocsForRound(ctx, round, teams, services);
-                ctx.SaveChanges();
-                return (round, flags, noises, havocs);
-            }
-        }
-
-        private static async Task InsertCheckerTasks(List<CheckerTask> tasks)
-        {
-            using (var ctx = new EnoEngineDBContext())
-            {
-                await RetryConnection(ctx);
-                ctx.AddRange(tasks);
-                await ctx.SaveChangesAsync();
-            }
-        }
-
-        public static async Task<List<CheckerTask>> RetrievePendingCheckerTasks(int maxAmount)
-        {
-            using (var ctx = new EnoEngineDBContext())
-            {
-                await RetryConnection(ctx);
-                var tasks = await ctx.CheckerTasks
-                    .Where(t => t.CheckerTaskLaunchStatus == CheckerTaskLaunchStatus.New)
-                    .OrderBy(t => t.StartTime)
-                    .Take(maxAmount)
-                    .ToListAsync();
-                // TODO update launch status without delaying operation
-                tasks.ForEach((t) => t.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Launched);
-                await ctx.SaveChangesAsync();
-                return tasks;
-            }
-        }
-
-        private static List<Flag> GenerateFlagsForRound(EnoEngineDBContext ctx, Round round, Team[] teams, Service[] services)
-        {
-            List<Flag> newFlags = new List<Flag>();
-            foreach (var team in teams)
-            {
-                foreach (var service in services)
-                {
-                    for (int i = 0; i < service.FlagsPerRound; i++)
-                    {
-                        var flag = new Flag()
-                        {
-                            Owner = team,
-                            StringRepresentation = EnoCoreUtils.GenerateSignedFlag((int) round.Id, (int) team.Id),
-                            Service = service,
-                            RoundOffset = i,
-                            GameRound = round
-                        };
-                        newFlags.Add(flag);
-                    }
-                }
-            }
-            ctx.Flags.AddRange(newFlags);
-            return newFlags;
-        }
-
-        private static List<Noise> GenerateNoisesForRound(EnoEngineDBContext ctx, Round round, Team[] teams, Service[] services)
-        {
-            List<Noise> newNoises = new List<Noise>();
-            foreach (var team in teams)
-            {
-                foreach (var service in services)
-                {
-                    for (int i = 0; i < service.NoisesPerRound; i++)
-                    {
-                        var noise = new Noise()
-                        {
-                            Owner = team,
-                            StringRepresentation = EnoCoreUtils.GenerateSignedNoise((int)round.Id, (int)team.Id),
-                            Service = service,
-                            RoundOffset = i,
-                            GameRound = round
-                        };
-                        newNoises.Add(noise);
-                    }
-                }
-            }
-            ctx.Noises.AddRange(newNoises);
-            return newNoises;
-        }
-
-        private static List<Havoc> GenerateHavocsForRound(EnoEngineDBContext ctx, Round round, Team[] teams, Service[] services)
-        {
-            List<Havoc> newHavocs = new List<Havoc>();
-            foreach (var team in teams)
-            {
-                foreach (var service in services)
-                {
-                    for (int i = 0; i < service.HavocsPerRound; i++)
-                    {
-                        var havoc = new Havoc()
-                        {
-                            Owner = team,
-                            StringRepresentation = EnoCoreUtils.GenerateSignedNoise((int)round.Id, (int)team.Id),
-                            Service = service,
-                            GameRound = round
-                        };
-                        newHavocs.Add(havoc);
-                    }
-                }
-            }
-            ctx.Havocs.AddRange(newHavocs);
-            return newHavocs;
-        }
-
-        public static async Task InsertPutFlagsTasks(long roundId, DateTime firstFlagTime, JsonConfiguration config)
-        {
-            using (var ctx = new EnoEngineDBContext())
-            {
-                await RetryConnection(ctx);
-                var currentFlags = await ctx.Flags
-                    .Where(f => f.GameRoundId == roundId)
-                    .Include(f => f.Service)
-                    .Include(f => f.Owner)
-                    .ToArrayAsync();
-
-                int maxRunningTime = config.RoundLengthInSeconds / 4;
-                double timeDiff = (maxRunningTime - 5) / (double)currentFlags.Count();
-                var tasks = new CheckerTask[currentFlags.Count()];
-                int i = 0;
-                foreach (var flag in currentFlags)
-                {
-                    var checkers = config.Checkers[flag.ServiceId];
-                    var checkerTask = new CheckerTask()
-                    {
-                        Address = $"service{flag.ServiceId}.team{flag.OwnerId}.{config.DnsSuffix}",
-                        CheckerUrl = checkers[i % checkers.Length],
-                        MaxRunningTime = maxRunningTime,
-                        Payload = flag.StringRepresentation,
-                        RelatedRoundId = flag.GameRoundId,
-                        CurrentRoundId = flag.GameRoundId,
-                        StartTime = firstFlagTime,
-                        TaskIndex = flag.RoundOffset,
-                        TaskType = "putflag",
-                        TeamName = flag.Owner.Name,
-                        ServiceId = flag.ServiceId,
-                        TeamId = flag.OwnerId,
-                        ServiceName = flag.Service.Name,
-                        CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New,
-                        RoundLength = config.RoundLengthInSeconds
-                    };
-                    tasks[i] = checkerTask;
-                    flag.PutTask = checkerTask;
-                    firstFlagTime = firstFlagTime.AddSeconds(timeDiff);
-                    i++;
-                }
-
-                var tasks_start_time = tasks.Select(x => x.StartTime).ToList();
-                tasks_start_time = EnoCoreUtils.Shuffle(tasks_start_time).ToList();
-                tasks = tasks_start_time.Zip(tasks, (a,b) => {b.StartTime = a; return b;}).ToArray();
-
-                ctx.AddRange(tasks);
-                await ctx.SaveChangesAsync();
-            }
-        }
-
-        public static async Task InsertPutNoisesTasks(DateTime firstFlagTime, IEnumerable<Noise> currentNoises, JsonConfiguration config)
-        {
-            int maxRunningTime = config.RoundLengthInSeconds / 4;
-            double timeDiff = (maxRunningTime - 5) / (double)currentNoises.Count();
-
-            var tasks = new List<CheckerTask>(currentNoises.Count());
-            int i = 0;
-            foreach (var noise in currentNoises)
-            {
-                var checkers = config.Checkers[noise.ServiceId];
-                tasks.Add(new CheckerTask()
-                {
-                    Address = $"service{noise.ServiceId}.team{noise.OwnerId}.{config.DnsSuffix}",
-                    CheckerUrl = checkers[i % checkers.Length],
-                    MaxRunningTime = maxRunningTime,
-                    Payload = noise.StringRepresentation,
-                    RelatedRoundId = noise.GameRoundId,
-                    CurrentRoundId = noise.GameRoundId,
-                    StartTime = firstFlagTime,
-                    TaskIndex = noise.RoundOffset,
-                    TaskType = "putnoise",
-                    TeamName = noise.Owner.Name,
-                    ServiceId = noise.ServiceId,
-                    TeamId = noise.OwnerId,
-                    ServiceName = noise.Service.Name,
-                    CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New,
-                    RoundLength = config.RoundLengthInSeconds
+                    Message = $"Applying {pendingMigrations} migration(s)",
+                    Function = nameof(Migrate),
+                    Module = nameof(EnoDatabase)
                 });
-                firstFlagTime = firstFlagTime.AddSeconds(timeDiff);
-                i++;
-            }
-
-            var tasks_start_time = tasks.Select(x => x.StartTime).ToList();
-            tasks_start_time = EnoCoreUtils.Shuffle(tasks_start_time).ToList();
-            tasks = tasks_start_time.Zip(tasks, (a,b) => {b.StartTime = a; return b;}).ToList();
-
-            await InsertCheckerTasks(tasks);
-        }
-
-        public static async Task InsertHavocsTasks(long roundId, DateTime begin, JsonConfiguration config)
-        {
-            int quarterRound = config.RoundLengthInSeconds / 4;
-            using (var ctx = new EnoEngineDBContext())
-            {
-                await RetryConnection(ctx);
-                var currentHavocs = await ctx.Havocs
-                    .Where(f => f.GameRoundId == roundId)
-                    .Include(f => f.Service)
-                    .Include(f => f.Owner)
-                    .ToArrayAsync();
-                double timeDiff = (double)quarterRound * 3 / currentHavocs.Count();
-                List<CheckerTask> havocTasks = new List<CheckerTask>(currentHavocs.Count());
-                int i = 0;
-                foreach (var havoc in currentHavocs)
+                _context.Database.Migrate();
+                _context.SaveChanges();
+                Logger.LogDebug(new EnoLogMessage()
                 {
-                    var checkers = config.Checkers[havoc.ServiceId];
-                    var task = new CheckerTask()
-                    {
-                        Address = $"service{havoc.ServiceId}.team{havoc.OwnerId}.{config.DnsSuffix}",
-                        CheckerUrl = checkers[i % checkers.Length],
-                        MaxRunningTime = quarterRound,
-                        Payload = havoc.StringRepresentation,
-                        RelatedRoundId = havoc.GameRoundId,
-                        CurrentRoundId = roundId,
-                        StartTime = begin,
-                        TaskIndex = 0,
-                        TaskType = "havoc",
-                        TeamName = havoc.Owner.Name,
-                        ServiceId = havoc.ServiceId,
-                        TeamId = havoc.OwnerId,
-                        ServiceName = havoc.Service.Name,
-                        CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New,
-                        RoundLength = config.RoundLengthInSeconds
-                    };
-                    havocTasks.Add(task);
-                    begin = begin.AddSeconds(timeDiff);
-                    i++;
-                }
-                var tasks_start_time = havocTasks.Select(x => x.StartTime).ToList();
-                tasks_start_time = EnoCoreUtils.Shuffle(tasks_start_time).ToList();
-                havocTasks = tasks_start_time.Zip(havocTasks, (a,b) => {b.StartTime = a; return b;}).ToList();
-
-                ctx.CheckerTasks.AddRange(havocTasks);
-                await ctx.SaveChangesAsync();
-            }
-        }
-
-        public static async Task InsertRetrieveCurrentFlagsTasks(DateTime q3, IEnumerable<Flag> currentFlags, JsonConfiguration config)
-        {
-            int maxRunningTime = config.RoundLengthInSeconds / 4;
-            double timeDiff = (maxRunningTime - 5) / (double)currentFlags.Count();
-            var tasks = new List<CheckerTask>(currentFlags.Count());
-            int i = 0;
-            foreach (var flag in currentFlags)
-            {
-                var checkers = config.Checkers[flag.ServiceId];
-                tasks.Add(new CheckerTask()
-                {
-                    Address = $"service{flag.ServiceId}.team{flag.OwnerId}.{config.DnsSuffix}",
-                    CheckerUrl = checkers[i % checkers.Length],
-                    MaxRunningTime = maxRunningTime,
-                    Payload = flag.StringRepresentation,
-                    CurrentRoundId = flag.GameRoundId,
-                    RelatedRoundId = flag.GameRoundId,
-                    StartTime = q3,
-                    TaskIndex = flag.RoundOffset,
-                    TaskType = "getflag",
-                    TeamName = flag.Owner.Name,
-                    TeamId = flag.OwnerId,
-                    ServiceName = flag.Service.Name,
-                    ServiceId = flag.ServiceId,
-                    CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New,
-                    RoundLength = config.RoundLengthInSeconds
+                    Message = $"Database migration complete",
+                    Function = nameof(Migrate),
+                    Module = nameof(EnoDatabase)
                 });
-                q3 = q3.AddSeconds(timeDiff);
-                i++;
             }
-            var tasks_start_time = tasks.Select(x => x.StartTime).ToList();
-            tasks_start_time = EnoCoreUtils.Shuffle(tasks_start_time).ToList();
-            tasks = tasks_start_time.Zip(tasks, (a,b) => {b.StartTime = a; return b;}).ToList();
-
-            await InsertCheckerTasks(tasks);
-        }
-
-        public static async Task InsertRetrieveOldFlagsTasks(Round currentRound, int oldRoundsCount, JsonConfiguration config)
-        {
-            int quarterRound = config.RoundLengthInSeconds / 4;
-            using (var ctx = new EnoEngineDBContext())
+            else
             {
-                await RetryConnection(ctx);
-                var oldFlags = await ctx.Flags
-                    .Where(f => f.GameRoundId + oldRoundsCount >= currentRound.Id)
-                    .Where(f => f.GameRoundId != currentRound.Id)
-                    .Where(f => f.PutTaskId != null)
-                    .Include(f => f.PutTask)
-                    .Where(f => f.PutTask.CheckerResult != CheckerResult.CheckerError)
-                    .Include(f => f.Owner)
-                    .Include(f => f.Service)
-                    .AsNoTracking()
-                    .ToArrayAsync();
-                List<CheckerTask> oldFlagsCheckerTasks = new List<CheckerTask>(oldFlags.Count());
-                double timeDiff = (double)quarterRound * 3 / oldFlags.Count();
-                DateTime time = currentRound.Begin;
-                int i = 0;
-                foreach (var oldFlag in oldFlags)
+                Logger.LogDebug(new EnoLogMessage()
                 {
-                    var checkers = config.Checkers[oldFlag.ServiceId];
-                    var task = new CheckerTask()
-                    {
-                        Address = $"service{oldFlag.ServiceId}.team{oldFlag.OwnerId}.{config.DnsSuffix}",
-                        CheckerUrl = checkers[i % checkers.Length],
-                        MaxRunningTime = quarterRound,
-                        Payload = oldFlag.StringRepresentation,
-                        RelatedRoundId = oldFlag.GameRoundId,
-                        CurrentRoundId = currentRound.Id,
-                        StartTime = time,
-                        TaskIndex = oldFlag.RoundOffset,
-                        TaskType = "getflag",
-                        TeamName = oldFlag.Owner.Name,
-                        ServiceId = oldFlag.ServiceId,
-                        TeamId = oldFlag.OwnerId,
-                        ServiceName = oldFlag.Service.Name,
-                        CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New,
-                        RoundLength = config.RoundLengthInSeconds
-                    };
-                    oldFlagsCheckerTasks.Add(task);
-                    time = time.AddSeconds(timeDiff);
-                    i++;
-                }
-
-                var tasks_start_time = oldFlagsCheckerTasks.Select(x => x.StartTime).ToList();
-                tasks_start_time = EnoCoreUtils.Shuffle(tasks_start_time).ToList();
-                oldFlagsCheckerTasks = tasks_start_time.Zip(oldFlagsCheckerTasks, (a,b) => {b.StartTime = a; return b;}).ToList();
-
-                ctx.CheckerTasks.AddRange(oldFlagsCheckerTasks);
-                await ctx.SaveChangesAsync();
-            }
-        }
-
-        public static async Task InsertRetrieveCurrentNoisesTasks(DateTime q3, IEnumerable<Noise> currentNoise, JsonConfiguration config)
-        {
-            int maxRunningTime = config.RoundLengthInSeconds / 4;
-            double timeDiff = (maxRunningTime - 5) / (double)currentNoise.Count();
-            var tasks = new List<CheckerTask>(currentNoise.Count());
-            int i = 0;
-            foreach (var flag in currentNoise)
-            {
-                var checkers = config.Checkers[flag.ServiceId];
-                tasks.Add(new CheckerTask()
-                {
-                    Address = $"service{flag.ServiceId}.team{flag.OwnerId}.{config.DnsSuffix}",
-                    CheckerUrl = checkers[i % checkers.Length],
-                    MaxRunningTime = maxRunningTime,
-                    Payload = flag.StringRepresentation,
-                    CurrentRoundId = flag.GameRoundId,
-                    RelatedRoundId = flag.GameRoundId,
-                    StartTime = q3,
-                    TaskIndex = flag.RoundOffset,
-                    TaskType = "getnoise",
-                    TeamName = flag.Owner.Name,
-                    TeamId = flag.OwnerId,
-                    ServiceName = flag.Service.Name,
-                    ServiceId = flag.ServiceId,
-                    CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New,
-                    RoundLength = config.RoundLengthInSeconds
+                    Message = $"No pending migrations",
+                    Function = nameof(Migrate),
+                    Module = nameof(EnoDatabase)
                 });
-                q3 = q3.AddSeconds(timeDiff);
-                i++;
-            }
-
-            var tasks_start_time = tasks.Select(x => x.StartTime).ToList();
-            tasks_start_time = EnoCoreUtils.Shuffle(tasks_start_time).ToList();
-            tasks = tasks_start_time.Zip(tasks, (a,b) => {b.StartTime = a; return b;}).ToList();
-
-            await InsertCheckerTasks(tasks);
-        }
-
-        internal static EnoEngineScoreboard GetCurrentScoreboard(long roundId)
-        {
-            using (var ctx = new EnoEngineDBContext())
-            {
-                var teams = ctx.Teams.AsNoTracking().OrderByDescending(t => t.TotalPoints).ToList();
-                var round = ctx.Rounds
-                    .AsNoTracking()
-                    .Where(r => r.Id == roundId)
-                    .LastOrDefault();
-                var services = ctx.Services.AsNoTracking().ToList();
-                var scoreboard = new EnoEngineScoreboard(round, services);
-                foreach (var team in teams)
-                {
-                    var details = ctx.ServiceStats
-                        .Where(ss => ss.TeamId == team.Id)
-                        .AsNoTracking()
-                        .ToList();
-                    scoreboard.Teams.Add(new EnoEngineScoreboardEntry(team, details));
-                }
-                return scoreboard;
             }
         }
 
-        private static DBInitializationResult FillDatabase(EnoEngineDBContext ctx, JsonConfiguration config)
+        private DBInitializationResult FillDatabase(JsonConfiguration config)
         {
-            var staleDbTeamIds = ctx.Teams.Select(t => t.Id).ToList();
+            var staleDbTeamIds = _context.Teams.Select(t => t.Id).ToList();
 
             // insert (valid!) teams
             foreach (var team in config.Teams)
@@ -696,7 +168,7 @@ namespace EnoCore
                 string teamSubnet = EnoCoreUtils.ExtractSubnet(team.TeamSubnet, config.TeamSubnetBytesLength);
 
                 // check if team is already present
-                var dbTeam = ctx.Teams
+                var dbTeam = _context.Teams
                     .Where(t => t.Id == team.Id)
                     .SingleOrDefault();
                 if (dbTeam == null)
@@ -708,7 +180,7 @@ namespace EnoCore
                         TeamName = team.Name,
                         Function = nameof(FillDatabase),
                     });
-                    ctx.Teams.Add(new Team()
+                    _context.Teams.Add(new Team()
                     {
                         TeamSubnet = teamSubnet,
                         Name = team.Name,
@@ -732,7 +204,7 @@ namespace EnoCore
                     ErrorMessage = $"Stale team in database: {staleDbTeamIds[0]}"
                 };
             //insert (valid!) services
-            var staleDbServiceIds = ctx.Services.Select(t => t.Id).ToList();
+            var staleDbServiceIds = _context.Services.Select(t => t.Id).ToList();
             foreach (var service in config.Services)
             {
                 if (service.Id == 0)
@@ -778,7 +250,7 @@ namespace EnoCore
                         Success = false,
                         ErrorMessage = $"Service {service.Name}: FlagsPerRound < 1"
                     };
-                var dbService = ctx.Services
+                var dbService = _context.Services
                     .Where(s => s.Id == service.Id)
                     .SingleOrDefault();
                 if (dbService == null)
@@ -790,7 +262,7 @@ namespace EnoCore
                         Function = nameof(FillDatabase),
                         ServiceName = service.Name
                     });
-                    ctx.Services.Add(new Service()
+                    _context.Services.Add(new Service()
                     {
                         Id = service.Id,
                         Name = service.Name,
@@ -819,18 +291,18 @@ namespace EnoCore
                 };
             }
 
-            ctx.SaveChanges(); // Save so that the services and teams receive proper IDs
-            foreach (var service in ctx.Services)
+            _context.SaveChanges(); // Save so that the services and teams receive proper IDs
+            foreach (var service in _context.Services)
             {
-                foreach (var team in ctx.Teams)
+                foreach (var team in _context.Teams)
                 {
-                    var stats = ctx.ServiceStats
+                    var stats = _context.ServiceStats
                         .Where(ss => ss.TeamId == team.Id)
-                        .Where (ss => ss.ServiceId == service.Id)
+                        .Where(ss => ss.ServiceId == service.Id)
                         .SingleOrDefault();
                     if (stats == null)
                     {
-                        ctx.ServiceStats.Add(new ServiceStats()
+                        _context.ServiceStats.Add(new ServiceStats()
                         {
                             AttackPoints = 0,
                             LostDefensePoints = 0,
@@ -842,207 +314,630 @@ namespace EnoCore
                     }
                 }
             }
+            _context.SaveChanges();
             return new DBInitializationResult
             {
                 Success = true
             };
         }
 
-        public static async Task RecordServiceStates(long roundId)
+        public async Task<FlagSubmissionResult> InsertSubmittedFlag(string flag, string attackerAddressPrefix, JsonConfiguration config) //TODO more logs
+        {
+            while (true)
+            {
+                try
+                {
+                    var dbFlag = await _context.Flags
+                            .Where(f => f.StringRepresentation == flag)
+                            .Include(f => f.Owner)
+                            .AsNoTracking()
+                            .SingleOrDefaultAsync();
+                    var dbAttackerTeam = await _context.Teams
+                        .Where(t => t.TeamSubnet == attackerAddressPrefix)
+                        .AsNoTracking()
+                        .SingleOrDefaultAsync();
+                    var currentRound = await _context.Rounds
+                        .AsNoTracking()
+                        .LastOrDefaultAsync();
+
+                    if (dbFlag == null)
+                        return FlagSubmissionResult.Invalid;
+                    if (dbAttackerTeam == null)
+                        return FlagSubmissionResult.InvalidSenderError;
+                    if (dbFlag.Owner.Id == dbAttackerTeam.Id)
+                        return FlagSubmissionResult.Own;
+                    if (dbFlag.GameRoundId < currentRound.Id - config.FlagValidityInRounds)
+                        return FlagSubmissionResult.Old;
+
+                    var submittedFlag = await _context.SubmittedFlags
+                        .Where(f => f.FlagId == dbFlag.Id && f.AttackerTeamId == dbAttackerTeam.Id)
+                        .SingleOrDefaultAsync();
+
+                    if (submittedFlag != null)
+                    {
+                        submittedFlag.SubmissionsCount += 1;
+                        _context.SaveChanges();
+                        return FlagSubmissionResult.Duplicate;
+                    }
+                    _context.SubmittedFlags.Add(new SubmittedFlag()
+                    {
+                        FlagId = dbFlag.Id,
+                        AttackerTeamId = dbAttackerTeam.Id,
+                        SubmissionsCount = 1,
+                        RoundId = currentRound.Id
+                    });
+                    _context.SaveChanges();
+                    return FlagSubmissionResult.Ok;
+                }
+                catch (DbUpdateException) { }
+            }
+        }
+
+        public async Task<(Round, List<Flag>, List<Noise>, List<Havoc>)> CreateNewRound(DateTime begin, DateTime q2, DateTime q3, DateTime q4, DateTime end)
+        {
+            var round = new Round()
+            {
+                Begin = begin,
+                Quarter2 = q2,
+                Quarter3 = q3,
+                Quarter4 = q4,
+                End = end
+            };
+            _context.Rounds.Add(round);
+            var teams = await _context.Teams
+                .ToArrayAsync();
+            var services = await _context.Services
+                .ToArrayAsync();
+            var flags = GenerateFlagsForRound(round, teams, services);
+            var noises = GenerateNoisesForRound(round, teams, services);
+            var havocs = GenerateHavocsForRound(round, teams, services);
+            _context.SaveChanges();
+            return (round, flags, noises, havocs);
+        }
+
+        private List<Flag> GenerateFlagsForRound(Round round, Team[] teams, Service[] services)
+        {
+            List<Flag> newFlags = new List<Flag>();
+            foreach (var team in teams)
+            {
+                foreach (var service in services)
+                {
+                    for (int i = 0; i < service.FlagsPerRound; i++)
+                    {
+                        var flag = new Flag()
+                        {
+                            Owner = team,
+                            StringRepresentation = EnoCoreUtils.GenerateSignedFlag((int)round.Id, (int)team.Id),
+                            ServiceId = service.Id,
+                            RoundOffset = i,
+                            GameRound = round
+                        };
+                        newFlags.Add(flag);
+                    }
+                }
+            }
+            _context.Flags.AddRange(newFlags);
+            return newFlags;
+        }
+
+        private List<Noise> GenerateNoisesForRound(Round round, Team[] teams, Service[] services)
+        {
+            List<Noise> newNoises = new List<Noise>();
+            foreach (var team in teams)
+            {
+                foreach (var service in services)
+                {
+                    for (int i = 0; i < service.NoisesPerRound; i++)
+                    {
+                        var noise = new Noise()
+                        {
+                            Owner = team,
+                            StringRepresentation = EnoCoreUtils.GenerateSignedNoise((int)round.Id, (int)team.Id),
+                            ServiceId = service.Id,
+                            RoundOffset = i,
+                            GameRound = round
+                        };
+                        newNoises.Add(noise);
+                    }
+                }
+            }
+            _context.Noises.AddRange(newNoises);
+            return newNoises;
+        }
+
+        private List<Havoc> GenerateHavocsForRound(Round round, Team[] teams, Service[] services)
+        {
+            List<Havoc> newHavocs = new List<Havoc>();
+            foreach (var team in teams)
+            {
+                foreach (var service in services)
+                {
+                    for (int i = 0; i < service.HavocsPerRound; i++)
+                    {
+                        var havoc = new Havoc()
+                        {
+                            Owner = team,
+                            StringRepresentation = EnoCoreUtils.GenerateSignedNoise((int)round.Id, (int)team.Id),
+                            ServiceId = service.Id,
+                            GameRound = round
+                        };
+                        newHavocs.Add(havoc);
+                    }
+                }
+            }
+            _context.Havocs.AddRange(newHavocs);
+            return newHavocs;
+        }
+
+        private async Task InsertCheckerTasks(IEnumerable<CheckerTask> tasks)
+        {
+            _context.AddRange(tasks);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<List<CheckerTask>> RetrievePendingCheckerTasks(int maxAmount)
+        {
+            var tasks = await _context.CheckerTasks
+                .Where(t => t.CheckerTaskLaunchStatus == CheckerTaskLaunchStatus.New)
+                .OrderBy(t => t.StartTime)
+                .Take(maxAmount)
+                .ToListAsync();
+            // TODO update launch status without delaying operation
+            tasks.ForEach((t) => t.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Launched);
+            await _context.SaveChangesAsync();
+            return tasks;
+        }
+
+        public async Task InsertPutFlagsTasks(long roundId, DateTime firstFlagTime, JsonConfiguration config)
+        {
+
+            var currentFlags = await _context.Flags
+                .Where(f => f.GameRoundId == roundId)
+                .Include(f => f.Service)
+                .Include(f => f.Owner)
+                .ToArrayAsync();
+
+            int maxRunningTime = config.RoundLengthInSeconds / 4;
+            double timeDiff = (maxRunningTime - 5) / (double)currentFlags.Count();
+            var tasks = new CheckerTask[currentFlags.Count()];
+            int i = 0;
+            foreach (var flag in currentFlags)
+            {
+                var checkers = config.Checkers[flag.ServiceId];
+                var checkerTask = new CheckerTask()
+                {
+                    Address = $"service{flag.ServiceId}.team{flag.OwnerId}.{config.DnsSuffix}",
+                    CheckerUrl = checkers[i % checkers.Length],
+                    MaxRunningTime = maxRunningTime,
+                    Payload = flag.StringRepresentation,
+                    RelatedRoundId = flag.GameRoundId,
+                    CurrentRoundId = flag.GameRoundId,
+                    StartTime = firstFlagTime,
+                    TaskIndex = flag.RoundOffset,
+                    TaskType = "putflag",
+                    TeamName = flag.Owner.Name,
+                    ServiceId = flag.ServiceId,
+                    TeamId = flag.OwnerId,
+                    ServiceName = flag.Service.Name,
+                    CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New,
+                    RoundLength = config.RoundLengthInSeconds
+                };
+                tasks[i] = checkerTask;
+                flag.PutTask = checkerTask;
+                firstFlagTime = firstFlagTime.AddSeconds(timeDiff);
+                i++;
+            }
+
+            var tasks_start_time = tasks.Select(x => x.StartTime).ToList();
+            tasks_start_time = EnoCoreUtils.Shuffle(tasks_start_time).ToList();
+            tasks = tasks_start_time.Zip(tasks, (a,b) => {b.StartTime = a; return b;}).ToArray();
+
+            await InsertCheckerTasks(tasks);
+        }
+
+        public async Task InsertPutNoisesTasks(DateTime firstFlagTime, IEnumerable<Noise> currentNoises, JsonConfiguration config)
+        {
+            int maxRunningTime = config.RoundLengthInSeconds / 4;
+            double timeDiff = (maxRunningTime - 5) / (double)currentNoises.Count();
+
+            var tasks = new List<CheckerTask>(currentNoises.Count());
+            int i = 0;
+            foreach (var noise in currentNoises)
+            {
+                var checkers = config.Checkers[noise.ServiceId];
+                tasks.Add(new CheckerTask()
+                {
+                    Address = $"service{noise.ServiceId}.team{noise.OwnerId}.{config.DnsSuffix}",
+                    CheckerUrl = checkers[i % checkers.Length],
+                    MaxRunningTime = maxRunningTime,
+                    Payload = noise.StringRepresentation,
+                    RelatedRoundId = noise.GameRoundId,
+                    CurrentRoundId = noise.GameRoundId,
+                    StartTime = firstFlagTime,
+                    TaskIndex = noise.RoundOffset,
+                    TaskType = "putnoise",
+                    TeamName = noise.Owner.Name,
+                    ServiceId = noise.ServiceId,
+                    TeamId = noise.OwnerId,
+                    ServiceName = noise.Service.Name,
+                    CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New,
+                    RoundLength = config.RoundLengthInSeconds
+                });
+                firstFlagTime = firstFlagTime.AddSeconds(timeDiff);
+                i++;
+            }
+
+            var tasks_start_time = tasks.Select(x => x.StartTime).ToList();
+            tasks_start_time = EnoCoreUtils.Shuffle(tasks_start_time).ToList();
+            tasks = tasks_start_time.Zip(tasks, (a, b) => { b.StartTime = a; return b; }).ToList();
+
+            await InsertCheckerTasks(tasks);
+        }
+
+        public async Task InsertHavocsTasks(long roundId, DateTime begin, JsonConfiguration config)
+        {
+            int quarterRound = config.RoundLengthInSeconds / 4;
+
+            var currentHavocs = await _context.Havocs
+                .Where(f => f.GameRoundId == roundId)
+                .Include(f => f.Service)
+                .Include(f => f.Owner)
+                .ToArrayAsync();
+            double timeDiff = (double)quarterRound * 3 / currentHavocs.Count();
+            List<CheckerTask> havocTasks = new List<CheckerTask>(currentHavocs.Count());
+            int i = 0;
+            foreach (var havoc in currentHavocs)
+            {
+                var checkers = config.Checkers[havoc.ServiceId];
+                var task = new CheckerTask()
+                {
+                    Address = $"service{havoc.ServiceId}.team{havoc.OwnerId}.{config.DnsSuffix}",
+                    CheckerUrl = checkers[i % checkers.Length],
+                    MaxRunningTime = quarterRound,
+                    Payload = havoc.StringRepresentation,
+                    RelatedRoundId = havoc.GameRoundId,
+                    CurrentRoundId = roundId,
+                    StartTime = begin,
+                    TaskIndex = 0,
+                    TaskType = "havoc",
+                    TeamName = havoc.Owner.Name,
+                    ServiceId = havoc.ServiceId,
+                    TeamId = havoc.OwnerId,
+                    ServiceName = havoc.Service.Name,
+                    CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New,
+                    RoundLength = config.RoundLengthInSeconds
+                };
+                havocTasks.Add(task);
+                begin = begin.AddSeconds(timeDiff);
+                i++;
+            }
+            var tasks_start_time = havocTasks.Select(x => x.StartTime).ToList();
+            tasks_start_time = EnoCoreUtils.Shuffle(tasks_start_time).ToList();
+            havocTasks = tasks_start_time.Zip(havocTasks, (a,b) => {b.StartTime = a; return b;}).ToList();
+
+            await InsertCheckerTasks(havocTasks);
+        }
+
+        public async Task InsertRetrieveCurrentFlagsTasks(DateTime q3, IEnumerable<Flag> currentFlags, JsonConfiguration config)
+        {
+            int maxRunningTime = config.RoundLengthInSeconds / 4;
+            double timeDiff = (maxRunningTime - 5) / (double)currentFlags.Count();
+            var tasks = new List<CheckerTask>(currentFlags.Count());
+            int i = 0;
+            foreach (var flag in currentFlags)
+            {
+                var checkers = config.Checkers[flag.ServiceId];
+                tasks.Add(new CheckerTask()
+                {
+                    Address = $"service{flag.ServiceId}.team{flag.OwnerId}.{config.DnsSuffix}",
+                    CheckerUrl = checkers[i % checkers.Length],
+                    MaxRunningTime = maxRunningTime,
+                    Payload = flag.StringRepresentation,
+                    CurrentRoundId = flag.GameRoundId,
+                    RelatedRoundId = flag.GameRoundId,
+                    StartTime = q3,
+                    TaskIndex = flag.RoundOffset,
+                    TaskType = "getflag",
+                    TeamName = flag.Owner.Name,
+                    TeamId = flag.OwnerId,
+                    ServiceName = flag.Service.Name,
+                    ServiceId = flag.ServiceId,
+                    CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New,
+                    RoundLength = config.RoundLengthInSeconds
+                });
+                q3 = q3.AddSeconds(timeDiff);
+                i++;
+            }
+            var tasks_start_time = tasks.Select(x => x.StartTime).ToList();
+            tasks_start_time = EnoCoreUtils.Shuffle(tasks_start_time).ToList();
+            tasks = tasks_start_time.Zip(tasks, (a, b) => { b.StartTime = a; return b; }).ToList();
+
+            await InsertCheckerTasks(tasks);
+        }
+
+        public async Task InsertRetrieveOldFlagsTasks(Round currentRound, int oldRoundsCount, JsonConfiguration config)
+        {
+            int quarterRound = config.RoundLengthInSeconds / 4;
+
+            var oldFlags = await _context.Flags
+                .Where(f => f.GameRoundId + oldRoundsCount >= currentRound.Id)
+                .Where(f => f.GameRoundId != currentRound.Id)
+                .Where(f => f.PutTaskId != null)
+                .Include(f => f.PutTask)
+                .Where(f => f.PutTask.CheckerResult != CheckerResult.CheckerError)
+                .Include(f => f.Owner)
+                .Include(f => f.Service)
+                .AsNoTracking()
+                .ToArrayAsync();
+            List<CheckerTask> oldFlagsCheckerTasks = new List<CheckerTask>(oldFlags.Count());
+            double timeDiff = (double)quarterRound * 3 / oldFlags.Count();
+            DateTime time = currentRound.Begin;
+            int i = 0;
+            foreach (var oldFlag in oldFlags)
+            {
+                var checkers = config.Checkers[oldFlag.ServiceId];
+                var task = new CheckerTask()
+                {
+                    Address = $"service{oldFlag.ServiceId}.team{oldFlag.OwnerId}.{config.DnsSuffix}",
+                    CheckerUrl = checkers[i % checkers.Length],
+                    MaxRunningTime = quarterRound,
+                    Payload = oldFlag.StringRepresentation,
+                    RelatedRoundId = oldFlag.GameRoundId,
+                    CurrentRoundId = currentRound.Id,
+                    StartTime = time,
+                    TaskIndex = oldFlag.RoundOffset,
+                    TaskType = "getflag",
+                    TeamName = oldFlag.Owner.Name,
+                    ServiceId = oldFlag.ServiceId,
+                    TeamId = oldFlag.OwnerId,
+                    ServiceName = oldFlag.Service.Name,
+                    CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New,
+                    RoundLength = config.RoundLengthInSeconds
+                };
+                oldFlagsCheckerTasks.Add(task);
+                time = time.AddSeconds(timeDiff);
+                i++;
+            }
+
+            var tasks_start_time = oldFlagsCheckerTasks.Select(x => x.StartTime).ToList();
+            tasks_start_time = EnoCoreUtils.Shuffle(tasks_start_time).ToList();
+            oldFlagsCheckerTasks = tasks_start_time.Zip(oldFlagsCheckerTasks, (a,b) => {b.StartTime = a; return b;}).ToList();
+
+            await InsertCheckerTasks(oldFlagsCheckerTasks);
+        }
+
+        public async Task InsertRetrieveCurrentNoisesTasks(DateTime q3, IEnumerable<Noise> currentNoises, JsonConfiguration config)
+        {
+            int maxRunningTime = config.RoundLengthInSeconds / 4;
+            double timeDiff = (maxRunningTime - 5) / (double)currentNoises.Count();
+            var tasks = new List<CheckerTask>(currentNoises.Count());
+            int i = 0;
+            foreach (var flag in currentNoises)
+            {
+                var checkers = config.Checkers[flag.ServiceId];
+                tasks.Add(new CheckerTask()
+                {
+                    Address = $"service{flag.ServiceId}.team{flag.OwnerId}.{config.DnsSuffix}",
+                    CheckerUrl = checkers[i % checkers.Length],
+                    MaxRunningTime = maxRunningTime,
+                    Payload = flag.StringRepresentation,
+                    CurrentRoundId = flag.GameRoundId,
+                    RelatedRoundId = flag.GameRoundId,
+                    StartTime = q3,
+                    TaskIndex = flag.RoundOffset,
+                    TaskType = "getnoise",
+                    TeamName = flag.Owner.Name,
+                    TeamId = flag.OwnerId,
+                    ServiceName = flag.Service.Name,
+                    ServiceId = flag.ServiceId,
+                    CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.New,
+                    RoundLength = config.RoundLengthInSeconds
+                });
+                q3 = q3.AddSeconds(timeDiff);
+                i++;
+            }
+
+            var tasks_start_time = tasks.Select(x => x.StartTime).ToList();
+            tasks_start_time = EnoCoreUtils.Shuffle(tasks_start_time).ToList();
+            tasks = tasks_start_time.Zip(tasks, (a, b) => { b.StartTime = a; return b; }).ToList();
+
+            await InsertCheckerTasks(tasks);
+        }
+
+        public async Task RecordServiceStates(long roundId)
         {
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
-            using (var ctx = new EnoEngineDBContext())
+            var round = await _context.Rounds
+                .Where(r => r.Id == roundId)
+                .AsNoTracking()
+                .SingleAsync();
+
+            var teams = await _context.Teams.AsNoTracking().ToArrayAsync();
+            var services = await _context.Services.AsNoTracking().ToArrayAsync();
+            foreach (var team in teams)
             {
-                await RetryConnection(ctx);
-                var round = await ctx.Rounds
-                    .Where(r => r.Id == roundId)
-                    .AsNoTracking()
-                    .SingleAsync();
-
-                var teams = await ctx.Teams.AsNoTracking().ToArrayAsync();
-                var services = await ctx.Services.AsNoTracking().ToArrayAsync();
-                foreach (var team in teams)
+                foreach (var service in services)
                 {
-                    foreach (var service in services)
+                    var reportedStatus = await ComputeServiceStatus(team, service, roundId);
+                    var roundTeamServiceState = new RoundTeamServiceState()
                     {
-                        var reportedStatus = await ComputeServiceStatus(ctx, team, service, roundId);
-                        var roundTeamServiceState = new RoundTeamServiceState()
-                        {
-                            GameRoundId = round.Id,
-                            ServiceId = service.Id,
-                            TeamId = team.Id,
-                            Status = reportedStatus
-                        };
-                        ctx.RoundTeamServiceStates.Add(roundTeamServiceState);
+                        GameRoundId = round.Id,
+                        ServiceId = service.Id,
+                        TeamId = team.Id,
+                        Status = reportedStatus
+                    };
+                    _context.RoundTeamServiceStates.Add(roundTeamServiceState);
 
-                        (await ctx.ServiceStats
-                           .Where(ss => ss.TeamId == team.Id && ss.ServiceId == service.Id)
-                           .SingleAsync()).Status = reportedStatus;
-                    }
+                    (await _context.ServiceStats
+                        .Where(ss => ss.TeamId == team.Id && ss.ServiceId == service.Id)
+                        .SingleAsync()).Status = reportedStatus;
                 }
-                await ctx.SaveChangesAsync();
             }
+            await _context.SaveChangesAsync();
             stopWatch.Stop();
             Console.WriteLine($"RecordServiceStates took {stopWatch.Elapsed.TotalMilliseconds}ms");
         }
 
-        public static async Task CalculatedAllPoints(long roundId, JsonConfiguration config)
+        public async Task CalculatedAllPoints(ServiceProvider serviceProvider, long roundId, JsonConfiguration config)
         {
             long newLatestSnapshotRoundId = Math.Max(0, roundId - config.FlagValidityInRounds - 1);
-            using (var ctx = new EnoEngineDBContext())
+            var services = await _context.Services
+                .AsNoTracking()
+                .ToArrayAsync();
+            var teams = await _context.Teams
+                .OrderBy(t => t.Id)
+                .ToArrayAsync();
+
+            foreach (var service in services)
             {
-                await RetryConnection(ctx);
-                var services = await ctx.Services
-                    .AsNoTracking()
-                    .ToArrayAsync();
-                var teams = await ctx.Teams
-                    .OrderBy(t => t.Id)
-                    .ToArrayAsync();
-
-                foreach (var service in services)
-                {
-                    Stopwatch stopWatch = new Stopwatch();
-                    stopWatch.Start();
-                    await CalculateServiceScores(teams, roundId, service, newLatestSnapshotRoundId);
-                    stopWatch.Stop();
-                    Console.WriteLine($"CalculateServiceScores {service.Name} took {stopWatch.Elapsed.TotalMilliseconds}ms");
-                }
-
-                // calculate the total points
-                var sums = await ctx.ServiceStats
-                    .GroupBy(ss => ss.TeamId)
-                    .Select(g => g.OrderBy(ss => ss.TeamId).Sum(ss => ss.ServiceLevelAgreementPoints + ss.LostDefensePoints + ss.AttackPoints))
-                    .ToArrayAsync();
-                for (int i = 0; i< teams.Length; i++)
-                {
-                    teams[i].AttackPoints = sums[i];
-                }
-                await ctx.SaveChangesAsync();
+                Stopwatch stopWatch = new Stopwatch();
+                stopWatch.Start();
+                await CalculateServiceScores(serviceProvider, teams, roundId, service, newLatestSnapshotRoundId);
+                stopWatch.Stop();
+                Console.WriteLine($"CalculateServiceScores {service.Name} took {stopWatch.Elapsed.TotalMilliseconds}ms");
             }
+
+            // calculate the total points
+            var sums = await _context.ServiceStats
+                .GroupBy(ss => ss.TeamId)
+                .Select(g => g.OrderBy(ss => ss.TeamId).Sum(ss => ss.ServiceLevelAgreementPoints + ss.LostDefensePoints + ss.AttackPoints))
+                .ToArrayAsync();
+            for (int i = 0; i< teams.Length; i++)
+            {
+                teams[i].AttackPoints = sums[i];
+            }
+            await _context.SaveChangesAsync();
+
         }
 
-        private static async Task CalculateServiceScores(Team[] teams, long roundId, Service service, long newLatestSnapshotRoundId)
+        private async Task CalculateServiceScores(ServiceProvider serviceProvider, Team[] teams, long roundId, Service service, long newLatestSnapshotRoundId)
         {
             ServiceStatsSnapshot[] oldSnapshots;
             long oldSnapshotsRoundId;
             ServiceStatsSnapshot[] newSnapshots;
 
-            using (var ctx = new EnoEngineDBContext())
+
+            oldSnapshots = await _context.ServiceStatsSnapshots
+                .Where(sss => sss.ServiceId == service.Id)
+                .GroupBy(sss => sss.TeamId)
+                .Select(g => g.OrderBy(sss => sss.Id).Last())
+                .AsNoTracking()
+                .ToArrayAsync();
+            if (oldSnapshots.Length == 0)
             {
-                await RetryConnection(ctx);
-                oldSnapshots = await ctx.ServiceStatsSnapshots
-                    .Where(sss => sss.ServiceId == service.Id)
-                    .GroupBy(sss => sss.TeamId)
-                    .Select(g => g.OrderBy(sss => sss.Id).Last())
-                    .AsNoTracking()
-                    .ToArrayAsync();
-                if (oldSnapshots.Length == 0)
-                {
-                    oldSnapshots = null;
-                    oldSnapshotsRoundId = 0;
-                }
-                else
-                {
-                    oldSnapshotsRoundId = oldSnapshots[0].RoundId;
-                }
-
-                if (newLatestSnapshotRoundId != 0)
-                {
-                    newSnapshots = teams.Select((t, i) => new ServiceStatsSnapshot()
-                    {
-                        AttackPoints = oldSnapshots?[i].AttackPoints ?? 0,
-                        LostDefensePoints = oldSnapshots?[i].LostDefensePoints ?? 0,
-                        ServiceLevelAgreementPoints = oldSnapshots?[i].LostDefensePoints ?? 0,
-                        RoundId = newLatestSnapshotRoundId,
-                        ServiceId = service.Id,
-                        TeamId = t.Id
-                    }).ToArray();
-                }
-                else
-                {
-                    newSnapshots = null;
-                }
-
-                var stableServiceStates = await ctx.RoundTeamServiceStates
-                    .Where(rtts => rtts.GameRoundId > oldSnapshotsRoundId)
-                    .Where(rtts => rtts.GameRoundId <= newLatestSnapshotRoundId)
-                    .GroupBy(rtts => rtts.TeamId)
-                    .Select(g => new TeamServiceStates()
-                    {
-                        Ups = g.Where(rtts => rtts.Status == ServiceStatus.Ok).Count(),
-                        Recoverings = g.Where(rtts => rtts.Status == ServiceStatus.Recovering).Count()
-                    })
-                    .AsNoTracking()
-                    .ToArrayAsync();
-                if (stableServiceStates.Length == 0) // stable stats are empty in the first few rounds
-                {
-                    stableServiceStates = null;
-                }
-
-                var volatileServiceStates = await ctx.RoundTeamServiceStates
-                    .Where(rtts => rtts.GameRoundId <= roundId)
-                    .Where(rtts => rtts.GameRoundId >= newLatestSnapshotRoundId)
-                    .GroupBy(rtts => rtts.TeamId)
-                    .Select(g => new TeamServiceStates()
-                    {
-                        Ups = g.Where(rtts => rtts.Status == ServiceStatus.Ok).Count(),
-                        Recoverings = g.Where(rtts => rtts.Status == ServiceStatus.Recovering).Count()
-                    })
-                    .AsNoTracking()
-                    .ToArrayAsync();
-
-                var tasks = new HashSet<Task>();
-                var teamserviceStats = new TeamServiceStates[teams.Length];
-                for (int i = 0; i < teams.Length; i++)
-                {
-                    int localIndex = i; //prevent i from being incremented before the task runs
-                    var team = teams[localIndex];
-                    if (tasks.Count < 16)
-                    {
-                        tasks.Add(Task.Run(async () => await UpdateTeamServiceStatsAndFillSnapshot(service, teams.Length, roundId, team.Id,
-                            oldSnapshots?[localIndex] ?? null, newSnapshots?[localIndex] ?? null,
-                            stableServiceStates?[localIndex] ?? null, volatileServiceStates[localIndex] ?? null)));
-                    }
-                    else
-                    {
-                        Task finished = await Task.WhenAny(tasks);
-                        tasks.Remove(finished);
-                        tasks.Add(Task.Run(async () => await UpdateTeamServiceStatsAndFillSnapshot(service, teams.Length, roundId, team.Id,
-                            oldSnapshots?[localIndex] ?? null, newSnapshots?[localIndex] ?? null,
-                            stableServiceStates?[localIndex] ?? null, volatileServiceStates[localIndex] ?? null)));
-                    }
-                }
-
-                if (newSnapshots != null)
-                {
-                    ctx.ServiceStatsSnapshots.AddRange(newSnapshots);
-                    await ctx.SaveChangesAsync();
-                }
-                await Task.WhenAll(tasks);
+                oldSnapshots = null;
+                oldSnapshotsRoundId = 0;
             }
+            else
+            {
+                oldSnapshotsRoundId = oldSnapshots[0].RoundId;
+            }
+
+            if (newLatestSnapshotRoundId != 0)
+            {
+                newSnapshots = teams.Select((t, i) => new ServiceStatsSnapshot()
+                {
+                    AttackPoints = oldSnapshots?[i].AttackPoints ?? 0,
+                    LostDefensePoints = oldSnapshots?[i].LostDefensePoints ?? 0,
+                    ServiceLevelAgreementPoints = oldSnapshots?[i].LostDefensePoints ?? 0,
+                    RoundId = newLatestSnapshotRoundId,
+                    ServiceId = service.Id,
+                    TeamId = t.Id
+                }).ToArray();
+            }
+            else
+            {
+                newSnapshots = null;
+            }
+
+            var stableServiceStates = await _context.RoundTeamServiceStates
+                .Where(rtts => rtts.GameRoundId > oldSnapshotsRoundId)
+                .Where(rtts => rtts.GameRoundId <= newLatestSnapshotRoundId)
+                .GroupBy(rtts => rtts.TeamId)
+                .Select(g => new TeamServiceStates()
+                {
+                    Ups = g.Where(rtts => rtts.Status == ServiceStatus.Ok).Count(),
+                    Recoverings = g.Where(rtts => rtts.Status == ServiceStatus.Recovering).Count()
+                })
+                .AsNoTracking()
+                .ToArrayAsync();
+            if (stableServiceStates.Length == 0) // stable stats are empty in the first few rounds
+            {
+                stableServiceStates = null;
+            }
+
+            var volatileServiceStates = await _context.RoundTeamServiceStates
+                .Where(rtts => rtts.GameRoundId <= roundId)
+                .Where(rtts => rtts.GameRoundId >= newLatestSnapshotRoundId)
+                .GroupBy(rtts => rtts.TeamId)
+                .Select(g => new TeamServiceStates()
+                {
+                    Ups = g.Where(rtts => rtts.Status == ServiceStatus.Ok).Count(),
+                    Recoverings = g.Where(rtts => rtts.Status == ServiceStatus.Recovering).Count()
+                })
+                .AsNoTracking()
+                .ToArrayAsync();
+
+            var tasks = new HashSet<Task>();
+            var teamserviceStats = new TeamServiceStates[teams.Length];
+            for (int i = 0; i < teams.Length; i++)
+            {
+                int localIndex = i; //prevent i from being incremented before the task runs
+                var team = teams[localIndex];
+                if (tasks.Count < 16)
+                {
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        using (var scope = serviceProvider.CreateScope())
+                        {
+                            await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().UpdateTeamServiceStatsAndFillSnapshot(service, teams.Length, roundId, team.Id,
+                                oldSnapshots?[localIndex] ?? null, newSnapshots?[localIndex] ?? null,
+                                stableServiceStates?[localIndex] ?? null, volatileServiceStates[localIndex] ?? null);
+                        }
+                    }));
+                }
+                else
+                {
+                    Task finished = await Task.WhenAny(tasks);
+                    tasks.Remove(finished);
+                    tasks.Add(Task.Run(async () => {
+                        using (var scope = serviceProvider.CreateScope())
+                        {
+                            await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().UpdateTeamServiceStatsAndFillSnapshot(service, teams.Length, roundId, team.Id,
+                                oldSnapshots?[localIndex] ?? null, newSnapshots?[localIndex] ?? null,
+                                stableServiceStates?[localIndex] ?? null, volatileServiceStates[localIndex] ?? null);
+                        }
+                    }));
+                }
+            }
+
+            if (newSnapshots != null)
+            {
+                _context.ServiceStatsSnapshots.AddRange(newSnapshots);
+                await _context.SaveChangesAsync();
+            }
+            await Task.WhenAll(tasks);
         }
 
-        private static async Task UpdateTeamServiceStatsAndFillSnapshot(Service service, long teamsCount, long roundId, long teamId,
+        public async Task UpdateTeamServiceStatsAndFillSnapshot(Service service, long teamsCount, long roundId, long teamId,
             ServiceStatsSnapshot oldSnapshot, ServiceStatsSnapshot newSnapshot,
             TeamServiceStates stableServiceState, TeamServiceStates volatileServiceState)
         {
-            using (var ctx = new EnoEngineDBContext())
-            {
-                var teamServiceStats = await ctx.ServiceStats
-                    .Where(ss => ss.TeamId == teamId)
-                    .Where(ss => ss.ServiceId == service.Id)
-                    .SingleAsync();
-                teamServiceStats.ServiceLevelAgreementPoints = CalculateTeamSlaScore(teamsCount,
-                    oldSnapshot, newSnapshot,
-                    stableServiceState, volatileServiceState);
-                //TODO atk
-                //TODO def
-                await ctx.SaveChangesAsync();
-            }
+            var teamServiceStats = await _context.ServiceStats
+                .Where(ss => ss.TeamId == teamId)
+                .Where(ss => ss.ServiceId == service.Id)
+                .SingleAsync();
+            teamServiceStats.ServiceLevelAgreementPoints = CalculateTeamSlaScore(teamsCount,
+                oldSnapshot, newSnapshot,
+                stableServiceState, volatileServiceState);
+            //TODO atk
+            //TODO def
+            await _context.SaveChangesAsync();
         }
 
-        private static double CalculateTeamSlaScore(long teamsCount,
+
+        private double CalculateTeamSlaScore(long teamsCount,
             ServiceStatsSnapshot oldSnapshot, ServiceStatsSnapshot newSnapshot,
             TeamServiceStates stableServiceState, TeamServiceStates volatileServiceStates)
         {
@@ -1060,212 +955,9 @@ namespace EnoCore
             return serviceSla;
         }
 
-        public static async Task UpdateTaskCheckerTaskResults(Memory<CheckerTask> tasks)
+        private async Task<ServiceStatus> ComputeServiceStatus(Team team, Service service, long roundId)
         {
-            using (var ctx = new EnoEngineDBContext())
-            {
-                await RetryConnection(ctx);
-                var tasksEnumerable = MemoryMarshal.ToEnumerable<CheckerTask>(tasks);
-                ctx.UpdateRange(tasksEnumerable);
-                await ctx.SaveChangesAsync();
-            }
-        }
-
-        private static async Task CalculateSLAScore(EnoEngineDBContext ctx, Service[] services, long currentRoundId, Team team, long newLatestSnapshotRoundId)
-        {
-            double slaScore = 0;
-            double teamsCount = ctx.Teams.Count();
-            foreach (var service in services)
-            {
-                var oldSnapshot = await ctx.ServiceStatsSnapshots
-                    .Where(sss => sss.TeamId == team.Id)
-                    .Where(sss => sss.ServiceId == service.Id)
-                    .OrderByDescending(sss => sss.RoundId)
-                    .Skip(1)
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync();
-                var oldSnapshotRoundId = oldSnapshot?.RoundId ?? 0;
-                var oldSnapshotSlaCore = oldSnapshot?.ServiceLevelAgreementPoints ?? 0;
-
-                double upsBetweenSnapshots = await ctx.RoundTeamServiceStates
-                    .Where(rtss => rtss.GameRoundId > oldSnapshotRoundId)
-                    .Where(rtss => rtss.GameRoundId <= newLatestSnapshotRoundId)
-                    .Where(rtss => rtss.TeamId == team.Id)
-                    .Where(rtss => rtss.ServiceId == service.Id)
-                    .Where(rtss => rtss.Status == ServiceStatus.Ok)
-                    .CountAsync();
-                double recoversBetweenSnapshots = await ctx.RoundTeamServiceStates
-                    .Where(rtss => rtss.GameRoundId > oldSnapshotRoundId)
-                    .Where(rtss => rtss.GameRoundId <= newLatestSnapshotRoundId)
-                    .Where(rtss => rtss.TeamId == team.Id)
-                    .Where(rtss => rtss.ServiceId == service.Id)
-                    .Where(rtss => rtss.Status == ServiceStatus.Recovering)
-                    .CountAsync();
-
-                double upsAfterNewSnapshot = await ctx.RoundTeamServiceStates
-                    .Where(f => f.GameRoundId <= currentRoundId)
-                    .Where(f => f.GameRoundId > newLatestSnapshotRoundId)
-                    .Where(rtss => rtss.TeamId == team.Id)
-                    .Where(rtss => rtss.ServiceId == service.Id)
-                    .Where(rtss => rtss.Status == ServiceStatus.Ok)
-                    .CountAsync();
-                double recoversAfterNewSnapshot = await ctx.RoundTeamServiceStates
-                    .Where(f => f.GameRoundId <= currentRoundId)
-                    .Where(f => f.GameRoundId > newLatestSnapshotRoundId)
-                    .Where(rtss => rtss.TeamId == team.Id)
-                    .Where(rtss => rtss.ServiceId == service.Id)
-                    .Where(rtss => rtss.Status == ServiceStatus.Recovering)
-                    .CountAsync();
-
-                double newSnapshotSlaScore = oldSnapshotSlaCore + (upsBetweenSnapshots + 0.5 * recoversBetweenSnapshots) * Math.Sqrt(teamsCount);
-                double serviceSlaScore = newSnapshotSlaScore + (upsAfterNewSnapshot + 0.5 * recoversAfterNewSnapshot) * Math.Sqrt(teamsCount);
-                slaScore += serviceSlaScore;
-                (await ctx.ServiceStats
-                    .Where(ss => ss.TeamId == team.Id && ss.ServiceId == service.Id)
-                    .SingleAsync()).ServiceLevelAgreementPoints = serviceSlaScore;
-
-                if (newLatestSnapshotRoundId > oldSnapshotRoundId)
-                {
-                    (await ctx.ServiceStatsSnapshots
-                        .Where(ss => ss.TeamId == team.Id && ss.ServiceId == service.Id)
-                        .Where(sss => sss.RoundId == newLatestSnapshotRoundId)
-                        .SingleAsync()).ServiceLevelAgreementPoints = newSnapshotSlaScore;
-                }
-            }
-            team.ServiceLevelAgreementPoints = slaScore;
-            team.TotalPoints += slaScore;
-        }
-
-        private static async Task CalculateDefenseScore(EnoEngineDBContext ctx, Service[] services, long currentRoundId, Team team, long newLatestSnapshotRoundId)
-        {
-            double teamDefenseScore = 0;
-            foreach (var service in services)
-            {
-                var oldSnapshot = await ctx.ServiceStatsSnapshots
-                    .Where(sss => sss.TeamId == team.Id)
-                    .Where(sss => sss.ServiceId == service.Id)
-                    .OrderByDescending(sss => sss.RoundId)
-                    .Skip(1)
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync();
-                var oldSnapshotRoundId = oldSnapshot?.RoundId ?? 0;
-                var oldSnapshotLostDefPoints = oldSnapshot?.LostDefensePoints ?? 0;
-
-                var ownedFlagsBetweenSnapshots = await ctx.Flags
-                    .Where(f => f.GameRoundId > oldSnapshotRoundId)
-                    .Where(f => f.GameRoundId <= newLatestSnapshotRoundId)
-                    .Where(f => f.OwnerId == team.Id)
-                    .Where(f => f.ServiceId == service.Id)
-                    .ToArrayAsync();
-                var ownedFlagsAfterNewSnapshot = await ctx.Flags
-                    .Where(f => f.GameRoundId <= currentRoundId)
-                    .Where(f => f.GameRoundId > newLatestSnapshotRoundId)
-                    .Where(f => f.OwnerId == team.Id)
-                    .Where(f => f.ServiceId == service.Id)
-                    .ToArrayAsync();
-
-                double newSnapshotDefenseScore = oldSnapshotLostDefPoints;
-                foreach (var ownedFlag in ownedFlagsBetweenSnapshots)
-                {
-                    double allCapturesOfFlag = await ctx.SubmittedFlags
-                        .Where(f => f.FlagId == ownedFlag.Id)
-                        .CountAsync();
-                    newSnapshotDefenseScore -= Math.Pow(allCapturesOfFlag, 0.75);
-                }
-
-                double serviceDefenseScore = newSnapshotDefenseScore;
-                foreach (var ownedFlag in ownedFlagsAfterNewSnapshot)
-                {
-                    double allCapturesOfFlag = await ctx.SubmittedFlags
-                        .Where(f => f.FlagId == ownedFlag.Id)
-                        .CountAsync();
-                    serviceDefenseScore -= Math.Pow(allCapturesOfFlag, 0.75);
-                }
-
-                teamDefenseScore += serviceDefenseScore;
-                (await ctx.ServiceStats
-                    .Where(ss => ss.TeamId == team.Id && ss.ServiceId == service.Id)
-                    .SingleAsync()).LostDefensePoints = serviceDefenseScore;
-
-                if (newLatestSnapshotRoundId > oldSnapshotRoundId)
-                {
-                    (await ctx.ServiceStatsSnapshots
-                        .Where(ss => ss.TeamId == team.Id && ss.ServiceId == service.Id)
-                        .Where(sss => sss.RoundId == newLatestSnapshotRoundId)
-                        .SingleAsync()).LostDefensePoints = newSnapshotDefenseScore;
-                }
-            }
-            team.LostDefensePoints = teamDefenseScore;
-            team.TotalPoints += teamDefenseScore;
-        }
-
-        private static async Task CalculateOffenseScore(EnoEngineDBContext ctx, Service[] services, long currentRoundId, Team team, long newLatestSnapshotRoundId)
-        {
-            double offenseScore = 0;
-            foreach (var service in services)
-            {
-                var oldSnapshot = await ctx.ServiceStatsSnapshots
-                    .Where(sss => sss.TeamId == team.Id)
-                    .Where(sss => sss.ServiceId == service.Id)
-                    .OrderByDescending(sss => sss.RoundId)
-                    .Skip(1)
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync();
-                var oldSnapshotRoundId = oldSnapshot?.RoundId ?? 0;
-                var oldSnapshotAttackPoints = oldSnapshot?.AttackPoints ?? 0;
-
-                var flagsCapturedByTeamBetweenSnapshots = await ctx.SubmittedFlags
-                    .Where(f => f.AttackerTeamId == team.Id)
-                    .Where(f => f.RoundId > oldSnapshotRoundId)
-                    .Where(f => f.RoundId <= newLatestSnapshotRoundId)
-                    .Include(f => f.Flag)
-                    .Where(f => f.Flag.ServiceId == service.Id)
-                    .ToArrayAsync();
-                var flagsCapturedByTeamAfterNewSnapshot = await ctx.SubmittedFlags
-                    .Where(f => f.RoundId <= currentRoundId)
-                    .Where(f => f.RoundId > newLatestSnapshotRoundId)
-                    .Where(f => f.AttackerTeamId == team.Id)
-                    .Include(f => f.Flag)
-                    .Where(f => f.Flag.ServiceId == service.Id)
-                    .ToArrayAsync();
-
-                double newSnapshotOffenseScore = oldSnapshotAttackPoints + flagsCapturedByTeamBetweenSnapshots.Length;
-                foreach (var submittedFlag in flagsCapturedByTeamBetweenSnapshots)
-                {
-                    double capturesOfFlag = await ctx.Flags
-                        .Where(f => f.Id == submittedFlag.FlagId)
-                        .CountAsync();
-                    newSnapshotOffenseScore += Math.Pow(1 / capturesOfFlag, 0.75);
-                }
-                double serviceOffenseScore = newSnapshotOffenseScore + flagsCapturedByTeamAfterNewSnapshot.Length;
-                foreach (var submittedFlag in flagsCapturedByTeamAfterNewSnapshot)
-                {
-                    double capturesOfFlag = await ctx.Flags
-                        .Where(f => f.Id == submittedFlag.FlagId)
-                        .CountAsync();
-                    newSnapshotOffenseScore += Math.Pow(1 / capturesOfFlag, 0.75);
-                }
-
-                offenseScore += serviceOffenseScore;
-                (await ctx.ServiceStats
-                    .Where(ss => ss.TeamId == team.Id && ss.ServiceId == service.Id)
-                    .SingleAsync()).AttackPoints = serviceOffenseScore;
-
-                if (newLatestSnapshotRoundId > oldSnapshotRoundId)
-                {
-                    (await ctx.ServiceStatsSnapshots
-                        .Where(ss => ss.TeamId == team.Id && ss.ServiceId == service.Id)
-                        .Where(sss => sss.RoundId == newLatestSnapshotRoundId)
-                        .SingleAsync()).AttackPoints = newSnapshotOffenseScore;
-                }
-            }
-            team.AttackPoints = offenseScore;
-            team.TotalPoints += offenseScore;
-        }
-
-        private static async Task<ServiceStatus> ComputeServiceStatus(EnoEngineDBContext ctx, Team team, Service service, long roundId)
-        {
-            var currentRoundTasks = await ctx.CheckerTasks
+            var currentRoundTasks = await _context.CheckerTasks
                 .Where(ct => ct.CurrentRoundId == roundId)
                 .Where(ct => ct.RelatedRoundId == roundId)
                 .Where(ct => ct.TeamId == team.Id)
@@ -1306,7 +998,7 @@ namespace EnoCore
             }
 
             // Current round was Ok, let's check the old ones
-            var oldRoundTasks = ctx.CheckerTasks
+            var oldRoundTasks = _context.CheckerTasks
                 .Where(ct => ct.RelatedRoundId != roundId)
                 .Where(ct => ct.CurrentRoundId == roundId)
                 .Where(ct => ct.TeamId == team.Id)
@@ -1323,29 +1015,35 @@ namespace EnoCore
                         return ServiceStatus.Recovering;
                 }
             }
-            
+
             return ServiceStatus.Ok;
         }
 
-        private static async Task RetryConnection(EnoEngineDBContext ctx)
+        public EnoEngineScoreboard GetCurrentScoreboard(long roundId)
         {
-            for (int i = 0; i < 100; i++)
+            var teams = _context.Teams.AsNoTracking().OrderByDescending(t => t.TotalPoints).ToList();
+            var round = _context.Rounds
+                .AsNoTracking()
+                .Where(r => r.Id == roundId)
+                .LastOrDefault();
+            var services = _context.Services.AsNoTracking().ToList();
+            var scoreboard = new EnoEngineScoreboard(round, services);
+            foreach (var team in teams)
             {
-                try
-                {
-                    await ctx.Database.OpenConnectionAsync();
-                    break;
-                }
-                catch (Exception e)
-                {
-                    Logger.LogWarning(new EnoLogMessage() {
-                        Message = $"Connection to database failed: {EnoCoreUtils.FormatException(e)}",
-                        Function = "RetryConnection",
-                        Module = nameof(EnoDatabase)
-                    });
-                    await Task.Delay(1);
-                }
+                var details = _context.ServiceStats
+                    .Where(ss => ss.TeamId == team.Id)
+                    .AsNoTracking()
+                    .ToList();
+                scoreboard.Teams.Add(new EnoEngineScoreboardEntry(team, details));
             }
+            return scoreboard;
+        }
+
+        public async Task UpdateTaskCheckerTaskResults(Memory<CheckerTask> tasks)
+        {
+            var tasksEnumerable = MemoryMarshal.ToEnumerable<CheckerTask>(tasks);
+            _context.UpdateRange(tasksEnumerable);
+            await _context.SaveChangesAsync();
         }
     }
 }

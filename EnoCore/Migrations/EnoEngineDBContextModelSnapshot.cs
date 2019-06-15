@@ -8,7 +8,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace EnoCore.Migrations
 {
-    [DbContext(typeof(EnoEngineDBContext))]
+    [DbContext(typeof(EnoDatabaseContext))]
     partial class EnoEngineDBContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)

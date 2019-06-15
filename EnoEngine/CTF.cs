@@ -1,7 +1,11 @@
 ﻿using EnoCore;
+using EnoCore.Models;
+using EnoCore.Models.Database;
 using EnoCore.Models.Json;
 using EnoEngine.FlagSubmission;
+using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,10 +21,12 @@ namespace EnoEngine.Game
     {
         private static readonly EnoLogger Logger = new EnoLogger(nameof(EnoEngine));
         private readonly SemaphoreSlim Lock = new SemaphoreSlim(1);
+        private readonly ServiceProvider ServiceProvider;
         private readonly CancellationToken Token;
 
-        public CTF(CancellationToken token)
+        public CTF(ServiceProvider serviceProvider, CancellationToken token)
         {
+            ServiceProvider = serviceProvider;
             Token = token;
             Task.Run(async () => await new FlagSubmissionEndpoint(this, token).Run());
         }
@@ -42,25 +48,71 @@ namespace EnoEngine.Game
             DateTime end = begin.AddSeconds(quatherLength * 4);
             try
             {
+                Round currentRound;
+                IEnumerable<Flag> newFlags;
+                IEnumerable<Noise> newNoises;
+                IEnumerable<Havoc> newHavocs;
+
                 // start the next round
-                (var currentRound, var currentFlags, var currentNoises, var currentHavocs) = await EnoDatabase.CreateNewRound(begin, q2, q3, q4, end);
+                using (var scope = ServiceProvider.CreateScope())
+                {
+                    var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
+                    (currentRound, newFlags, newNoises, newHavocs) = await db.CreateNewRound(begin, q2, q3, q4, end);
+                }
                 long observedRounds = Program.Configuration.CheckedRoundsPerRound > currentRound.Id ? currentRound.Id : Program.Configuration.CheckedRoundsPerRound;
 
                 // start the evaluation
                 var handleOldRoundTask = Task.Run(async () => await HandleRoundEnd(currentRound.Id - 1, Program.Configuration));
 
+
                 // insert put tasks
-                var insertPutNewFlagsTask = Task.Run(async () => await EnoDatabase.InsertPutFlagsTasks(currentRound.Id, begin, Program.Configuration));
-                var insertPutNewNoisesTask = Task.Run(async () => await EnoDatabase.InsertPutNoisesTasks(begin, currentNoises, Program.Configuration));
-                var insertHavocsTask = Task.Run(async () => await EnoDatabase.InsertHavocsTasks(currentRound.Id, begin, Program.Configuration));
+                var insertPutNewFlagsTask = Task.Run(async () =>
+                {
+                    using (var scope = ServiceProvider.CreateScope())
+                    {
+                        await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertPutFlagsTasks(currentRound.Id, begin, Program.Configuration);
+                    }
+                });
+                var insertPutNewNoisesTask = Task.Run(async () =>
+                {
+                    using (var scope = ServiceProvider.CreateScope())
+                    {
+                        await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertPutNoisesTasks(begin, newNoises, Program.Configuration);
+                    }
+                });
+                var insertHavocsTask = Task.Run(async () =>
+                {
+                    using (var scope = ServiceProvider.CreateScope())
+                    {
+                        await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertHavocsTasks(currentRound.Id, begin, Program.Configuration);
+                    }
+                });
 
                 // give the db some space TODO save the earliest tasks first
                 await Task.Delay(1000);
 
                 // insert get tasks
-                var insertRetrieveCurrentFlagsTask = Task.Run(async () => await EnoDatabase.InsertRetrieveCurrentFlagsTasks(q3, currentFlags, Program.Configuration));
-                var insertRetrieveOldFlagsTask = Task.Run(async () => await EnoDatabase.InsertRetrieveOldFlagsTasks(currentRound, Program.Configuration.CheckedRoundsPerRound - 1, Program.Configuration));
-                var insertGetCurrentNoisesTask = Task.Run(async () => await EnoDatabase.InsertRetrieveCurrentNoisesTasks(q3, currentNoises, Program.Configuration));
+                var insertRetrieveCurrentFlagsTask = Task.Run(async () =>
+                {
+                    using (var scope = ServiceProvider.CreateScope())
+                    {
+                        await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertRetrieveCurrentFlagsTasks(q3, newFlags, Program.Configuration);
+                    }
+                });
+                var insertRetrieveOldFlagsTask = Task.Run(async () =>
+                {
+                    using (var scope = ServiceProvider.CreateScope())
+                    {
+                        await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertRetrieveOldFlagsTasks(currentRound, Program.Configuration.CheckedRoundsPerRound - 1, Program.Configuration);
+                    }
+                });
+                var insertGetCurrentNoisesTask = Task.Run(async () =>
+                {
+                    using (var scope = ServiceProvider.CreateScope())
+                    {
+                        await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertRetrieveCurrentNoisesTasks(q3, newNoises, Program.Configuration);
+                    }
+                });
 
                 // TODO start noise for old rounds
 
@@ -113,7 +165,7 @@ namespace EnoEngine.Game
             }
             try
             {
-                return await EnoDatabase.InsertSubmittedFlag(flag, attackerAddressPrefix, Program.Configuration);
+                return await ServiceProvider.GetRequiredService<IEnoDatabase>().InsertSubmittedFlag(flag, attackerAddressPrefix, Program.Configuration);
             }
             catch (Exception e)
             {
@@ -129,12 +181,17 @@ namespace EnoEngine.Game
 
         private async Task<DateTime> HandleRoundEnd(long roundId, JsonConfiguration config)
         {
-            if (roundId > 0)
+            using (var scope = ServiceProvider.CreateScope())
             {
-                await EnoDatabase.RecordServiceStates(roundId);
-                await EnoDatabase.CalculatedAllPoints(roundId, config);
+                var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
+                if (roundId > 0)
+                {
+                    await db.RecordServiceStates(roundId);
+                    await db.CalculatedAllPoints(ServiceProvider, roundId, config);
+                }
+                var scoreboard = db.GetCurrentScoreboard(roundId);
+                EnoCoreUtils.GenerateCurrentScoreboard(scoreboard, $"..{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}", roundId);
             }
-            EnoCoreUtils.GenerateCurrentScoreboard($"..{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}", roundId);
             return DateTime.UtcNow;
         }
     }

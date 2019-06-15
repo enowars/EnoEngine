@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using EnoCore.Models;
 using EnoCore.Models.Database;
 using EnoCore.Models.Json;
 using Microsoft.Extensions.Logging;
@@ -76,9 +77,8 @@ namespace EnoCore
             return fancy;
         }
 
-        public static void GenerateCurrentScoreboard(string path, long roundId)
+        public static void GenerateCurrentScoreboard(EnoEngineScoreboard scoreboard, string path, long roundId)
         {
-            var scoreboard = EnoDatabase.GetCurrentScoreboard(roundId);
             var json = JsonConvert.SerializeObject(scoreboard);
             File.WriteAllText($"{path}scoreboard{roundId}.json", json);
             File.WriteAllText($"{path}scoreboard.json", json);

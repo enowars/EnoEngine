@@ -1,6 +1,8 @@
 ﻿using EnoCore;
 using EnoCore.Models.Database;
 using EnoCore.Models.Json;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
@@ -22,42 +24,60 @@ namespace EnoLauncher
         private static readonly CancellationTokenSource LauncherCancelSource = new CancellationTokenSource();
         private static readonly EnoLogger Logger = new EnoLogger(nameof(EnoLauncher));
         private static readonly HttpClient Client = new HttpClient();
-        private static Task UpdateDatabaseTask;
+        private readonly Task UpdateDatabaseTask;
+        private readonly ServiceProvider ServiceProvider;
+
+        public Program(ServiceProvider serviceProvider)
+        {
+            ServiceProvider = serviceProvider;
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
+                db.Migrate();
+            }
+            UpdateDatabaseTask = Task.Run(async () => await UpdateDatabaseLoop());
+        }
 
         public void Start()
         {
-            Client.Timeout = new TimeSpan(0, 1, 0);
+                Client.Timeout = new TimeSpan(0, 1, 0);
             LauncherLoop().Wait();
         }
 
         public async Task LauncherLoop()
         {
-            Logger.LogInfo(new EnoLogMessage()
+            using (var scope = ServiceProvider.CreateScope())
             {
-                Module = nameof(EnoLauncher),
-                Function = nameof(LauncherLoop),
-                Message = $"LauncherLoop starting"
-            });
-            UpdateDatabaseTask = Task.Run(async () => await UpdateDatabase());
-            while (!LauncherCancelSource.IsCancellationRequested)
-            {
-                var tasks = await EnoDatabase.RetrievePendingCheckerTasks(100);
-                if (tasks.Count > 0)
+                var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
+                db.Migrate();
+                Logger.LogInfo(new EnoLogMessage()
                 {
-                    Logger.LogInfo(new EnoLogMessage()
+                    Module = nameof(EnoLauncher),
+                    Function = nameof(LauncherLoop),
+                    Message = $"LauncherLoop starting"
+                });
+
+                while (!LauncherCancelSource.IsCancellationRequested)
+                {
+                    
+                    var tasks = await db.RetrievePendingCheckerTasks(100);
+                    if (tasks.Count > 0)
                     {
-                        Module = nameof(EnoLauncher),
-                        Function = nameof(LauncherLoop),
-                        Message = $"Scheduling {tasks.Count} tasks"
-                    });
-                }
-                foreach (var task in tasks)
-                {
-                    var t = Task.Run(async () => await LaunchCheckerTask(task));
-                }
-                if (tasks.Count == 0)
-                {
-                    await Task.Delay(50, LauncherCancelSource.Token);
+                        Logger.LogInfo(new EnoLogMessage()
+                        {
+                            Module = nameof(EnoLauncher),
+                            Function = nameof(LauncherLoop),
+                            Message = $"Scheduling {tasks.Count} tasks"
+                        });
+                    }
+                    foreach (var task in tasks)
+                    {
+                        var t = Task.Run(async () => await LaunchCheckerTask(task));
+                    }
+                    if (tasks.Count == 0)
+                    {
+                        await Task.Delay(50, LauncherCancelSource.Token);
+                    }
                 }
             }
         }
@@ -145,9 +165,16 @@ namespace EnoLauncher
                     Function = nameof(Main),
                     Message = $"EnoLauncher starting"
                 });
-                EnoDatabase.Migrate();
-                var content = File.ReadAllText("ctf.json");
-                new Program().Start();
+                var databaseDomain = Environment.GetEnvironmentVariable("DATABASE_DOMAIN") ?? "localhost";
+                var serviceProvider = new ServiceCollection()
+                    .AddDbContextPool<EnoDatabaseContext>(options => {
+                        options.UseNpgsql(
+                            $@"Server={databaseDomain};Port=5432;Database=EnoDatabase;User Id=docker;Password=docker;Timeout=15;SslMode=Disable;",
+                            pgoptions => pgoptions.EnableRetryOnFailure());
+                    }, 2)
+                    .AddScoped<IEnoDatabase, EnoDatabase>()
+                    .BuildServiceProvider(validateScopes: true);
+                new Program(serviceProvider).Start();
             }
             catch (Exception e)
             {
@@ -160,30 +187,34 @@ namespace EnoLauncher
             }
         }
 
-        static async Task UpdateDatabase()
+        async Task UpdateDatabaseLoop()
         {
             try
             {
-                while (!LauncherCancelSource.IsCancellationRequested)
+                using (var scope = ServiceProvider.CreateScope())
                 {
-                    CheckerTask[] results = new CheckerTask[TASK_UPDATE_BATCH_SIZE];
-                    int i = 0;
-                    while (i < TASK_UPDATE_BATCH_SIZE)
+                    var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
+                    while (!LauncherCancelSource.IsCancellationRequested)
                     {
-                        if (ResultsQueue.TryDequeue(out var result))
+                        CheckerTask[] results = new CheckerTask[TASK_UPDATE_BATCH_SIZE];
+                        int i = 0;
+                        while (i < TASK_UPDATE_BATCH_SIZE)
                         {
-                            results[i] = result;
-                            i += 1;
+                            if (ResultsQueue.TryDequeue(out var result))
+                            {
+                                results[i] = result;
+                                i += 1;
+                            }
+                            else
+                            {
+                                break;
+                            }
                         }
-                        else
+                        await db.UpdateTaskCheckerTaskResults(results.AsMemory(0, i));
+                        if (i != TASK_UPDATE_BATCH_SIZE)
                         {
-                            break;
+                            await Task.Delay(1);
                         }
-                    }
-                    await EnoDatabase.UpdateTaskCheckerTaskResults(results.AsMemory(0, i));
-                    if (i != TASK_UPDATE_BATCH_SIZE)
-                    {
-                        await Task.Delay(1);
                     }
                 }
             }
@@ -193,7 +224,7 @@ namespace EnoLauncher
                 Logger.LogFatal(new EnoLogMessage()
                 {
                     Module = nameof(EnoLauncher),
-                    Function = nameof(UpdateDatabase),
+                    Function = nameof(UpdateDatabaseLoop),
                     Message = $"UpdateDatabase failed: {EnoCoreUtils.FormatException(e)}"
                 });
             }
