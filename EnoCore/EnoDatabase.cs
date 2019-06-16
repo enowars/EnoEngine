@@ -66,7 +66,6 @@ namespace EnoCore
         public EnoDatabase(EnoDatabaseContext context, ILogger<EnoDatabase> logger)
         {
             _context = context;
-            logger.LogInformation("hello world", new EnoLogMessage());
         }
 
         public DBInitializationResult ApplyConfig(JsonConfiguration config)

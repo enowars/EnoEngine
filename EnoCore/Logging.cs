@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace EnoCore
@@ -21,24 +22,21 @@ namespace EnoCore
 
     public class EnoConsoleLogger : ILogger
     {
-        long TeamId;
-        string Module;
-
-        public EnoConsoleLogger(string categoryName)
-        {
-            Module = categoryName;
-        }
+        public EnoConsoleLogger(string categoryName) { }
 
         public IDisposable BeginScope<TState>(TState state)
         {
-            throw new NotImplementedException();
+            return null;
         }
 
         public bool IsEnabled(LogLevel logLevel) => true;
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
-            Console.WriteLine(formatter(state, exception));
+            if (logLevel >= LogLevel.Information)
+            {
+                Console.WriteLine(formatter(state, exception));
+            }
         }
     }
 
