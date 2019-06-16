@@ -145,7 +145,7 @@ namespace EnoEngine
                 .AddLogging(loggingBuilder =>
                 {
                     loggingBuilder.AddConsole();
-                    loggingBuilder.AddFilter(ll => ll > LogLevel.Information);
+                    loggingBuilder.AddFilter(ll => ll >= LogLevel.Information);
                 })
                 .BuildServiceProvider(validateScopes: true);
             new Program(serviceProvider).Start();

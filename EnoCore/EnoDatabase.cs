@@ -36,12 +36,6 @@ namespace EnoCore
         public string ErrorMessage;
     }
 
-    public class TeamServiceStates
-    {
-        public long Ups { get; set; }
-        public long Recoverings { get; set; }
-    }
-
     public interface IEnoDatabase
     {
         DBInitializationResult ApplyConfig(JsonConfiguration configuration);
@@ -55,14 +49,13 @@ namespace EnoCore
         Task InsertRetrieveOldFlagsTasks(Round currentRound, int oldRoundsCount, JsonConfiguration config);
         Task InsertRetrieveCurrentNoisesTasks(Round currentRound, List<Noise> currentNoises, JsonConfiguration config);
         Task<List<CheckerTask>> RetrievePendingCheckerTasks(int maxAmount);
-        Task CalculateAllPoints(ServiceProvider serviceProvider, long roundId, JsonConfiguration config);
+        Task CalculatePoints(ServiceProvider serviceProvider, long roundId, JsonConfiguration config);
         EnoEngineScoreboard GetCurrentScoreboard(long roundId);
-        Task UpdateTeamServiceStatsAndFillSnapshot(Service service, long teamsCount, long roundId, long teamId,
+        /*Task UpdateTeamServiceStatsAndFillSnapshot(Service service, long teamsCount, long roundId, long teamId,
             ServiceStatsSnapshot oldSnapshot, ServiceStatsSnapshot newSnapshot,
-            TeamServiceStates stableServiceState, TeamServiceStates volatileServiceState);
+            TeamServiceStates stableServiceState, TeamServiceStates volatileServiceState);*/
         void Migrate();
         Task UpdateTaskCheckerTaskResults(Memory<CheckerTask> tasks);
-        Task RecordTeamServiceStates(long roundId, Team team, Service[] services);
     }
 
     public class EnoDatabase : IEnoDatabase
@@ -841,14 +834,6 @@ namespace EnoCore
             }
         }
 
-        internal class TeamResult
-        {
-            public Team Team { get; set; }
-            public CheckerResult  CheckerResult { get; set; }
-            public long RoundId { get; set; }
-            public long ServiceId { get; set; }
-        }
-
         public async Task CalculateRoundTeamServiceStates(IServiceProvider serviceProvider, long roundId)
         {
             Stopwatch stopWatch = new Stopwatch();
@@ -899,68 +884,26 @@ namespace EnoCore
             Console.WriteLine($"CalculateRoundTeamServiceStates took {stopWatch.Elapsed.TotalMilliseconds}ms");
         }
 
-        public async Task RecordTeamServiceStates(long roundId, Team team, Service[] services)
+        public async Task CalculatePoints(ServiceProvider serviceProvider, long roundId, JsonConfiguration config)
         {
-            var worstCurrentRoundResults = await _context.CheckerTasks
-                    .Where(ct => ct.CurrentRoundId == roundId)
-                    .Where(ct => ct.RelatedRoundId == roundId)
-                    .Where(ct => ct.TeamId == team.Id)
-                    .GroupBy(ct => ct.ServiceId)
-                    .Select(g => g.OrderBy(o => o.ServiceId).Max(ct => ct.CheckerResult))
-                    .ToArrayAsync();
-
-            var worstOldRoundResults = await _context.CheckerTasks
-                .Where(ct => ct.CurrentRoundId == roundId)
-                .Where(ct => ct.RelatedRoundId != roundId)
-                .Where(ct => ct.TeamId == team.Id)
-                .GroupBy(ct => ct.ServiceId)
-                .Select(g => g.OrderBy(o => o.TeamId).Max(ct => ct.CheckerResult))
-                .ToArrayAsync();
-
-            for (int i = 0; i < services.Length; i++)
-            {
-                CheckerResult worstResult = worstCurrentRoundResults[i];
-                if (worstResult == CheckerResult.Ok && worstOldRoundResults.Length > 0)
-                {
-                    worstResult = worstOldRoundResults[i];
-                }
-
-                var roundTeamServiceState = new RoundTeamServiceState()
-                {
-                    GameRoundId = roundId,
-                    ServiceId = services[i].Id,
-                    TeamId = team.Id,
-                    Status = EnoCoreUtils.CheckerResultToServiceStatus(worstResult)
-                };
-                _context.RoundTeamServiceStates.Add(roundTeamServiceState);
-
-                (await _context.ServiceStats
-                    .Where(ss => ss.TeamId == team.Id && ss.ServiceId == services[i].Id)
-                    .SingleAsync()).Status = roundTeamServiceState.Status;
-                await _context.SaveChangesAsync();
-            }
-        }
-
-        public async Task CalculateAllPoints(ServiceProvider serviceProvider, long roundId, JsonConfiguration config)
-        {
-            return;
             long newLatestSnapshotRoundId = Math.Max(0, roundId - config.FlagValidityInRounds - 1);
             var services = await _context.Services
                 .AsNoTracking()
                 .ToArrayAsync();
             var teams = await _context.Teams
-                .OrderBy(t => t.Id)
+                .AsNoTracking()
                 .ToArrayAsync();
 
             foreach (var service in services)
             {
                 Stopwatch stopWatch = new Stopwatch();
                 stopWatch.Start();
-                await CalculateServiceScores(serviceProvider, teams, roundId, service, newLatestSnapshotRoundId);
+                await CalculateServicePoints(serviceProvider, teams, roundId, service, 0, newLatestSnapshotRoundId);
                 stopWatch.Stop();
                 Console.WriteLine($"CalculateServiceScores {service.Name} took {stopWatch.Elapsed.TotalMilliseconds}ms");
             }
 
+            /*
             // calculate the total points
             var sums = await _context.ServiceStats
                 .GroupBy(ss => ss.TeamId)
@@ -971,150 +914,100 @@ namespace EnoCore
                 teams[i].AttackPoints = sums[i];
             }
             await _context.SaveChangesAsync();
+            */
 
         }
 
-        private async Task CalculateServiceScores(ServiceProvider serviceProvider, Team[] teams, long roundId, Service service, long newLatestSnapshotRoundId)
+        private async Task CalculateServicePoints(ServiceProvider serviceProvider, Team[] teams, long roundId, Service service, long oldSnapshotsRoundId, long newLatestSnapshotRoundId)
         {
-            ServiceStatsSnapshot[] oldSnapshots;
-            long oldSnapshotsRoundId;
-            ServiceStatsSnapshot[] newSnapshots;
-
-
-            oldSnapshots = await _context.ServiceStatsSnapshots
+            var oldSnapshots = await _context.ServiceStatsSnapshots
+                .TagWith("CalculateServiceScores:oldSnapshots")
+                .Where(sss => sss.RoundId == oldSnapshotsRoundId)
                 .Where(sss => sss.ServiceId == service.Id)
-                .GroupBy(sss => sss.TeamId)
-                .Select(g => g.OrderBy(sss => sss.Id).Last())
                 .AsNoTracking()
-                .ToArrayAsync();
-            if (oldSnapshots.Length == 0)
-            {
-                oldSnapshots = null;
-                oldSnapshotsRoundId = 0;
-            }
-            else
-            {
-                oldSnapshotsRoundId = oldSnapshots[0].RoundId;
-            }
-
-            if (newLatestSnapshotRoundId != 0)
-            {
-                newSnapshots = teams.Select((t, i) => new ServiceStatsSnapshot()
-                {
-                    AttackPoints = oldSnapshots?[i].AttackPoints ?? 0,
-                    LostDefensePoints = oldSnapshots?[i].LostDefensePoints ?? 0,
-                    ServiceLevelAgreementPoints = oldSnapshots?[i].LostDefensePoints ?? 0,
-                    RoundId = newLatestSnapshotRoundId,
-                    ServiceId = service.Id,
-                    TeamId = t.Id
-                }).ToArray();
-            }
-            else
-            {
-                newSnapshots = null;
-            }
+                .ToDictionaryAsync(sss => sss.TeamId);
 
             var stableServiceStates = await _context.RoundTeamServiceStates
+                .TagWith("CalculateServiceScores:stableServiceStates")
                 .Where(rtts => rtts.GameRoundId > oldSnapshotsRoundId)
                 .Where(rtts => rtts.GameRoundId <= newLatestSnapshotRoundId)
-                .GroupBy(rtts => rtts.TeamId)
-                .Select(g => new TeamServiceStates()
-                {
-                    Ups = g.Where(rtts => rtts.Status == ServiceStatus.Ok).Count(),
-                    Recoverings = g.Where(rtts => rtts.Status == ServiceStatus.Recovering).Count()
-                })
+                .GroupBy(rtss => new { rtss.TeamId, rtss.Status })
+                .Select(rtss => new { rtss.Key, Amount = rtss.Count()})
                 .AsNoTracking()
-                .ToArrayAsync();
-            if (stableServiceStates.Length == 0) // stable stats are empty in the first few rounds
-            {
-                stableServiceStates = null;
-            }
+                .ToDictionaryAsync(rtss => rtss.Key);
 
             var volatileServiceStates = await _context.RoundTeamServiceStates
-                .Where(rtts => rtts.GameRoundId <= roundId)
-                .Where(rtts => rtts.GameRoundId >= newLatestSnapshotRoundId)
-                .GroupBy(rtts => rtts.TeamId)
-                .Select(g => new TeamServiceStates()
-                {
-                    Ups = g.Where(rtts => rtts.Status == ServiceStatus.Ok).Count(),
-                    Recoverings = g.Where(rtts => rtts.Status == ServiceStatus.Recovering).Count()
-                })
+                .TagWith("CalculateServiceScores:volatileServiceStates")
+                .Where(rtts => rtts.GameRoundId > oldSnapshotsRoundId)
+                .Where(rtts => rtts.GameRoundId <= newLatestSnapshotRoundId)
+                .GroupBy(rtss => new { rtss.TeamId, rtss.Status })
+                .Select(rtss => new { rtss.Key, Amount = rtss.Count() })
                 .AsNoTracking()
-                .ToArrayAsync();
+                .ToDictionaryAsync(rtss => rtss.Key);
 
-            var tasks = new HashSet<Task>();
-            var teamserviceStats = new TeamServiceStates[teams.Length];
-            for (int i = 0; i < teams.Length; i++)
+            var newSnapshots = teams.ToDictionary(t => t.Id, t => new ServiceStatsSnapshot()
             {
-                int localIndex = i; //prevent i from being incremented before the task runs
-                var team = teams[localIndex];
-                if (tasks.Count < 16)
-                {
-                    tasks.Add(Task.Run(async () =>
-                    {
-                        using (var scope = serviceProvider.CreateScope())
-                        {
-                            await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().UpdateTeamServiceStatsAndFillSnapshot(service, teams.Length, roundId, team.Id,
-                                oldSnapshots?[localIndex], newSnapshots?[localIndex],
-                                stableServiceStates?[localIndex], volatileServiceStates[localIndex]);
-                        }
-                    }));
-                }
-                else
-                {
-                    Task finished = await Task.WhenAny(tasks);
-                    tasks.Remove(finished);
-                    tasks.Add(Task.Run(async () => {
-                        using (var scope = serviceProvider.CreateScope())
-                        {
-                            await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().UpdateTeamServiceStatsAndFillSnapshot(service, teams.Length, roundId, team.Id,
-                                oldSnapshots?[localIndex] ?? null, newSnapshots?[localIndex] ?? null,
-                                stableServiceStates?[localIndex] ?? null, volatileServiceStates[localIndex] ?? null);
-                        }
-                    }));
-                }
-            }
-            await Task.WhenAll(tasks);
-            if (newSnapshots != null)
-            {
-                _context.ServiceStatsSnapshots.AddRange(newSnapshots);
-                await _context.SaveChangesAsync();
-            }
-        }
+                TeamId = t.Id,
+                RoundId = newLatestSnapshotRoundId,
+                ServiceId = service.Id
+            });
 
-        public async Task UpdateTeamServiceStatsAndFillSnapshot(Service service, long teamsCount, long roundId, long teamId,
-            ServiceStatsSnapshot oldSnapshot, ServiceStatsSnapshot newSnapshot,
-            TeamServiceStates stableServiceState, TeamServiceStates volatileServiceState)
-        {
-            var teamServiceStats = await _context.ServiceStats
-                .Where(ss => ss.TeamId == teamId)
+            var serviceStats = await _context.ServiceStats
                 .Where(ss => ss.ServiceId == service.Id)
-                .SingleAsync();
-            teamServiceStats.ServiceLevelAgreementPoints = CalculateTeamSlaScore(teamsCount,
-                oldSnapshot, newSnapshot,
-                stableServiceState, volatileServiceState);
-            //TODO atk
-            //TODO def
+                .ToDictionaryAsync(ss => ss.TeamId);
+
+            foreach (var team in teams)
+            {
+                try
+                {
+                    // SLA
+                    double slaPoints = 0;
+                    // snapshotted part
+                    if (oldSnapshots.ContainsKey(team.Id))
+                    {
+                        slaPoints = oldSnapshots[team.Id].ServiceLevelAgreementPoints;
+                    }
+                    else if (oldSnapshotsRoundId > 0) // old snapshould should have been here, but is not!
+                    {
+                        throw new Exception("old snapshot not found, oh no!"); //TODO requery
+                    }
+
+                    // stable part
+                    double stableSLADiff = 0;
+                    if (stableServiceStates.TryGetValue(new { TeamId = team.Id, Status = ServiceStatus.Ok }, out var oks))
+                    {
+                        stableSLADiff += oks.Amount;
+                    }
+                    if (stableServiceStates.TryGetValue(new { TeamId = team.Id, Status = ServiceStatus.Recovering }, out var recoverings))
+                    {
+                        stableSLADiff += recoverings.Amount / 2;
+                    }
+                    slaPoints += stableSLADiff * Math.Sqrt(teams.Length);
+                    newSnapshots[team.Id].ServiceLevelAgreementPoints = slaPoints;
+
+                    // volatile part
+                    double volatileDiff = 0;
+                    if (volatileServiceStates.TryGetValue(new { TeamId = team.Id, Status = ServiceStatus.Ok }, out var volOks))
+                    {
+                        volatileDiff += volOks.Amount;
+                    }
+                    if (volatileServiceStates.TryGetValue(new { TeamId = team.Id, Status = ServiceStatus.Recovering }, out var volRecoverings))
+                    {
+                        volatileDiff += volRecoverings.Amount / 2;
+                    }
+                    slaPoints += volatileDiff * Math.Sqrt(teams.Length);
+                    serviceStats[team.Id].ServiceLevelAgreementPoints = slaPoints;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.StackTrace);
+                }
+            }
+            if (newLatestSnapshotRoundId > 0)
+            {
+                _context.ServiceStatsSnapshots.AddRange(newSnapshots.Values);
+            }
             await _context.SaveChangesAsync();
-        }
-
-
-        private double CalculateTeamSlaScore(long teamsCount,
-            ServiceStatsSnapshot oldSnapshot, ServiceStatsSnapshot newSnapshot,
-            TeamServiceStates stableServiceState, TeamServiceStates volatileServiceStates)
-        {
-            double serviceSla = 0;
-            if (oldSnapshot != null)
-            {
-                serviceSla += oldSnapshot.ServiceLevelAgreementPoints;
-            }
-            if (newSnapshot != null)
-            {
-                serviceSla += (stableServiceState.Ups + (stableServiceState.Recoverings * 0.5)) * Math.Sqrt(teamsCount);
-                newSnapshot.ServiceLevelAgreementPoints = serviceSla;
-            }
-            serviceSla += (volatileServiceStates.Ups + (volatileServiceStates.Recoverings * 0.5)) * Math.Sqrt(teamsCount);
-            return serviceSla;
         }
 
         public EnoEngineScoreboard GetCurrentScoreboard(long roundId)
