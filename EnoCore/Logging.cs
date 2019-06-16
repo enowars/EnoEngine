@@ -1,4 +1,5 @@
 ﻿using EnoCore.Models.Json;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -8,6 +9,39 @@ using System.Text;
 
 namespace EnoCore
 {
+    public class EnoLoggerProvider : ILoggerProvider
+    {
+        public ILogger CreateLogger(string categoryName)
+        {
+            return new EnoConsoleLogger(categoryName);
+        }
+
+        public void Dispose() { }
+    }
+
+    public class EnoConsoleLogger : ILogger
+    {
+        long TeamId;
+        string Module;
+
+        public EnoConsoleLogger(string categoryName)
+        {
+            Module = categoryName;
+        }
+
+        public IDisposable BeginScope<TState>(TState state)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+        {
+            Console.WriteLine(formatter(state, exception));
+        }
+    }
+
     public class EnoLogger
     {
         private readonly string Tool;

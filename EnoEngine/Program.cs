@@ -144,8 +144,9 @@ namespace EnoEngine
                 .AddScoped<IEnoDatabase, EnoDatabase>()
                 .AddLogging(loggingBuilder =>
                 {
-                    loggingBuilder.AddConsole();
-                    loggingBuilder.AddFilter(ll => ll >= LogLevel.Information);
+                    loggingBuilder.AddProvider(new EnoLoggerProvider());
+                    //loggingBuilder.AddConsole();
+                    loggingBuilder.AddFilter((category, level) => category != DbLoggerCategory.Database.Command.Name);
                 })
                 .BuildServiceProvider(validateScopes: true);
             new Program(serviceProvider).Start();

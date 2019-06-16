@@ -63,9 +63,10 @@ namespace EnoCore
         private static readonly EnoLogger Logger = new EnoLogger(nameof(EnoDatabase));
         private readonly EnoDatabaseContext _context;
 
-        public EnoDatabase(EnoDatabaseContext context)
+        public EnoDatabase(EnoDatabaseContext context, ILogger<EnoDatabase> logger)
         {
             _context = context;
+            logger.LogInformation("hello world", new EnoLogMessage());
         }
 
         public DBInitializationResult ApplyConfig(JsonConfiguration config)
