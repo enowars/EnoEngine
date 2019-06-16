@@ -22,7 +22,12 @@ namespace EnoCore
 
     public class EnoConsoleLogger : ILogger
     {
-        public EnoConsoleLogger(string categoryName) { }
+        string CategoryName;
+
+        public EnoConsoleLogger(string categoryName)
+        {
+            CategoryName = categoryName;
+        }
 
         public IDisposable BeginScope<TState>(TState state)
         {
@@ -35,7 +40,7 @@ namespace EnoCore
         {
             if (logLevel >= LogLevel.Information)
             {
-                Console.WriteLine(formatter(state, exception));
+                Console.WriteLine($"[{CategoryName}] {formatter(state, exception)}");
             }
         }
     }
