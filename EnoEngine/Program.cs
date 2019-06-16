@@ -136,13 +136,28 @@ namespace EnoEngine
                 Message = "EnoEngine starting"
             });
             var serviceProvider = new ServiceCollection()
-                .AddDbContextPool<EnoDatabaseContext>(options => { options.UseNpgsql(
-                    EnoCoreUtils.PostgresConnectionString,
-                    pgoptions => pgoptions.EnableRetryOnFailure());
+                .AddDbContextPool<EnoDatabaseContext>(options => {
+                    options.UseNpgsql(
+                        EnoCoreUtils.PostgresConnectionString,
+                        pgoptions => pgoptions.EnableRetryOnFailure());
                 }, 90)
                 .AddScoped<IEnoDatabase, EnoDatabase>()
+                .AddLogging(loggingBuilder =>
+                {
+                    loggingBuilder.AddConsole();
+                    loggingBuilder.AddFilter(ll => ll > LogLevel.Information);
+                })
                 .BuildServiceProvider(validateScopes: true);
             new Program(serviceProvider).Start();
+        }
+
+        private static ILoggerFactory GetLoggerFactory()
+        {
+            IServiceCollection serviceCollection = new ServiceCollection();
+            serviceCollection.AddLogging(builder =>
+                builder.AddConsole());
+            return serviceCollection.BuildServiceProvider()
+                .GetService<ILoggerFactory>();
         }
     }
 }

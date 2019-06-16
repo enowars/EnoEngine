@@ -47,7 +47,7 @@ namespace EnoCore
         DBInitializationResult ApplyConfig(JsonConfiguration configuration);
         Task<FlagSubmissionResult> InsertSubmittedFlag(string flag, string attackerAddressPrefix, JsonConfiguration config);
         Task<(Round, Round, List<Flag>, List<Noise>, List<Havoc>)> CreateNewRound(DateTime begin, DateTime q2, DateTime q3, DateTime q4, DateTime end);
-        Task RecordServiceStates(IServiceProvider serviceProvider, long roundId);
+        Task CalculateRoundTeamServiceStates(IServiceProvider serviceProvider, long roundId);
         Task InsertPutFlagsTasks(long roundId, DateTime firstFlagTime, JsonConfiguration config);
         Task InsertPutNoisesTasks(Round currentRound, IEnumerable<Noise> currentNoises, JsonConfiguration config);
         Task InsertHavocsTasks(long roundId, DateTime begin, JsonConfiguration config);
@@ -55,7 +55,7 @@ namespace EnoCore
         Task InsertRetrieveOldFlagsTasks(Round currentRound, int oldRoundsCount, JsonConfiguration config);
         Task InsertRetrieveCurrentNoisesTasks(Round currentRound, List<Noise> currentNoises, JsonConfiguration config);
         Task<List<CheckerTask>> RetrievePendingCheckerTasks(int maxAmount);
-        Task CalculatedAllPoints(ServiceProvider serviceProvider, long roundId, JsonConfiguration config);
+        Task CalculateAllPoints(ServiceProvider serviceProvider, long roundId, JsonConfiguration config);
         EnoEngineScoreboard GetCurrentScoreboard(long roundId);
         Task UpdateTeamServiceStatsAndFillSnapshot(Service service, long teamsCount, long roundId, long teamId,
             ServiceStatsSnapshot oldSnapshot, ServiceStatsSnapshot newSnapshot,
@@ -841,42 +841,62 @@ namespace EnoCore
             }
         }
 
-        public async Task RecordServiceStates(IServiceProvider serviceProvider, long roundId)
+        internal class TeamResult
+        {
+            public Team Team { get; set; }
+            public CheckerResult  CheckerResult { get; set; }
+            public long RoundId { get; set; }
+            public long ServiceId { get; set; }
+        }
+
+        public async Task CalculateRoundTeamServiceStates(IServiceProvider serviceProvider, long roundId)
         {
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
 
             var teams = await _context.Teams.AsNoTracking().ToArrayAsync();
             var services = await _context.Services.AsNoTracking().ToArrayAsync();
-            var tasks = new HashSet<Task>();
-            foreach (var team in teams)
+
+            var currentRoundTasks = await _context.CheckerTasks
+                .TagWith("CalculateRoundTeamServiceStates:currentRoundTasks")
+                .Where(ct => ct.CurrentRoundId == roundId)
+                .Where(ct => ct.RelatedRoundId == roundId)
+                .GroupBy(ct => new { ct.ServiceId, ct.TeamId })
+                .Select(g => new { g.Key, WorstResult = g.Min(ct => ct.CheckerResult) })
+                .AsNoTracking()
+                .ToDictionaryAsync(g => g.Key, g => g.WorstResult);
+
+            var oldRoundsTasks = await _context.CheckerTasks
+                .TagWith("CalculateRoundTeamServiceStates:oldRoundsTasks")
+                .Where(ct => ct.CurrentRoundId == roundId)
+                .Where(ct => ct.RelatedRoundId != roundId)
+                .GroupBy(ct => new { ct.ServiceId, ct.TeamId })
+                .Select(g => new { g.Key, WorstResult = g.Min(ct => ct.CheckerResult) })
+                .AsNoTracking()
+                .ToDictionaryAsync(g => g.Key, g => g.WorstResult);
+
+            RoundTeamServiceState[] states = new RoundTeamServiceState[currentRoundTasks.Count];
+            int i = 0;
+            foreach (var entry in currentRoundTasks)
             {
-                if (tasks.Count < 16)
+                CheckerResult result = entry.Value;
+                if (result == CheckerResult.Ok && oldRoundsTasks.ContainsKey(entry.Key))
                 {
-                    tasks.Add(Task.Run(async () =>
-                    {
-                        using (var scope = serviceProvider.CreateScope())
-                        {
-                            await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().RecordTeamServiceStates(roundId, team, services);
-                        }
-                    }));
+                    result = oldRoundsTasks[entry.Key];
                 }
-                else
+                states[i] = new RoundTeamServiceState()
                 {
-                    Task finished = await Task.WhenAny(tasks);
-                    tasks.Remove(finished);
-                    tasks.Add(Task.Run(async () =>
-                    {
-                        using (var scope = serviceProvider.CreateScope())
-                        {
-                            await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().RecordTeamServiceStates(roundId, team, services);
-                        }
-                    }));
-                }
+                    GameRoundId = roundId,
+                    ServiceId = entry.Key.ServiceId,
+                    TeamId = entry.Key.TeamId,
+                    Status = EnoCoreUtils.CheckerResultToServiceStatus(result)
+                };
+                i += 1;
             }
-            await Task.WhenAll(tasks);
+            _context.AddRange(states);
+            await _context.SaveChangesAsync();
             stopWatch.Stop();
-            Console.WriteLine($"RecordServiceStates took {stopWatch.Elapsed.TotalMilliseconds}ms");
+            Console.WriteLine($"CalculateRoundTeamServiceStates took {stopWatch.Elapsed.TotalMilliseconds}ms");
         }
 
         public async Task RecordTeamServiceStates(long roundId, Team team, Service[] services)
@@ -921,8 +941,9 @@ namespace EnoCore
             }
         }
 
-        public async Task CalculatedAllPoints(ServiceProvider serviceProvider, long roundId, JsonConfiguration config)
+        public async Task CalculateAllPoints(ServiceProvider serviceProvider, long roundId, JsonConfiguration config)
         {
+            return;
             long newLatestSnapshotRoundId = Math.Max(0, roundId - config.FlagValidityInRounds - 1);
             var services = await _context.Services
                 .AsNoTracking()

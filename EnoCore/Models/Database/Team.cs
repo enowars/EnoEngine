@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EnoCore.Models.Database;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
@@ -18,6 +19,7 @@ namespace EnoCore.Models
         public List<RoundTeamServiceState> ServiceDetails { get; set; }
         public long ServiceStatsId { get; set; }
         public List<ServiceStats> ServiceStats { get; set; }
+        public List<CheckerTask> CheckerTasks { get; set; }
         public bool Active { get; set; }
     }
 }

@@ -16,7 +16,7 @@ namespace EnoCore.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
-                .HasAnnotation("ProductVersion", "2.2.3-servicing-35854")
+                .HasAnnotation("ProductVersion", "2.2.4-servicing-10062")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             modelBuilder.Entity("EnoCore.Models.Database.CheckerTask", b =>
@@ -61,6 +61,8 @@ namespace EnoCore.Migrations
                     b.HasIndex("CheckerTaskLaunchStatus");
 
                     b.HasIndex("StartTime");
+
+                    b.HasIndex("TeamId");
 
                     b.ToTable("CheckerTasks");
                 });
@@ -311,6 +313,14 @@ namespace EnoCore.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Teams");
+                });
+
+            modelBuilder.Entity("EnoCore.Models.Database.CheckerTask", b =>
+                {
+                    b.HasOne("EnoCore.Models.Team")
+                        .WithMany("CheckerTasks")
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("EnoCore.Models.Database.Havoc", b =>

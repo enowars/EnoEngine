@@ -15,7 +15,7 @@ namespace EnoCore
             using (var scope = serviceProvider.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                await db.RecordServiceStates(scope.ServiceProvider, roundId);
+                await db.CalculateRoundTeamServiceStates(scope.ServiceProvider, roundId);
             }
         }
 
@@ -24,7 +24,7 @@ namespace EnoCore
             using (var scope = serviceProvider.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                await db.CalculatedAllPoints(serviceProvider, roundId, config);
+                await db.CalculateAllPoints(serviceProvider, roundId, config);
             }
         }
 

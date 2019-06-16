@@ -9,34 +9,6 @@ namespace EnoCore.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "CheckerTasks",
-                columns: table => new
-                {
-                    Id = table.Column<long>(nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
-                    CheckerUrl = table.Column<string>(nullable: true),
-                    TaskType = table.Column<string>(nullable: true),
-                    Address = table.Column<string>(nullable: true),
-                    ServiceId = table.Column<long>(nullable: false),
-                    ServiceName = table.Column<string>(nullable: true),
-                    TeamId = table.Column<long>(nullable: false),
-                    TeamName = table.Column<string>(nullable: true),
-                    RelatedRoundId = table.Column<long>(nullable: false),
-                    CurrentRoundId = table.Column<long>(nullable: false),
-                    Payload = table.Column<string>(nullable: true),
-                    StartTime = table.Column<DateTime>(nullable: false),
-                    MaxRunningTime = table.Column<int>(nullable: false),
-                    RoundLength = table.Column<long>(nullable: false),
-                    TaskIndex = table.Column<long>(nullable: false),
-                    CheckerResult = table.Column<int>(nullable: false),
-                    CheckerTaskLaunchStatus = table.Column<int>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CheckerTasks", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Rounds",
                 columns: table => new
                 {
@@ -90,43 +62,35 @@ namespace EnoCore.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Flags",
+                name: "CheckerTasks",
                 columns: table => new
                 {
                     Id = table.Column<long>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
-                    StringRepresentation = table.Column<string>(nullable: true),
-                    OwnerId = table.Column<long>(nullable: false),
+                    CheckerUrl = table.Column<string>(nullable: true),
+                    TaskType = table.Column<string>(nullable: true),
+                    Address = table.Column<string>(nullable: true),
                     ServiceId = table.Column<long>(nullable: false),
-                    RoundOffset = table.Column<int>(nullable: false),
-                    GameRoundId = table.Column<long>(nullable: false),
-                    PutTaskId = table.Column<long>(nullable: true)
+                    ServiceName = table.Column<string>(nullable: true),
+                    TeamId = table.Column<long>(nullable: false),
+                    TeamName = table.Column<string>(nullable: true),
+                    RelatedRoundId = table.Column<long>(nullable: false),
+                    CurrentRoundId = table.Column<long>(nullable: false),
+                    Payload = table.Column<string>(nullable: true),
+                    StartTime = table.Column<DateTime>(nullable: false),
+                    MaxRunningTime = table.Column<int>(nullable: false),
+                    RoundLength = table.Column<long>(nullable: false),
+                    TaskIndex = table.Column<long>(nullable: false),
+                    CheckerResult = table.Column<int>(nullable: false),
+                    CheckerTaskLaunchStatus = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Flags", x => x.Id);
+                    table.PrimaryKey("PK_CheckerTasks", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Flags_Rounds_GameRoundId",
-                        column: x => x.GameRoundId,
-                        principalTable: "Rounds",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Flags_Teams_OwnerId",
-                        column: x => x.OwnerId,
+                        name: "FK_CheckerTasks_Teams_TeamId",
+                        column: x => x.TeamId,
                         principalTable: "Teams",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Flags_CheckerTasks_PutTaskId",
-                        column: x => x.PutTaskId,
-                        principalTable: "CheckerTasks",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Flags_Services_ServiceId",
-                        column: x => x.ServiceId,
-                        principalTable: "Services",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -300,6 +264,48 @@ namespace EnoCore.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Flags",
+                columns: table => new
+                {
+                    Id = table.Column<long>(nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
+                    StringRepresentation = table.Column<string>(nullable: true),
+                    OwnerId = table.Column<long>(nullable: false),
+                    ServiceId = table.Column<long>(nullable: false),
+                    RoundOffset = table.Column<int>(nullable: false),
+                    GameRoundId = table.Column<long>(nullable: false),
+                    PutTaskId = table.Column<long>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Flags", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Flags_Rounds_GameRoundId",
+                        column: x => x.GameRoundId,
+                        principalTable: "Rounds",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Flags_Teams_OwnerId",
+                        column: x => x.OwnerId,
+                        principalTable: "Teams",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Flags_CheckerTasks_PutTaskId",
+                        column: x => x.PutTaskId,
+                        principalTable: "CheckerTasks",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Flags_Services_ServiceId",
+                        column: x => x.ServiceId,
+                        principalTable: "Services",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "SubmittedFlags",
                 columns: table => new
                 {
@@ -342,6 +348,11 @@ namespace EnoCore.Migrations
                 name: "IX_CheckerTasks_StartTime",
                 table: "CheckerTasks",
                 column: "StartTime");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CheckerTasks_TeamId",
+                table: "CheckerTasks",
+                column: "TeamId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Flags_GameRoundId",
@@ -477,13 +488,13 @@ namespace EnoCore.Migrations
                 name: "Rounds");
 
             migrationBuilder.DropTable(
-                name: "Teams");
-
-            migrationBuilder.DropTable(
                 name: "CheckerTasks");
 
             migrationBuilder.DropTable(
                 name: "Services");
+
+            migrationBuilder.DropTable(
+                name: "Teams");
         }
     }
 }
