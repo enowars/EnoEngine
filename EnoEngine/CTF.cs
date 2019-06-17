@@ -184,8 +184,8 @@ namespace EnoEngine.Game
         {
             if (roundId > 0)
             {
-                await EnoDatabaseUtils.RecordServiceStates(ServiceProvider, roundId);
-                await EnoDatabaseUtils.CalculateAllPoints(ServiceProvider, roundId, config);
+                var newStates = await EnoDatabaseUtils.RecordServiceStates(ServiceProvider, roundId);
+                await EnoDatabaseUtils.CalculateAllPoints(ServiceProvider, roundId, newStates, config);
             }
             var scoreboard = EnoDatabaseUtils.GetCurrentScoreboard(ServiceProvider, roundId);
             EnoCoreUtils.GenerateCurrentScoreboard(scoreboard, $"..{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}", roundId);

@@ -59,7 +59,6 @@ namespace EnoLauncher
 
                 while (!LauncherCancelSource.IsCancellationRequested)
                 {
-                    
                     var tasks = await db.RetrievePendingCheckerTasks(100);
                     if (tasks.Count > 0)
                     {
