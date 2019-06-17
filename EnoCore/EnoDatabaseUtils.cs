@@ -36,7 +36,5 @@ namespace EnoCore
                 return db.GetCurrentScoreboard(roundId);
             }
         }
-
-
     }
 }

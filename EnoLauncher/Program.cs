@@ -50,19 +50,24 @@ namespace EnoLauncher
             {
                 var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
                 db.Migrate();
-                Logger.LogInfo(new EnoLogMessage()
-                {
-                    Module = nameof(EnoLauncher),
-                    Function = nameof(LauncherLoop),
-                    Message = $"LauncherLoop starting"
-                });
+            }
 
-                while (!LauncherCancelSource.IsCancellationRequested)
+            Logger.LogInfo(new EnoLogMessage()
+            {
+                Module = nameof(EnoLauncher),
+                Function = nameof(LauncherLoop),
+                Message = $"LauncherLoop starting"
+            });
+
+            while (!LauncherCancelSource.IsCancellationRequested)
+            {
+                using (var scope = ServiceProvider.CreateScope())
                 {
+                    var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
                     var tasks = await db.RetrievePendingCheckerTasks(100);
                     if (tasks.Count > 0)
                     {
-                        Logger.LogInfo(new EnoLogMessage()
+                        Logger.LogDebug(new EnoLogMessage()
                         {
                             Module = nameof(EnoLauncher),
                             Function = nameof(LauncherLoop),
@@ -189,30 +194,30 @@ namespace EnoLauncher
         {
             try
             {
-                using (var scope = ServiceProvider.CreateScope())
+                while (!LauncherCancelSource.IsCancellationRequested)
                 {
-                    var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                    while (!LauncherCancelSource.IsCancellationRequested)
+                    CheckerTask[] results = new CheckerTask[TASK_UPDATE_BATCH_SIZE];
+                    int i = 0;
+                    while (i < TASK_UPDATE_BATCH_SIZE)
                     {
-                        CheckerTask[] results = new CheckerTask[TASK_UPDATE_BATCH_SIZE];
-                        int i = 0;
-                        while (i < TASK_UPDATE_BATCH_SIZE)
+                        if (ResultsQueue.TryDequeue(out var result))
                         {
-                            if (ResultsQueue.TryDequeue(out var result))
-                            {
-                                results[i] = result;
-                                i += 1;
-                            }
-                            else
-                            {
-                                break;
-                            }
+                            results[i] = result;
+                            i += 1;
                         }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                    using (var scope = ServiceProvider.CreateScope())
+                    {
+                        var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
                         await db.UpdateTaskCheckerTaskResults(results.AsMemory(0, i));
-                        if (i != TASK_UPDATE_BATCH_SIZE)
-                        {
-                            await Task.Delay(1);
-                        }
+                    }
+                    if (i != TASK_UPDATE_BATCH_SIZE)
+                    {
+                        await Task.Delay(1);
                     }
                 }
             }
