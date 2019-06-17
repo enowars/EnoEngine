@@ -64,7 +64,7 @@ namespace EnoLauncher
                 using (var scope = ServiceProvider.CreateScope())
                 {
                     var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                    var tasks = await db.RetrievePendingCheckerTasks(100);
+                    var tasks = await db.RetrievePendingCheckerTasks(1000);
                     if (tasks.Count > 0)
                     {
                         Logger.LogDebug(new EnoLogMessage()

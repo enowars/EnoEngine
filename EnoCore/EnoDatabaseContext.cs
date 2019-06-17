@@ -50,71 +50,6 @@ namespace EnoCore
                 .IsUnique();
         }
 
-        private static async Task CalculateSLAScore(EnoDatabaseContext ctx, Service[] services, long currentRoundId, Team team, long newLatestSnapshotRoundId)
-        {
-            double slaScore = 0;
-            double teamsCount = ctx.Teams.Count();
-            foreach (var service in services)
-            {
-                var oldSnapshot = await ctx.ServiceStatsSnapshots
-                    .Where(sss => sss.TeamId == team.Id)
-                    .Where(sss => sss.ServiceId == service.Id)
-                    .OrderByDescending(sss => sss.RoundId)
-                    .Skip(1)
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync();
-                var oldSnapshotRoundId = oldSnapshot?.RoundId ?? 0;
-                var oldSnapshotSlaCore = oldSnapshot?.ServiceLevelAgreementPoints ?? 0;
-
-                double upsBetweenSnapshots = await ctx.RoundTeamServiceStates
-                    .Where(rtss => rtss.GameRoundId > oldSnapshotRoundId)
-                    .Where(rtss => rtss.GameRoundId <= newLatestSnapshotRoundId)
-                    .Where(rtss => rtss.TeamId == team.Id)
-                    .Where(rtss => rtss.ServiceId == service.Id)
-                    .Where(rtss => rtss.Status == ServiceStatus.Ok)
-                    .CountAsync();
-                double recoversBetweenSnapshots = await ctx.RoundTeamServiceStates
-                    .Where(rtss => rtss.GameRoundId > oldSnapshotRoundId)
-                    .Where(rtss => rtss.GameRoundId <= newLatestSnapshotRoundId)
-                    .Where(rtss => rtss.TeamId == team.Id)
-                    .Where(rtss => rtss.ServiceId == service.Id)
-                    .Where(rtss => rtss.Status == ServiceStatus.Recovering)
-                    .CountAsync();
-
-                double upsAfterNewSnapshot = await ctx.RoundTeamServiceStates
-                    .Where(f => f.GameRoundId <= currentRoundId)
-                    .Where(f => f.GameRoundId > newLatestSnapshotRoundId)
-                    .Where(rtss => rtss.TeamId == team.Id)
-                    .Where(rtss => rtss.ServiceId == service.Id)
-                    .Where(rtss => rtss.Status == ServiceStatus.Ok)
-                    .CountAsync();
-                double recoversAfterNewSnapshot = await ctx.RoundTeamServiceStates
-                    .Where(f => f.GameRoundId <= currentRoundId)
-                    .Where(f => f.GameRoundId > newLatestSnapshotRoundId)
-                    .Where(rtss => rtss.TeamId == team.Id)
-                    .Where(rtss => rtss.ServiceId == service.Id)
-                    .Where(rtss => rtss.Status == ServiceStatus.Recovering)
-                    .CountAsync();
-
-                double newSnapshotSlaScore = oldSnapshotSlaCore + (upsBetweenSnapshots + 0.5 * recoversBetweenSnapshots) * Math.Sqrt(teamsCount);
-                double serviceSlaScore = newSnapshotSlaScore + (upsAfterNewSnapshot + 0.5 * recoversAfterNewSnapshot) * Math.Sqrt(teamsCount);
-                slaScore += serviceSlaScore;
-                (await ctx.ServiceStats
-                    .Where(ss => ss.TeamId == team.Id && ss.ServiceId == service.Id)
-                    .SingleAsync()).ServiceLevelAgreementPoints = serviceSlaScore;
-
-                if (newLatestSnapshotRoundId > oldSnapshotRoundId)
-                {
-                    (await ctx.ServiceStatsSnapshots
-                        .Where(ss => ss.TeamId == team.Id && ss.ServiceId == service.Id)
-                        .Where(sss => sss.RoundId == newLatestSnapshotRoundId)
-                        .SingleAsync()).ServiceLevelAgreementPoints = newSnapshotSlaScore;
-                }
-            }
-            team.ServiceLevelAgreementPoints = slaScore;
-            team.TotalPoints += slaScore;
-        }
-
         private static async Task CalculateDefenseScore(EnoDatabaseContext ctx, Service[] services, long currentRoundId, Team team, long newLatestSnapshotRoundId)
         {
             double teamDefenseScore = 0;
@@ -241,7 +176,5 @@ namespace EnoCore
             team.AttackPoints = offenseScore;
             team.TotalPoints += offenseScore;
         }
-
-        
     }
 }
