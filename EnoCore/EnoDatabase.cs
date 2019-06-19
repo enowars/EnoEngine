@@ -39,7 +39,7 @@ namespace EnoCore
     public interface IEnoDatabase
     {
         DBInitializationResult ApplyConfig(JsonConfiguration configuration);
-        Task<FlagSubmissionResult> InsertSubmittedFlag(string flag, string attackerAddressPrefix, JsonConfiguration config);
+        Task<FlagSubmissionResult> InsertSubmittedFlag(string flag, long attackerTeamId, JsonConfiguration config);
         Task<(Round, Round, List<Flag>, List<Noise>, List<Havoc>)> CreateNewRound(DateTime begin, DateTime q2, DateTime q3, DateTime q4, DateTime end);
         Task<Dictionary<(long ServiceId, long TeamId), RoundTeamServiceState>> CalculateRoundTeamServiceStates(IServiceProvider serviceProvider, long roundId);
         Task InsertPutFlagsTasks(long roundId, DateTime firstFlagTime, JsonConfiguration config);
@@ -47,6 +47,7 @@ namespace EnoCore
         Task InsertHavocsTasks(long roundId, DateTime begin, JsonConfiguration config);
         Task InsertRetrieveCurrentFlagsTasks(Round round, List<Flag> currentFlags, JsonConfiguration config);
         Task InsertRetrieveOldFlagsTasks(Round currentRound, int oldRoundsCount, JsonConfiguration config);
+        Task<long> GetTeamIdByPrefix(string attackerPrefixString);
         Task InsertRetrieveCurrentNoisesTasks(Round currentRound, List<Noise> currentNoises, JsonConfiguration config);
         Task<List<CheckerTask>> RetrievePendingCheckerTasks(int maxAmount);
         Task CalculatePoints(ServiceProvider serviceProvider, long roundId, Dictionary<(long ServiceId, long TeamId), RoundTeamServiceState> states, JsonConfiguration config);
@@ -316,7 +317,7 @@ namespace EnoCore
             };
         }
 
-        public async Task<FlagSubmissionResult> InsertSubmittedFlag(string flag, string attackerAddressPrefix, JsonConfiguration config) //TODO more logs
+        public async Task<FlagSubmissionResult> InsertSubmittedFlag(string flag, long attackerTeamId, JsonConfiguration config) //TODO more logs
         {
             while (true)
             {
@@ -327,25 +328,20 @@ namespace EnoCore
                             .Include(f => f.Owner)
                             .AsNoTracking()
                             .SingleOrDefaultAsync();
-                    var dbAttackerTeam = await _context.Teams
-                        .Where(t => t.TeamSubnet == attackerAddressPrefix)
-                        .AsNoTracking()
-                        .SingleOrDefaultAsync();
+
                     var currentRound = await _context.Rounds
                         .AsNoTracking()
                         .LastOrDefaultAsync();
 
                     if (dbFlag == null)
                         return FlagSubmissionResult.Invalid;
-                    if (dbAttackerTeam == null)
-                        return FlagSubmissionResult.InvalidSenderError;
-                    if (dbFlag.Owner.Id == dbAttackerTeam.Id)
+                    if (dbFlag.Owner.Id == attackerTeamId)
                         return FlagSubmissionResult.Own;
                     if (dbFlag.GameRoundId < currentRound.Id - config.FlagValidityInRounds)
                         return FlagSubmissionResult.Old;
 
                     var submittedFlag = await _context.SubmittedFlags
-                        .Where(f => f.FlagId == dbFlag.Id && f.AttackerTeamId == dbAttackerTeam.Id)
+                        .Where(f => f.FlagId == dbFlag.Id && f.AttackerTeamId == attackerTeamId)
                         .SingleOrDefaultAsync();
 
                     if (submittedFlag != null)
@@ -357,7 +353,7 @@ namespace EnoCore
                     _context.SubmittedFlags.Add(new SubmittedFlag()
                     {
                         FlagId = dbFlag.Id,
-                        AttackerTeamId = dbAttackerTeam.Id,
+                        AttackerTeamId = attackerTeamId,
                         SubmissionsCount = 1,
                         RoundId = currentRound.Id
                     });
@@ -1266,6 +1262,14 @@ namespace EnoCore
             var tasksEnumerable = MemoryMarshal.ToEnumerable<CheckerTask>(tasks);
             _context.UpdateRange(tasksEnumerable);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<long> GetTeamIdByPrefix(string attackerPrefixString)
+        {
+            return await _context.Teams
+                .Where(t => t.TeamSubnet == attackerPrefixString)
+                .Select(t => t.Id)
+                .SingleAsync();
         }
     }
 }

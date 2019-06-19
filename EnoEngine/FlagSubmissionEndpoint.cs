@@ -1,6 +1,7 @@
 ﻿using EnoCore;
 using EnoCore.Models.Json;
 using EnoEngine.Game;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -17,25 +18,42 @@ namespace EnoEngine.FlagSubmission
     {
         private static readonly EnoLogger Logger = new EnoLogger(nameof(EnoEngine));
         readonly CancellationToken Token;
-        readonly TcpListener Listener = new TcpListener(IPAddress.IPv6Any, 1337);
-        readonly IFlagSubmissionHandler Handler;
+        readonly TcpListener ProductionListener = new TcpListener(IPAddress.IPv6Any, 1337);
+        readonly TcpListener DebugListener = new TcpListener(IPAddress.IPv6Any, 1338);
+        readonly IServiceProvider ServiceProvider;
 
-        public FlagSubmissionEndpoint(IFlagSubmissionHandler handler, CancellationToken token)
+        public FlagSubmissionEndpoint(IServiceProvider serviceProvider, CancellationToken token)
         {
             Token = token;
-            Token.Register(() => Listener.Stop());
-            Handler = handler;
+            Token.Register(() => ProductionListener.Stop());
+            Token.Register(() => DebugListener.Stop());
+            ServiceProvider = serviceProvider;
         }
 
-        public async Task Run()
+        public async Task RunDebugEndpoint()
         {
             try
             {
-                Listener.Start();
+                DebugListener.Start();
                 while (!Token.IsCancellationRequested)
                 {
-                    var client = await Listener.AcceptTcpClientAsync();
-                    var clientTask = HandleSubmissionClient(client);
+                    var client = await DebugListener.AcceptTcpClientAsync();
+                    var attackerAddress = ((IPEndPoint)client.Client.RemoteEndPoint).Address.GetAddressBytes();
+                    var attackerPrefix = new byte[Program.Configuration.TeamSubnetBytesLength];
+                    Array.Copy(attackerAddress, attackerPrefix, Program.Configuration.TeamSubnetBytesLength);
+                    var attackerPrefixString = BitConverter.ToString(attackerPrefix);
+                   
+                    var clientTask = Task.Run(async () =>
+                    {
+                        using (StreamReader reader = new StreamReader(client.GetStream()))
+                        {
+                            long teamId;
+                            var line = await reader.ReadLineAsync();
+                            teamId = Convert.ToInt64(line);
+                            await HandleIdentifiedSubmissionClient(client, reader, teamId);
+                        }
+                    });
+                    
                 }
             }
             catch (ObjectDisposedException) { }
@@ -45,15 +63,61 @@ namespace EnoEngine.FlagSubmission
                 Logger.LogFatal(new EnoLogMessage()
                 {
                     Module = nameof(FlagSubmission),
-                    Function = nameof(Run),
-                    Message = $"FlagSubmissionEndpoint failed: {EnoCoreUtils.FormatException(e)}"
+                    Function = nameof(RunDebugEndpoint),
+                    Message = $"RunDebugEndpoint failed: {EnoCoreUtils.FormatException(e)}"
                 });
             }
             Logger.LogInfo(new EnoLogMessage()
             {
                 Module = nameof(FlagSubmission),
-                Function = nameof(Run),
-                Message = "FlagSubmissionEndpoint finished"
+                Function = nameof(RunDebugEndpoint),
+                Message = "RunDebugEndpoint finished"
+            });
+        }
+
+        public async Task RunProductionEndpoint()
+        {
+            try
+            {
+                ProductionListener.Start();
+                while (!Token.IsCancellationRequested)
+                {
+                    var client = await ProductionListener.AcceptTcpClientAsync();
+                    var attackerAddress = ((IPEndPoint)client.Client.RemoteEndPoint).Address.GetAddressBytes();
+                    var attackerPrefix = new byte[Program.Configuration.TeamSubnetBytesLength];
+                    Array.Copy(attackerAddress, attackerPrefix, Program.Configuration.TeamSubnetBytesLength);
+                    var attackerPrefixString = BitConverter.ToString(attackerPrefix);
+                    long teamId;
+                    using (var scope = ServiceProvider.CreateScope())
+                    {
+                        var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
+                        teamId = await db.GetTeamIdByPrefix(attackerPrefixString);
+                    }
+                    var clientTask = Task.Run(async () =>
+                    {
+                        using (StreamReader reader = new StreamReader(client.GetStream()))
+                        {
+                            await HandleIdentifiedSubmissionClient(client, reader, teamId);
+                        }
+                    });
+                }
+            }
+            catch (ObjectDisposedException) { }
+            catch (TaskCanceledException) { }
+            catch (Exception e)
+            {
+                Logger.LogFatal(new EnoLogMessage()
+                {
+                    Module = nameof(FlagSubmission),
+                    Function = nameof(RunProductionEndpoint),
+                    Message = $"RunProductionEndpoint failed: {EnoCoreUtils.FormatException(e)}"
+                });
+            }
+            Logger.LogInfo(new EnoLogMessage()
+            {
+                Module = nameof(FlagSubmission),
+                Function = nameof(RunProductionEndpoint),
+                Message = "RunProductionEndpoint finished"
             });
         }
 
@@ -80,24 +144,54 @@ namespace EnoEngine.FlagSubmission
             }
         }
 
-        public async Task HandleSubmissionClient(TcpClient client)
+        public async Task HandleIdentifiedSubmissionClient(TcpClient client, StreamReader reader, long teamId)
         {
-            var attackerAddress = ((IPEndPoint) client.Client.RemoteEndPoint).Address.GetAddressBytes();
-            var attackerPrefix = new byte[Program.Configuration.TeamSubnetBytesLength];
-            Array.Copy(attackerAddress, attackerPrefix, Program.Configuration.TeamSubnetBytesLength);
-            var attackerPrefixString = BitConverter.ToString(attackerPrefix);
-
-            using (StreamReader reader = new StreamReader(client.GetStream()))
+            try
             {
                 string line = await reader.ReadLineAsync();
+                await Task.Delay(1);
                 while (!Token.IsCancellationRequested && line != null)
                 {
-                    var endpoint = (IPEndPoint) client.Client.RemoteEndPoint;
-                    var result = await Handler.HandleFlagSubmission(line, attackerPrefixString);
+                    var result = await HandleFlagSubmission(line, teamId);
                     var resultArray = Encoding.ASCII.GetBytes(FormatSubmissionResult(result) + "\n");
                     await client.GetStream().WriteAsync(resultArray, 0, resultArray.Length);
                     line = await reader.ReadLineAsync();
                 }
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(new EnoLogMessage()
+                {
+                    Module = nameof(CTF),
+                    Function = nameof(HandleFlagSubmission),
+                    Message = $"HandleIdentifiedSubmissionClient() failed: {EnoCoreUtils.FormatException(e)}"
+                });
+            }
+        }
+
+        private async Task<FlagSubmissionResult> HandleFlagSubmission(string flag, long attackerTeamId)
+        {
+            if (!EnoCoreUtils.IsValidFlag(flag))
+            {
+                return FlagSubmissionResult.Invalid;
+            }
+            try
+            {
+                using (var scope = ServiceProvider.CreateScope())
+                {
+                    var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
+                    return await db.InsertSubmittedFlag(flag, attackerTeamId, Program.Configuration);
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(new EnoLogMessage()
+                {
+                    Module = nameof(CTF),
+                    Function = nameof(HandleFlagSubmission),
+                    Message = $"HandleFlabSubmission() failed: {EnoCoreUtils.FormatException(e)}"
+                });
+                return FlagSubmissionResult.UnknownError;
             }
         }
     }

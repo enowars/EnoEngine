@@ -12,12 +12,7 @@ using System.Threading.Tasks;
 
 namespace EnoEngine.Game
 {
-    interface IFlagSubmissionHandler
-    {
-        Task<FlagSubmissionResult> HandleFlagSubmission(string flag, string attackerAddressPrefix);
-    }
-
-    class CTF : IFlagSubmissionHandler
+    class CTF
     {
         private static readonly EnoLogger Logger = new EnoLogger(nameof(EnoEngine));
         private readonly SemaphoreSlim Lock = new SemaphoreSlim(1);
@@ -28,7 +23,9 @@ namespace EnoEngine.Game
         {
             ServiceProvider = serviceProvider;
             Token = token;
-            Task.Run(async () => await new FlagSubmissionEndpoint(this, token).Run());
+            var flagSub = new FlagSubmissionEndpoint(serviceProvider, token);
+            Task.Run(async () => await flagSub.RunProductionEndpoint());
+            Task.Run(async () => await flagSub.RunDebugEndpoint());
         }
 
         public async Task<DateTime> StartNewRound()
@@ -156,28 +153,6 @@ namespace EnoEngine.Game
                 Lock.Release();
             }
             return end;
-        }
-
-        public async Task<FlagSubmissionResult> HandleFlagSubmission(string flag, string attackerAddressPrefix)
-        { 
-            if (!EnoCoreUtils.IsValidFlag(flag))
-            {
-                return FlagSubmissionResult.Invalid;
-            }
-            try
-            {
-                return await ServiceProvider.GetRequiredService<IEnoDatabase>().InsertSubmittedFlag(flag, attackerAddressPrefix, Program.Configuration);
-            }
-            catch (Exception e)
-            {
-                Logger.LogError(new EnoLogMessage()
-                {
-                    Module = nameof(CTF),
-                    Function = nameof(HandleFlagSubmission),
-                    Message = $"HandleFlabSubmission() failed: {EnoCoreUtils.FormatException(e)}"
-                });
-                return FlagSubmissionResult.UnknownError;
-            }
         }
 
         private async Task<DateTime> HandleRoundEnd(long roundId, JsonConfiguration config)
