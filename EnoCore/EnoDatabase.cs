@@ -977,6 +977,7 @@ namespace EnoCore
                         team.AttackPoints = sums.Value.AttackPointsSum;
                         team.LostDefensePoints = sums.Value.DefensePointsSum;
                         team.ServiceLevelAgreementPoints = sums.Value.SLAPointsSum;
+                        team.TotalPoints = sum;
                     }
                     await _context.SaveChangesAsync();
                     break;
