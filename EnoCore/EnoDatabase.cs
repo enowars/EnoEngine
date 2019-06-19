@@ -975,6 +975,43 @@ namespace EnoCore
                 .AsNoTracking()
                 .ToDictionaryAsync(rtss => rtss.Key);
 
+            var allCapturesOfFlagsSinceSnapshot = await _context.SubmittedFlags
+                .TagWith("CalculateServiceScores:allCapturesOfFlagsSinceSnapshot")
+                .Where(sf => sf.RoundId > oldSnapshotsRoundId)
+                .GroupBy(sf => sf.FlagId)
+                .Select(g => new { g.Key, Amount = g.Count()})
+                .ToDictionaryAsync(g => g.Key);
+
+            var stableCaptures = await _context.SubmittedFlags
+                .TagWith("CalculateServiceScores:stableCaptures")
+                .Where(sf => sf.RoundId > oldSnapshotsRoundId)
+                .Where(sf => sf.RoundId <= newLatestSnapshotRoundId)
+                .GroupBy(sf => sf.AttackerTeamId) // this is not an SQL GroupBy, since we need the invidual flags
+                .ToDictionaryAsync(sf => sf.Key, sf => new { SubmittedFlags = sf.AsEnumerable() });
+
+            var volatileCaptures = await _context.SubmittedFlags
+                .TagWith("CalculateServiceScores:volatileCaptures")
+                .Where(sf => sf.RoundId <= roundId)
+                .Where(sf => sf.RoundId > newLatestSnapshotRoundId)
+                .GroupBy(sf => sf.AttackerTeamId) // this is not an SQL GroupBy, since we need the invidual flags
+                .ToDictionaryAsync(sf => sf.Key, sf => new { SubmittedFlags = sf.AsEnumerable() });
+
+            var stableLosses = await _context.SubmittedFlags
+                .TagWith("CalculateServiceScores:stableLosses")
+                .Where(sf => sf.RoundId > oldSnapshotsRoundId)
+                .Where(sf => sf.RoundId <= newLatestSnapshotRoundId)
+                .Include(sf => sf.Flag)
+                .GroupBy(sf => sf.Flag.OwnerId) // this is not an SQL GroupBy, since we need the invidual flags
+                .ToDictionaryAsync(sf => sf.Key, sf => new { LostFlagIds = sf.AsEnumerable().Select(s => s.FlagId).Distinct() });
+
+            var volatileLosses = await _context.SubmittedFlags
+                .TagWith("CalculateServiceScores:volatileLosses")
+                .Where(sf => sf.RoundId <= roundId)
+                .Where(sf => sf.RoundId > newLatestSnapshotRoundId)
+                .Include(sf => sf.Flag)
+                .GroupBy(sf => sf.Flag.OwnerId) // this is not an SQL GroupBy, since we need the invidual flags
+                .ToDictionaryAsync(sf => sf.Key, sf => new { LostFlagIds = sf.AsEnumerable().Select(s => s.FlagId).Distinct() });
+
             var newSnapshots = teams.ToDictionary(t => t.Id, t => new ServiceStatsSnapshot()
             {
                 TeamId = t.Id,
@@ -990,12 +1027,16 @@ namespace EnoCore
             {
                 try
                 {
-                    // SLA
                     double slaPoints = 0;
+                    double attackPoints = 0;
+                    double defPoints = 0;
+                    // SLA Points
                     // snapshotted part
                     if (oldSnapshots.ContainsKey(team.Id))
                     {
                         slaPoints = oldSnapshots[team.Id].ServiceLevelAgreementPoints;
+                        attackPoints = oldSnapshots[team.Id].AttackPoints;
+                        defPoints = oldSnapshots[team.Id].LostDefensePoints;
                     }
                     else if (oldSnapshotsRoundId > 0) // old snapshould should have been here, but is not!
                     {
@@ -1023,6 +1064,8 @@ namespace EnoCore
                             .CountAsync();
 
                         slaPoints = (oldUps + (oldRecoverings / 2)) * Math.Sqrt(teams.Length);
+                        //TODO do atk/def recalc too
+                        throw new Exception("todo recalc atk/def");
                     }
 
                     // stable part
@@ -1050,6 +1093,78 @@ namespace EnoCore
                     }
                     slaPoints += volatileDiff * Math.Sqrt(teams.Length);
                     serviceStats[team.Id].ServiceLevelAgreementPoints = slaPoints;
+
+                    // Attack Points
+                    // stable part
+                    if (stableCaptures.TryGetValue(team.Id, out var stableCapturesOfTeam))
+                    {
+                        attackPoints += stableCapturesOfTeam.SubmittedFlags.Count();
+                        foreach (var capture in stableCapturesOfTeam.SubmittedFlags)
+                        {
+                            if (allCapturesOfFlagsSinceSnapshot.TryGetValue(capture.FlagId, out var captures))
+                            {
+                                attackPoints += 1 / captures.Amount;
+                            }
+                            else
+                            {
+                                //TODO warning, ths should never happen
+                            }
+                        }
+                    }
+                    newSnapshots[team.Id].AttackPoints = attackPoints;
+
+                    // volatile part
+                    if (volatileCaptures.TryGetValue(team.Id, out var volatileCapturesOfTeam))
+                    {
+                        attackPoints += volatileCapturesOfTeam.SubmittedFlags.Count();
+                        foreach (var capture in volatileCapturesOfTeam.SubmittedFlags)
+                        {
+                            if (allCapturesOfFlagsSinceSnapshot.TryGetValue(capture.FlagId, out var captures))
+                            {
+                                attackPoints += 1 / captures.Amount;
+                            }
+                            else
+                            {
+                                //TODO warning, this should never happen
+                            }
+                        }
+                    }
+                    serviceStats[team.Id].AttackPoints = attackPoints;
+
+                    // Def Points
+                    // stable part
+                    if (stableLosses.TryGetValue(team.Id, out var stablelossesOfTeam))
+                    {
+                        foreach (var loss in stablelossesOfTeam.LostFlagIds)
+                        {
+                            if (allCapturesOfFlagsSinceSnapshot.TryGetValue(loss, out var captures))
+                            {
+                                defPoints -= Math.Pow(captures.Amount, 0.75);
+                            }
+                            else
+                            {
+                                //TODO warning, this should never happen
+                            }
+                        }
+                    }
+                    newSnapshots[team.Id].LostDefensePoints = defPoints;
+
+                    // volatile part
+                    if (volatileLosses.TryGetValue(team.Id, out var volatileLossesOfTeam))
+                    {
+                        foreach (var loss in volatileLossesOfTeam.LostFlagIds)
+                        {
+                            if (allCapturesOfFlagsSinceSnapshot.TryGetValue(loss, out var captures))
+                            {
+                                defPoints -= Math.Pow(captures.Amount, 0.75);
+                            }
+                            else
+                            {
+                                //TODO warning, this should never happen
+                            }
+                        }
+                    }
+                    serviceStats[team.Id].LostDefensePoints = defPoints;
 
                     // service status
                     newStates.TryGetValue((service.Id, team.Id), out var status_rtss);

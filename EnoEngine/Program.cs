@@ -146,7 +146,7 @@ namespace EnoEngine
                 {
                     loggingBuilder.AddProvider(new EnoLoggerProvider());
                     //loggingBuilder.AddConsole();
-                    loggingBuilder.AddFilter((category, level) => category != DbLoggerCategory.Database.Command.Name);
+                    //loggingBuilder.AddFilter((category, level) => category != DbLoggerCategory.Database.Command.Name);
                 })
                 .BuildServiceProvider(validateScopes: true);
             new Program(serviceProvider).Start();
