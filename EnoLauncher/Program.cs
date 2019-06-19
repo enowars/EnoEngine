@@ -62,27 +62,39 @@ namespace EnoLauncher
 
             while (!LauncherCancelSource.IsCancellationRequested)
             {
-                using (var scope = ServiceProvider.CreateScope())
+                try
                 {
-                    var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                    var tasks = await db.RetrievePendingCheckerTasks(1000);
-                    if (tasks.Count > 0)
+                    using (var scope = ServiceProvider.CreateScope())
                     {
-                        Logger.LogDebug(new EnoLogMessage()
+                        var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
+                        var tasks = await db.RetrievePendingCheckerTasks(1000);
+                        if (tasks.Count > 0)
                         {
-                            Module = nameof(EnoLauncher),
-                            Function = nameof(LauncherLoop),
-                            Message = $"Scheduling {tasks.Count} tasks"
-                        });
+                            Logger.LogDebug(new EnoLogMessage()
+                            {
+                                Module = nameof(EnoLauncher),
+                                Function = nameof(LauncherLoop),
+                                Message = $"Scheduling {tasks.Count} tasks"
+                            });
+                        }
+                        foreach (var task in tasks)
+                        {
+                            var t = Task.Run(async () => await LaunchCheckerTask(task));
+                        }
+                        if (tasks.Count == 0)
+                        {
+                            await Task.Delay(50, LauncherCancelSource.Token);
+                        }
                     }
-                    foreach (var task in tasks)
+                }
+                catch (Exception e)
+                {
+                    Logger.LogWarning(new EnoLogMessage()
                     {
-                        var t = Task.Run(async () => await LaunchCheckerTask(task));
-                    }
-                    if (tasks.Count == 0)
-                    {
-                        await Task.Delay(50, LauncherCancelSource.Token);
-                    }
+                        Module = nameof(EnoLauncher),
+                        Function = nameof(LauncherLoop),
+                        Message = $"LauncherLoop retrying because: {EnoCoreUtils.FormatException(e)}"
+                    });
                 }
             }
         }
@@ -227,13 +239,14 @@ namespace EnoLauncher
                             }
                             break;
                         }
-                        catch (SocketException e)
+                        catch (OperationCanceledException) { throw; }
+                        catch (Exception e)
                         {
                             Logger.LogFatal(new EnoLogMessage()
                             {
                                 Module = nameof(EnoLauncher),
                                 Function = nameof(UpdateDatabaseLoop),
-                                Message = $"UpdateDatabase retrying: {EnoCoreUtils.FormatException(e)}"
+                                Message = $"UpdateDatabase retrying because: {EnoCoreUtils.FormatException(e)}"
                             });
                         }
                     }
