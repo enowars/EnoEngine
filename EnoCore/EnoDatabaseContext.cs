@@ -45,9 +45,19 @@ namespace EnoCore
             modelBuilder.Entity<CheckerTask>()
                 .HasIndex(ct => ct.StartTime);
 
+            modelBuilder.Entity<CheckerTask>()
+                .HasIndex(ct => ct.CurrentRoundId);
+
+            modelBuilder.Entity<CheckerTask>()
+                .HasIndex(ct => ct.RelatedRoundId);
+
+            modelBuilder.Entity<CheckerTask>()
+                .HasIndex(ct => ct.TeamId);
+
             modelBuilder.Entity<SubmittedFlag>()
                 .HasIndex(sf => new { sf.AttackerTeamId, sf.FlagId })
                 .IsUnique();
+
         }
     }
 }

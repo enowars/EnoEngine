@@ -60,6 +60,10 @@ namespace EnoCore.Migrations
 
                     b.HasIndex("CheckerTaskLaunchStatus");
 
+                    b.HasIndex("CurrentRoundId");
+
+                    b.HasIndex("RelatedRoundId");
+
                     b.HasIndex("StartTime");
 
                     b.HasIndex("TeamId");

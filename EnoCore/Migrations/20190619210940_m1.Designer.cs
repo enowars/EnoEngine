@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EnoCore.Migrations
 {
     [DbContext(typeof(EnoDatabaseContext))]
-    [Migration("20190616000043_m1")]
+    [Migration("20190619210940_m1")]
     partial class m1
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -61,6 +61,10 @@ namespace EnoCore.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CheckerTaskLaunchStatus");
+
+                    b.HasIndex("CurrentRoundId");
+
+                    b.HasIndex("RelatedRoundId");
 
                     b.HasIndex("StartTime");
 

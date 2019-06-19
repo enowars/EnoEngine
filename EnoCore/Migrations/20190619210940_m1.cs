@@ -345,6 +345,16 @@ namespace EnoCore.Migrations
                 column: "CheckerTaskLaunchStatus");
 
             migrationBuilder.CreateIndex(
+                name: "IX_CheckerTasks_CurrentRoundId",
+                table: "CheckerTasks",
+                column: "CurrentRoundId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CheckerTasks_RelatedRoundId",
+                table: "CheckerTasks",
+                column: "RelatedRoundId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_CheckerTasks_StartTime",
                 table: "CheckerTasks",
                 column: "StartTime");
