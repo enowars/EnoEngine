@@ -865,21 +865,24 @@ namespace EnoCore
                         foreach (var service in services)
                         {
                             var key = new { ServiceId = service.Id, TeamId = team.Id };
-                            CheckerResult result = CheckerResult.CheckerError;
-                            if (currentRoundWorstResults.ContainsKey(new { ServiceId = service.Id, TeamId = team.Id }))
+                            ServiceStatus status = ServiceStatus.CheckerError;
+                            if (currentRoundWorstResults.ContainsKey(key))
                             {
-                                result = currentRoundWorstResults[key];
+                                status = EnoCoreUtils.CheckerResultToServiceStatus(currentRoundWorstResults[key]);
                             }
-                            if (result == CheckerResult.Ok && oldRoundsWorstResults.ContainsKey(key))
+                            if (status == ServiceStatus.Ok && oldRoundsWorstResults.ContainsKey(key))
                             {
-                                result = oldRoundsWorstResults[key];
+                                if (oldRoundsWorstResults[key] != CheckerResult.Ok)
+                                {
+                                    status = ServiceStatus.Recovering;
+                                }
                             }
                             states[(key.ServiceId, key.TeamId)] = new RoundTeamServiceState()
                             {
                                 GameRoundId = roundId,
                                 ServiceId = key.ServiceId,
                                 TeamId = key.TeamId,
-                                Status = EnoCoreUtils.CheckerResultToServiceStatus(result)
+                                Status = status
                             };
                         }
                     }
