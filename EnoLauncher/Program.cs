@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -210,14 +211,31 @@ namespace EnoLauncher
                             break;
                         }
                     }
-                    using (var scope = ServiceProvider.CreateScope())
+                    
+                    while (true)
                     {
-                        var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                        await db.UpdateTaskCheckerTaskResults(results.AsMemory(0, i));
-                    }
-                    if (i != TASK_UPDATE_BATCH_SIZE)
-                    {
-                        await Task.Delay(1);
+                        try
+                        {
+                            using (var scope = ServiceProvider.CreateScope())
+                            {
+                                var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
+                                await db.UpdateTaskCheckerTaskResults(results.AsMemory(0, i));
+                            }
+                            if (i != TASK_UPDATE_BATCH_SIZE)
+                            {
+                                await Task.Delay(1);
+                            }
+                            break;
+                        }
+                        catch (SocketException e)
+                        {
+                            Logger.LogFatal(new EnoLogMessage()
+                            {
+                                Module = nameof(EnoLauncher),
+                                Function = nameof(UpdateDatabaseLoop),
+                                Message = $"UpdateDatabase retrying: {EnoCoreUtils.FormatException(e)}"
+                            });
+                        }
                     }
                 }
             }
