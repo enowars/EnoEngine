@@ -224,7 +224,7 @@ namespace EnoLauncher
                         }
                     }
                     
-                    while (true)
+                    while (!LauncherCancelSource.IsCancellationRequested)
                     {
                         try
                         {
