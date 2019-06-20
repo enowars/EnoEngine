@@ -6,6 +6,7 @@ using EnoEngine.FlagSubmission;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -66,24 +67,36 @@ namespace EnoEngine.Game
                 // insert put tasks
                 var insertPutNewFlagsTask = Task.Run(async () =>
                 {
+                    Stopwatch stopWatch = new Stopwatch();
+                    stopWatch.Start();
                     using (var scope = ServiceProvider.CreateScope())
                     {
                         await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertPutFlagsTasks(currentRound.Id, begin, Program.Configuration);
                     }
+                    stopWatch.Stop();
+                    Console.WriteLine($"InsertPutFlagsTasks took {stopWatch.Elapsed.TotalMilliseconds}ms");
                 });
                 var insertPutNewNoisesTask = Task.Run(async () =>
                 {
+                    Stopwatch stopWatch = new Stopwatch();
+                    stopWatch.Start();
                     using (var scope = ServiceProvider.CreateScope())
                     {
                         await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertPutNoisesTasks(currentRound, newNoises, Program.Configuration);
                     }
+                    stopWatch.Stop();
+                    Console.WriteLine($"InsertPutNoisesTasks took {stopWatch.Elapsed.TotalMilliseconds}ms");
                 });
                 var insertHavocsTask = Task.Run(async () =>
                 {
+                    Stopwatch stopWatch = new Stopwatch();
+                    stopWatch.Start();
                     using (var scope = ServiceProvider.CreateScope())
                     {
                         await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertHavocsTasks(currentRound.Id, begin, Program.Configuration);
                     }
+                    stopWatch.Stop();
+                    Console.WriteLine($"InsertHavocsTasks took {stopWatch.Elapsed.TotalMilliseconds}ms");
                 });
 
                 // give the db some space TODO save the earliest tasks first
@@ -92,24 +105,36 @@ namespace EnoEngine.Game
                 // insert get tasks
                 var insertRetrieveCurrentFlagsTask = Task.Run(async () =>
                 {
+                    Stopwatch stopWatch = new Stopwatch();
+                    stopWatch.Start();
                     using (var scope = ServiceProvider.CreateScope())
                     {
                         await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertRetrieveCurrentFlagsTasks(currentRound, newFlags, Program.Configuration);
                     }
+                    stopWatch.Stop();
+                    Console.WriteLine($"InsertRetrieveCurrentFlagsTasks took {stopWatch.Elapsed.TotalMilliseconds}ms");
                 });
                 var insertRetrieveOldFlagsTask = Task.Run(async () =>
                 {
+                    Stopwatch stopWatch = new Stopwatch();
+                    stopWatch.Start();
                     using (var scope = ServiceProvider.CreateScope())
                     {
                         await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertRetrieveOldFlagsTasks(currentRound, Program.Configuration.CheckedRoundsPerRound - 1, Program.Configuration);
                     }
+                    stopWatch.Stop();
+                    Console.WriteLine($"InsertRetrieveOldFlagsTasks took {stopWatch.Elapsed.TotalMilliseconds}ms");
                 });
                 var insertGetCurrentNoisesTask = Task.Run(async () =>
                 {
+                    Stopwatch stopWatch = new Stopwatch();
+                    stopWatch.Start();
                     using (var scope = ServiceProvider.CreateScope())
                     {
                         await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertRetrieveCurrentNoisesTasks(currentRound, newNoises, Program.Configuration);
                     }
+                    stopWatch.Stop();
+                    Console.WriteLine($"InsertRetrieveCurrentNoisesTasks took {stopWatch.Elapsed.TotalMilliseconds}ms");
                 });
 
                 // TODO start noise for old rounds

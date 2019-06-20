@@ -1247,7 +1247,7 @@ namespace EnoCore
             var round = _context.Rounds
                 .AsNoTracking()
                 .Where(r => r.Id == roundId)
-                .LastOrDefault();
+                .Single();
             var services = _context.Services.AsNoTracking().ToList();
             var scoreboard = new EnoEngineScoreboard(round, services);
             foreach (var team in teams)
