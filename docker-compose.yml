@@ -1,14 +1,14 @@
 version: '3.4'
 
 services:
-  enolauncher:
-    environment:
-      - DATABASE_DOMAIN=enopostgres
-    build:
-      context: .
-      dockerfile: EnoLauncher/Dockerfile
-    volumes:
-      - ./ctf.json:/app/ctf.json
+#  enolauncher:
+#    environment:
+#      - DATABASE_DOMAIN=enopostgres
+#    build:
+#      context: .
+#      dockerfile: EnoLauncher/Dockerfile
+#    volumes:
+#      - ./ctf.json:/app/ctf.json
   enopostgres:
     image: postgres
     environment:
