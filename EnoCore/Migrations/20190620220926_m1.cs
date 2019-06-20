@@ -340,6 +340,11 @@ namespace EnoCore.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_CheckerTasks_CheckerResult",
+                table: "CheckerTasks",
+                column: "CheckerResult");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_CheckerTasks_CheckerTaskLaunchStatus",
                 table: "CheckerTasks",
                 column: "CheckerTaskLaunchStatus");
@@ -423,6 +428,11 @@ namespace EnoCore.Migrations
                 name: "IX_RoundTeamServiceStates_ServiceId",
                 table: "RoundTeamServiceStates",
                 column: "ServiceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RoundTeamServiceStates_Status",
+                table: "RoundTeamServiceStates",
+                column: "Status");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RoundTeamServiceStates_TeamId",

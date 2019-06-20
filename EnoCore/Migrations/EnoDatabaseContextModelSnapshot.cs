@@ -58,6 +58,8 @@ namespace EnoCore.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CheckerResult");
+
                     b.HasIndex("CheckerTaskLaunchStatus");
 
                     b.HasIndex("CurrentRoundId");
@@ -215,6 +217,8 @@ namespace EnoCore.Migrations
                     b.HasIndex("GameRoundId");
 
                     b.HasIndex("ServiceId");
+
+                    b.HasIndex("Status");
 
                     b.HasIndex("TeamId");
 

@@ -52,12 +52,17 @@ namespace EnoCore
                 .HasIndex(ct => ct.RelatedRoundId);
 
             modelBuilder.Entity<CheckerTask>()
+                .HasIndex(ct => ct.CheckerResult);
+
+            modelBuilder.Entity<CheckerTask>()
                 .HasIndex(ct => ct.TeamId);
 
             modelBuilder.Entity<SubmittedFlag>()
                 .HasIndex(sf => new { sf.AttackerTeamId, sf.FlagId })
                 .IsUnique();
 
+            modelBuilder.Entity<RoundTeamServiceState>()
+                .HasIndex(rtss => rtss.Status);
         }
     }
 }
