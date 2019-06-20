@@ -464,6 +464,10 @@ namespace EnoCore
 
         private async Task InsertCheckerTasks(IEnumerable<CheckerTask> tasks)
         {
+            Logger.LogDebug(new EnoLogMessage()
+            {
+                Message = $"InsertCheckerTasks inserting {tasks.Count()} tasks"
+            });
             _context.AddRange(tasks);
             await _context.SaveChangesAsync();
         }
@@ -718,7 +722,8 @@ namespace EnoCore
                 try
                 {
                     var oldFlags = await _context.Flags
-                        .Where(f => f.GameRoundId + oldRoundsCount >= currentRound.Id)
+                        .TagWith("InsertRetrieveOldFlagsTasks:oldFlags")
+                        .Where(f => f.GameRoundId  >= currentRound.Id - oldRoundsCount) // TODO skipped IDs
                         .Where(f => f.GameRoundId != currentRound.Id)
                         .Where(f => f.PutTaskId != null)
                         .Include(f => f.PutTask)
@@ -757,9 +762,11 @@ namespace EnoCore
                         i++;
                     }
 
+                    /*
                     var tasks_start_time = oldFlagsCheckerTasks.Select(x => x.StartTime).ToList();
                     tasks_start_time = EnoCoreUtils.Shuffle(tasks_start_time).ToList();
                     oldFlagsCheckerTasks = tasks_start_time.Zip(oldFlagsCheckerTasks, (a, b) => { b.StartTime = a; return b; }).ToList();
+                    */
 
                     await InsertCheckerTasks(oldFlagsCheckerTasks);
                     return;
