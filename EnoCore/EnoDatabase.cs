@@ -45,6 +45,7 @@ namespace EnoCore
         Task InsertPutFlagsTasks(long roundId, DateTime firstFlagTime, JsonConfiguration config);
         Task InsertPutNoisesTasks(Round currentRound, IEnumerable<Noise> currentNoises, JsonConfiguration config);
         Task InsertHavocsTasks(long roundId, DateTime begin, JsonConfiguration config);
+        Task<List<Flag>> RetrieveFlags(int maxAmount, List<Flag> dontFetch);
         Task InsertRetrieveCurrentFlagsTasks(Round round, List<Flag> currentFlags, JsonConfiguration config);
         Task InsertRetrieveOldFlagsTasks(Round currentRound, int oldRoundsCount, JsonConfiguration config);
         Task<long> GetTeamIdByPrefix(string attackerPrefixString);
@@ -483,6 +484,14 @@ namespace EnoCore
             tasks.ForEach((t) => t.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Launched);
             await _context.SaveChangesAsync();
             return tasks;
+        }
+
+        public async Task<List<Flag>> RetrieveFlags(int maxAmount, List<Flag> dontFetch) {
+            var flags = await _context.Flags
+                .Where(f => !dontFetch.Contains(f))
+                .Take(maxAmount)
+                .ToListAsync();
+            return flags;
         }
 
         public async Task InsertPutFlagsTasks(long roundId, DateTime firstFlagTime, JsonConfiguration config)
