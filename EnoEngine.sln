@@ -1,13 +1,18 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27703.2035
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.352
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EnoEngine", "EnoEngine\EnoEngine.csproj", "{3574123C-85D5-4A75-8F24-66736C072E8B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EnoCore", "EnoCore\EnoCore.csproj", "{029F1DC6-3647-4088-8093-5737154CD457}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EnoLauncher", "EnoLauncher\EnoLauncher.csproj", "{EA5A8FD3-BA74-48B4-9282-C7EAA77B166C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlagShooter", "FlagShooter\FlagShooter.csproj", "{46A15780-216F-4997-AB46-536364F3CA7E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{029F1DC6-3647-4088-8093-5737154CD457} = {029F1DC6-3647-4088-8093-5737154CD457}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +32,10 @@ Global
 		{EA5A8FD3-BA74-48B4-9282-C7EAA77B166C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EA5A8FD3-BA74-48B4-9282-C7EAA77B166C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EA5A8FD3-BA74-48B4-9282-C7EAA77B166C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{46A15780-216F-4997-AB46-536364F3CA7E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46A15780-216F-4997-AB46-536364F3CA7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46A15780-216F-4997-AB46-536364F3CA7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46A15780-216F-4997-AB46-536364F3CA7E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
