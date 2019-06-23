@@ -85,7 +85,7 @@ namespace FlagShooter
                         {
                             await Task.Delay(50, LauncherCancelSource.Token);
                         }
-                        flagcount += (int) (flagcount * 0.3); // double flagcount
+                        flagcount = (int) Math.Ceiling((double)flagcount * 1.3); // double flagcount
                     }
                 }
                 catch (Exception e)
