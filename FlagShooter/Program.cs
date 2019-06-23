@@ -15,7 +15,6 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Net.Sockets;
 using EnoCore.Models;
 
 
@@ -59,6 +58,7 @@ namespace FlagShooter
                 Message = $"LauncherLoop starting"
             });
 
+            var flagcount = 1;
             while (!LauncherCancelSource.IsCancellationRequested)
             {
                 try
@@ -67,7 +67,7 @@ namespace FlagShooter
                     {
                         var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
                         
-                        var flags = await db.RetrieveFlags(1000, new List<Flag>());
+                        var flags = await db.RetrieveFlags(flagcount, new List<Flag>());
                         if (flags.Count > 0)
                         {
                             Logger.LogDebug(new EnoLogMessage()
@@ -85,6 +85,7 @@ namespace FlagShooter
                         {
                             await Task.Delay(50, LauncherCancelSource.Token);
                         }
+                        flagcount = flagcount * 2; // double flagcount
                     }
                 }
                 catch (Exception e)
