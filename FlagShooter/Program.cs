@@ -79,13 +79,13 @@ namespace FlagShooter
                         }
                         foreach (var flag in flags)
                         {
-                            var t = Task.Run(() => SendFlagTask(flag));
+                            var t = Task.Run(async () => await SendFlagTask(flag));
                         }
                         if (flags.Count == 0)
                         {
                             await Task.Delay(50, LauncherCancelSource.Token);
                         }
-                        flagcount = (int) Math.Ceiling((double)flagcount * 1.3); // double flagcount
+                        flagcount = (int) Math.Ceiling((double)flagcount * 1.5); // double flagcount
                     }
                 }
                 catch (Exception e)
@@ -100,20 +100,23 @@ namespace FlagShooter
             }
         }
 
-        private void SendFlagTask(Flag f)
+        private async Task SendFlagTask(Flag f)
         {
-            var client = new TcpClient("localhost", 1338);
-            var stream = client.GetStream();
+            for(var i=1;i<255;i++) {
+                var client = new TcpClient();
+                await client.ConnectAsync("localhost", 1338);
+                var stream = client.GetStream();
 
-            Byte[] data = System.Text.Encoding.ASCII.GetBytes("1");
-            stream.Write(data, 0, data.Length);
+                Byte[] data = System.Text.Encoding.ASCII.GetBytes(i.ToString()+"\n");
+                await stream.WriteAsync(data, 0, data.Length);
 
-            var flagstr = f.StringRepresentation+"\n";
-            data = System.Text.Encoding.ASCII.GetBytes(flagstr);
-            stream.Write(data, 0, data.Length);
-            
-            stream.Close();
-            client.Close();
+                var flagstr = f.StringRepresentation+"\n";
+                data = System.Text.Encoding.ASCII.GetBytes(flagstr);
+                await stream.WriteAsync(data, 0, data.Length);
+                
+                stream.Close();
+                client.Close();
+            }
         }
 
 

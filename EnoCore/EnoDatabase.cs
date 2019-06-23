@@ -490,6 +490,7 @@ namespace EnoCore
             var flags = await _context.Flags
                 .Where(f => !dontFetch.Contains(f))
                 .Take(maxAmount)
+                .AsNoTracking()
                 .ToListAsync();
             return flags;
         }
