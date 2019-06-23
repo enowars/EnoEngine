@@ -16,11 +16,17 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Net.Sockets;
+using EnoCore.Models;
+
 
 namespace FlagShooter
 {
     class Program
     {
+
+        private static readonly CancellationTokenSource LauncherCancelSource = new CancellationTokenSource();
+        private static readonly EnoLogger Logger = new EnoLogger(nameof(FlagShooter));
+        private readonly ServiceProvider ServiceProvider;
 
         public Program(ServiceProvider serviceProvider)
         {
@@ -34,7 +40,7 @@ namespace FlagShooter
 
         public void Start()
         {
-            Client.Timeout = new TimeSpan(0, 1, 0);
+            //Client.Timeout = new TimeSpan(0, 1, 0);
             LauncherLoop().Wait();
         }
 
@@ -48,7 +54,7 @@ namespace FlagShooter
 
             Logger.LogInfo(new EnoLogMessage()
             {
-                Module = nameof(EnoLauncher),
+                Module = nameof(FlagShooter),
                 Function = nameof(LauncherLoop),
                 Message = $"LauncherLoop starting"
             });
@@ -61,19 +67,19 @@ namespace FlagShooter
                     {
                         var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
                         
-                        var flags = await db.RetrieveFlags(1000, new List());
+                        var flags = await db.RetrieveFlags(1000, new List<Flag>());
                         if (flags.Count > 0)
                         {
                             Logger.LogDebug(new EnoLogMessage()
                             {
-                                Module = nameof(EnoLauncher),
+                                Module = nameof(FlagShooter),
                                 Function = nameof(LauncherLoop),
                                 Message = $"Sending {flags.Count} flags"
                             });
                         }
                         foreach (var flag in flags)
                         {
-                            var t = Task.Run(async () => await SendFlagTask(flag));
+                            var t = Task.Run(() => SendFlagTask(flag));
                         }
                         if (flags.Count == 0)
                         {
@@ -85,7 +91,7 @@ namespace FlagShooter
                 {
                     Logger.LogWarning(new EnoLogMessage()
                     {
-                        Module = nameof(EnoLauncher),
+                        Module = nameof(FlagShooter),
                         Function = nameof(LauncherLoop),
                         Message = $"LauncherLoop retrying because: {EnoCoreUtils.FormatException(e)}"
                     });
@@ -93,9 +99,9 @@ namespace FlagShooter
             }
         }
 
-        private Task SendFlagTask(Flag f)
+        private void SendFlagTask(Flag f)
         {
-            var client = TcpClient("localhost", 1337);
+            var client = new TcpClient("localhost", 1337);
             var stream = client.GetStream();
             var flagstr = f.StringRepresentation+"\n";
             Byte[] data = System.Text.Encoding.ASCII.GetBytes(flagstr);    
@@ -111,7 +117,7 @@ namespace FlagShooter
             {
                 Logger.LogInfo(new EnoLogMessage()
                 {
-                    Module = nameof(EnoLauncher),
+                    Module = nameof(FlagShooter),
                     Function = nameof(Main),
                     Message = $"FlagShooter starting"
                 });
@@ -129,7 +135,7 @@ namespace FlagShooter
             {
                 Logger.LogFatal(new EnoLogMessage()
                 {
-                    Module = nameof(EnoLauncher),
+                    Module = nameof(FlagShooter),
                     Function = nameof(Main),
                     Message = $"FlagShooter failed: {EnoCoreUtils.FormatException(e)}"
                 });
