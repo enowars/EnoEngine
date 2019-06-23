@@ -85,7 +85,7 @@ namespace FlagShooter
                         {
                             await Task.Delay(50, LauncherCancelSource.Token);
                         }
-                        flagcount = flagcount * 2; // double flagcount
+                        flagcount += (int) (flagcount * 0.3); // double flagcount
                     }
                 }
                 catch (Exception e)
@@ -102,11 +102,16 @@ namespace FlagShooter
 
         private void SendFlagTask(Flag f)
         {
-            var client = new TcpClient("localhost", 1337);
+            var client = new TcpClient("localhost", 1338);
             var stream = client.GetStream();
-            var flagstr = f.StringRepresentation+"\n";
-            Byte[] data = System.Text.Encoding.ASCII.GetBytes(flagstr);    
+
+            Byte[] data = System.Text.Encoding.ASCII.GetBytes("1");
             stream.Write(data, 0, data.Length);
+
+            var flagstr = f.StringRepresentation+"\n";
+            data = System.Text.Encoding.ASCII.GetBytes(flagstr);
+            stream.Write(data, 0, data.Length);
+            
             stream.Close();
             client.Close();
         }
