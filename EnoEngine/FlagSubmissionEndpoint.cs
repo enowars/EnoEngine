@@ -4,6 +4,7 @@ using EnoEngine.Game;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -16,18 +17,26 @@ namespace EnoEngine.FlagSubmission
 {
     class FlagSubmissionEndpoint
     {
+        private static readonly ConcurrentQueue<(string flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult> tcs)> FlagInsertsQueue
+            = new ConcurrentQueue<(string, long, TaskCompletionSource<FlagSubmissionResult>)>();
         private static readonly EnoLogger Logger = new EnoLogger(nameof(EnoEngine));
+        const int InsertSubmissionsRetries = 16;
+        const int InsertSubmissionsBatchSize = 1000;
         readonly CancellationToken Token;
         readonly TcpListener ProductionListener = new TcpListener(IPAddress.IPv6Any, 1337);
         readonly TcpListener DebugListener = new TcpListener(IPAddress.IPv6Any, 1338);
         readonly IServiceProvider ServiceProvider;
+        private readonly Task UpdateDatabaseTask;
 
         public FlagSubmissionEndpoint(IServiceProvider serviceProvider, CancellationToken token)
         {
             Token = token;
+            ProductionListener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
+            DebugListener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
             Token.Register(() => ProductionListener.Stop());
             Token.Register(() => DebugListener.Stop());
             ServiceProvider = serviceProvider;
+            UpdateDatabaseTask = Task.Run(async () => await InsertSubmissionsLoop());
         }
 
         public async Task RunDebugEndpoint()
@@ -155,9 +164,12 @@ namespace EnoEngine.FlagSubmission
                     var result = await HandleFlagSubmission(line, teamId);
                     var resultArray = Encoding.ASCII.GetBytes(FormatSubmissionResult(result) + "\n");
                     await client.GetStream().WriteAsync(resultArray, 0, resultArray.Length);
+                    await client.GetStream().FlushAsync();
                     line = await reader.ReadLineAsync();
                 }
             }
+            catch (SocketException) { }
+            catch (IOException) { }
             catch (Exception e)
             {
                 Logger.LogError(new EnoLogMessage()
@@ -177,11 +189,9 @@ namespace EnoEngine.FlagSubmission
             }
             try
             {
-                using (var scope = ServiceProvider.CreateScope())
-                {
-                    var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                    return await db.InsertSubmittedFlag(flag, attackerTeamId, Program.Configuration);
-                }
+                var tcs = new TaskCompletionSource<FlagSubmissionResult>();
+                FlagInsertsQueue.Enqueue((flag, attackerTeamId, tcs));
+                return await tcs.Task;
             }
             catch (Exception e)
             {
@@ -192,6 +202,58 @@ namespace EnoEngine.FlagSubmission
                     Message = $"HandleFlabSubmission() failed: {EnoCoreUtils.FormatException(e)}"
                 });
                 return FlagSubmissionResult.UnknownError;
+            }
+        }
+
+        private async Task InsertSubmissionsLoop()
+        {
+            try
+            {
+                while (!Token.IsCancellationRequested)
+                {
+                    var submissions = EnoCoreUtils.DrainQueue(FlagInsertsQueue, InsertSubmissionsBatchSize);
+                    if (submissions.Count == 0)
+                    {
+                        await Task.Delay(1);
+                    }
+                    else
+                    {
+                        try
+                        {
+                            await EnoCoreUtils.RetryDatabaseAction(async () =>
+                            {
+                                using (var scope = ServiceProvider.CreateScope())
+                                {
+                                    var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
+                                    await db.ProcessSubmissionsBatch(submissions);
+                                }
+                            });
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.LogWarning(new EnoLogMessage()
+                            {
+                                Module = nameof(FlagSubmissionEndpoint),
+                                Function = nameof(InsertSubmissionsLoop),
+                                Message = $"InsertSubmissionsLoop dropping batch because: {EnoCoreUtils.FormatException(e)}"
+                            });
+                        }
+                        foreach (var (flag, attackerTeamId, tcs) in submissions)
+                        {
+                            var t = Task.Run(() => tcs.TrySetResult(FlagSubmissionResult.UnknownError));
+                        }
+                    }
+                }
+            }
+            catch (TaskCanceledException) { }
+            catch (Exception e)
+            {
+                Logger.LogFatal(new EnoLogMessage()
+                {
+                    Module = nameof(FlagSubmissionEndpoint),
+                    Function = nameof(InsertSubmissionsLoop),
+                    Message = $"InsertSubmissionsLoop failed: {EnoCoreUtils.FormatException(e)}"
+                });
             }
         }
     }

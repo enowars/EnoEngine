@@ -39,13 +39,13 @@ namespace EnoCore
     public interface IEnoDatabase
     {
         DBInitializationResult ApplyConfig(JsonConfiguration configuration);
-        Task<FlagSubmissionResult> InsertSubmittedFlag(string flag, long attackerTeamId, JsonConfiguration config);
+        Task ProcessSubmissionsBatch(List<(string flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult> result)> submissions);
         Task<(Round, Round, List<Flag>, List<Noise>, List<Havoc>)> CreateNewRound(DateTime begin, DateTime q2, DateTime q3, DateTime q4, DateTime end);
         Task<Dictionary<(long ServiceId, long TeamId), RoundTeamServiceState>> CalculateRoundTeamServiceStates(IServiceProvider serviceProvider, long roundId);
         Task InsertPutFlagsTasks(long roundId, DateTime firstFlagTime, JsonConfiguration config);
         Task InsertPutNoisesTasks(Round currentRound, IEnumerable<Noise> currentNoises, JsonConfiguration config);
         Task InsertHavocsTasks(long roundId, DateTime begin, JsonConfiguration config);
-        Task<List<Flag>> RetrieveFlags(int maxAmount, List<Flag> dontFetch);
+        Task<Flag[]> RetrieveFlags(int maxAmount);
         Task InsertRetrieveCurrentFlagsTasks(Round round, List<Flag> currentFlags, JsonConfiguration config);
         Task InsertRetrieveOldFlagsTasks(Round currentRound, int oldRoundsCount, JsonConfiguration config);
         Task<long> GetTeamIdByPrefix(string attackerPrefixString);
@@ -318,50 +318,75 @@ namespace EnoCore
             };
         }
 
-        public async Task<FlagSubmissionResult> InsertSubmittedFlag(string flag, long attackerTeamId, JsonConfiguration config) //TODO more logs
+        public async Task ProcessSubmissionsBatch(List<(string flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult> result)> submissions)
         {
-            while (true)
+            var uniqueSubmissions = new HashSet<(string flag, long attackerTeamid)>(submissions.Count);
+            var acceptedSubmissions = new List<SubmittedFlag>(submissions.Count);
+            var oks = new List<TaskCompletionSource<FlagSubmissionResult>>(submissions.Count);
+
+            var currentRoundId = await _context.Rounds
+                .OrderByDescending(r => r.Id)
+                .Select(r => r.Id)
+                .FirstOrDefaultAsync(); //TODO handle 0
+
+            Logger.LogDebug(new EnoLogMessage()
             {
-                try
+                Message = $"Handling {submissions.Count} submissions",
+                RoundId = currentRoundId,
+                Module = nameof(EnoDatabase),
+                Function = nameof(ProcessSubmissionsBatch)
+            });
+
+            var flagStrings = submissions
+                .Select(s => s.flag)
+                .ToHashSet();
+
+            var flags = await _context.Flags
+                .TagWith("ProcessSubmissionsBatch:flags")
+                .Where(f => flagStrings.Contains(f.StringRepresentation))
+                .ToArrayAsync();
+
+            var flagIds = flags.Select(f => f.Id);
+            var flagDict = flags.ToDictionary(f => f.StringRepresentation);
+
+            var previousSubmissions = await _context.SubmittedFlags
+                .TagWith("ProcessSubmissionsBatch:previousSubmissions")
+                .Where(f => flagIds.Contains(f.FlagId))
+                .ToDictionaryAsync(f => (f.Flag.StringRepresentation, f.AttackerTeamId));
+
+            for (int i = 0; i < submissions.Count; i++)
+            {
+                var submission = submissions[i];
+                if (previousSubmissions.ContainsKey((submission.flag, submission.attackerTeamId)) ||
+                    uniqueSubmissions.Contains((submission.flag, submission.attackerTeamId)))
                 {
-                    var dbFlag = await _context.Flags
-                            .Where(f => f.StringRepresentation == flag)
-                            .Include(f => f.Owner)
-                            .AsNoTracking()
-                            .SingleOrDefaultAsync();
-
-                    var currentRound = await _context.Rounds
-                        .AsNoTracking()
-                        .LastOrDefaultAsync();
-
-                    if (dbFlag == null)
-                        return FlagSubmissionResult.Invalid;
-                    if (dbFlag.Owner.Id == attackerTeamId)
-                        return FlagSubmissionResult.Own;
-                    if (dbFlag.GameRoundId < currentRound.Id - config.FlagValidityInRounds)
-                        return FlagSubmissionResult.Old;
-
-                    var submittedFlag = await _context.SubmittedFlags
-                        .Where(f => f.FlagId == dbFlag.Id && f.AttackerTeamId == attackerTeamId)
-                        .SingleOrDefaultAsync();
-
-                    if (submittedFlag != null)
-                    {
-                        submittedFlag.SubmissionsCount += 1;
-                        _context.SaveChanges();
-                        return FlagSubmissionResult.Duplicate;
-                    }
-                    _context.SubmittedFlags.Add(new SubmittedFlag()
-                    {
-                        FlagId = dbFlag.Id,
-                        AttackerTeamId = attackerTeamId,
-                        SubmissionsCount = 1,
-                        RoundId = currentRound.Id
-                    });
-                    _context.SaveChanges();
-                    return FlagSubmissionResult.Ok;
+                    var _ = Task.Run(() => submission.result.SetResult(FlagSubmissionResult.Duplicate));
                 }
-                catch (DbUpdateException) { }
+                else
+                {
+                    if (flagDict.ContainsKey(submission.flag))
+                    {
+                        acceptedSubmissions.Add(new SubmittedFlag()
+                        {
+                            FlagId = flagDict[submission.flag].Id,
+                            AttackerTeamId = submission.attackerTeamId,
+                            RoundId = currentRoundId
+                        });
+                        oks.Add(submission.result);
+                        uniqueSubmissions.Add((submission.flag, submission.attackerTeamId));
+                    }
+                    else
+                    {
+                        var t = Task.Run(() => submission.result.SetResult(FlagSubmissionResult.Invalid));
+                    }
+                }
+            }
+
+            _context.AddRange(acceptedSubmissions);
+            await _context.SaveChangesAsync();
+            foreach (var ok in oks)
+            {
+                var t = Task.Run(() => ok.SetResult(FlagSubmissionResult.Ok));
             }
         }
 
@@ -486,12 +511,13 @@ namespace EnoCore
             return tasks;
         }
 
-        public async Task<List<Flag>> RetrieveFlags(int maxAmount, List<Flag> dontFetch) {
+        public async Task<Flag[]> RetrieveFlags(int maxAmount)
+        {
             var flags = await _context.Flags
-                .Where(f => !dontFetch.Contains(f))
-                .Take(maxAmount)
+                .OrderByDescending(f => f.Id)
                 .AsNoTracking()
-                .ToListAsync();
+                .Take(maxAmount)
+                .ToArrayAsync();
             return flags;
         }
 

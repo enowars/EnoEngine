@@ -26,6 +26,9 @@ namespace FlagShooter
         private static readonly CancellationTokenSource LauncherCancelSource = new CancellationTokenSource();
         private static readonly EnoLogger Logger = new EnoLogger(nameof(FlagShooter));
         private readonly ServiceProvider ServiceProvider;
+        private readonly Dictionary<long, (TcpClient, StreamReader reader, StreamWriter writer)> TeamSockets =
+            new Dictionary<long, (TcpClient, StreamReader reader, StreamWriter writer)>();
+        private readonly long AttackingTeams = 10;
 
         public Program(ServiceProvider serviceProvider)
         {
@@ -35,15 +38,23 @@ namespace FlagShooter
                 var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
                 db.Migrate();
             }
+            for (int i = 0; i < AttackingTeams; i++)
+            {
+                var tcpClient = new TcpClient();
+                tcpClient.Connect("localhost", 1338);
+                (TcpClient tcpClient, StreamReader, StreamWriter writer) client = (tcpClient, new StreamReader(tcpClient.GetStream()), new StreamWriter(tcpClient.GetStream()));
+                client.writer.AutoFlush = true;
+                client.writer.Write($"{i+1}\n");
+                TeamSockets[i+1] = client;
+            }
         }
 
         public void Start()
         {
-            //Client.Timeout = new TimeSpan(0, 1, 0);
-            LauncherLoop().Wait();
+            FlagRunnerLoop().Wait();
         }
 
-        public async Task LauncherLoop()
+        public async Task FlagRunnerLoop()
         {
             using (var scope = ServiceProvider.CreateScope())
             {
@@ -54,11 +65,11 @@ namespace FlagShooter
             Logger.LogInfo(new EnoLogMessage()
             {
                 Module = nameof(FlagShooter),
-                Function = nameof(LauncherLoop),
-                Message = $"LauncherLoop starting"
+                Function = nameof(FlagRunnerLoop),
+                Message = $"FlagRunnerLoop starting"
             });
 
-            var flagcount = 1;
+            var flagcount = 10000;
             while (!LauncherCancelSource.IsCancellationRequested)
             {
                 try
@@ -66,26 +77,24 @@ namespace FlagShooter
                     using (var scope = ServiceProvider.CreateScope())
                     {
                         var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                        
-                        var flags = await db.RetrieveFlags(flagcount, new List<Flag>());
-                        if (flags.Count > 0)
+                        var flags = await db.RetrieveFlags(flagcount);
+                        var tasks = new Task[AttackingTeams];
+                        if (flags.Length > 0)
                         {
                             Logger.LogDebug(new EnoLogMessage()
                             {
                                 Module = nameof(FlagShooter),
-                                Function = nameof(LauncherLoop),
-                                Message = $"Sending {flags.Count} flags"
+                                Function = nameof(FlagRunnerLoop),
+                                Message = $"Sending {flags.Length} flags"
                             });
                         }
-                        foreach (var flag in flags)
+                        for (int i = 0; i < AttackingTeams; i++)
                         {
-                            var t = Task.Run(async () => await SendFlagTask(flag));
+                            var ti = i;
+                            tasks[ti] = Task.Run(async () => await SendFlagTask(flags, ti + 1));
                         }
-                        if (flags.Count == 0)
-                        {
-                            await Task.Delay(50, LauncherCancelSource.Token);
-                        }
-                        flagcount = (int) Math.Ceiling((double)flagcount * 1.5); // double flagcount
+                        await Task.WhenAll(tasks);
+                        await Task.Delay(1000, LauncherCancelSource.Token);
                     }
                 }
                 catch (Exception e)
@@ -93,29 +102,34 @@ namespace FlagShooter
                     Logger.LogWarning(new EnoLogMessage()
                     {
                         Module = nameof(FlagShooter),
-                        Function = nameof(LauncherLoop),
-                        Message = $"LauncherLoop retrying because: {EnoCoreUtils.FormatException(e)}"
+                        Function = nameof(FlagRunnerLoop),
+                        Message = $"FlagRunnerLoop retrying because: {EnoCoreUtils.FormatException(e)}"
                     });
                 }
             }
         }
 
-        private async Task SendFlagTask(Flag f)
+        private async Task SendFlagTask(Flag[] flags, long teamId)
         {
-            for(var i=1;i<255;i++) {
-                var client = new TcpClient();
-                await client.ConnectAsync("localhost", 1338);
-                var stream = client.GetStream();
-
-                Byte[] data = System.Text.Encoding.ASCII.GetBytes(i.ToString()+"\n");
-                await stream.WriteAsync(data, 0, data.Length);
-
-                var flagstr = f.StringRepresentation+"\n";
-                data = System.Text.Encoding.ASCII.GetBytes(flagstr);
-                await stream.WriteAsync(data, 0, data.Length);
-                
-                stream.Close();
-                client.Close();
+            try
+            {
+                var (_, reader, writer) = TeamSockets[teamId];
+                foreach (var flag in flags)
+                {
+                    await writer.WriteAsync($"{flag}\n");
+                    //Console.WriteLine($"Team {teamId} waiting...");
+                    var resp = await reader.ReadLineAsync();
+                    //Console.WriteLine($"{resp}");
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.LogWarning(new EnoLogMessage()
+                {
+                    Module = nameof(FlagShooter),
+                    Function = nameof(SendFlagTask),
+                    Message = $"SendFlagTask failed because: {EnoCoreUtils.FormatException(e)}"
+                });
             }
         }
 

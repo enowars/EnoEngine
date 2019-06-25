@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -45,6 +48,7 @@ namespace EnoCore
 
     public class EnoCoreUtils
     {
+        const int DATABASE_RETRIES = 50;
         private static readonly RNGCryptoServiceProvider Random = new RNGCryptoServiceProvider();
         private static readonly int ENTROPY_IN_BYTES = 8;
         private static readonly byte[] FLAG_SIGNING_KEY = Encoding.ASCII.GetBytes("suchasecretstornkkeytheywillneverguess");
@@ -52,6 +56,44 @@ namespace EnoCore
         public static string PostgresDomain => Environment.GetEnvironmentVariable("DATABASE_DOMAIN") ?? "localhost";
         public static string PostgresConnectionString => $@"Server={PostgresDomain};Port=5432;Database=EnoDatabase;User Id=docker;Password=docker;Timeout=15;SslMode=Disable;";
 
+        public static async Task RetryDatabaseAction(Func<Task> function)
+        {
+            Exception lastException = null;
+            for (int i = 0; i < DATABASE_RETRIES; i++)
+            {
+                try
+                {
+                    await function();
+                    return;
+                }
+                catch (SocketException e)
+                {
+                    lastException = e;
+                }
+                catch (IOException e)
+                {
+                    lastException = e;
+                }
+            }
+            throw lastException;
+        }
+
+        public static List<T> DrainQueue<T>(ConcurrentQueue<T> queue, int max)
+        {
+            var drains = new List<T>(max);
+            while (drains.Count < max)
+            {
+                if (queue.TryDequeue(out var result))
+                {
+                    drains.Add(result);
+                }
+                else
+                {
+                    break;
+                }
+            }
+            return drains;
+        }
 
         public static CheckerResult ParseCheckerResult(string result)
         {
