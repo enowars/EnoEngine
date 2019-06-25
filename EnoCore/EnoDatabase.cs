@@ -366,14 +366,22 @@ namespace EnoCore
                 {
                     if (flagDict.ContainsKey(submission.flag))
                     {
-                        acceptedSubmissions.Add(new SubmittedFlag()
+                        var flag = flagDict[submission.flag];
+                        if (flag.OwnerId == submission.attackerTeamId)
                         {
-                            FlagId = flagDict[submission.flag].Id,
-                            AttackerTeamId = submission.attackerTeamId,
-                            RoundId = currentRoundId
-                        });
-                        oks.Add(submission.result);
-                        uniqueSubmissions.Add((submission.flag, submission.attackerTeamId));
+                            var t = Task.Run(() => submission.result.SetResult(FlagSubmissionResult.Own));
+                        }
+                        else
+                        {
+                            acceptedSubmissions.Add(new SubmittedFlag()
+                            {
+                                FlagId = flag.Id,
+                                AttackerTeamId = submission.attackerTeamId,
+                                RoundId = currentRoundId
+                            });
+                            oks.Add(submission.result);
+                            uniqueSubmissions.Add((submission.flag, submission.attackerTeamId));
+                        }
                     }
                     else
                     {
