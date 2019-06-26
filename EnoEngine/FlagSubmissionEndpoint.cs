@@ -231,7 +231,7 @@ namespace EnoEngine.FlagSubmission
                         }
                         catch (Exception e)
                         {
-                            Logger.LogWarning(new EnoLogMessage()
+                            Logger.LogError(new EnoLogMessage()
                             {
                                 Module = nameof(FlagSubmissionEndpoint),
                                 Function = nameof(InsertSubmissionsLoop),

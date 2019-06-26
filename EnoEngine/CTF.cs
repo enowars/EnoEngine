@@ -63,79 +63,18 @@ namespace EnoEngine.Game
                 // start the evaluation
                 var handleOldRoundTask = Task.Run(async () => await HandleRoundEnd(oldRound?.Id ?? 0, Program.Configuration));
 
-
                 // insert put tasks
-                var insertPutNewFlagsTask = Task.Run(async () =>
-                {
-                    Stopwatch stopWatch = new Stopwatch();
-                    stopWatch.Start();
-                    using (var scope = ServiceProvider.CreateScope())
-                    {
-                        await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertPutFlagsTasks(currentRound.Id, begin, Program.Configuration);
-                    }
-                    stopWatch.Stop();
-                    Console.WriteLine($"InsertPutFlagsTasks took {stopWatch.Elapsed.TotalMilliseconds}ms");
-                });
-                var insertPutNewNoisesTask = Task.Run(async () =>
-                {
-                    Stopwatch stopWatch = new Stopwatch();
-                    stopWatch.Start();
-                    using (var scope = ServiceProvider.CreateScope())
-                    {
-                        await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertPutNoisesTasks(currentRound, newNoises, Program.Configuration);
-                    }
-                    stopWatch.Stop();
-                    Console.WriteLine($"InsertPutNoisesTasks took {stopWatch.Elapsed.TotalMilliseconds}ms");
-                });
-                var insertHavocsTask = Task.Run(async () =>
-                {
-                    Stopwatch stopWatch = new Stopwatch();
-                    stopWatch.Start();
-                    using (var scope = ServiceProvider.CreateScope())
-                    {
-                        await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertHavocsTasks(currentRound.Id, begin, Program.Configuration);
-                    }
-                    stopWatch.Stop();
-                    Console.WriteLine($"InsertHavocsTasks took {stopWatch.Elapsed.TotalMilliseconds}ms");
-                });
+                var insertPutNewFlagsTask = Task.Run(async () => await InsertPutNewFlagsTasks(currentRound.Id, begin));
+                var insertPutNewNoisesTask = Task.Run(async () => await InsertPutNewNoisesTasks(currentRound, newNoises));
+                var insertHavocsTask = Task.Run(async () => await InsertHavocsTasks(currentRound, begin));
 
                 // give the db some space TODO save the earliest tasks first
                 await Task.Delay(1000);
 
                 // insert get tasks
-                var insertRetrieveCurrentFlagsTask = Task.Run(async () =>
-                {
-                    Stopwatch stopWatch = new Stopwatch();
-                    stopWatch.Start();
-                    using (var scope = ServiceProvider.CreateScope())
-                    {
-                        await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertRetrieveCurrentFlagsTasks(currentRound, newFlags, Program.Configuration);
-                    }
-                    stopWatch.Stop();
-                    Console.WriteLine($"InsertRetrieveCurrentFlagsTasks took {stopWatch.Elapsed.TotalMilliseconds}ms");
-                });
-                var insertRetrieveOldFlagsTask = Task.Run(async () =>
-                {
-                    Stopwatch stopWatch = new Stopwatch();
-                    stopWatch.Start();
-                    using (var scope = ServiceProvider.CreateScope())
-                    {
-                        await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertRetrieveOldFlagsTasks(currentRound, Program.Configuration.CheckedRoundsPerRound - 1, Program.Configuration);
-                    }
-                    stopWatch.Stop();
-                    Console.WriteLine($"InsertRetrieveOldFlagsTasks took {stopWatch.Elapsed.TotalMilliseconds}ms");
-                });
-                var insertGetCurrentNoisesTask = Task.Run(async () =>
-                {
-                    Stopwatch stopWatch = new Stopwatch();
-                    stopWatch.Start();
-                    using (var scope = ServiceProvider.CreateScope())
-                    {
-                        await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertRetrieveCurrentNoisesTasks(currentRound, newNoises, Program.Configuration);
-                    }
-                    stopWatch.Stop();
-                    Console.WriteLine($"InsertRetrieveCurrentNoisesTasks took {stopWatch.Elapsed.TotalMilliseconds}ms");
-                });
+                var insertRetrieveCurrentFlagsTask = Task.Run(async () => await InsertRetrieveCurrentFlagsTasks(currentRound, newFlags));
+                var insertRetrieveOldFlagsTask = Task.Run(async () => await InsertRetrieveOldFlagsTasks(currentRound));
+                var insertGetCurrentNoisesTask = Task.Run(async () => await InsertGetCurrentNoisesTask(currentRound, newNoises));
 
                 // TODO start noise for old rounds
 
@@ -178,6 +117,164 @@ namespace EnoEngine.Game
                 Lock.Release();
             }
             return end;
+        }
+
+        private async Task InsertPutNewFlagsTasks(long roundId, DateTime begin)
+        {
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
+            try
+            {
+                await EnoCoreUtils.RetryDatabaseAction(async () =>
+                {
+                    using (var scope = ServiceProvider.CreateScope())
+                    {
+                        await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertPutFlagsTasks(roundId, begin, Program.Configuration);
+                    }
+                });
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(new EnoLogMessage()
+                {
+                    Message = $"InsertPutFlagsTasks failed because: {e}",
+                    RoundId = roundId
+                });
+            }
+            stopWatch.Stop();
+            Console.WriteLine($"InsertPutFlagsTasks took {stopWatch.Elapsed.TotalMilliseconds}ms");
+        }
+
+        private async Task InsertPutNewNoisesTasks(Round currentRound, IEnumerable<Noise> newNoises)
+        {
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
+            try
+            {
+                await EnoCoreUtils.RetryDatabaseAction(async () =>
+                {
+                    using (var scope = ServiceProvider.CreateScope())
+                    {
+                        await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertPutNoisesTasks(currentRound, newNoises, Program.Configuration);
+                    }
+                });
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(new EnoLogMessage()
+                {
+                    Message = $"InsertPutNewNoisesTasks failed because: {e}",
+                    RoundId = currentRound.Id
+                });
+                await Task.Delay(1);
+            }
+            stopWatch.Stop();
+            Console.WriteLine($"InsertPutNewNoisesTasks took {stopWatch.Elapsed.TotalMilliseconds}ms");
+        }
+
+        private async Task InsertHavocsTasks(Round currentRound, DateTime begin)
+        {
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
+            try
+            {
+                await EnoCoreUtils.RetryDatabaseAction(async () =>
+                {
+                    using (var scope = ServiceProvider.CreateScope())
+                    {
+                        await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertHavocsTasks(currentRound.Id, begin, Program.Configuration);
+                    }
+                });
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(new EnoLogMessage()
+                {
+                    Message = $"InsertHavocsTasks failed because: {e}",
+                    RoundId = currentRound.Id
+                });
+                await Task.Delay(1);
+            }
+            stopWatch.Stop();
+            Console.WriteLine($"InsertHavocsTasks took {stopWatch.Elapsed.TotalMilliseconds}ms");
+        }
+
+        private async Task InsertRetrieveCurrentFlagsTasks(Round currentRound, List<Flag> newFlags)
+        {
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
+            try
+            {
+                await EnoCoreUtils.RetryDatabaseAction(async () =>
+                {
+                    using (var scope = ServiceProvider.CreateScope())
+                    {
+                        await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertRetrieveCurrentFlagsTasks(currentRound, newFlags, Program.Configuration);
+                    }
+                });
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(new EnoLogMessage()
+                {
+                    Message = $"InsertRetrieveCurrentFlagsTasks failed because: {e}",
+                    RoundId = currentRound.Id
+                });
+            }
+            stopWatch.Stop();
+            Console.WriteLine($"InsertRetrieveCurrentFlagsTasks took {stopWatch.Elapsed.TotalMilliseconds}ms");
+        }
+
+        private async Task InsertRetrieveOldFlagsTasks(Round currentRound)
+        {
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
+            try
+            {
+                await EnoCoreUtils.RetryDatabaseAction(async () =>
+                {
+                    using (var scope = ServiceProvider.CreateScope())
+                    {
+                        await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertRetrieveOldFlagsTasks(currentRound, Program.Configuration.CheckedRoundsPerRound - 1, Program.Configuration);
+                    }
+                });
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(new EnoLogMessage()
+                {
+                    Message = $"InsertRetrieveOldFlagsTasks failed because: {e}",
+                    RoundId = currentRound.Id
+                });
+            }
+            stopWatch.Stop();
+            Console.WriteLine($"InsertRetrieveOldFlagsTasks took {stopWatch.Elapsed.TotalMilliseconds}ms");
+        }
+
+        private async Task InsertGetCurrentNoisesTask(Round currentRound, List<Noise> newNoises)
+        {
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
+            try
+            {
+                await EnoCoreUtils.RetryDatabaseAction(async () =>
+                {
+                    using (var scope = ServiceProvider.CreateScope())
+                    {
+                        await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertRetrieveCurrentNoisesTasks(currentRound, newNoises, Program.Configuration);
+                    }
+                });
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(new EnoLogMessage()
+                {
+                    Message = $"InsertRetrieveCurrentNoisesTasks failed because: {e}",
+                    RoundId = currentRound.Id
+                });
+            }
+            stopWatch.Stop();
+            Console.WriteLine($"InsertRetrieveCurrentNoisesTasks took {stopWatch.Elapsed.TotalMilliseconds}ms");
         }
 
         private async Task<DateTime> HandleRoundEnd(long roundId, JsonConfiguration config)
