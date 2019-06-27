@@ -106,18 +106,20 @@ namespace EnoLauncher
                 var message = EnoLogMessage.FromCheckerTask(task);
                 message.Module = nameof(EnoLauncher);
                 message.Function = nameof(LaunchCheckerTask);
-                message.Message = $"LaunchCheckerTask for task {task.Id} ({task.TaskType}, currentRound={task.CurrentRoundId}, relatedRound={task.RelatedRoundId})";
+                message.Message = $"LaunchCheckerTask() for task {task.Id} ({task.TaskType}, currentRound={task.CurrentRoundId}, relatedRound={task.RelatedRoundId}), type={task.TaskType}";
                 Logger.LogTrace(message);
                 var cancelSource = new CancellationTokenSource();
                 var now = DateTime.UtcNow;
                 var span = task.StartTime.Subtract(DateTime.UtcNow);
                 if (span.TotalSeconds < -0.5)
                 {
-                    message.Message = $"Task starts {span.TotalSeconds} late";
+                    message.Message = $"Task {task.Id} starts {span.TotalSeconds} late (should: {task.StartTime})";
                     Logger.LogWarning(message);
                 }
                 if (task.StartTime > now)
                 {
+                    message.Message = $"Task {task.Id} sleeping: {span}";
+                    Logger.LogTrace(message);
                     await Task.Delay(span);
                 }
                 var content = new StringContent(JsonConvert.SerializeObject(task), Encoding.UTF8, "application/json");
