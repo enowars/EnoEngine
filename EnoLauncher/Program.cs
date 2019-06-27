@@ -106,7 +106,7 @@ namespace EnoLauncher
                 var message = EnoLogMessage.FromCheckerTask(task);
                 message.Module = nameof(EnoLauncher);
                 message.Function = nameof(LaunchCheckerTask);
-                message.Message = $"LaunchCheckerTask() for task {task.Id} ({task.TaskType}, currentRound={task.CurrentRoundId}, relatedRound={task.RelatedRoundId}), type={task.TaskType}";
+                message.Message = $"LaunchCheckerTask() for task {task.Id} ({task.TaskType}, currentRound={task.CurrentRoundId}, relatedRound={task.RelatedRoundId})";
                 Logger.LogTrace(message);
                 var cancelSource = new CancellationTokenSource();
                 var now = DateTime.UtcNow;

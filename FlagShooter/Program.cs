@@ -111,15 +111,28 @@ namespace FlagShooter
 
         private async Task SendFlagTask(Flag[] flags, long teamId)
         {
+            var batchSize = 100;
             try
             {
                 var (_, reader, writer) = TeamSockets[teamId];
-                foreach (var flag in flags)
+                for (int i = 0; i < flags.Length / batchSize; i++)
                 {
-                    await writer.WriteAsync($"{flag}\n");
-                    //Console.WriteLine($"Team {teamId} waiting...");
-                    var resp = await reader.ReadLineAsync();
-                    //Console.WriteLine($"{resp}");
+                    var submissionStringBuilder = new StringBuilder();
+                    int j;
+                    for (j = 0; j < batchSize; j++)
+                    {
+                        if (i + j < flags.Length)
+                        {
+                            submissionStringBuilder.Append($"{flags[i + j]}\n");
+                        }
+                    }
+                    await writer.WriteAsync(submissionStringBuilder.ToString());
+                    for (int k = 0; k < j; k++)
+                    {
+                        //Console.WriteLine($"Team {teamId} waiting...");
+                        var resp = await reader.ReadLineAsync();
+                        //Console.WriteLine($"{resp}");
+                    }
                 }
             }
             catch (Exception e)
