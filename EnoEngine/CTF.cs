@@ -286,7 +286,8 @@ namespace EnoEngine.Game
             if (roundId > 0)
             {
                 var newStates = await RecordServiceStates(roundId);
-                await EnoDatabaseUtils.CalculateAllPoints(ServiceProvider, roundId, newStates, config);
+                await CalculateServicePoints(roundId, newStates);
+                await CalculateTotalPoints(roundId);
             }
             var jsonStopWatch = new Stopwatch();
             jsonStopWatch.Start();
@@ -297,22 +298,73 @@ namespace EnoEngine.Game
             return DateTime.UtcNow;
         }
 
+        private async Task CalculateTotalPoints(long roundId)
+        {
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
+            try
+            {
+                await EnoCoreUtils.RetryScopedDatabaseAction(ServiceProvider,
+                    async (IEnoDatabase db) => await db.CalculateTotalPoints());
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(new EnoLogMessage()
+                {
+                    Message = $"CalculateTotalPoints failed because: {e}",
+                    RoundId = roundId
+                });
+            }
+            finally
+            {
+                stopWatch.Stop();
+                Logger.Log(CalculateTotalPointsFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
+            }
+        }
+
+        private async Task CalculateServicePoints(long roundId, Dictionary<(long ServiceId, long TeamId), RoundTeamServiceState> newStates)
+        {
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
+            try
+            {
+                var (newLatestSnapshotRoundId, oldSnapshotRoundId, services, teams) = await EnoCoreUtils.RetryScopedDatabaseAction(ServiceProvider,
+                    async(IEnoDatabase db) => await db.GetPointCalculationFrame(Program.Configuration));
+
+                var servicePointsTasks = new List<Task>(services.Length);
+                foreach (var service in services)
+                {
+                    servicePointsTasks.Add(Task.Run(async () =>
+                    {
+                        await EnoCoreUtils.RetryScopedDatabaseAction(ServiceProvider,
+                            async (IEnoDatabase db) => await db.CalculateServiceStats(teams, newStates, roundId, service, oldSnapshotRoundId, newLatestSnapshotRoundId));
+                    }));
+                }
+                await Task.WhenAll(servicePointsTasks);
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(new EnoLogMessage()
+                {
+                    Message = $"CalculateServicePoints failed because: {e}",
+                    RoundId = roundId
+                });
+            }
+            finally
+            {
+                stopWatch.Stop();
+                Logger.Log(CalculateServicePointsFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
+            }
+        }
+
         private async Task<Dictionary<(long ServiceId, long TeamId), RoundTeamServiceState>> RecordServiceStates(long roundId)
         {
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
             try
             {
-                return await EnoCoreUtils.RetryDatabaseAction(async () =>
-                {
-                    using (var scope = ServiceProvider.CreateScope())
-                    {
-                        var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                        var states = await db.CalculateRoundTeamServiceStates(scope.ServiceProvider, roundId);
-                        
-                        return states;
-                    }
-                });
+                return await EnoCoreUtils.RetryScopedDatabaseAction(ServiceProvider,
+                    async (IEnoDatabase db) => await db.CalculateRoundTeamServiceStates(ServiceProvider, roundId));
             }
             catch (Exception e)
             {

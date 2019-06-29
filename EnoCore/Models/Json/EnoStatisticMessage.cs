@@ -9,10 +9,15 @@ namespace EnoCore.Models.Json
     {
         [JsonProperty("tool")]
         public string Tool { get; set; }
+        // Flag Submission
         public FlagsubmissionBatchProcessedMessage FlagsubmissionBatchProcessedMessage { get; set; }
-        public ScoreboardJsonGenerationFinishedMessage ScoreboardJsonGenerationFinishedMessage { get; set; }
+        // Old Round
         public RecordServiceStatesFinishedMessage RecordServiceStatesFinishedMessage { get; set; }
         public CalculateServiceStatsFetchFinishedMessage CalculateServiceStatsFetchFinishedMessage { get; set; }
+        public CalculateServicePointsFinishedMessage CalculateServicePointsFinishedMessage { get; set; }
+        public CalculateTotalPointsFinishedMessage CalculateTotalPointsFinishedMessage { get; set; }
+        public ScoreboardJsonGenerationFinishedMessage ScoreboardJsonGenerationFinishedMessage { get; set; }
+        // New Round
         public StartNewRoundFinishedMessage StartNewRoundFinishedMessage { get; set; }
     }
 
@@ -58,6 +63,42 @@ namespace EnoCore.Models.Json
             return new EnoStatisticMessage()
             {
                 RecordServiceStatesFinishedMessage = new RecordServiceStatesFinishedMessage()
+                {
+                    DurationInMillis = duration,
+                    RoundId = roundId
+                }
+            };
+        }
+    }
+
+    public class CalculateTotalPointsFinishedMessage
+    {
+        [JsonProperty("round")]
+        public long RoundId { get; set; }
+        public long DurationInMillis { get; set; }
+        public static EnoStatisticMessage Create(long roundId, long duration)
+        {
+            return new EnoStatisticMessage()
+            {
+                CalculateTotalPointsFinishedMessage = new CalculateTotalPointsFinishedMessage()
+                {
+                    DurationInMillis = duration,
+                    RoundId = roundId
+                }
+            };
+        }
+    }
+
+    public class CalculateServicePointsFinishedMessage
+    {
+        [JsonProperty("round")]
+        public long RoundId { get; set; }
+        public long DurationInMillis { get; set; }
+        public static EnoStatisticMessage Create(long roundId, long duration)
+        {
+            return new EnoStatisticMessage()
+            {
+                CalculateServicePointsFinishedMessage = new CalculateServicePointsFinishedMessage()
                 {
                     DurationInMillis = duration,
                     RoundId = roundId

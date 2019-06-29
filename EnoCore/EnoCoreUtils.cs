@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using EnoCore.Models;
 using EnoCore.Models.Database;
 using EnoCore.Models.Json;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
@@ -86,6 +87,57 @@ namespace EnoCore
                 try
                 {
                     return await function();
+                }
+                catch (SocketException e)
+                {
+                    lastException = e;
+                }
+                catch (IOException e)
+                {
+                    lastException = e;
+                }
+            }
+            throw lastException;
+        }
+
+        public static async Task RetryScopedDatabaseAction(IServiceProvider serviceProvider, Func<IEnoDatabase, Task> function)
+        {
+            Exception lastException = null;
+            for (int i = 0; i < DATABASE_RETRIES; i++)
+            {
+                try
+                {
+                    using (var scope = serviceProvider.CreateScope())
+                    {
+                        var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
+                        await function(db);
+                        return;
+                    }
+                }
+                catch (SocketException e)
+                {
+                    lastException = e;
+                }
+                catch (IOException e)
+                {
+                    lastException = e;
+                }
+            }
+            throw lastException;
+        }
+
+        public static async Task<T> RetryScopedDatabaseAction<T>(IServiceProvider serviceProvider, Func<IEnoDatabase, Task<T>> function)
+        {
+            Exception lastException = null;
+            for (int i = 0; i < DATABASE_RETRIES; i++)
+            {
+                try
+                {
+                    using (var scope = serviceProvider.CreateScope())
+                    {
+                        var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
+                        return await function(db);
+                    }
                 }
                 catch (SocketException e)
                 {
