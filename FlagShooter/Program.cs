@@ -28,7 +28,7 @@ namespace FlagShooter
         private readonly ServiceProvider ServiceProvider;
         private readonly Dictionary<long, (TcpClient, StreamReader reader, StreamWriter writer)[]> TeamSockets =
             new Dictionary<long, (TcpClient, StreamReader reader, StreamWriter writer)[]>();
-        private readonly long AttackingTeams = 10;
+        private readonly long AttackingTeams = 50;
         private readonly int SubmissionConnectionsPerTeam = 100;
 
         public Program(ServiceProvider serviceProvider)
