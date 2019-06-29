@@ -31,8 +31,8 @@ namespace EnoEngine.Game
 
         public async Task<DateTime> StartNewRound()
         {
-            var startNewRoundStopwatch = new Stopwatch();
-            startNewRoundStopwatch.Start();
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
             await Lock.WaitAsync(Token);
             Logger.LogDebug(new EnoLogMessage()
             {
@@ -60,52 +60,48 @@ namespace EnoEngine.Game
                     var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
                     (oldRound, currentRound, newFlags, newNoises, newHavocs) = await db.CreateNewRound(begin, q2, q3, q4, end);
                 }
-                long observedRounds = Program.Configuration.CheckedRoundsPerRound > currentRound.Id ? currentRound.Id : Program.Configuration.CheckedRoundsPerRound;
-
-                // start the evaluation
-                var handleOldRoundTask = Task.Run(async () => await HandleRoundEnd(oldRound?.Id ?? 0, Program.Configuration));
+                Logger.LogInfo(new EnoLogMessage()
+                {
+                    Module = nameof(CTF),
+                    Function = nameof(StartNewRound),
+                    RoundId = currentRound.Id,
+                    Message = $"CreateNewRound for {currentRound.Id} finished ({stopwatch.ElapsedMilliseconds}ms)"
+                });
 
                 // insert put tasks
                 var insertPutNewFlagsTask = Task.Run(async () => await InsertPutNewFlagsTasks(currentRound.Id, begin));
                 var insertPutNewNoisesTask = Task.Run(async () => await InsertPutNewNoisesTasks(currentRound, newNoises));
                 var insertHavocsTask = Task.Run(async () => await InsertHavocsTasks(currentRound, begin));
 
-                // give the db some space TODO save the earliest tasks first
-                await Task.Delay(1000);
+                await insertPutNewFlagsTask;
+                await insertPutNewNoisesTask;
+                await insertHavocsTask;
 
                 // insert get tasks
                 var insertRetrieveCurrentFlagsTask = Task.Run(async () => await InsertRetrieveCurrentFlagsTasks(currentRound, newFlags));
                 var insertRetrieveOldFlagsTask = Task.Run(async () => await InsertRetrieveOldFlagsTasks(currentRound));
                 var insertGetCurrentNoisesTask = Task.Run(async () => await InsertGetCurrentNoisesTask(currentRound, newNoises));
 
-                // TODO start noise for old rounds
-
-                //TODO await in trycatch, we want to wait for everything
-                await insertPutNewFlagsTask;
                 await insertRetrieveCurrentFlagsTask;
                 await insertRetrieveOldFlagsTask;
-
-                await insertPutNewNoisesTask;
                 await insertGetCurrentNoisesTask;
 
-                await insertHavocsTask;
                 Logger.LogInfo(new EnoLogMessage()
                 {
                     Module = nameof(CTF),
                     Function = nameof(StartNewRound),
                     RoundId = currentRound.Id,
-                    Message = $"All checker tasks for round {currentRound.Id} are created"
+                    Message = $"All checker tasks for round {currentRound.Id} are created ({stopwatch.ElapsedMilliseconds}ms)"
                 });
-                var oldRoundHandlingFinished = await handleOldRoundTask;
+                await HandleRoundEnd(oldRound?.Id ?? 0, Program.Configuration);
                 Logger.LogInfo(new EnoLogMessage()
                 {
                     Module = nameof(CTF),
                     Function = nameof(StartNewRound),
                     RoundId = oldRound?.Id ?? 0,
-                    Message = $"Scoreboard calculation for round {oldRound?.Id ?? 0} complete ({(oldRoundHandlingFinished - begin).ToString()})"
+                    Message = $"HandleRoundEnd for round {oldRound?.Id ?? 0} finished ({stopwatch.ElapsedMilliseconds}ms)"
                 });
-                startNewRoundStopwatch.Stop();
-                Logger.Log(StartNewRoundFinishedMessage.Create(oldRound?.Id ?? 0, startNewRoundStopwatch.ElapsedMilliseconds));
+                Logger.Log(StartNewRoundFinishedMessage.Create(oldRound?.Id ?? 0, stopwatch.ElapsedMilliseconds));
             }
             catch (Exception e)
             {
