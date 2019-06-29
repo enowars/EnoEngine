@@ -42,7 +42,7 @@ namespace FlagShooter
             for (int i = 0; i < AttackingTeams; i++)
             {
                 TeamSockets[i+1] = new (TcpClient, StreamReader reader, StreamWriter writer)[SubmissionConnectionsPerTeam];
-                for (int j = 0; i < SubmissionConnectionsPerTeam; i++)
+                for (int j = 0; i < SubmissionConnectionsPerTeam; j++)
                 {
                     var tcpClient = new TcpClient();
                     tcpClient.Connect("localhost", 1338);
