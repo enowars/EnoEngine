@@ -950,6 +950,8 @@ namespace EnoCore
             {
                 try
                 {
+                    var calculateServiceStatsFetchStopwatch = new Stopwatch();
+                    calculateServiceStatsFetchStopwatch.Start();
                     var oldSnapshots = await _context.ServiceStatsSnapshots
                         .TagWith("CalculateServiceScores:oldSnapshots")
                         .Where(sss => sss.RoundId == oldSnapshotsRoundId)
@@ -1025,6 +1027,8 @@ namespace EnoCore
                         .Where(ss => ss.ServiceId == service.Id)
                         .ToDictionaryAsync(ss => ss.TeamId);
 
+                    calculateServiceStatsFetchStopwatch.Stop();
+                    Logger.Log(CalculateServiceStatsFetchFinishedMessage.Create(roundId, service.Name, calculateServiceStatsFetchStopwatch.ElapsedMilliseconds));
                     foreach (var team in teams)
                     {
                         double slaPoints = 0;

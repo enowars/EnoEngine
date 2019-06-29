@@ -281,7 +281,11 @@ namespace EnoEngine.Game
         {
             if (roundId > 0)
             {
+                var recordServiceStatesStopwatch = new Stopwatch();
+                recordServiceStatesStopwatch.Start();
                 var newStates = await EnoDatabaseUtils.RecordServiceStates(ServiceProvider, roundId);
+                recordServiceStatesStopwatch.Stop();
+                Logger.Log(RecordServiceStatesFinishedMessage.Create(roundId, recordServiceStatesStopwatch.ElapsedMilliseconds));
                 await EnoDatabaseUtils.CalculateAllPoints(ServiceProvider, roundId, newStates, config);
             }
             var jsonStopWatch = new Stopwatch();

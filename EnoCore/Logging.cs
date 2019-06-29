@@ -100,6 +100,7 @@ namespace EnoCore
 
         public void Log(EnoStatisticMessage message)
         {
+            message.Tool = Tool;
             Debug.WriteLine(JsonConvert.SerializeObject(message));
         }
     }
