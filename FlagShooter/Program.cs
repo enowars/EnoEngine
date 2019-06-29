@@ -127,9 +127,11 @@ namespace FlagShooter
                         if (i + j < flags.Length)
                         {
                             var con = connections[j];
+                            int ti = i;
+                            int tj = j;
                             tasks.Add(Task.Run(async () =>
                             {
-                                await con.writer.WriteAsync($"{flags[i + j]}\n");
+                                await con.writer.WriteAsync($"{flags[ti + tj]}\n");
                                 await con.reader.ReadLineAsync();
                             }));
                         }
