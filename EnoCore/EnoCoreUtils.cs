@@ -78,6 +78,27 @@ namespace EnoCore
             throw lastException;
         }
 
+        public static async Task<T> RetryDatabaseAction<T>(Func<Task<T>> function)
+        {
+            Exception lastException = null;
+            for (int i = 0; i < DATABASE_RETRIES; i++)
+            {
+                try
+                {
+                    return await function();
+                }
+                catch (SocketException e)
+                {
+                    lastException = e;
+                }
+                catch (IOException e)
+                {
+                    lastException = e;
+                }
+            }
+            throw lastException;
+        }
+
         public static List<T> DrainQueue<T>(ConcurrentQueue<T> queue, int max)
         {
             var drains = new List<T>(max);

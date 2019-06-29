@@ -285,11 +285,7 @@ namespace EnoEngine.Game
         {
             if (roundId > 0)
             {
-                var recordServiceStatesStopwatch = new Stopwatch();
-                recordServiceStatesStopwatch.Start();
-                var newStates = await EnoDatabaseUtils.RecordServiceStates(ServiceProvider, roundId);
-                recordServiceStatesStopwatch.Stop();
-                Logger.Log(RecordServiceStatesFinishedMessage.Create(roundId, recordServiceStatesStopwatch.ElapsedMilliseconds));
+                var newStates = await RecordServiceStates(roundId);
                 await EnoDatabaseUtils.CalculateAllPoints(ServiceProvider, roundId, newStates, config);
             }
             var jsonStopWatch = new Stopwatch();
@@ -299,6 +295,39 @@ namespace EnoEngine.Game
             jsonStopWatch.Stop();
             Logger.Log(ScoreboardJsonGenerationFinishedMessage.Create(jsonStopWatch.ElapsedMilliseconds));
             return DateTime.UtcNow;
+        }
+
+        private async Task<Dictionary<(long ServiceId, long TeamId), RoundTeamServiceState>> RecordServiceStates(long roundId)
+        {
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
+            try
+            {
+                return await EnoCoreUtils.RetryDatabaseAction(async () =>
+                {
+                    using (var scope = ServiceProvider.CreateScope())
+                    {
+                        var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
+                        var states = await db.CalculateRoundTeamServiceStates(scope.ServiceProvider, roundId);
+                        
+                        return states;
+                    }
+                });
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(new EnoLogMessage()
+                {
+                    Message = $"RecordServiceStates failed because: {e}",
+                    RoundId = roundId
+                });
+                return new Dictionary<(long ServiceId, long TeamId), RoundTeamServiceState>();
+            }
+            finally
+            {
+                stopWatch.Stop();
+                Logger.Log(RecordServiceStatesFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
+            }
         }
     }
 }

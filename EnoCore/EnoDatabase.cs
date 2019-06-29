@@ -780,76 +780,58 @@ namespace EnoCore
 
         public async Task<Dictionary<(long ServiceId, long TeamId), RoundTeamServiceState>> CalculateRoundTeamServiceStates(IServiceProvider serviceProvider, long roundId)
         {
-            Stopwatch stopWatch = new Stopwatch();
-            stopWatch.Start();
-            while(true)
+
+            var teams = await _context.Teams.AsNoTracking().ToArrayAsync();
+            var services = await _context.Services.AsNoTracking().ToArrayAsync();
+
+            var currentRoundWorstResults = await _context.CheckerTasks
+                .TagWith("CalculateRoundTeamServiceStates:currentRoundTasks")
+                .Where(ct => ct.CurrentRoundId == roundId)
+                .Where(ct => ct.RelatedRoundId == roundId)
+                .GroupBy(ct => new { ct.ServiceId, ct.TeamId })
+                .Select(g => new { g.Key, WorstResult = g.Min(ct => ct.CheckerResult) })
+                .AsNoTracking()
+                .ToDictionaryAsync(g => g.Key, g => g.WorstResult);
+
+            var oldRoundsWorstResults = await _context.CheckerTasks
+                .TagWith("CalculateRoundTeamServiceStates:oldRoundsTasks")
+                .Where(ct => ct.CurrentRoundId == roundId)
+                .Where(ct => ct.RelatedRoundId != roundId)
+                .GroupBy(ct => new { ct.ServiceId, ct.TeamId })
+                .Select(g => new { g.Key, WorstResult = g.Min(ct => ct.CheckerResult) })
+                .AsNoTracking()
+                .ToDictionaryAsync(g => g.Key, g => g.WorstResult);
+
+            var states = new Dictionary<(long ServiceId, long TeamId), RoundTeamServiceState>();
+            foreach (var team in teams)
             {
-                try
+                foreach (var service in services)
                 {
-                    var teams = await _context.Teams.AsNoTracking().ToArrayAsync();
-                    var services = await _context.Services.AsNoTracking().ToArrayAsync();
-
-                    var currentRoundWorstResults = await _context.CheckerTasks
-                        .TagWith("CalculateRoundTeamServiceStates:currentRoundTasks")
-                        .Where(ct => ct.CurrentRoundId == roundId)
-                        .Where(ct => ct.RelatedRoundId == roundId)
-                        .GroupBy(ct => new { ct.ServiceId, ct.TeamId })
-                        .Select(g => new { g.Key, WorstResult = g.Min(ct => ct.CheckerResult) })
-                        .AsNoTracking()
-                        .ToDictionaryAsync(g => g.Key, g => g.WorstResult);
-
-                    var oldRoundsWorstResults = await _context.CheckerTasks
-                        .TagWith("CalculateRoundTeamServiceStates:oldRoundsTasks")
-                        .Where(ct => ct.CurrentRoundId == roundId)
-                        .Where(ct => ct.RelatedRoundId != roundId)
-                        .GroupBy(ct => new { ct.ServiceId, ct.TeamId })
-                        .Select(g => new { g.Key, WorstResult = g.Min(ct => ct.CheckerResult) })
-                        .AsNoTracking()
-                        .ToDictionaryAsync(g => g.Key, g => g.WorstResult);
-
-                    var states = new Dictionary<(long ServiceId, long TeamId), RoundTeamServiceState>();
-                    foreach (var team in teams)
+                    var key = new { ServiceId = service.Id, TeamId = team.Id };
+                    ServiceStatus status = ServiceStatus.CheckerError;
+                    if (currentRoundWorstResults.ContainsKey(key))
                     {
-                        foreach (var service in services)
+                        status = EnoCoreUtils.CheckerResultToServiceStatus(currentRoundWorstResults[key]);
+                    }
+                    if (status == ServiceStatus.Ok && oldRoundsWorstResults.ContainsKey(key))
+                    {
+                        if (oldRoundsWorstResults[key] != CheckerResult.Ok)
                         {
-                            var key = new { ServiceId = service.Id, TeamId = team.Id };
-                            ServiceStatus status = ServiceStatus.CheckerError;
-                            if (currentRoundWorstResults.ContainsKey(key))
-                            {
-                                status = EnoCoreUtils.CheckerResultToServiceStatus(currentRoundWorstResults[key]);
-                            }
-                            if (status == ServiceStatus.Ok && oldRoundsWorstResults.ContainsKey(key))
-                            {
-                                if (oldRoundsWorstResults[key] != CheckerResult.Ok)
-                                {
-                                    status = ServiceStatus.Recovering;
-                                }
-                            }
-                            states[(key.ServiceId, key.TeamId)] = new RoundTeamServiceState()
-                            {
-                                GameRoundId = roundId,
-                                ServiceId = key.ServiceId,
-                                TeamId = key.TeamId,
-                                Status = status
-                            };
+                            status = ServiceStatus.Recovering;
                         }
                     }
-                    _context.RoundTeamServiceStates.AddRange(states.Values);
-                    await _context.SaveChangesAsync();
-                    stopWatch.Stop();
-                    Console.WriteLine($"CalculateRoundTeamServiceStates took {stopWatch.Elapsed.TotalMilliseconds}ms");
-                    return states;
-                }
-                catch (SocketException e)
-                {
-                    Logger.LogDebug(new EnoLogMessage()
+                    states[(key.ServiceId, key.TeamId)] = new RoundTeamServiceState()
                     {
-                        Message = $"CalculateRoundTeamServiceStates retrying because: {e}",
-                        RoundId = roundId
-                    });
-                    await Task.Delay(1);
+                        GameRoundId = roundId,
+                        ServiceId = key.ServiceId,
+                        TeamId = key.TeamId,
+                        Status = status
+                    };
                 }
             }
+            _context.RoundTeamServiceStates.AddRange(states.Values);
+            await _context.SaveChangesAsync();
+            return states;
         }
 
         public async Task CalculatePoints(ServiceProvider serviceProvider, long roundId, Dictionary<(long ServiceId, long TeamId), RoundTeamServiceState> newStates, JsonConfiguration config)

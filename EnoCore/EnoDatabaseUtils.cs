@@ -10,15 +10,6 @@ namespace EnoCore
 {
     public class EnoDatabaseUtils
     {
-        public static async Task<Dictionary<(long ServiceId, long TeamId), RoundTeamServiceState>> RecordServiceStates(ServiceProvider serviceProvider, long roundId)
-        {
-            using (var scope = serviceProvider.CreateScope())
-            {
-                var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                return await db.CalculateRoundTeamServiceStates(scope.ServiceProvider, roundId);
-            }
-        }
-
         public static async Task CalculateAllPoints(ServiceProvider serviceProvider, long roundId, Dictionary<(long ServiceId, long TeamId), RoundTeamServiceState> newStates, JsonConfiguration config)
         {
             using (var scope = serviceProvider.CreateScope())
