@@ -329,13 +329,7 @@ namespace EnoCore
                 .Select(r => r.Id)
                 .FirstOrDefaultAsync(); //TODO handle 0
 
-            Logger.LogDebug(new EnoLogMessage()
-            {
-                Message = $"Handling {submissions.Count} submissions",
-                RoundId = currentRoundId,
-                Module = nameof(EnoDatabase),
-                Function = nameof(ProcessSubmissionsBatch)
-            });
+            Logger.Log(FlagsubmissionBatchProcessedMessage.Create(submissions.Count));
 
             var flagStrings = submissions
                 .Select(s => s.flag)

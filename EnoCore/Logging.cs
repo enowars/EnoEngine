@@ -97,5 +97,10 @@ namespace EnoCore
             Debug.WriteLine(JsonConvert.SerializeObject(message));
             Console.WriteLine($"{message.Timestamp} {message.Message}");
         }
+
+        public void Log(EnoStatisticMessage message)
+        {
+            Debug.WriteLine(JsonConvert.SerializeObject(message));
+        }
     }
 }

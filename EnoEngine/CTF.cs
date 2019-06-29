@@ -284,8 +284,12 @@ namespace EnoEngine.Game
                 var newStates = await EnoDatabaseUtils.RecordServiceStates(ServiceProvider, roundId);
                 await EnoDatabaseUtils.CalculateAllPoints(ServiceProvider, roundId, newStates, config);
             }
+            var jsonStopWatch = new Stopwatch();
+            jsonStopWatch.Start();
             var scoreboard = EnoDatabaseUtils.GetCurrentScoreboard(ServiceProvider, roundId);
             EnoCoreUtils.GenerateCurrentScoreboard(scoreboard, $"..{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}", roundId);
+            jsonStopWatch.Stop();
+            Logger.Log(ScoreboardJsonGenerationFinishedMessage.Create(jsonStopWatch.ElapsedMilliseconds));
             return DateTime.UtcNow;
         }
     }
