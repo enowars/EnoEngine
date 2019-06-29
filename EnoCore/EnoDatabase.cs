@@ -1180,14 +1180,30 @@ namespace EnoCore
                     {
                         _context.ServiceStatsSnapshots.AddRange(newSnapshots.Values);
                     }
-                    await _context.SaveChangesAsync();
+                    while (true)
+                    {
+                        try
+                        {
+                            await _context.SaveChangesAsync();
+                            break;
+                        }
+                        catch (SocketException e)
+                        {
+                            Logger.LogDebug(new EnoLogMessage()
+                            {
+                                Message = $"CalculatePoints retrying SaveChangesAsync because: {e}",
+                                RoundId = roundId
+                            });
+                            await Task.Delay(1);
+                        }
+                    }
                     break;
                 }
                 catch (SocketException e)
                 {
                     Logger.LogDebug(new EnoLogMessage()
                     {
-                        Message = $"CalculatePoints retrying fetches because: {e}",
+                        Message = $"CalculatePoints retrying because: {e}",
                         RoundId = roundId
                     });
                     await Task.Delay(1);
