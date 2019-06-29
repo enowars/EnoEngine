@@ -209,12 +209,19 @@ namespace EnoEngine.FlagSubmission
         {
             try
             {
+                var lastQueueMessageTimestamp = DateTime.UtcNow;
+                Logger.Log(FlagsubmissionQueueSizeMessage.Create(FlagInsertsQueue.Count));
                 while (!Token.IsCancellationRequested)
                 {
+                    if (DateTime.UtcNow.Subtract(lastQueueMessageTimestamp).Seconds > 5)
+                    {
+                        Logger.Log(FlagsubmissionQueueSizeMessage.Create(FlagInsertsQueue.Count));
+                        lastQueueMessageTimestamp = DateTime.UtcNow;
+                    }
                     var submissions = EnoCoreUtils.DrainQueue(FlagInsertsQueue, InsertSubmissionsBatchSize);
                     if (submissions.Count == 0)
                     {
-                        await Task.Delay(1);
+                        await Task.Delay(10);
                     }
                     else
                     {

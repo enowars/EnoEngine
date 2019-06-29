@@ -22,7 +22,6 @@ namespace FlagShooter
 {
     class Program
     {
-
         private static readonly CancellationTokenSource LauncherCancelSource = new CancellationTokenSource();
         private static readonly EnoLogger Logger = new EnoLogger(nameof(FlagShooter));
         private readonly ServiceProvider ServiceProvider;

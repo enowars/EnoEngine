@@ -11,6 +11,7 @@ namespace EnoCore.Models.Json
         public string Tool { get; set; }
         // Flag Submission
         public FlagsubmissionBatchProcessedMessage FlagsubmissionBatchProcessedMessage { get; set; }
+        public FlagsubmissionQueueSizeMessage FlagsubmissionQueueSize { get; set; }
         // Old Round
         public RecordServiceStatesFinishedMessage RecordServiceStatesFinishedMessage { get; set; }
         public CalculateServiceStatsFetchFinishedMessage CalculateServiceStatsFetchFinishedMessage { get; set; }
@@ -32,6 +33,22 @@ namespace EnoCore.Models.Json
                 FlagsubmissionBatchProcessedMessage = new FlagsubmissionBatchProcessedMessage()
                 {
                     FlagsProcessed = flagsProcessed
+                }
+            };
+        }
+    }
+
+    public class FlagsubmissionQueueSizeMessage
+    {
+        public long QueueSize { get; set; }
+
+        public static EnoStatisticMessage Create(long size)
+        {
+            return new EnoStatisticMessage()
+            {
+                FlagsubmissionQueueSize = new FlagsubmissionQueueSizeMessage()
+                {
+                    QueueSize = size
                 }
             };
         }
