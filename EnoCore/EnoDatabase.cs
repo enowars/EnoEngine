@@ -924,6 +924,7 @@ namespace EnoCore
                 .Where(sf => sf.RoundId > oldSnapshotsRoundId)
                 .GroupBy(sf => sf.FlagId)
                 .Select(g => new { g.Key, Amount = g.Count() })
+                .AsNoTracking()
                 .ToDictionaryAsync(g => g.Key);
 
             var stableCaptures = await _context.SubmittedFlags
@@ -931,6 +932,7 @@ namespace EnoCore
                 .Where(sf => sf.RoundId > oldSnapshotsRoundId)
                 .Where(sf => sf.RoundId <= newLatestSnapshotRoundId)
                 .GroupBy(sf => sf.AttackerTeamId) // this is not an SQL GroupBy, since we need the invidual flags
+                .AsNoTracking()
                 .ToDictionaryAsync(sf => sf.Key, sf => new { SubmittedFlags = sf.AsEnumerable() });
 
             var volatileCaptures = await _context.SubmittedFlags
@@ -938,6 +940,7 @@ namespace EnoCore
                 .Where(sf => sf.RoundId <= roundId)
                 .Where(sf => sf.RoundId > newLatestSnapshotRoundId)
                 .GroupBy(sf => sf.AttackerTeamId) // this is not an SQL GroupBy, since we need the invidual flags
+                .AsNoTracking()
                 .ToDictionaryAsync(sf => sf.Key, sf => new { SubmittedFlags = sf.AsEnumerable() });
 
             var stableLosses = await _context.SubmittedFlags
@@ -946,6 +949,7 @@ namespace EnoCore
                 .Where(sf => sf.RoundId <= newLatestSnapshotRoundId)
                 .Include(sf => sf.Flag)
                 .GroupBy(sf => sf.Flag.OwnerId) // this is not an SQL GroupBy, since we need the invidual flags
+                .AsNoTracking()
                 .ToDictionaryAsync(sf => sf.Key, sf => new { LostFlagIds = sf.AsEnumerable().Select(s => s.FlagId).Distinct() });
 
             var volatileLosses = await _context.SubmittedFlags
@@ -954,6 +958,7 @@ namespace EnoCore
                 .Where(sf => sf.RoundId > newLatestSnapshotRoundId)
                 .Include(sf => sf.Flag)
                 .GroupBy(sf => sf.Flag.OwnerId) // this is not an SQL GroupBy, since we need the invidual flags
+                .AsNoTracking()
                 .ToDictionaryAsync(sf => sf.Key, sf => new { LostFlagIds = sf.AsEnumerable().Select(s => s.FlagId).Distinct() });
 
             var newSnapshots = teams.ToDictionary(t => t.Id, t => new ServiceStatsSnapshot()
