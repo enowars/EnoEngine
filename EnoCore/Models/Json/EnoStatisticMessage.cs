@@ -13,6 +13,7 @@ namespace EnoCore.Models.Json
         public ScoreboardJsonGenerationFinishedMessage ScoreboardJsonGenerationFinishedMessage { get; set; }
         public RecordServiceStatesFinishedMessage RecordServiceStatesDoneMessage { get; set; }
         public CalculateServiceStatsFetchFinishedMessage CalculateServiceStatsFetchFinishedMessage { get; set; }
+        public StartNewRoundFinishedMessage StartNewRoundFinishedMessage { get; set; }
     }
 
     public class FlagsubmissionBatchProcessedMessage
@@ -57,6 +58,24 @@ namespace EnoCore.Models.Json
             return new EnoStatisticMessage()
             {
                 RecordServiceStatesDoneMessage = new RecordServiceStatesFinishedMessage()
+                {
+                    DurationInMillis = duration,
+                    RoundId = roundId
+                }
+            };
+        }
+    }
+
+    public class StartNewRoundFinishedMessage
+    {
+        [JsonProperty("round")]
+        public long RoundId { get; set; }
+        public long DurationInMillis { get; set; }
+        public static EnoStatisticMessage Create(long roundId, long duration)
+        {
+            return new EnoStatisticMessage()
+            {
+                StartNewRoundFinishedMessage = new StartNewRoundFinishedMessage()
                 {
                     DurationInMillis = duration,
                     RoundId = roundId

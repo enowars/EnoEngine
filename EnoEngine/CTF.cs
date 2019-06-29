@@ -31,6 +31,8 @@ namespace EnoEngine.Game
 
         public async Task<DateTime> StartNewRound()
         {
+            var startNewRoundStopwatch = new Stopwatch();
+            startNewRoundStopwatch.Start();
             await Lock.WaitAsync(Token);
             Logger.LogDebug(new EnoLogMessage()
             {
@@ -102,6 +104,8 @@ namespace EnoEngine.Game
                     RoundId = oldRound?.Id ?? 0,
                     Message = $"Scoreboard calculation for round {oldRound?.Id ?? 0} complete ({(oldRoundHandlingFinished - begin).ToString()})"
                 });
+                startNewRoundStopwatch.Stop();
+                Logger.Log(StartNewRoundFinishedMessage.Create(oldRound?.Id ?? 0, startNewRoundStopwatch.ElapsedMilliseconds));
             }
             catch (Exception e)
             {
