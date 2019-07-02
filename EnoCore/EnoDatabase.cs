@@ -327,7 +327,7 @@ namespace EnoCore
                 .OrderByDescending(r => r.Id)
                 .Select(r => r.Id)
                 .FirstAsync();
-            statement.Append("INSERT INTO \"SubmittedFlags\" (\"FlagId\", \"AttackerTeamId\", \"RoundId\", \"SubmissionsCount\")\nVALUES ");
+            statement.Append("insert into \"SubmittedFlags\" (\"FlagId\", \"AttackerTeamId\", \"RoundId\", \"SubmissionsCount\")\nvalues ");
             foreach (var (flag, attackerTeamId, result) in submissions)
             {
                 if (flag.GameRoundId + flagValidityInRounds >= roundId)
@@ -339,7 +339,7 @@ namespace EnoCore
                     var t = Task.Run(() => result.TrySetResult(FlagSubmissionResult.Old)); //TODO can multiple trysetresults cause harm?
                 }
             }
-            statement.Append("ON CONFLICT (\"AttackerTeamId\",\"FlagId\") DO UPDATE SET \"SubmissionsCount\" = \"SubmittedFlags\".\"SubmissionsCount\" + 1 returning \"SubmissionsCount\";");
+            statement.Append("on conflict (\"AttackerTeamId\",\"FlagId\") do update set \"SubmissionsCount\" = \"SubmittedFlags\".\"SubmissionsCount\" + 1 returning \"SubmissionsCount\";");
             var inserts = await _context.SubmittedFlags.FromSql(statement.ToString()).ToArrayAsync();
             for (int i = 0; i < submissions.Count; i++)
             {
