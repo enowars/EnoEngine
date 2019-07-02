@@ -503,7 +503,7 @@ namespace EnoCore
         public async Task<Round> GetLastRound(){
             var round = await _context.Rounds
                 .OrderByDescending(f => f.Id)
-                .FirstAsync();
+                .FirstOrDefaultAsync();
             return round;
         }
 

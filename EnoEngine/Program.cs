@@ -131,28 +131,24 @@ namespace EnoEngine
 
         private async Task AwaitOldRound(){
             var db = ServiceProvider.CreateScope().ServiceProvider.GetRequiredService<IEnoDatabase>();
-            Round lastround;
-            try{
-                lastround = await db.GetLastRound();
+            Round lastround = await db.GetLastRound();
+            var msg = "";
+            if(lastround == null){
+                msg = "No running round found";
             }
-            catch{
-                Logger.LogInfo(new EnoLogMessage()
-                {
-                    Module = nameof(EnoEngine),
-                    Function = nameof(AwaitOldRound),
-                    Message = "No old round found"
-                });
-                return;
-            }
-            if(lastround.End > DateTime.Now){
-                Logger.LogInfo(new EnoLogMessage()
-                {
-                    Module = nameof(EnoEngine),
-                    Function = nameof(AwaitOldRound),
-                    Message = "EnoEngine waits for old rounds after restart"
-                });
+            else if(lastround.End > DateTime.Now){
+                msg = "EnoEngine waits for running round";
                 await Task.Delay(Math.Abs(lastround.End.Millisecond - DateTime.Now.Millisecond));
             }
+            else{
+                msg = "All previous rounds are finished";
+            }
+            Logger.LogInfo(new EnoLogMessage()
+                {
+                    Module = nameof(EnoEngine),
+                    Function = nameof(AwaitOldRound),
+                    Message = msg
+                });
         }
 
         public static void Main(string[] args)
