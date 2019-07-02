@@ -47,7 +47,7 @@ namespace FlagShooter
                     tcpClient.Connect("localhost", 1338);
                     (TcpClient tcpClient, StreamReader, StreamWriter writer) client = (tcpClient, new StreamReader(tcpClient.GetStream()), new StreamWriter(tcpClient.GetStream()));
                     client.writer.AutoFlush = true;
-                    client.writer.Write($"{i + 1 + 200}\n");
+                    client.writer.Write($"{i + 200}\n");
                     TeamSockets[i + 1][j] = client;
                 }
             }
