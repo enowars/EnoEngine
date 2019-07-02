@@ -354,6 +354,7 @@ namespace EnoCore
                     var t = Task.Run(() => submissions[i].result.TrySetResult(FlagSubmissionResult.Duplicate));
                 }
             }
+            Logger.Log(FlagsubmissionBatchProcessedMessage.Create(submissions.Count));
         }
 
         public async Task<(Round, Round, List<Flag>, List<Noise>, List<Havoc>)> CreateNewRound(DateTime begin, DateTime q2, DateTime q3, DateTime q4, DateTime end)
