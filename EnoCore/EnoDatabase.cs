@@ -335,7 +335,7 @@ namespace EnoCore
             {
                 if (flag.GameRoundId + flagValidityInRounds >= roundId)
                 {
-                    if (acceptedSubmissionsSet.Contains((flag.Id, attackerTeamId)))
+                    if (!acceptedSubmissionsSet.Contains((flag.Id, attackerTeamId)))
                     {
                         acceptedSubmissions.Add(result);
                         acceptedSubmissionsSet.Add((flag.Id, attackerTeamId));
