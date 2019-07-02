@@ -375,6 +375,11 @@ namespace EnoEngine.Game
             {
                 stopWatch.Stop();
                 Logger.Log(RecordServiceStatesFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
+                Logger.LogInfo(new EnoLogMessage()
+                {
+                    Message = $"RecordServiceStates took {stopWatch.ElapsedMilliseconds}ms",
+                    RoundId = roundId
+                });
             }
         }
     }

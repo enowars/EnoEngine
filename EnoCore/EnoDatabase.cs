@@ -324,6 +324,8 @@ namespace EnoCore
         public async Task ProcessSubmissionsBatch(List<(Flag flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult> result)> submissions, long flagValidityInRounds)
         {
             var statement = new StringBuilder();
+            var acceptedSubmissions = new List<TaskCompletionSource<FlagSubmissionResult>>(submissions.Count);
+            var acceptedSubmissionsSet = new HashSet<(long, long)>();
             long roundId = await _context.Rounds
                 .OrderByDescending(r => r.Id)
                 .Select(r => r.Id)
@@ -333,7 +335,12 @@ namespace EnoCore
             {
                 if (flag.GameRoundId + flagValidityInRounds >= roundId)
                 {
-                    statement.Append($"({flag.Id}, {attackerTeamId}, {roundId}, 1),");
+                    if (acceptedSubmissionsSet.Contains((flag.Id, attackerTeamId)))
+                    {
+                        acceptedSubmissions.Add(result);
+                        acceptedSubmissionsSet.Add((flag.Id, attackerTeamId));
+                        statement.Append($"({flag.Id}, {attackerTeamId}, {roundId}, 1),");
+                    }
                 }
                 else
                 {
@@ -343,15 +350,15 @@ namespace EnoCore
             statement.Length--; // Pointers are fun!
             statement.Append("\non conflict (\"AttackerTeamId\",\"FlagId\") do update set \"SubmissionsCount\" = \"SubmittedFlags\".\"SubmissionsCount\" + 1 returning \"Id\", \"AttackerTeamId\", \"RoundId\", \"FlagId\", \"SubmissionsCount\";");
             var inserts = await _context.SubmittedFlags.FromSql(statement.ToString()).ToArrayAsync();
-            for (int i = 0; i < submissions.Count; i++)
+            for (int i = 0; i < acceptedSubmissions.Count; i++)
             {
                 if (inserts[i].SubmissionsCount == 1)
                 {
-                    var t = Task.Run(() => submissions[i].result.TrySetResult(FlagSubmissionResult.Ok));
+                    var t = Task.Run(() => acceptedSubmissions[i].TrySetResult(FlagSubmissionResult.Ok));
                 }
                 else
                 {
-                    var t = Task.Run(() => submissions[i].result.TrySetResult(FlagSubmissionResult.Duplicate));
+                    var t = Task.Run(() => acceptedSubmissions[i].TrySetResult(FlagSubmissionResult.Duplicate));
                 }
             }
             Logger.Log(FlagsubmissionBatchProcessedMessage.Create(submissions.Count));
