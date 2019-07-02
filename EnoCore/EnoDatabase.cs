@@ -332,14 +332,15 @@ namespace EnoCore
             {
                 if (flag.GameRoundId + flagValidityInRounds >= roundId)
                 {
-                    statement.Append($"(${flag.Id}, ${attackerTeamId}, ${roundId}, 1)");
+                    statement.Append($"(${flag.Id}, ${attackerTeamId}, ${roundId}, 1),");
                 }
                 else
                 {
                     var t = Task.Run(() => result.TrySetResult(FlagSubmissionResult.Old)); //TODO can multiple trysetresults cause harm?
                 }
             }
-            statement.Append("on conflict (\"AttackerTeamId\",\"FlagId\") do update set \"SubmissionsCount\" = \"SubmittedFlags\".\"SubmissionsCount\" + 1 returning \"SubmissionsCount\";");
+            statement.Length--; // Pointers are fun!
+            statement.Append("\non conflict (\"AttackerTeamId\",\"FlagId\") do update set \"SubmissionsCount\" = \"SubmittedFlags\".\"SubmissionsCount\" + 1 returning \"SubmissionsCount\";");
             var inserts = await _context.SubmittedFlags.FromSql(statement.ToString()).ToArrayAsync();
             for (int i = 0; i < submissions.Count; i++)
             {
