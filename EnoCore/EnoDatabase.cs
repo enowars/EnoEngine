@@ -333,7 +333,7 @@ namespace EnoCore
             {
                 if (flag.GameRoundId + flagValidityInRounds >= roundId)
                 {
-                    statement.Append($"(${flag.Id}, ${attackerTeamId}, ${roundId}, 1),");
+                    statement.Append($"({flag.Id}, {attackerTeamId}, {roundId}, 1),");
                 }
                 else
                 {
@@ -341,12 +341,14 @@ namespace EnoCore
                 }
             }
             statement.Length--; // Pointers are fun!
-            statement.Append("\non conflict (\"AttackerTeamId\",\"FlagId\") do update set \"SubmissionsCount\" = \"SubmittedFlags\".\"SubmissionsCount\" + 1 returning \"SubmissionsCount\";");
+            statement.Append("\non conflict (\"AttackerTeamId\",\"FlagId\") do update set \"SubmissionsCount\" = \"SubmittedFlags\".\"SubmissionsCount\" + 1 returning \"SubmittedFlags\";");
+            var inserts = await _context.SubmittedFlags.FromSql(statement.ToString()).ToArrayAsync();
+            /*
             using (var command = _context.Database.GetDbConnection().CreateCommand())
             {
                 command.CommandText = statement.ToString();
                 await _context.Database.OpenConnectionAsync();
-                using (var result = command.ExecuteReader())
+                using (var result = await command.ExecuteReaderAsync())
                 {
                     for (int i = 0; i < submissions.Count; i++)
                     {
@@ -362,7 +364,7 @@ namespace EnoCore
                     }
                 }
             }
-            //var inserts = await _context.SubmittedFlags.FromSql(statement.ToString()).ToArrayAsync();
+            */
         }
 
         public async Task<(Round, Round, List<Flag>, List<Noise>, List<Havoc>)> CreateNewRound(DateTime begin, DateTime q2, DateTime q3, DateTime q4, DateTime end)
@@ -532,6 +534,7 @@ namespace EnoCore
                 tasks[i] = checkerTask;
                 firstFlagTime = firstFlagTime.AddSeconds(timeDiff);
                 i++;
+                Console.WriteLine(flag);
             }
 
             var tasks_start_time = tasks.Select(x => x.StartTime).ToList();
