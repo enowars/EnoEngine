@@ -85,6 +85,8 @@ namespace EnoEngine
         {
             try
             {
+                //Check if there is an old round running
+                CheckForOldRound();
                 while (!EngineCancelSource.IsCancellationRequested)
                 {
                     var end = await EnoGame.StartNewRound();
@@ -124,6 +126,21 @@ namespace EnoEngine
                         serializer.Serialize(jw, new JsonConfiguration());
                     }
                 }
+            }
+        }
+
+        private async void CheckForOldRound(){
+            var db = ServiceProvider.CreateScope().ServiceProvider.GetRequiredService<IEnoDatabase>();
+            Round lastround;
+            try{
+                lastround = await db.GetLastRound();
+            }
+            catch{
+                //No round there
+                return;
+            }
+            if(lastround.End > DateTime.Now){
+                await Task.Delay(Math.Abs(lastround.End.Millisecond - DateTime.Now.Millisecond));
             }
         }
 

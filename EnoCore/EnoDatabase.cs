@@ -53,6 +53,7 @@ namespace EnoCore
         Task InsertRetrieveCurrentNoisesTasks(Round currentRound, List<Noise> currentNoises, JsonConfiguration config);
         Task<List<CheckerTask>> RetrievePendingCheckerTasks(int maxAmount);
         Task CalculateTotalPoints();
+        Task<Round> GetLastRound();
         EnoEngineScoreboard GetCurrentScoreboard(long roundId);
         /*Task UpdateTeamServiceStatsAndFillSnapshot(Service service, long teamsCount, long roundId, long teamId,
             ServiceStatsSnapshot oldSnapshot, ServiceStatsSnapshot newSnapshot,
@@ -497,6 +498,13 @@ namespace EnoCore
                 .Take(maxAmount)
                 .ToArrayAsync();
             return flags;
+        }
+
+        public async Task<Round> GetLastRound(){
+            var round = await _context.Rounds
+                .OrderByDescending(f => f.Id)
+                .FirstAsync();
+            return round;
         }
 
         public async Task InsertPutFlagsTasks(long roundId, DateTime firstFlagTime, JsonConfiguration config)
