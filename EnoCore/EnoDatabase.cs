@@ -16,6 +16,7 @@ using System.Runtime.InteropServices;
 using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net.Sockets;
+using System.Data;
 
 namespace EnoCore
 {
@@ -341,18 +342,27 @@ namespace EnoCore
             }
             statement.Length--; // Pointers are fun!
             statement.Append("\non conflict (\"AttackerTeamId\",\"FlagId\") do update set \"SubmissionsCount\" = \"SubmittedFlags\".\"SubmissionsCount\" + 1 returning \"SubmissionsCount\";");
-            var inserts = await _context.SubmittedFlags.FromSql(statement.ToString()).ToArrayAsync();
-            for (int i = 0; i < submissions.Count; i++)
+            using (var command = _context.Database.GetDbConnection().CreateCommand())
             {
-                if (inserts[i].SubmissionsCount == 1)
+                command.CommandText = statement.ToString();
+                await _context.Database.OpenConnectionAsync();
+                using (var result = command.ExecuteReader())
                 {
-                    var t = Task.Run(() => submissions[i].result.TrySetResult(FlagSubmissionResult.Ok));
-                }
-                else
-                {
-                    var t = Task.Run(() => submissions[i].result.TrySetResult(FlagSubmissionResult.Duplicate));
+                    for (int i = 0; i < submissions.Count; i++)
+                    {
+                        var record = (IDataRecord)result.NextResultAsync();
+                        if ((long) record[0] == 1)
+                        {
+                            var t = Task.Run(() => submissions[i].result.TrySetResult(FlagSubmissionResult.Ok));
+                        }
+                        else
+                        {
+                            var t = Task.Run(() => submissions[i].result.TrySetResult(FlagSubmissionResult.Duplicate));
+                        }
+                    }
                 }
             }
+            //var inserts = await _context.SubmittedFlags.FromSql(statement.ToString()).ToArrayAsync();
         }
 
         public async Task<(Round, Round, List<Flag>, List<Noise>, List<Havoc>)> CreateNewRound(DateTime begin, DateTime q2, DateTime q3, DateTime q4, DateTime end)
