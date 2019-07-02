@@ -86,7 +86,7 @@ namespace EnoEngine
             try
             {
                 //Check if there is an old round running
-                CheckForOldRound();
+                await AwaitOldRound();
                 while (!EngineCancelSource.IsCancellationRequested)
                 {
                     var end = await EnoGame.StartNewRound();
@@ -129,17 +129,28 @@ namespace EnoEngine
             }
         }
 
-        private async void CheckForOldRound(){
+        private async Task AwaitOldRound(){
             var db = ServiceProvider.CreateScope().ServiceProvider.GetRequiredService<IEnoDatabase>();
             Round lastround;
             try{
                 lastround = await db.GetLastRound();
             }
             catch{
-                //No round there
+                Logger.LogInfo(new EnoLogMessage()
+                {
+                    Module = nameof(EnoEngine),
+                    Function = nameof(AwaitOldRound),
+                    Message = "No old round found"
+                })
                 return;
             }
             if(lastround.End > DateTime.Now){
+                Logger.LogInfo(new EnoLogMessage()
+                {
+                    Module = nameof(EnoEngine),
+                    Function = nameof(AwaitOldRound),
+                    Message = "EnoEngine waits for old rounds after restart"
+                });
                 await Task.Delay(Math.Abs(lastround.End.Millisecond - DateTime.Now.Millisecond));
             }
         }
