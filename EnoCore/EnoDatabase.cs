@@ -349,16 +349,19 @@ namespace EnoCore
             }
             statement.Length--; // Pointers are fun!
             statement.Append("\non conflict (\"AttackerTeamId\",\"FlagId\") do update set \"SubmissionsCount\" = \"SubmittedFlags\".\"SubmissionsCount\" + 1 returning \"Id\", \"AttackerTeamId\", \"RoundId\", \"FlagId\", \"SubmissionsCount\";");
-            var inserts = await _context.SubmittedFlags.FromSql(statement.ToString()).ToArrayAsync();
-            for (int i = 0; i < acceptedSubmissions.Count; i++)
+            if (acceptedSubmissions.Count > 0)
             {
-                if (inserts[i].SubmissionsCount == 1)
+                var inserts = await _context.SubmittedFlags.FromSql(statement.ToString()).ToArrayAsync();
+                for (int i = 0; i < acceptedSubmissions.Count; i++)
                 {
-                    var t = Task.Run(() => acceptedSubmissions[i].TrySetResult(FlagSubmissionResult.Ok));
-                }
-                else
-                {
-                    var t = Task.Run(() => acceptedSubmissions[i].TrySetResult(FlagSubmissionResult.Duplicate));
+                    if (inserts[i].SubmissionsCount == 1)
+                    {
+                        var t = Task.Run(() => acceptedSubmissions[i].TrySetResult(FlagSubmissionResult.Ok));
+                    }
+                    else
+                    {
+                        var t = Task.Run(() => acceptedSubmissions[i].TrySetResult(FlagSubmissionResult.Duplicate));
+                    }
                 }
             }
             Logger.Log(FlagsubmissionBatchProcessedMessage.Create(submissions.Count));
