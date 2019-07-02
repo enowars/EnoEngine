@@ -29,6 +29,19 @@ namespace EnoCore
         [ThreadStatic]
         private static Random _local;
 
+        public static void NextBytes(byte[] array)
+        {
+            Random inst = _local;
+            if (inst == null)
+            {
+                byte[] buffer = new byte[4];
+                _global.GetBytes(buffer);
+                _local = inst = new Random(
+                    BitConverter.ToInt32(buffer, 0));
+            }
+            inst.NextBytes(array);
+        }
+
         public static int Next()
         {
             Random inst = _local;
@@ -50,7 +63,6 @@ namespace EnoCore
     public class EnoCoreUtils
     {
         const int DATABASE_RETRIES = 50;
-        internal static readonly RNGCryptoServiceProvider Random = new RNGCryptoServiceProvider();
         internal static readonly int ENTROPY_IN_BYTES = 8;
         internal static readonly byte[] FLAG_SIGNING_KEY = Encoding.ASCII.GetBytes("suchasecretstornkkeytheywillneverguess");
         internal static readonly byte[] NOISE_SIGNING_KEY = Encoding.ASCII.GetBytes("anotherstrenksecrettheyvref24tr");
@@ -202,22 +214,19 @@ namespace EnoCore
         }
 
 
-        internal static string GenerateSignedNoise(int roundId, int teamId)
+        internal static string GenerateNoise()
         {
-            using (HMACSHA1 hmacsha1 = new HMACSHA1(NOISE_SIGNING_KEY))
-            {
-                return "ENONOIS"; //TODO GeneratedSignedString(hmacsha1, roundId, teamId);
-            }
+            var noiseContent = new byte[sizeof(int) * 3 + ENTROPY_IN_BYTES];
+            ThreadSafeRandom.NextBytes(noiseContent);
+            return Convert.ToBase64String(noiseContent);
         }
 
-        internal static byte[] GetFlagEntropy()
+        internal static byte[] GenerateFlagEntropy()
         {
             var entropy = new byte[ENTROPY_IN_BYTES];
-            Random.GetBytes(entropy);
+            ThreadSafeRandom.NextBytes(entropy);
             return entropy;
         }
-
-
 
         public static async Task DelayUntil(DateTime time, CancellationToken token)
         {

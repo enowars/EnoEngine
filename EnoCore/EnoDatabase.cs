@@ -404,7 +404,7 @@ namespace EnoCore
                         var flag = new Flag()
                         {
                             Owner = team,
-                            Entropy = EnoCoreUtils.GetFlagEntropy(),
+                            Entropy = EnoCoreUtils.GenerateFlagEntropy(),
                             ServiceId = service.Id,
                             RoundOffset = i,
                             GameRound = round
@@ -429,7 +429,7 @@ namespace EnoCore
                         var noise = new Noise()
                         {
                             Owner = team,
-                            StringRepresentation = EnoCoreUtils.GenerateSignedNoise((int)round.Id, (int)team.Id),
+                            StringRepresentation = EnoCoreUtils.GenerateNoise(),
                             ServiceId = service.Id,
                             RoundOffset = i,
                             GameRound = round
