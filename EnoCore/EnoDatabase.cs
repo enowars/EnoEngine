@@ -39,7 +39,7 @@ namespace EnoCore
     public interface IEnoDatabase
     {
         DBInitializationResult ApplyConfig(JsonConfiguration configuration);
-        Task ProcessSubmissionsBatch(List<(string flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult> result)> submissions);
+        Task ProcessSubmissionsBatch(List<(Flag flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult> result)> submissions, long flagValidityInRounds);
         Task<(Round, Round, List<Flag>, List<Noise>, List<Havoc>)> CreateNewRound(DateTime begin, DateTime q2, DateTime q3, DateTime q4, DateTime end);
         Task<Dictionary<(long ServiceId, long TeamId), RoundTeamServiceState>> CalculateRoundTeamServiceStates(IServiceProvider serviceProvider, long roundId);
         Task InsertPutFlagsTasks(long roundId, DateTime firstFlagTime, JsonConfiguration config);
@@ -320,77 +320,37 @@ namespace EnoCore
             };
         }
 
-        public async Task ProcessSubmissionsBatch(List<(string flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult> result)> submissions)
+        public async Task ProcessSubmissionsBatch(List<(Flag flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult> result)> submissions, long flagValidityInRounds)
         {
-            var uniqueSubmissions = new HashSet<(string flag, long attackerTeamid)>(submissions.Count);
-            var acceptedSubmissions = new List<SubmittedFlag>(submissions.Count);
-            var oks = new List<TaskCompletionSource<FlagSubmissionResult>>(submissions.Count);
-
-            var currentRoundId = await _context.Rounds
+            var statement = new StringBuilder();
+            long roundId = await _context.Rounds
                 .OrderByDescending(r => r.Id)
                 .Select(r => r.Id)
-                .FirstOrDefaultAsync(); //TODO handle 0
-
-            Logger.Log(FlagsubmissionBatchProcessedMessage.Create(submissions.Count));
-
-            var flagStrings = submissions
-                .Select(s => s.flag)
-                .ToHashSet();
-
-            var flags = await _context.Flags
-                .TagWith("ProcessSubmissionsBatch:flags")
-                .Where(f => flagStrings.Contains(f.StringRepresentation))
-                .ToArrayAsync();
-
-            var flagIds = flags.Select(f => f.Id);
-            var flagDict = flags.ToDictionary(f => f.StringRepresentation);
-
-            var previousSubmissions = await _context.SubmittedFlags
-                .TagWith("ProcessSubmissionsBatch:previousSubmissions")
-                .Where(f => flagIds.Contains(f.FlagId))
-                .ToDictionaryAsync(f => (f.Flag.StringRepresentation, f.AttackerTeamId));
-
-            for (int i = 0; i < submissions.Count; i++)
+                .FirstAsync();
+            statement.Append("INSERT INTO \"SubmittedFlags\" (\"FlagId\", \"AttackerTeamId\", \"RoundId\", \"SubmissionsCount\")\nVALUES ");
+            foreach (var (flag, attackerTeamId, result) in submissions)
             {
-                var submission = submissions[i];
-                if (previousSubmissions.ContainsKey((submission.flag, submission.attackerTeamId)) ||
-                    uniqueSubmissions.Contains((submission.flag, submission.attackerTeamId)))
+                if (flag.GameRoundId + flagValidityInRounds >= roundId)
                 {
-                    var _ = Task.Run(() => submission.result.SetResult(FlagSubmissionResult.Duplicate));
+                    statement.Append($"(${flag.Id}, ${attackerTeamId}, ${roundId}, 1)");
                 }
                 else
                 {
-                    if (flagDict.ContainsKey(submission.flag))
-                    {
-                        var flag = flagDict[submission.flag];
-                        if (flag.OwnerId == submission.attackerTeamId)
-                        {
-                            var t = Task.Run(() => submission.result.SetResult(FlagSubmissionResult.Own));
-                        }
-                        else
-                        {
-                            acceptedSubmissions.Add(new SubmittedFlag()
-                            {
-                                FlagId = flag.Id,
-                                AttackerTeamId = submission.attackerTeamId,
-                                RoundId = currentRoundId
-                            });
-                            oks.Add(submission.result);
-                            uniqueSubmissions.Add((submission.flag, submission.attackerTeamId));
-                        }
-                    }
-                    else
-                    {
-                        var t = Task.Run(() => submission.result.SetResult(FlagSubmissionResult.Invalid));
-                    }
+                    var t = Task.Run(() => result.TrySetResult(FlagSubmissionResult.Old)); //TODO can multiple trysetresults cause harm?
                 }
             }
-
-            _context.AddRange(acceptedSubmissions);
-            await _context.SaveChangesAsync();
-            foreach (var ok in oks)
+            statement.Append("ON CONFLICT (\"AttackerTeamId\",\"FlagId\") DO UPDATE SET \"SubmissionsCount\" = \"SubmittedFlags\".\"SubmissionsCount\" + 1 returning \"SubmissionsCount\";");
+            var inserts = await _context.SubmittedFlags.FromSql(statement.ToString()).ToArrayAsync();
+            for (int i = 0; i < submissions.Count; i++)
             {
-                var t = Task.Run(() => ok.SetResult(FlagSubmissionResult.Ok));
+                if (inserts[i].SubmissionsCount == 1)
+                {
+                    var t = Task.Run(() => submissions[i].result.TrySetResult(FlagSubmissionResult.Ok));
+                }
+                else
+                {
+                    var t = Task.Run(() => submissions[i].result.TrySetResult(FlagSubmissionResult.Duplicate));
+                }
             }
         }
 
@@ -431,7 +391,7 @@ namespace EnoCore
                         var flag = new Flag()
                         {
                             Owner = team,
-                            StringRepresentation = EnoCoreUtils.GenerateSignedFlag((int)round.Id, (int)team.Id),
+                            Entropy = EnoCoreUtils.GetFlagEntropy(),
                             ServiceId = service.Id,
                             RoundOffset = i,
                             GameRound = round
@@ -545,7 +505,7 @@ namespace EnoCore
                     Address = $"service{flag.ServiceId}.team{flag.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
                     MaxRunningTime = maxRunningTime,
-                    Payload = flag.StringRepresentation,
+                    Payload = flag.ToString(),
                     RelatedRoundId = flag.GameRoundId,
                     CurrentRoundId = flag.GameRoundId,
                     StartTime = firstFlagTime,
@@ -559,7 +519,6 @@ namespace EnoCore
                     RoundLength = config.RoundLengthInSeconds
                 };
                 tasks[i] = checkerTask;
-                flag.PutTask = checkerTask;
                 firstFlagTime = firstFlagTime.AddSeconds(timeDiff);
                 i++;
             }
@@ -667,7 +626,7 @@ namespace EnoCore
                     Address = $"service{flag.ServiceId}.team{flag.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
                     MaxRunningTime = maxRunningTime,
-                    Payload = flag.StringRepresentation,
+                    Payload = flag.ToString(),
                     CurrentRoundId = flag.GameRoundId,
                     RelatedRoundId = flag.GameRoundId,
                     StartTime = q3,
@@ -696,9 +655,6 @@ namespace EnoCore
                 .TagWith("InsertRetrieveOldFlagsTasks:oldFlags")
                 .Where(f => f.GameRoundId  >= currentRound.Id - oldRoundsCount) // TODO skipped IDs
                 .Where(f => f.GameRoundId != currentRound.Id)
-                .Where(f => f.PutTaskId != null)
-                .Include(f => f.PutTask)
-                .Where(f => f.PutTask.CheckerResult != CheckerResult.CheckerError)
                 .Include(f => f.Owner)
                 .Include(f => f.Service)
                 .AsNoTracking()
@@ -715,7 +671,7 @@ namespace EnoCore
                     Address = $"service{oldFlag.ServiceId}.team{oldFlag.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
                     MaxRunningTime = quarterRound,
-                    Payload = oldFlag.StringRepresentation,
+                    Payload = oldFlag.ToString(),
                     RelatedRoundId = oldFlag.GameRoundId,
                     CurrentRoundId = currentRound.Id,
                     StartTime = time,

@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EnoCore.Migrations
 {
     [DbContext(typeof(EnoDatabaseContext))]
-    [Migration("20190620220926_m1")]
+    [Migration("20190702014143_m1")]
     partial class m1
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -156,25 +156,21 @@ namespace EnoCore.Migrations
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<byte[]>("Entropy");
+
                     b.Property<long>("GameRoundId");
 
                     b.Property<long>("OwnerId");
 
-                    b.Property<long?>("PutTaskId");
-
                     b.Property<int>("RoundOffset");
 
                     b.Property<long>("ServiceId");
-
-                    b.Property<string>("StringRepresentation");
 
                     b.HasKey("Id");
 
                     b.HasIndex("GameRoundId");
 
                     b.HasIndex("OwnerId");
-
-                    b.HasIndex("PutTaskId");
 
                     b.HasIndex("ServiceId");
 
@@ -285,8 +281,7 @@ namespace EnoCore.Migrations
 
                     b.Property<long>("RoundId");
 
-                    b.Property<long>("SubmissionsCount")
-                        .IsConcurrencyToken();
+                    b.Property<long>("SubmissionsCount");
 
                     b.HasKey("Id");
 
@@ -398,10 +393,6 @@ namespace EnoCore.Migrations
                         .WithMany()
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("EnoCore.Models.Database.CheckerTask", "PutTask")
-                        .WithMany()
-                        .HasForeignKey("PutTaskId");
 
                     b.HasOne("EnoCore.Models.Service", "Service")
                         .WithMany()

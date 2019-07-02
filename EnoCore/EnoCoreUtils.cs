@@ -50,10 +50,10 @@ namespace EnoCore
     public class EnoCoreUtils
     {
         const int DATABASE_RETRIES = 50;
-        private static readonly RNGCryptoServiceProvider Random = new RNGCryptoServiceProvider();
-        private static readonly int ENTROPY_IN_BYTES = 8;
-        private static readonly byte[] FLAG_SIGNING_KEY = Encoding.ASCII.GetBytes("suchasecretstornkkeytheywillneverguess");
-        private static readonly byte[] NOISE_SIGNING_KEY = Encoding.ASCII.GetBytes("anotherstrenksecrettheyvref24tr");
+        internal static readonly RNGCryptoServiceProvider Random = new RNGCryptoServiceProvider();
+        internal static readonly int ENTROPY_IN_BYTES = 8;
+        internal static readonly byte[] FLAG_SIGNING_KEY = Encoding.ASCII.GetBytes("suchasecretstornkkeytheywillneverguess");
+        internal static readonly byte[] NOISE_SIGNING_KEY = Encoding.ASCII.GetBytes("anotherstrenksecrettheyvref24tr");
         public static string PostgresDomain => Environment.GetEnvironmentVariable("DATABASE_DOMAIN") ?? "localhost";
         public static string PostgresConnectionString => $@"Server={PostgresDomain};Port=5432;Database=EnoDatabase;User Id=docker;Password=docker;Timeout=15;SslMode=Disable;";
 
@@ -201,52 +201,23 @@ namespace EnoCore
             File.WriteAllText($"{path}scoreboard.json", json);
         }
 
-        internal static string GenerateSignedFlag(int roundId, int teamid)
-        {
-            using (HMACSHA1 hmacsha1 = new HMACSHA1(FLAG_SIGNING_KEY))
-            {
-                return GeneratedSignedString(hmacsha1, roundId, teamid);
-            }
-        }
 
         internal static string GenerateSignedNoise(int roundId, int teamId)
         {
             using (HMACSHA1 hmacsha1 = new HMACSHA1(NOISE_SIGNING_KEY))
             {
-                return GeneratedSignedString(hmacsha1, roundId, teamId);
+                return "ENONOIS"; //TODO GeneratedSignedString(hmacsha1, roundId, teamId);
             }
         }
 
-        public static bool IsValidFlag(string input)
+        internal static byte[] GetFlagEntropy()
         {
-            try
-            {
-                var flag = input.Substring(3);
-                var flagBytes = Convert.FromBase64String(flag);
-                var flagContent = new ArraySegment<byte>(flagBytes, 0, sizeof(int) + ENTROPY_IN_BYTES);
-                var flagSignature = new ArraySegment<byte>(flagBytes, sizeof(int) + ENTROPY_IN_BYTES,
-                                                           flagBytes.Length - sizeof(int) - ENTROPY_IN_BYTES);
-                using (HMACSHA1 hmacsha1 = new HMACSHA1(FLAG_SIGNING_KEY))
-                {
-                    byte[] hash = hmacsha1.ComputeHash(flagBytes, 0, sizeof(int) + ENTROPY_IN_BYTES);
-                    return flagSignature.SequenceEqual(hash);
-                }
-            }
-            catch (Exception) { }
-            return false;
+            var entropy = new byte[ENTROPY_IN_BYTES];
+            Random.GetBytes(entropy);
+            return entropy;
         }
 
-        private static string GeneratedSignedString(HMAC hmac, int roundId, int teamId)
-        {
-            byte[] flagContent = new byte[sizeof(int) + ENTROPY_IN_BYTES];
-            Random.GetBytes(flagContent, sizeof(int), ENTROPY_IN_BYTES);
-            BitConverter.GetBytes(roundId).CopyTo(flagContent, 0);
-            byte[] flagSignature = hmac.ComputeHash(flagContent);
-            byte[] flag = new byte[flagContent.Length + flagSignature.Length];
-            flagContent.CopyTo(flag, 0);
-            flagSignature.CopyTo(flag, flagContent.Length);
-            return "ENO" + Convert.ToBase64String(flag);
-        }
+
 
         public static async Task DelayUntil(DateTime time, CancellationToken token)
         {

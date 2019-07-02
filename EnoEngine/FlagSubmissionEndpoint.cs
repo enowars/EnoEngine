@@ -1,4 +1,5 @@
 ﻿using EnoCore;
+using EnoCore.Models;
 using EnoCore.Models.Json;
 using EnoEngine.Game;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,8 +18,8 @@ namespace EnoEngine.FlagSubmission
 {
     class FlagSubmissionEndpoint
     {
-        private static readonly ConcurrentQueue<(string flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult> tcs)> FlagInsertsQueue
-            = new ConcurrentQueue<(string, long, TaskCompletionSource<FlagSubmissionResult>)>();
+        private static readonly ConcurrentQueue<(Flag flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult> tcs)> FlagInsertsQueue
+            = new ConcurrentQueue<(Flag, long, TaskCompletionSource<FlagSubmissionResult>)>();
         private static readonly EnoLogger Logger = new EnoLogger(nameof(EnoEngine));
         const int InsertSubmissionsRetries = 16;
         const int InsertSubmissionsBatchSize = 1000;
@@ -181,17 +182,18 @@ namespace EnoEngine.FlagSubmission
             }
         }
 
-        private async Task<FlagSubmissionResult> HandleFlagSubmission(string flag, long attackerTeamId)
+        private async Task<FlagSubmissionResult> HandleFlagSubmission(string flagString, long attackerTeamId)
         {
-            if (!EnoCoreUtils.IsValidFlag(flag))
-            {
-                return FlagSubmissionResult.Invalid;
-            }
             try
             {
-                var tcs = new TaskCompletionSource<FlagSubmissionResult>();
-                FlagInsertsQueue.Enqueue((flag, attackerTeamId, tcs));
-                return await tcs.Task;
+                var flag = Flag.FromString(flagString);
+                if (flag != null)
+                {
+                    var tcs = new TaskCompletionSource<FlagSubmissionResult>();
+                    FlagInsertsQueue.Enqueue((flag, attackerTeamId, tcs));
+                    return await tcs.Task;
+                }
+                return FlagSubmissionResult.Invalid;
             }
             catch (Exception e)
             {
@@ -232,7 +234,7 @@ namespace EnoEngine.FlagSubmission
                                 using (var scope = ServiceProvider.CreateScope())
                                 {
                                     var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                                    await db.ProcessSubmissionsBatch(submissions);
+                                    await db.ProcessSubmissionsBatch(submissions, Program.Configuration.FlagValidityInRounds);
                                 }
                             });
                         }
