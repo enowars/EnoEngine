@@ -489,6 +489,7 @@ namespace EnoCore
         {
             var flags = await _context.Flags
                 .OrderByDescending(f => f.Id)
+                .Where(f => f.OwnerId <= 50)
                 .AsNoTracking()
                 .Take(maxAmount)
                 .ToArrayAsync();
