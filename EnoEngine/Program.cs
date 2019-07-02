@@ -141,7 +141,7 @@ namespace EnoEngine
                     Module = nameof(EnoEngine),
                     Function = nameof(AwaitOldRound),
                     Message = "No old round found"
-                })
+                });
                 return;
             }
             if(lastround.End > DateTime.Now){
