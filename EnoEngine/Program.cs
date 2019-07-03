@@ -151,7 +151,7 @@ namespace EnoEngine
         {
             Log.Logger = new LoggerConfiguration()
                 .WriteTo.Async(a => a.File("../data/engine.log",
-                    outputTemplate: "{Message}"))
+                    outputTemplate: "{Message}{NewLine}"))
                 .CreateLogger();
 
             Logger.LogInfo(new EnoLogMessage()
