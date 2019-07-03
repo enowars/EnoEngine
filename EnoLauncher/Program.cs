@@ -124,11 +124,11 @@ namespace EnoLauncher
                     await Task.Delay(span);
                 }
                 var content = new StringContent(JsonConvert.SerializeObject(task), Encoding.UTF8, "application/json");
-                message.Message = $"LaunchCheckerTask {task.Id} POSTing {task.TaskType} to checker";
-                Logger.LogTrace(message);
                 cancelSource.CancelAfter(task.MaxRunningTime * 1000);
                 while (!cancelSource.IsCancellationRequested)
                 {
+                    message.Message = $"LaunchCheckerTask {task.Id} POSTing {task.TaskType} to checker";
+                    Logger.LogTrace(message);
                     var response = await Client.PostAsync(new Uri(task.CheckerUrl), content, cancelSource.Token);
                     if (response.StatusCode == HttpStatusCode.OK)
                     {
