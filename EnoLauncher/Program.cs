@@ -42,7 +42,7 @@ namespace EnoLauncher
 
         public void Start()
         {
-                Client.Timeout = new TimeSpan(0, 1, 0);
+            Client.Timeout = new TimeSpan(0, 1, 0);
             LauncherLoop().Wait();
         }
 
@@ -184,7 +184,8 @@ namespace EnoLauncher
         {
             Log.Logger = new LoggerConfiguration()
                 .WriteTo.Async(a => a.File("../data/launcher.log",
-                    outputTemplate: "{Message}{NewLine}"))
+                    outputTemplate: "{Message}{NewLine}",
+                    fileSizeLimitBytes: null))
                 .CreateLogger();
             try
             {
