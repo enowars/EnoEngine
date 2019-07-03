@@ -143,16 +143,17 @@ namespace EnoLauncher
                         task.CheckerResult = checkerResult;
                         task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
                         ResultsQueue.Enqueue(task);
+                        return;
                     }
-                    else
+                    else if (cancelSource.IsCancellationRequested)
                     {
                         message.Message = $"LaunchCheckerTask {task.Id} returned {response.StatusCode} ({(int)response.StatusCode})";
                         Logger.LogError(message);
                         task.CheckerResult = CheckerResult.CheckerError;
                         task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
                         ResultsQueue.Enqueue(task);
+                        return;
                     }
-                    break;
                 }
             }
             catch (TaskCanceledException e)
