@@ -17,6 +17,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Diagnostics;
 using System.ComponentModel;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 namespace EnoEngine
 {
@@ -148,6 +149,10 @@ namespace EnoEngine
 
         public static void Main(string[] args)
         {
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.Async(a => a.RollingFile("../data/engine.log"))
+                .CreateLogger();
+
             Logger.LogInfo(new EnoLogMessage()
             {
                 Module = nameof(EnoEngine),
@@ -163,8 +168,7 @@ namespace EnoEngine
                 .AddScoped<IEnoDatabase, EnoDatabase>()
                 .AddLogging(loggingBuilder =>
                 {
-                    loggingBuilder.AddProvider(new EnoLoggerProvider());
-                    //loggingBuilder.AddConsole();
+                    loggingBuilder.AddSerilog(dispose: true);
                     loggingBuilder.AddFilter((category, level) => category != DbLoggerCategory.Database.Command.Name);
                 })
                 .BuildServiceProvider(validateScopes: true);

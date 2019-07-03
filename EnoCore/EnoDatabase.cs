@@ -365,7 +365,7 @@ namespace EnoCore
                     }
                 }
             }
-            Logger.Log(FlagsubmissionBatchProcessedMessage.Create(submissions.Count));
+            Logger.LogStatistics(FlagsubmissionBatchProcessedMessage.Create(submissions.Count));
         }
 
         public async Task<(Round, Round, List<Flag>, List<Noise>, List<Havoc>)> CreateNewRound(DateTime begin, DateTime q2, DateTime q3, DateTime q4, DateTime end)
@@ -951,7 +951,7 @@ namespace EnoCore
                 .ToDictionaryAsync(ss => ss.TeamId);
 
             stopwatch.Stop();
-            Logger.Log(CalculateServiceStatsFetchFinishedMessage.Create(roundId, service.Name, stopwatch.ElapsedMilliseconds));
+            Logger.LogStatistics(CalculateServiceStatsFetchFinishedMessage.Create(roundId, service.Name, stopwatch.ElapsedMilliseconds));
             foreach (var team in teams)
             {
                 double slaPoints = 0;

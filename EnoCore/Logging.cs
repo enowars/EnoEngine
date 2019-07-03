@@ -1,6 +1,7 @@
 ﻿using EnoCore.Models.Json;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,41 +11,6 @@ using System.Text;
 
 namespace EnoCore
 {
-    public class EnoLoggerProvider : ILoggerProvider
-    {
-        public ILogger CreateLogger(string categoryName)
-        {
-            return new EnoConsoleLogger(categoryName);
-        }
-
-        public void Dispose() { }
-    }
-
-    public class EnoConsoleLogger : ILogger
-    {
-        string CategoryName;
-
-        public EnoConsoleLogger(string categoryName)
-        {
-            CategoryName = categoryName;
-        }
-
-        public IDisposable BeginScope<TState>(TState state)
-        {
-            return null;
-        }
-
-        public bool IsEnabled(LogLevel logLevel) => true;
-
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
-        {
-            if (logLevel >= LogLevel.Information)
-            {
-                Console.WriteLine($"[{CategoryName}] {formatter(state, exception)}");
-            }
-        }
-    }
-
     public class EnoLogger
     {
         private readonly string Tool;
@@ -57,51 +23,51 @@ namespace EnoCore
         public void LogTrace(EnoLogMessage message)
         {
             message.Severity = "TRACE";
-            Log(message);
+            LogEno(message);
         }
 
         public void LogDebug(EnoLogMessage message)
         {
             message.Severity = "DEBUG";
-            Log(message);
+            LogEno(message);
         }
 
         public void LogInfo(EnoLogMessage message)
         {
             message.Severity = "INFO";
-            Log(message);
+            LogEno(message);
         }
 
         public void LogWarning(EnoLogMessage message)
         {
             message.Severity = "WARNING";
-            Log(message);
+            LogEno(message);
         }
 
         public void LogError(EnoLogMessage message)
         {
             message.Severity = "ERROR";
-            Log(message);
+            LogEno(message);
         }
 
         public void LogFatal(EnoLogMessage message)
         {
             message.Severity = "FATAL";
-            Log(message);
+            LogEno(message);
         }
 
-        private void Log(EnoLogMessage message)
+        private void LogEno(EnoLogMessage message)
         {
             message.Tool = Tool;
             message.Timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture);
-            Debug.WriteLine(JsonConvert.SerializeObject(message));
+            Log.Logger.Information(JsonConvert.SerializeObject(message));
             Console.WriteLine($"{message.Timestamp} {message.Message}");
         }
 
-        public void Log(EnoStatisticMessage message)
+        public void LogStatistics(EnoStatisticMessage message)
         {
             message.Tool = Tool;
-            Debug.WriteLine(JsonConvert.SerializeObject(message));
+            Log.Logger.Information(JsonConvert.SerializeObject(message));
         }
     }
 }

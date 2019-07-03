@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Serilog;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -180,6 +181,9 @@ namespace EnoLauncher
 
         static void Main(string[] args)
         {
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.Async(a => a.RollingFile("../data/launcher.log"))
+                .CreateLogger();
             try
             {
                 Logger.LogInfo(new EnoLogMessage()

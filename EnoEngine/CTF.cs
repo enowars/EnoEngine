@@ -101,7 +101,7 @@ namespace EnoEngine.Game
                     RoundId = oldRound?.Id ?? 0,
                     Message = $"HandleRoundEnd for round {oldRound?.Id ?? 0} finished ({stopwatch.ElapsedMilliseconds}ms)"
                 });
-                Logger.Log(StartNewRoundFinishedMessage.Create(oldRound?.Id ?? 0, stopwatch.ElapsedMilliseconds));
+                Logger.LogStatistics(StartNewRoundFinishedMessage.Create(oldRound?.Id ?? 0, stopwatch.ElapsedMilliseconds));
             }
             catch (Exception e)
             {
@@ -290,7 +290,7 @@ namespace EnoEngine.Game
             var scoreboard = EnoDatabaseUtils.GetCurrentScoreboard(ServiceProvider, roundId);
             EnoCoreUtils.GenerateCurrentScoreboard(scoreboard, $"..{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}", roundId);
             jsonStopWatch.Stop();
-            Logger.Log(ScoreboardJsonGenerationFinishedMessage.Create(jsonStopWatch.ElapsedMilliseconds));
+            Logger.LogStatistics(ScoreboardJsonGenerationFinishedMessage.Create(jsonStopWatch.ElapsedMilliseconds));
             return DateTime.UtcNow;
         }
 
@@ -314,7 +314,7 @@ namespace EnoEngine.Game
             finally
             {
                 stopWatch.Stop();
-                Logger.Log(CalculateTotalPointsFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
+                Logger.LogStatistics(CalculateTotalPointsFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
             }
         }
 
@@ -349,7 +349,7 @@ namespace EnoEngine.Game
             finally
             {
                 stopWatch.Stop();
-                Logger.Log(CalculateServicePointsFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
+                Logger.LogStatistics(CalculateServicePointsFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
             }
         }
 
@@ -374,7 +374,7 @@ namespace EnoEngine.Game
             finally
             {
                 stopWatch.Stop();
-                Logger.Log(RecordServiceStatesFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
+                Logger.LogStatistics(RecordServiceStatesFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
                 Logger.LogInfo(new EnoLogMessage()
                 {
                     Message = $"RecordServiceStates took {stopWatch.ElapsedMilliseconds}ms",

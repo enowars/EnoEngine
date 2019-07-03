@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Serilog.Sinks.Async" Version="1.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\EnoCore\EnoCore.csproj" />
   </ItemGroup>
 
