@@ -137,13 +137,16 @@ namespace EnoEngine
 
             if (lastRound != null)
             {
-                Logger.LogInfo(new EnoLogMessage()
-                {
-                    Message = $"Sleeping until old round ends ({lastRound.End})",
-                    RoundId = lastRound.Id
-                });
                 var span = lastRound.End.Subtract(DateTime.UtcNow);
-                await Task.Delay(span);
+                if (span.Seconds > 1)
+                {
+                    Logger.LogInfo(new EnoLogMessage()
+                    {
+                        Message = $"Sleeping until old round ends ({lastRound.End})",
+                        RoundId = lastRound.Id
+                    });
+                    await Task.Delay(span);
+                }
             }
         }
 
