@@ -22,6 +22,7 @@ namespace EnoLauncher
     class Program
     {
         private const int TASK_UPDATE_BATCH_SIZE = 500;
+        private const int MAX_RETRIES = 1;
         private static readonly ConcurrentQueue<CheckerTask> ResultsQueue = new ConcurrentQueue<CheckerTask>();
         private static readonly CancellationTokenSource LauncherCancelSource = new CancellationTokenSource();
         private static readonly EnoLogger Logger = new EnoLogger(nameof(EnoLauncher));
@@ -125,7 +126,8 @@ namespace EnoLauncher
                 }
                 var content = new StringContent(JsonConvert.SerializeObject(task), Encoding.UTF8, "application/json");
                 cancelSource.CancelAfter(task.MaxRunningTime * 1000);
-                while (!cancelSource.IsCancellationRequested)
+                int retry = 0;
+                while (!cancelSource.IsCancellationRequested && retry <= MAX_RETRIES)
                 {
                     message.Message = $"LaunchCheckerTask {task.Id} POSTing {task.TaskType} to checker";
                     Logger.LogTrace(message);
@@ -153,6 +155,10 @@ namespace EnoLauncher
                         task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
                         ResultsQueue.Enqueue(task);
                         return;
+                    }
+                    else
+                    {
+                        retry += 1;
                     }
                 }
             }
