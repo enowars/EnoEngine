@@ -126,28 +126,32 @@ namespace EnoLauncher
                 message.Message = $"LaunchCheckerTask {task.Id} POSTing {task.TaskType} to checker";
                 Logger.LogTrace(message);
                 cancelSource.CancelAfter(task.MaxRunningTime * 1000);
-                var response = await Client.PostAsync(new Uri(task.CheckerUrl), content, cancelSource.Token);
-                if (response.StatusCode == HttpStatusCode.OK)
+                while (!cancelSource.IsCancellationRequested)
                 {
-                    var responseString = (await response.Content.ReadAsStringAsync()).TrimEnd(Environment.NewLine.ToCharArray());
-                    message.Message = $"LaunchCheckerTask received {responseString}";
-                    Logger.LogTrace(message);
-                    dynamic responseJson = JsonConvert.DeserializeObject(responseString);
-                    string result = responseJson.result;
-                    var checkerResult = EnoCoreUtils.ParseCheckerResult(result);
-                    message.Message = $"LaunchCheckerTask {task.Id} returned {checkerResult}";
-                    Logger.LogTrace(message);
-                    task.CheckerResult = checkerResult;
-                    task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
-                    ResultsQueue.Enqueue(task);
-                }
-                else
-                {
-                    message.Message = $"LaunchCheckerTask {task.Id} returned {response.StatusCode} ({(int) response.StatusCode})";
-                    Logger.LogError(message);
-                    task.CheckerResult = CheckerResult.CheckerError;
-                    task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
-                    ResultsQueue.Enqueue(task);
+                    var response = await Client.PostAsync(new Uri(task.CheckerUrl), content, cancelSource.Token);
+                    if (response.StatusCode == HttpStatusCode.OK)
+                    {
+                        var responseString = (await response.Content.ReadAsStringAsync()).TrimEnd(Environment.NewLine.ToCharArray());
+                        message.Message = $"LaunchCheckerTask received {responseString}";
+                        Logger.LogTrace(message);
+                        dynamic responseJson = JsonConvert.DeserializeObject(responseString);
+                        string result = responseJson.result;
+                        var checkerResult = EnoCoreUtils.ParseCheckerResult(result);
+                        message.Message = $"LaunchCheckerTask {task.Id} returned {checkerResult}";
+                        Logger.LogTrace(message);
+                        task.CheckerResult = checkerResult;
+                        task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
+                        ResultsQueue.Enqueue(task);
+                    }
+                    else
+                    {
+                        message.Message = $"LaunchCheckerTask {task.Id} returned {response.StatusCode} ({(int)response.StatusCode})";
+                        Logger.LogError(message);
+                        task.CheckerResult = CheckerResult.CheckerError;
+                        task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
+                        ResultsQueue.Enqueue(task);
+                    }
+                    break;
                 }
             }
             catch (TaskCanceledException e)
