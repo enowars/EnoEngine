@@ -182,7 +182,8 @@ namespace EnoLauncher
         static void Main(string[] args)
         {
             Log.Logger = new LoggerConfiguration()
-                .WriteTo.Async(a => a.RollingFile("../data/launcher.log"))
+                .WriteTo.Async(a => a.File("../data/launcher.log",
+                    outputTemplate: "{Message}"))
                 .CreateLogger();
             try
             {
