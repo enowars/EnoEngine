@@ -127,7 +127,7 @@ namespace EnoLauncher
                 var content = new StringContent(JsonConvert.SerializeObject(task), Encoding.UTF8, "application/json");
                 cancelSource.CancelAfter(task.MaxRunningTime * 1000);
                 int retry = 0;
-                while (!cancelSource.IsCancellationRequested && retry <= MAX_RETRIES)
+                while (!cancelSource.IsCancellationRequested)
                 {
                     message.Message = $"LaunchCheckerTask {task.Id} POSTing {task.TaskType} to checker";
                     Logger.LogTrace(message);
@@ -147,7 +147,11 @@ namespace EnoLauncher
                         ResultsQueue.Enqueue(task);
                         return;
                     }
-                    else if (cancelSource.IsCancellationRequested)
+                    else if (retry < MAX_RETRIES)
+                    {
+                        retry += 1;
+                    }
+                    else
                     {
                         message.Message = $"LaunchCheckerTask {task.Id} returned {response.StatusCode} ({(int)response.StatusCode})";
                         Logger.LogError(message);
@@ -155,10 +159,6 @@ namespace EnoLauncher
                         task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
                         ResultsQueue.Enqueue(task);
                         return;
-                    }
-                    else
-                    {
-                        retry += 1;
                     }
                 }
             }
