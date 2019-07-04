@@ -33,8 +33,18 @@ namespace EnoCore.Models
                 byte[] flag = new byte[flagContent.Length + flagSignature.Length];
                 flagContent.CopyTo(flag, 0);
                 flagSignature.CopyTo(flag, flagContent.Length);
-                return "ENO" + Convert.ToBase64String(flag);
+                return "ENO" + UrlSafify(Convert.ToBase64String(flag));
             }
+        }
+
+        private static string UrlSafify(string input)
+        {
+            return input.Replace("+", "-").Replace("/", "_");
+        }
+
+        private static string UrlUnSafify(string input)
+        {
+            return input.Replace("-", "+").Replace("_", "/");
         }
 
         public static Flag FromString(string input)
@@ -42,7 +52,7 @@ namespace EnoCore.Models
             try
             {
                 var flag = input.Substring(3);
-                var flagBytes = Convert.FromBase64String(flag);
+                var flagBytes = Convert.FromBase64String(UrlUnSafify(flag));
 
                 var id = BitConverter.ToInt32(flagBytes, 0);
                 var ownerId = BitConverter.ToInt32(flagBytes, sizeof(int));
