@@ -190,8 +190,15 @@ namespace EnoEngine.FlagSubmission
                 if (flag != null)
                 {
                     var tcs = new TaskCompletionSource<FlagSubmissionResult>();
-                    FlagInsertsQueue.Enqueue((flag, attackerTeamId, tcs));
-                    return await tcs.Task;
+                    while (true)
+                    {
+                        if (FlagInsertsQueue.Count < 100000)
+                        {
+                            FlagInsertsQueue.Enqueue((flag, attackerTeamId, tcs));
+                            return await tcs.Task;
+                        }
+                        await Task.Delay(10);
+                    }
                 }
                 return FlagSubmissionResult.Invalid;
             }
