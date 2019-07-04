@@ -51,6 +51,10 @@ namespace EnoCore.Models
         {
             try
             {
+                if (!input.StartsWith("ENO"))
+                {
+                    return null;
+                }
                 var flag = input.Substring(3);
                 var flagBytes = Convert.FromBase64String(UrlUnSafify(flag));
 
