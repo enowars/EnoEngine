@@ -218,7 +218,7 @@ namespace EnoCore
         {
             var noiseContent = new byte[sizeof(int) * 3 + ENTROPY_IN_BYTES];
             ThreadSafeRandom.NextBytes(noiseContent);
-            return Convert.ToBase64String(noiseContent);
+            return UrlSafify(Convert.ToBase64String(noiseContent));
         }
 
         internal static byte[] GenerateFlagEntropy()
@@ -261,6 +261,16 @@ namespace EnoCore
                 yield return elements[swapIndex];
                 elements[swapIndex] = elements[i];
             }
+        }
+
+        public static string UrlSafify(string input)
+        {
+            return input.Replace("+", "-").Replace("/", "_");
+        }
+
+        public static string UrlUnSafify(string input)
+        {
+            return input.Replace("-", "+").Replace("_", "/");
         }
 
         public static ServiceStatus CheckerResultToServiceStatus(CheckerResult checkerResult)
