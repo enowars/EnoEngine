@@ -25,14 +25,20 @@ namespace EnoCore.Models.Json
     public class FlagsubmissionBatchProcessedMessage
     {
         public long FlagsProcessed { get; set; }
+        public long OkFlags { get; set; }
+        public long DuplicateFlags { get; set; }
+        public long OldFlags { get; set; }
 
-        public static EnoStatisticMessage Create(long flagsProcessed)
+        public static EnoStatisticMessage Create(long flagsProcessed, long okFlags, long duplicateFlags, long oldFlags)
         {
             return new EnoStatisticMessage()
             {
                 FlagsubmissionBatchProcessedMessage = new FlagsubmissionBatchProcessedMessage()
                 {
-                    FlagsProcessed = flagsProcessed
+                    FlagsProcessed = flagsProcessed,
+                    OkFlags = okFlags,
+                    DuplicateFlags = duplicateFlags,
+                    OldFlags = oldFlags
                 }
             };
         }

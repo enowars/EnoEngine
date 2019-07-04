@@ -324,6 +324,9 @@ namespace EnoCore
 
         public async Task ProcessSubmissionsBatch(List<(Flag flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult> result)> submissions, long flagValidityInRounds)
         {
+            long okFlags = 0;
+            long duplicateFlags = 0;
+            long oldFlags = 0;
             var statement = new StringBuilder();
             var acceptedSubmissions = new List<TaskCompletionSource<FlagSubmissionResult>>(submissions.Count);
             var acceptedSubmissionsSet = new HashSet<(long, long)>();
@@ -345,6 +348,7 @@ namespace EnoCore
                 }
                 else
                 {
+                    oldFlags += 1;
                     var t = Task.Run(() => result.TrySetResult(FlagSubmissionResult.Old)); //TODO can multiple trysetresults cause harm?
                 }
             }
@@ -358,14 +362,16 @@ namespace EnoCore
                     if (inserts[i].SubmissionsCount == 1)
                     {
                         var t = Task.Run(() => acceptedSubmissions[i].TrySetResult(FlagSubmissionResult.Ok));
+                        okFlags += 1;
                     }
                     else
                     {
                         var t = Task.Run(() => acceptedSubmissions[i].TrySetResult(FlagSubmissionResult.Duplicate));
+                        duplicateFlags += 1;
                     }
                 }
             }
-            Logger.LogStatistics(FlagsubmissionBatchProcessedMessage.Create(submissions.Count));
+            Logger.LogStatistics(FlagsubmissionBatchProcessedMessage.Create(submissions.Count, okFlags, duplicateFlags, oldFlags));
         }
 
         public async Task<(Round, Round, List<Flag>, List<Noise>, List<Havoc>)> CreateNewRound(DateTime begin, DateTime q2, DateTime q3, DateTime q4, DateTime end)
