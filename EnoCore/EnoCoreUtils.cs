@@ -62,7 +62,7 @@ namespace EnoCore
 
     public class EnoCoreUtils
     {
-        const int DATABASE_RETRIES = 50;
+        const int DATABASE_RETRIES = 500;
         internal static readonly int ENTROPY_IN_BYTES = 8;
         internal static readonly byte[] FLAG_SIGNING_KEY = Encoding.ASCII.GetBytes("suchasecretstornkkeytheywillneverguess");
         internal static readonly byte[] NOISE_SIGNING_KEY = Encoding.ASCII.GetBytes("anotherstrenksecrettheyvref24tr");
