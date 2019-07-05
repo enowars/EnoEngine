@@ -149,6 +149,8 @@ namespace EnoLauncher
                     }
                     else if (retry < MAX_RETRIES)
                     {
+                        message.Message = $"LaunchCheckerTask {task.Id} returned {response.StatusCode}, retrying...";
+                        Logger.LogError(message);
                         retry += 1;
                     }
                     else
