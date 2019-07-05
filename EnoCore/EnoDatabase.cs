@@ -906,6 +906,8 @@ namespace EnoCore
             var allCapturesOfFlagsSinceSnapshot = await _context.SubmittedFlags
                 .TagWith("CalculateServiceScores:allCapturesOfFlagsSinceSnapshot")
                 .Where(sf => sf.RoundId > oldSnapshotsRoundId)
+                .Include(sf => sf.Flag)
+                .Where(sf => sf.Flag.ServiceId == service.Id)
                 .GroupBy(sf => sf.FlagId)
                 .Select(g => new { g.Key, Amount = g.Count() })
                 .AsNoTracking()
@@ -915,6 +917,8 @@ namespace EnoCore
                 .TagWith("CalculateServiceScores:stableCaptures")
                 .Where(sf => sf.RoundId > oldSnapshotsRoundId)
                 .Where(sf => sf.RoundId <= newLatestSnapshotRoundId)
+                .Include(sf => sf.Flag)
+                .Where(sf => sf.Flag.ServiceId == service.Id)
                 .GroupBy(sf => sf.AttackerTeamId) // this is not an SQL GroupBy, since we need the invidual flags
                 .AsNoTracking()
                 .ToDictionaryAsync(sf => sf.Key, sf => new { SubmittedFlags = sf.AsEnumerable() });
@@ -923,6 +927,8 @@ namespace EnoCore
                 .TagWith("CalculateServiceScores:volatileCaptures")
                 .Where(sf => sf.RoundId <= roundId)
                 .Where(sf => sf.RoundId > newLatestSnapshotRoundId)
+                .Include(sf => sf.Flag)
+                .Where(sf => sf.Flag.ServiceId == service.Id)
                 .GroupBy(sf => sf.AttackerTeamId) // this is not an SQL GroupBy, since we need the invidual flags
                 .AsNoTracking()
                 .ToDictionaryAsync(sf => sf.Key, sf => new { SubmittedFlags = sf.AsEnumerable() });
@@ -932,6 +938,7 @@ namespace EnoCore
                 .Where(sf => sf.RoundId > oldSnapshotsRoundId)
                 .Where(sf => sf.RoundId <= newLatestSnapshotRoundId)
                 .Include(sf => sf.Flag)
+                .Where(sf => sf.Flag.ServiceId == service.Id)
                 .GroupBy(sf => sf.Flag.OwnerId) // this is not an SQL GroupBy, since we need the invidual flags
                 .AsNoTracking()
                 .ToDictionaryAsync(sf => sf.Key, sf => new { LostFlagIds = sf.AsEnumerable().Select(s => s.FlagId).Distinct() });
@@ -941,6 +948,7 @@ namespace EnoCore
                 .Where(sf => sf.RoundId <= roundId)
                 .Where(sf => sf.RoundId > newLatestSnapshotRoundId)
                 .Include(sf => sf.Flag)
+                .Where(sf => sf.Flag.ServiceId == service.Id)
                 .GroupBy(sf => sf.Flag.OwnerId) // this is not an SQL GroupBy, since we need the invidual flags
                 .AsNoTracking()
                 .ToDictionaryAsync(sf => sf.Key, sf => new { LostFlagIds = sf.AsEnumerable().Select(s => s.FlagId).Distinct() });
