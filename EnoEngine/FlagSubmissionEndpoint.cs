@@ -253,10 +253,10 @@ namespace EnoEngine.FlagSubmission
                                 Function = nameof(InsertSubmissionsLoop),
                                 Message = $"InsertSubmissionsLoop dropping batch because: {EnoCoreUtils.FormatException(e)}"
                             });
-                        }
-                        foreach (var (flag, attackerTeamId, tcs) in submissions)
-                        {
-                            var t = Task.Run(() => tcs.TrySetResult(FlagSubmissionResult.UnknownError));
+                            foreach (var (flag, attackerTeamId, tcs) in submissions)
+                            {
+                                var t = Task.Run(() => tcs.TrySetResult(FlagSubmissionResult.UnknownError));
+                            }
                         }
                     }
                 }
