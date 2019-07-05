@@ -363,14 +363,15 @@ namespace EnoCore
                 var inserts = await _context.SubmittedFlags.FromSql(statement.ToString()).ToArrayAsync();
                 for (int i = 0; i < acceptedSubmissions.Count; i++)
                 {
+                    var ti = i;
                     if (inserts[i].SubmissionsCount == 1)
                     {
-                        var t = Task.Run(() => acceptedSubmissions[i].TrySetResult(FlagSubmissionResult.Ok));
+                        var t = Task.Run(() => acceptedSubmissions[ti].TrySetResult(FlagSubmissionResult.Ok));
                         okFlags += 1;
                     }
                     else
                     {
-                        var t = Task.Run(() => acceptedSubmissions[i].TrySetResult(FlagSubmissionResult.Duplicate));
+                        var t = Task.Run(() => acceptedSubmissions[ti].TrySetResult(FlagSubmissionResult.Duplicate));
                         duplicateFlags += 1;
                     }
                 }
