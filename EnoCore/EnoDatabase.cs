@@ -345,6 +345,10 @@ namespace EnoCore
                         acceptedSubmissionsSet.Add((flag.Id, attackerTeamId));
                         statement.Append($"({flag.Id}, {attackerTeamId}, {roundId}, 1),");
                     }
+                    else
+                    {
+                        var t = Task.Run(() => result.TrySetResult(FlagSubmissionResult.Duplicate));
+                    }
                 }
                 else
                 {

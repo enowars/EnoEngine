@@ -190,6 +190,10 @@ namespace EnoEngine.FlagSubmission
                 if (flag != null)
                 {
                     var tcs = new TaskCompletionSource<FlagSubmissionResult>();
+                    if (flag.OwnerId == attackerTeamId)
+                    {
+                        return FlagSubmissionResult.Own;
+                    }
                     while (true)
                     {
                         if (FlagInsertsQueue.Count < 100000)
