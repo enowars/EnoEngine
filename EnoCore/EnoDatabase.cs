@@ -1009,7 +1009,7 @@ namespace EnoCore
                         .Where(rtss => rtss.Status == ServiceStatus.Recovering)
                         .CountAsync();
 
-                    slaPoints = (oldUps + (oldRecoverings / 2)) * Math.Sqrt(teams.Length);
+                    slaPoints = (oldUps + (oldRecoverings / 2.0)) * Math.Sqrt(teams.Length);
                     //TODO do atk/def recalc too
                     throw new Exception("todo recalc atk/def");
                 }
@@ -1022,7 +1022,7 @@ namespace EnoCore
                 }
                 if (stableServiceStates.TryGetValue(new { TeamId = team.Id, Status = ServiceStatus.Recovering }, out var recoverings))
                 {
-                    stableSLADiff += recoverings.Amount / 2;
+                    stableSLADiff += recoverings.Amount / 2.0;
                 }
                 slaPoints += stableSLADiff * Math.Sqrt(teams.Length);
                 newSnapshots[team.Id].ServiceLevelAgreementPoints = slaPoints;
@@ -1035,7 +1035,7 @@ namespace EnoCore
                 }
                 if (volatileServiceStates.TryGetValue(new { TeamId = team.Id, Status = ServiceStatus.Recovering }, out var volRecoverings))
                 {
-                    volatileDiff += volRecoverings.Amount / 2;
+                    volatileDiff += volRecoverings.Amount / 2.0;
                 }
                 slaPoints += volatileDiff * Math.Sqrt(teams.Length);
                 serviceStats[team.Id].ServiceLevelAgreementPoints = slaPoints;
@@ -1049,7 +1049,7 @@ namespace EnoCore
                     {
                         if (allCapturesOfFlagsSinceSnapshot.TryGetValue(capture.FlagId, out var captures))
                         {
-                            attackPoints += 1 / captures.Amount;
+                            attackPoints += 1.0 / captures.Amount;
                         }
                         else
                         {
@@ -1067,7 +1067,7 @@ namespace EnoCore
                     {
                         if (allCapturesOfFlagsSinceSnapshot.TryGetValue(capture.FlagId, out var captures))
                         {
-                            attackPoints += 1 / captures.Amount;
+                            attackPoints += 1.0 / captures.Amount;
                         }
                         else
                         {
