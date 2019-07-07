@@ -49,8 +49,8 @@ namespace EnoEngine.FlagSubmission
                 {
                     var client = await DebugListener.AcceptTcpClientAsync();
                     var attackerAddress = ((IPEndPoint)client.Client.RemoteEndPoint).Address.GetAddressBytes();
-                    var attackerPrefix = new byte[Program.Configuration.TeamSubnetBytesLength];
-                    Array.Copy(attackerAddress, attackerPrefix, Program.Configuration.TeamSubnetBytesLength);
+                    var attackerPrefix = new byte[EnoEngine.Configuration.TeamSubnetBytesLength];
+                    Array.Copy(attackerAddress, attackerPrefix, EnoEngine.Configuration.TeamSubnetBytesLength);
                     var attackerPrefixString = BitConverter.ToString(attackerPrefix);
                    
                     var clientTask = Task.Run(async () =>
@@ -94,8 +94,8 @@ namespace EnoEngine.FlagSubmission
                 {
                     var client = await ProductionListener.AcceptTcpClientAsync();
                     var attackerAddress = ((IPEndPoint)client.Client.RemoteEndPoint).Address.GetAddressBytes();
-                    var attackerPrefix = new byte[Program.Configuration.TeamSubnetBytesLength];
-                    Array.Copy(attackerAddress, attackerPrefix, Program.Configuration.TeamSubnetBytesLength);
+                    var attackerPrefix = new byte[EnoEngine.Configuration.TeamSubnetBytesLength];
+                    Array.Copy(attackerAddress, attackerPrefix, EnoEngine.Configuration.TeamSubnetBytesLength);
                     var attackerPrefixString = BitConverter.ToString(attackerPrefix);
                     long teamId;
                     using (var scope = ServiceProvider.CreateScope())
@@ -245,7 +245,7 @@ namespace EnoEngine.FlagSubmission
                                 using (var scope = ServiceProvider.CreateScope())
                                 {
                                     var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                                    await db.ProcessSubmissionsBatch(submissions, Program.Configuration.FlagValidityInRounds);
+                                    await db.ProcessSubmissionsBatch(submissions, EnoEngine.Configuration.FlagValidityInRounds);
                                 }
                             });
                         }

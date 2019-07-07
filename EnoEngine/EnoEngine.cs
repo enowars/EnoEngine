@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.CommandLine;
 using System.Threading;
 using System.Threading.Tasks;
 using EnoCore;
@@ -21,8 +22,9 @@ using Serilog;
 
 namespace EnoEngine
 {
-    class Program
+    class EnoEngine
     {
+        private static readonly string MODE_RECALCULATE = "recalculate";
         private static readonly EnoLogger Logger = new EnoLogger(nameof(EnoEngine));
         private static readonly CancellationTokenSource EngineCancelSource = new CancellationTokenSource();
         public static JsonConfiguration Configuration { get; set; }
@@ -30,7 +32,7 @@ namespace EnoEngine
         readonly CTF EnoGame;
         readonly ServiceProvider ServiceProvider;
 
-        public Program(ServiceProvider serviceProvider)
+        public EnoEngine(ServiceProvider serviceProvider)
         {
             ServiceProvider = serviceProvider;
             EnoGame = new CTF(serviceProvider, EngineCancelSource.Token);
@@ -60,8 +62,6 @@ namespace EnoEngine
                 CreateConfig();
                 return 1;
             }
-            var content = File.ReadAllText("ctf.json");
-            Configuration = JsonConvert.DeserializeObject<JsonConfiguration>(content);
             var db = ServiceProvider.CreateScope().ServiceProvider.GetRequiredService<IEnoDatabase>();
             var result = db.ApplyConfig(Configuration);
             Configuration.BuildCheckersDict();
@@ -150,7 +150,7 @@ namespace EnoEngine
             }
         }
 
-        public static void Main(string[] args)
+        public static void Main(string argument)
         {
             Log.Logger = new LoggerConfiguration()
                 .WriteTo.Async(a => a.File("../data/engine.log",
@@ -177,16 +177,27 @@ namespace EnoEngine
                     loggingBuilder.AddFilter((category, level) => category != DbLoggerCategory.Database.Command.Name);
                 })
                 .BuildServiceProvider(validateScopes: true);
-            new Program(serviceProvider).Start();
+
+            var content = File.ReadAllText("ctf.json");
+            Configuration = JsonConvert.DeserializeObject<JsonConfiguration>(content);
+            if (argument == MODE_RECALCULATE)
+            {
+                new EnoEngine(serviceProvider).Recalculate().Wait();
+            }
+            else
+            {
+                new EnoEngine(serviceProvider).Start();
+            }
         }
 
-        private static ILoggerFactory GetLoggerFactory()
+        private async Task Recalculate()
         {
-            IServiceCollection serviceCollection = new ServiceCollection();
-            serviceCollection.AddLogging(builder =>
-                builder.AddConsole());
-            return serviceCollection.BuildServiceProvider()
-                .GetService<ILoggerFactory>();
+            var lastFinishedRound = await EnoCoreUtils.RetryScopedDatabaseAction(ServiceProvider,
+                async (IEnoDatabase db) => await db.PrepareRecalculation());
+            for (int i = 1; i <= lastFinishedRound.Id; i++)
+            {
+                await EnoGame.HandleRoundEnd(i, true);
+            }
         }
     }
 }

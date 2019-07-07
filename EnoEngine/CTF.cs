@@ -15,7 +15,7 @@ namespace EnoEngine.Game
 {
     class CTF
     {
-        private static readonly EnoLogger Logger = new EnoLogger(nameof(EnoEngine));
+        private static readonly EnoLogger Logger = new EnoLogger(nameof(CTF));
         private readonly SemaphoreSlim Lock = new SemaphoreSlim(1);
         private readonly ServiceProvider ServiceProvider;
         private readonly CancellationToken Token;
@@ -40,7 +40,7 @@ namespace EnoEngine.Game
                 Function = nameof(StartNewRound),
                 Message = "Starting new Round"
             });
-            double quatherLength = Program.Configuration.RoundLengthInSeconds / 4;
+            double quatherLength = EnoEngine.Configuration.RoundLengthInSeconds / 4;
             DateTime begin = DateTime.UtcNow;
             DateTime q2 = begin.AddSeconds(quatherLength);
             DateTime q3 = begin.AddSeconds(quatherLength * 2);
@@ -93,7 +93,7 @@ namespace EnoEngine.Game
                     RoundId = currentRound.Id,
                     Message = $"All checker tasks for round {currentRound.Id} are created ({stopwatch.ElapsedMilliseconds}ms)"
                 });
-                await HandleRoundEnd(oldRound?.Id ?? 0, Program.Configuration);
+                await HandleRoundEnd(oldRound?.Id ?? 0);
                 Logger.LogInfo(new EnoLogMessage()
                 {
                     Module = nameof(CTF),
@@ -129,7 +129,7 @@ namespace EnoEngine.Game
                 {
                     using (var scope = ServiceProvider.CreateScope())
                     {
-                        await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertPutFlagsTasks(roundId, begin, Program.Configuration);
+                        await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertPutFlagsTasks(roundId, begin, EnoEngine.Configuration);
                     }
                 });
             }
@@ -155,7 +155,7 @@ namespace EnoEngine.Game
                 {
                     using (var scope = ServiceProvider.CreateScope())
                     {
-                        await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertPutNoisesTasks(currentRound, newNoises, Program.Configuration);
+                        await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertPutNoisesTasks(currentRound, newNoises, EnoEngine.Configuration);
                     }
                 });
             }
@@ -182,7 +182,7 @@ namespace EnoEngine.Game
                 {
                     using (var scope = ServiceProvider.CreateScope())
                     {
-                        await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertHavocsTasks(currentRound.Id, begin, Program.Configuration);
+                        await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertHavocsTasks(currentRound.Id, begin, EnoEngine.Configuration);
                     }
                 });
             }
@@ -209,7 +209,7 @@ namespace EnoEngine.Game
                 {
                     using (var scope = ServiceProvider.CreateScope())
                     {
-                        await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertRetrieveCurrentFlagsTasks(currentRound, newFlags, Program.Configuration);
+                        await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertRetrieveCurrentFlagsTasks(currentRound, newFlags, EnoEngine.Configuration);
                     }
                 });
             }
@@ -235,7 +235,7 @@ namespace EnoEngine.Game
                 {
                     using (var scope = ServiceProvider.CreateScope())
                     {
-                        await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertRetrieveOldFlagsTasks(currentRound, Program.Configuration.CheckedRoundsPerRound - 1, Program.Configuration);
+                        await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertRetrieveOldFlagsTasks(currentRound, EnoEngine.Configuration.CheckedRoundsPerRound - 1, EnoEngine.Configuration);
                     }
                 });
             }
@@ -261,7 +261,7 @@ namespace EnoEngine.Game
                 {
                     using (var scope = ServiceProvider.CreateScope())
                     {
-                        await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertRetrieveCurrentNoisesTasks(currentRound, newNoises, Program.Configuration);
+                        await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertRetrieveCurrentNoisesTasks(currentRound, newNoises, EnoEngine.Configuration);
                     }
                 });
             }
@@ -277,12 +277,15 @@ namespace EnoEngine.Game
             Console.WriteLine($"InsertRetrieveCurrentNoisesTasks took {stopWatch.Elapsed.TotalMilliseconds}ms");
         }
 
-        private async Task<DateTime> HandleRoundEnd(long roundId, JsonConfiguration config)
+        public async Task<DateTime> HandleRoundEnd(long roundId, bool recalculating = false)
         {
             if (roundId > 0)
             {
-                var newStates = await RecordServiceStates(roundId);
-                await CalculateServicePoints(roundId, newStates);
+                if (!recalculating)
+                {
+                    await RecordServiceStates(roundId);
+                }
+                await CalculateServicePoints(roundId);
                 await CalculateTotalPoints(roundId);
             }
             var jsonStopWatch = new Stopwatch();
@@ -318,14 +321,14 @@ namespace EnoEngine.Game
             }
         }
 
-        private async Task CalculateServicePoints(long roundId, Dictionary<(long ServiceId, long TeamId), RoundTeamServiceState> newStates)
+        public async Task CalculateServicePoints(long roundId)
         {
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
             try
             {
                 var (newLatestSnapshotRoundId, oldSnapshotRoundId, services, teams) = await EnoCoreUtils.RetryScopedDatabaseAction(ServiceProvider,
-                    async(IEnoDatabase db) => await db.GetPointCalculationFrame(Program.Configuration));
+                    async(IEnoDatabase db) => await db.GetPointCalculationFrame(roundId, EnoEngine.Configuration));
 
                 var servicePointsTasks = new List<Task>(services.Length);
                 foreach (var service in services)
@@ -333,7 +336,7 @@ namespace EnoEngine.Game
                     servicePointsTasks.Add(Task.Run(async () =>
                     {
                         await EnoCoreUtils.RetryScopedDatabaseAction(ServiceProvider,
-                            async (IEnoDatabase db) => await db.CalculateServiceStats(teams, newStates, roundId, service, oldSnapshotRoundId, newLatestSnapshotRoundId));
+                            async (IEnoDatabase db) => await db.CalculateServiceStats(teams, roundId, service, oldSnapshotRoundId, newLatestSnapshotRoundId));
                     }));
                 }
                 await Task.WhenAll(servicePointsTasks);
@@ -353,13 +356,13 @@ namespace EnoEngine.Game
             }
         }
 
-        private async Task<Dictionary<(long ServiceId, long TeamId), RoundTeamServiceState>> RecordServiceStates(long roundId)
+        private async Task RecordServiceStates(long roundId)
         {
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
             try
             {
-                return await EnoCoreUtils.RetryScopedDatabaseAction(ServiceProvider,
+                await EnoCoreUtils.RetryScopedDatabaseAction(ServiceProvider,
                     async (IEnoDatabase db) => await db.CalculateRoundTeamServiceStates(ServiceProvider, roundId));
             }
             catch (Exception e)
@@ -369,7 +372,6 @@ namespace EnoEngine.Game
                     Message = $"RecordServiceStates failed because: {e}",
                     RoundId = roundId
                 });
-                return new Dictionary<(long ServiceId, long TeamId), RoundTeamServiceState>();
             }
             finally
             {
