@@ -23,7 +23,7 @@ namespace FlagShooter
     class Program
     {
         private static readonly CancellationTokenSource LauncherCancelSource = new CancellationTokenSource();
-        private static readonly EnoLogger Logger = new EnoLogger(nameof(FlagShooter));
+        private readonly ILogger Logger;
         private readonly ServiceProvider ServiceProvider;
         private readonly Dictionary<long, (TcpClient, StreamReader reader, StreamWriter writer)[]> TeamSockets =
             new Dictionary<long, (TcpClient, StreamReader reader, StreamWriter writer)[]>();
@@ -66,12 +66,7 @@ namespace FlagShooter
                 db.Migrate();
             }
 
-            Logger.LogInfo(new EnoLogMessage()
-            {
-                Module = nameof(FlagShooter),
-                Function = nameof(FlagRunnerLoop),
-                Message = $"FlagRunnerLoop starting"
-            });
+            Console.WriteLine("$FlagRunnerLoop starting");
 
             var flagcount = 10000;
             while (!LauncherCancelSource.IsCancellationRequested)
@@ -81,16 +76,11 @@ namespace FlagShooter
                     using (var scope = ServiceProvider.CreateScope())
                     {
                         var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                        var flags = await db.RetrieveFlags(flagcount);
+                        var flags = await File.ReadAllLinesAsync(@"C:\Users\Benni\enowars3\flags.sorted");
                         var tasks = new Task[AttackingTeams];
                         if (flags.Length > 0)
                         {
-                            Logger.LogDebug(new EnoLogMessage()
-                            {
-                                Module = nameof(FlagShooter),
-                                Function = nameof(FlagRunnerLoop),
-                                Message = $"Sending {flags.Length} flags"
-                            });
+                            Console.WriteLine($"Sending {flags.Length} flags");
                         }
                         for (int i = 0; i < AttackingTeams; i++)
                         {
@@ -103,17 +93,12 @@ namespace FlagShooter
                 }
                 catch (Exception e)
                 {
-                    Logger.LogWarning(new EnoLogMessage()
-                    {
-                        Module = nameof(FlagShooter),
-                        Function = nameof(FlagRunnerLoop),
-                        Message = $"FlagRunnerLoop retrying because: {EnoCoreUtils.FormatException(e)}"
-                    });
+                    Console.WriteLine($"FlagRunnerLoop retrying because: {EnoCoreUtils.FormatException(e)}");
                 }
             }
         }
 
-        private async Task SendFlagsTask(Flag[] flags, long teamId)
+        private async Task SendFlagsTask(string[] flags, long teamId)
         {
             try
             {
@@ -141,12 +126,7 @@ namespace FlagShooter
             }
             catch (Exception e)
             {
-                Logger.LogWarning(new EnoLogMessage()
-                {
-                    Module = nameof(FlagShooter),
-                    Function = nameof(SendFlagsTask),
-                    Message = $"SendFlagTask failed because: {EnoCoreUtils.FormatException(e)}"
-                });
+                Console.WriteLine($"SendFlagTask failed because: {EnoCoreUtils.FormatException(e)}");
             }
         }
 
@@ -155,12 +135,7 @@ namespace FlagShooter
         {
             try
             {
-                Logger.LogInfo(new EnoLogMessage()
-                {
-                    Module = nameof(FlagShooter),
-                    Function = nameof(Main),
-                    Message = $"FlagShooter starting"
-                });
+                Console.WriteLine($"FlagShooter starting");
                 var serviceProvider = new ServiceCollection()
                     .AddDbContextPool<EnoDatabaseContext>(options => {
                         options.UseNpgsql(
@@ -173,12 +148,7 @@ namespace FlagShooter
             }
             catch (Exception e)
             {
-                Logger.LogFatal(new EnoLogMessage()
-                {
-                    Module = nameof(FlagShooter),
-                    Function = nameof(Main),
-                    Message = $"FlagShooter failed: {EnoCoreUtils.FormatException(e)}"
-                });
+                Console.WriteLine($"FlagShooter failed: {EnoCoreUtils.FormatException(e)}");
             }
         }
     }

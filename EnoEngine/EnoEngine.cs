@@ -18,67 +18,75 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Diagnostics;
 using System.ComponentModel;
 using Microsoft.EntityFrameworkCore;
-using Serilog;
+using EnoCore.Models.Database;
 
 namespace EnoEngine
 {
-    class EnoEngine
+    static class IServiceCollectionExtension
     {
-        private static readonly string MODE_RECALCULATE = "recalculate";
-        private static readonly EnoLogger Logger = new EnoLogger(nameof(EnoEngine));
+        public static IServiceCollection AddEnoEngine(this IServiceCollection services)
+        {
+            services
+                .AddScoped<IEnoDatabase, EnoDatabase>()
+                .AddSingleton<IEnoEngine, EnoEngine>()
+                .AddLogging()
+                .AddDbContextPool<EnoDatabaseContext>(options =>
+                {
+                    options.UseNpgsql(
+                        EnoCoreUtils.PostgresConnectionString,
+                        pgoptions => pgoptions.EnableRetryOnFailure());
+                }, 90);
+            return services;
+        }
+    }
+
+    interface IEnoEngine
+    {
+        Task RunContest();
+        Task RunRecalculation();
+    }
+
+    class EnoEngine : IEnoEngine
+    {
+        public static readonly string MODE_RECALCULATE = "recalculate";
         private static readonly CancellationTokenSource EngineCancelSource = new CancellationTokenSource();
+        private readonly IServiceProvider ServiceProvider;
         public static JsonConfiguration Configuration { get; set; }
 
         readonly CTF EnoGame;
-        readonly ServiceProvider ServiceProvider;
+        private readonly ILogger Logger;
 
-        public EnoEngine(ServiceProvider serviceProvider)
+        public EnoEngine(ILogger<EnoEngine> logger, IServiceProvider serviceProvider)
         {
+            Logger = logger;
             ServiceProvider = serviceProvider;
-            EnoGame = new CTF(serviceProvider, EngineCancelSource.Token);
+            EnoGame = new CTF(serviceProvider, logger, EngineCancelSource.Token);
         }
 
-        public int Start()
+        public async Task RunContest()
         {
             // Gracefully shutdown when CTRL+C is invoked
             Console.CancelKeyPress += (s, e) => {
-                Logger.LogInfo(new EnoLogMessage()
-                {
-                    Module = nameof(EnoEngine),
-                    Function = nameof(Start),
-                    Message = "Shutting down EnoEngine"
-                });
+                Logger.LogInformation("Shutting down EnoEngine");
                 e.Cancel = true;
                 EngineCancelSource.Cancel();
             };
             if (!File.Exists("ctf.json"))
             {
-                Logger.LogFatal(new EnoLogMessage()
-                {
-                    Module = nameof(EnoEngine),
-                    Function = nameof(Start),
-                    Message = "Config (ctf.json) didn't exist. Creating sample and exiting"
-                });
+                Logger.LogCritical("Config (ctf.json) didn't exist. Creating sample and exiting");
                 CreateConfig();
-                return 1;
+                return;
             }
             var db = ServiceProvider.CreateScope().ServiceProvider.GetRequiredService<IEnoDatabase>();
             var result = db.ApplyConfig(Configuration);
             Configuration.BuildCheckersDict();
             if (result.Success)
             {
-                GameLoop().Wait();
-                return 0;
+                await GameLoop();
             }
             else
             {
-                Logger.LogFatal(new EnoLogMessage()
-                {
-                    Module = nameof(EnoEngine),
-                    Function = nameof(Start),
-                    Message = $"Invalid configuration, exiting ({result.ErrorMessage})"
-                });
-                return 1;
+                Logger.LogCritical($"Invalid configuration, exiting ({result.ErrorMessage})");
             }
         }
 
@@ -97,19 +105,9 @@ namespace EnoEngine
             catch (OperationCanceledException) { }
             catch (Exception e)
             {
-                Logger.LogError(new EnoLogMessage()
-                {
-                    Module = nameof(EnoEngine),
-                    Function = nameof(GameLoop),
-                    Message = $"GameLoop failed: {EnoCoreUtils.FormatException(e)}"
-                });
+                Logger.LogError($"GameLoop failed: {EnoCoreUtils.FormatException(e)}");
             }
-            Logger.LogInfo(new EnoLogMessage()
-            {
-                Module = nameof(EnoEngine),
-                Function = nameof(GameLoop),
-                Message = "GameLoop finished"
-            });
+            Logger.LogInformation("GameLoop finished");
         }
 
         private static void CreateConfig()
@@ -140,60 +138,18 @@ namespace EnoEngine
                 var span = lastRound.End.Subtract(DateTime.UtcNow);
                 if (span.Seconds > 1)
                 {
-                    Logger.LogInfo(new EnoLogMessage()
-                    {
-                        Message = $"Sleeping until old round ends ({lastRound.End})",
-                        RoundId = lastRound.Id
-                    });
+                    Logger.LogInformation($"Sleeping until old round ends ({lastRound.End})");
                     await Task.Delay(span);
                 }
             }
         }
 
-        public static void Main(string argument)
+        public async Task RunRecalculation()
         {
-            Log.Logger = new LoggerConfiguration()
-                .WriteTo.Async(a => a.File("../data/engine.log",
-                    outputTemplate: "{Message}{NewLine}",
-                    fileSizeLimitBytes: null))
-                .CreateLogger();
-
-            Logger.LogInfo(new EnoLogMessage()
-            {
-                Module = nameof(EnoEngine),
-                Function = nameof(Main),
-                Message = "EnoEngine starting"
-            });
-            var serviceProvider = new ServiceCollection()
-                .AddDbContextPool<EnoDatabaseContext>(options => {
-                    options.UseNpgsql(
-                        EnoCoreUtils.PostgresConnectionString,
-                        pgoptions => pgoptions.EnableRetryOnFailure());
-                }, 90)
-                .AddScoped<IEnoDatabase, EnoDatabase>()
-                .AddLogging(loggingBuilder =>
-                {
-                    loggingBuilder.AddSerilog(dispose: true);
-                    loggingBuilder.AddFilter((category, level) => category != DbLoggerCategory.Database.Command.Name);
-                })
-                .BuildServiceProvider(validateScopes: true);
-
-            var content = File.ReadAllText("ctf.json");
-            Configuration = JsonConvert.DeserializeObject<JsonConfiguration>(content);
-            if (argument == MODE_RECALCULATE)
-            {
-                new EnoEngine(serviceProvider).Recalculate().Wait();
-            }
-            else
-            {
-                new EnoEngine(serviceProvider).Start();
-            }
-        }
-
-        private async Task Recalculate()
-        {
+            Logger.LogInformation("RunRecalculation()");
             var lastFinishedRound = await EnoCoreUtils.RetryScopedDatabaseAction(ServiceProvider,
                 async (IEnoDatabase db) => await db.PrepareRecalculation());
+
             for (int i = 1; i <= lastFinishedRound.Id; i++)
             {
                 await EnoGame.HandleRoundEnd(i, true);

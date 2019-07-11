@@ -10,7 +10,7 @@ namespace EnoCore
 {
     public class EnoDatabaseUtils
     {
-        public static EnoEngineScoreboard GetCurrentScoreboard(ServiceProvider serviceProvider, long roundId)
+        public static EnoEngineScoreboard GetCurrentScoreboard(IServiceProvider serviceProvider, long roundId)
         {
             using (var scope = serviceProvider.CreateScope())
             {

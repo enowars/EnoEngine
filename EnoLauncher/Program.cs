@@ -25,10 +25,10 @@ namespace EnoLauncher
         private const int MAX_RETRIES = 1;
         private static readonly ConcurrentQueue<CheckerTask> ResultsQueue = new ConcurrentQueue<CheckerTask>();
         private static readonly CancellationTokenSource LauncherCancelSource = new CancellationTokenSource();
-        private static readonly EnoLogger Logger = new EnoLogger(nameof(EnoLauncher));
         private static readonly HttpClient Client = new HttpClient();
         private readonly Task UpdateDatabaseTask;
         private readonly ServiceProvider ServiceProvider;
+        private readonly Microsoft.Extensions.Logging.ILogger Logger;
 
         public Program(ServiceProvider serviceProvider)
         {
@@ -39,6 +39,7 @@ namespace EnoLauncher
                 db.Migrate();
             }
             UpdateDatabaseTask = Task.Run(async () => await UpdateDatabaseLoop());
+            Logger = serviceProvider.GetRequiredService<ILogger<Program>>();
         }
 
         public void Start()
@@ -55,12 +56,7 @@ namespace EnoLauncher
                 db.Migrate();
             }
 
-            Logger.LogInfo(new EnoLogMessage()
-            {
-                Module = nameof(EnoLauncher),
-                Function = nameof(LauncherLoop),
-                Message = $"LauncherLoop starting"
-            });
+            Logger.LogInformation($"LauncherLoop starting");
 
             while (!LauncherCancelSource.IsCancellationRequested)
             {
@@ -72,12 +68,7 @@ namespace EnoLauncher
                         var tasks = await db.RetrievePendingCheckerTasks(1000);
                         if (tasks.Count > 0)
                         {
-                            Logger.LogDebug(new EnoLogMessage()
-                            {
-                                Module = nameof(EnoLauncher),
-                                Function = nameof(LauncherLoop),
-                                Message = $"Scheduling {tasks.Count} tasks"
-                            });
+                            Logger.LogDebug($"Scheduling {tasks.Count} tasks");
                         }
                         foreach (var task in tasks)
                         {
@@ -91,137 +82,107 @@ namespace EnoLauncher
                 }
                 catch (Exception e)
                 {
-                    Logger.LogWarning(new EnoLogMessage()
-                    {
-                        Module = nameof(EnoLauncher),
-                        Function = nameof(LauncherLoop),
-                        Message = $"LauncherLoop retrying because: {EnoCoreUtils.FormatException(e)}"
-                    });
+                    Logger.LogWarning($"LauncherLoop retrying because: {EnoCoreUtils.FormatException(e)}");
                 }
             }
         }
 
         public async Task LaunchCheckerTask(CheckerTask task)
         {
-            try
+            using (var scope = Logger.BeginEnoScope(task))
             {
-                var message = EnoLogMessage.FromCheckerTask(task);
-                message.Module = nameof(EnoLauncher);
-                message.Function = nameof(LaunchCheckerTask);
-                message.Message = $"LaunchCheckerTask() for task {task.Id} ({task.TaskType}, currentRound={task.CurrentRoundId}, relatedRound={task.RelatedRoundId})";
-                Logger.LogTrace(message);
-                var cancelSource = new CancellationTokenSource();
-                var now = DateTime.UtcNow;
-                var span = task.StartTime.Subtract(DateTime.UtcNow);
-                if (span.TotalSeconds < -0.5)
+                try
                 {
-                    message.Message = $"Task {task.Id} starts {span.TotalSeconds} late (should: {task.StartTime})";
-                    Logger.LogWarning(message);
-                }
-                if (task.StartTime > now)
-                {
-                    message.Message = $"Task {task.Id} sleeping: {span}";
-                    Logger.LogTrace(message);
-                    await Task.Delay(span);
-                }
-                var content = new StringContent(JsonConvert.SerializeObject(task), Encoding.UTF8, "application/json");
-                cancelSource.CancelAfter(task.MaxRunningTime * 1000);
-                int retry = 0;
-                while (!cancelSource.IsCancellationRequested)
-                {
-                    message.Message = $"LaunchCheckerTask {task.Id} POSTing {task.TaskType} to checker";
-                    Logger.LogTrace(message);
-                    var response = await Client.PostAsync(new Uri(task.CheckerUrl), content, cancelSource.Token);
-                    if (response.StatusCode == HttpStatusCode.OK)
+                    Logger.LogDebug($"LaunchCheckerTask() for task {task.Id} ({task.TaskType}, currentRound={task.CurrentRoundId}, relatedRound={task.RelatedRoundId})");
+                    var cancelSource = new CancellationTokenSource();
+                    var now = DateTime.UtcNow;
+                    var span = task.StartTime.Subtract(DateTime.UtcNow);
+                    if (span.TotalSeconds < -0.5)
                     {
-                        var responseString = (await response.Content.ReadAsStringAsync()).TrimEnd(Environment.NewLine.ToCharArray());
-                        message.Message = $"LaunchCheckerTask received {responseString}";
-                        Logger.LogTrace(message);
-                        dynamic responseJson = JsonConvert.DeserializeObject(responseString);
-                        string result = responseJson.result;
-                        var checkerResult = EnoCoreUtils.ParseCheckerResult(result);
-                        message.Message = $"LaunchCheckerTask {task.Id} returned {checkerResult}";
-                        Logger.LogTrace(message);
-                        task.CheckerResult = checkerResult;
-                        task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
-                        ResultsQueue.Enqueue(task);
-                        return;
+                        Logger.LogWarning($"Task {task.Id} starts {span.TotalSeconds} late (should: {task.StartTime})");
                     }
-                    else if (retry < MAX_RETRIES)
+                    if (task.StartTime > now)
                     {
-                        message.Message = $"LaunchCheckerTask {task.Id} returned {response.StatusCode}, retrying...";
-                        Logger.LogError(message);
-                        retry += 1;
+                        Logger.LogTrace($"Task {task.Id} sleeping: {span}");
+                        await Task.Delay(span);
                     }
-                    else
+                    var content = new StringContent(JsonConvert.SerializeObject(task), Encoding.UTF8, "application/json");
+                    cancelSource.CancelAfter(task.MaxRunningTime * 1000);
+                    int retry = 0;
+                    while (!cancelSource.IsCancellationRequested)
                     {
-                        message.Message = $"LaunchCheckerTask {task.Id} returned {response.StatusCode} ({(int)response.StatusCode})";
-                        Logger.LogError(message);
-                        task.CheckerResult = CheckerResult.CheckerError;
-                        task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
-                        ResultsQueue.Enqueue(task);
-                        return;
+                        Logger.LogTrace($"LaunchCheckerTask {task.Id} POSTing {task.TaskType} to checker");
+                        var response = await Client.PostAsync(new Uri(task.CheckerUrl), content, cancelSource.Token);
+                        if (response.StatusCode == HttpStatusCode.OK)
+                        {
+                            var responseString = (await response.Content.ReadAsStringAsync()).TrimEnd(Environment.NewLine.ToCharArray());
+                            Logger.LogDebug($"LaunchCheckerTask received {responseString}");
+                            dynamic responseJson = JsonConvert.DeserializeObject(responseString);
+                            string result = responseJson.result;
+                            var checkerResult = EnoCoreUtils.ParseCheckerResult(result);
+                            Logger.LogTrace($"LaunchCheckerTask {task.Id} returned {checkerResult}");
+                            task.CheckerResult = checkerResult;
+                            task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
+                            ResultsQueue.Enqueue(task);
+                            return;
+                        }
+                        else if (retry < MAX_RETRIES)
+                        {
+                            Logger.LogError($"LaunchCheckerTask {task.Id} returned {response.StatusCode}, retrying...");
+                            retry += 1;
+                        }
+                        else
+                        {
+                            Logger.LogError($"LaunchCheckerTask {task.Id} returned {response.StatusCode} ({(int)response.StatusCode})");
+                            task.CheckerResult = CheckerResult.CheckerError;
+                            task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
+                            ResultsQueue.Enqueue(task);
+                            return;
+                        }
                     }
                 }
-            }
-            catch (TaskCanceledException e)
-            {
-                var message = EnoLogMessage.FromCheckerTask(task);
-                message.Module = nameof(EnoLauncher);
-                message.Function = nameof(LaunchCheckerTask);
-                message.Message = $"{nameof(LaunchCheckerTask)} {task.Id} was cancelled: {EnoCoreUtils.FormatException(e)}";
-                Logger.LogTrace(message);
-                task.CheckerResult = CheckerResult.Down;
-                task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
-                ResultsQueue.Enqueue(task);
-            }
-            catch (Exception e)
-            {
-                var message = EnoLogMessage.FromCheckerTask(task);
-                message.Module = nameof(EnoLauncher);
-                message.Function = nameof(LaunchCheckerTask);
-                message.Message = $"{nameof(LaunchCheckerTask)} failed: {EnoCoreUtils.FormatException(e)}";
-                Logger.LogError(message);
-                task.CheckerResult = CheckerResult.CheckerError;
-                task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
-                ResultsQueue.Enqueue(task);
+                catch (TaskCanceledException e)
+                {
+                    Logger.LogTrace($"{nameof(LaunchCheckerTask)} {task.Id} was cancelled: {EnoCoreUtils.FormatException(e)}");
+                    task.CheckerResult = CheckerResult.Down;
+                    task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
+                    ResultsQueue.Enqueue(task);
+                }
+                catch (Exception e)
+                {
+                    Logger.LogError($"{nameof(LaunchCheckerTask)} failed: {EnoCoreUtils.FormatException(e)}");
+                    task.CheckerResult = CheckerResult.CheckerError;
+                    task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
+                    ResultsQueue.Enqueue(task);
+                }
             }
         }
 
         static void Main(string[] args)
         {
             Log.Logger = new LoggerConfiguration()
-                .WriteTo.Async(a => a.File("../data/launcher.log",
-                    outputTemplate: "{Message}{NewLine}",
-                    fileSizeLimitBytes: null))
+                .MinimumLevel.Override(DbLoggerCategory.Name, Serilog.Events.LogEventLevel.Warning)
+                .Enrich.FromLogContext()
+                .MinimumLevel.Debug()
+                .WriteTo.Async(a => a.File(new EnoCoreJsonFormatter("EnoLauncher"), "../data/launcher.log", fileSizeLimitBytes: null))
+                .WriteTo.Console(new EnoCoreTextFormatter())
                 .CreateLogger();
-            try
-            {
-                Logger.LogInfo(new EnoLogMessage()
+
+            var serviceProvider = new ServiceCollection()
+                .AddScoped<IEnoDatabase, EnoDatabase>()
+                .AddDbContextPool<EnoDatabaseContext>(options =>
                 {
-                    Module = nameof(EnoLauncher),
-                    Function = nameof(Main),
-                    Message = $"EnoLauncher starting"
-                });
-                var serviceProvider = new ServiceCollection()
-                    .AddDbContextPool<EnoDatabaseContext>(options => {
-                        options.UseNpgsql(
-                            EnoCoreUtils.PostgresConnectionString,
-                            pgoptions => pgoptions.EnableRetryOnFailure());
-                    }, 2)
-                    .AddScoped<IEnoDatabase, EnoDatabase>()
-                    .BuildServiceProvider(validateScopes: true);
-                new Program(serviceProvider).Start();
-            }
-            catch (Exception e)
-            {
-                Logger.LogFatal(new EnoLogMessage()
+                    options.UseNpgsql(
+                        EnoCoreUtils.PostgresConnectionString,
+                        pgoptions => pgoptions.EnableRetryOnFailure());
+                }, 90)
+                .AddLogging(loggingBuilder =>
                 {
-                    Module = nameof(EnoLauncher),
-                    Function = nameof(Main),
-                    Message = $"EnoLauncher failed: {EnoCoreUtils.FormatException(e)}"
-                });
-            }
+                    loggingBuilder.AddFilter((category, level) => category != DbLoggerCategory.Database.Command.Name);
+                    loggingBuilder.AddSerilog(dispose: true);
+                })
+                .BuildServiceProvider(validateScopes: true);
+            new Program(serviceProvider).Start();
         }
 
         async Task UpdateDatabaseLoop()
@@ -263,12 +224,7 @@ namespace EnoLauncher
                         catch (OperationCanceledException) { throw; }
                         catch (Exception e)
                         {
-                            Logger.LogFatal(new EnoLogMessage()
-                            {
-                                Module = nameof(EnoLauncher),
-                                Function = nameof(UpdateDatabaseLoop),
-                                Message = $"UpdateDatabase retrying because: {EnoCoreUtils.FormatException(e)}"
-                            });
+                            Logger.LogInformation($"UpdateDatabase retrying because: {EnoCoreUtils.FormatException(e)}");
                         }
                     }
                 }
@@ -276,12 +232,7 @@ namespace EnoLauncher
             catch (TaskCanceledException) { }
             catch (Exception e)
             {
-                Logger.LogFatal(new EnoLogMessage()
-                {
-                    Module = nameof(EnoLauncher),
-                    Function = nameof(UpdateDatabaseLoop),
-                    Message = $"UpdateDatabase failed: {EnoCoreUtils.FormatException(e)}"
-                });
+                Logger.LogCritical($"UpdateDatabase failed: {EnoCoreUtils.FormatException(e)}");
             }
         }
     }

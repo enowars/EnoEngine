@@ -4,6 +4,7 @@ using EnoCore.Models.Database;
 using EnoCore.Models.Json;
 using EnoEngine.FlagSubmission;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -15,16 +16,17 @@ namespace EnoEngine.Game
 {
     class CTF
     {
-        private static readonly EnoLogger Logger = new EnoLogger(nameof(CTF));
+        private readonly ILogger Logger;
         private readonly SemaphoreSlim Lock = new SemaphoreSlim(1);
-        private readonly ServiceProvider ServiceProvider;
+        private readonly IServiceProvider ServiceProvider;
         private readonly CancellationToken Token;
 
-        public CTF(ServiceProvider serviceProvider, CancellationToken token)
+        public CTF(IServiceProvider serviceProvider, ILogger logger, CancellationToken token)
         {
             ServiceProvider = serviceProvider;
+            Logger = logger;
             Token = token;
-            var flagSub = new FlagSubmissionEndpoint(serviceProvider, token);
+            var flagSub = new FlagSubmissionEndpoint(serviceProvider, logger, token);
             Task.Run(async () => await flagSub.RunProductionEndpoint());
             Task.Run(async () => await flagSub.RunDebugEndpoint());
         }
@@ -34,12 +36,7 @@ namespace EnoEngine.Game
             var stopwatch = new Stopwatch();
             stopwatch.Start();
             await Lock.WaitAsync(Token);
-            Logger.LogDebug(new EnoLogMessage()
-            {
-                Module = nameof(CTF),
-                Function = nameof(StartNewRound),
-                Message = "Starting new Round"
-            });
+            Logger.LogDebug("Starting new Round");
             double quatherLength = EnoEngine.Configuration.RoundLengthInSeconds / 4;
             DateTime begin = DateTime.UtcNow;
             DateTime q2 = begin.AddSeconds(quatherLength);
@@ -60,13 +57,7 @@ namespace EnoEngine.Game
                     var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
                     (oldRound, currentRound, newFlags, newNoises, newHavocs) = await db.CreateNewRound(begin, q2, q3, q4, end);
                 }
-                Logger.LogInfo(new EnoLogMessage()
-                {
-                    Module = nameof(CTF),
-                    Function = nameof(StartNewRound),
-                    RoundId = currentRound.Id,
-                    Message = $"CreateNewRound for {currentRound.Id} finished ({stopwatch.ElapsedMilliseconds}ms)"
-                });
+                Logger.LogInformation($"CreateNewRound for {currentRound.Id} finished ({stopwatch.ElapsedMilliseconds}ms)");
 
                 // insert put tasks
                 var insertPutNewFlagsTask = Task.Run(async () => await InsertPutNewFlagsTasks(currentRound.Id, begin));
@@ -86,31 +77,14 @@ namespace EnoEngine.Game
                 await insertRetrieveOldFlagsTask;
                 await insertGetCurrentNoisesTask;
 
-                Logger.LogInfo(new EnoLogMessage()
-                {
-                    Module = nameof(CTF),
-                    Function = nameof(StartNewRound),
-                    RoundId = currentRound.Id,
-                    Message = $"All checker tasks for round {currentRound.Id} are created ({stopwatch.ElapsedMilliseconds}ms)"
-                });
+                Logger.LogInformation($"All checker tasks for round {currentRound.Id} are created ({stopwatch.ElapsedMilliseconds}ms)");
                 await HandleRoundEnd(oldRound?.Id ?? 0);
-                Logger.LogInfo(new EnoLogMessage()
-                {
-                    Module = nameof(CTF),
-                    Function = nameof(StartNewRound),
-                    RoundId = oldRound?.Id ?? 0,
-                    Message = $"HandleRoundEnd for round {oldRound?.Id ?? 0} finished ({stopwatch.ElapsedMilliseconds}ms)"
-                });
-                Logger.LogStatistics(StartNewRoundFinishedMessage.Create(oldRound?.Id ?? 0, stopwatch.ElapsedMilliseconds));
+                Logger.LogInformation($"HandleRoundEnd for round {oldRound?.Id ?? 0} finished ({stopwatch.ElapsedMilliseconds}ms)");
+                EnoLogger.LogStatistics(StartNewRoundFinishedMessage.Create(oldRound?.Id ?? 0, stopwatch.ElapsedMilliseconds));
             }
             catch (Exception e)
             {
-                Logger.LogError(new EnoLogMessage()//TODO link to round
-                {
-                    Module = nameof(CTF),
-                    Function = nameof(StartNewRound), 
-                    Message = $"StartNewRound failed: {EnoCoreUtils.FormatException(e)}"
-                });
+                Logger.LogError($"StartNewRound failed: {EnoCoreUtils.FormatException(e)}");
             }
             finally
             {
@@ -135,11 +109,7 @@ namespace EnoEngine.Game
             }
             catch (Exception e)
             {
-                Logger.LogError(new EnoLogMessage()
-                {
-                    Message = $"InsertPutFlagsTasks failed because: {e}",
-                    RoundId = roundId
-                });
+                Logger.LogError($"InsertPutFlagsTasks failed because: {e}");
             }
             stopWatch.Stop();
             Console.WriteLine($"InsertPutFlagsTasks took {stopWatch.Elapsed.TotalMilliseconds}ms");
@@ -161,11 +131,7 @@ namespace EnoEngine.Game
             }
             catch (Exception e)
             {
-                Logger.LogError(new EnoLogMessage()
-                {
-                    Message = $"InsertPutNewNoisesTasks failed because: {e}",
-                    RoundId = currentRound.Id
-                });
+                Logger.LogError($"InsertPutNewNoisesTasks failed because: {e}");
                 await Task.Delay(1);
             }
             stopWatch.Stop();
@@ -188,11 +154,7 @@ namespace EnoEngine.Game
             }
             catch (Exception e)
             {
-                Logger.LogError(new EnoLogMessage()
-                {
-                    Message = $"InsertHavocsTasks failed because: {e}",
-                    RoundId = currentRound.Id
-                });
+                Logger.LogError($"InsertHavocsTasks failed because: {e}");
                 await Task.Delay(1);
             }
             stopWatch.Stop();
@@ -215,11 +177,7 @@ namespace EnoEngine.Game
             }
             catch (Exception e)
             {
-                Logger.LogError(new EnoLogMessage()
-                {
-                    Message = $"InsertRetrieveCurrentFlagsTasks failed because: {e}",
-                    RoundId = currentRound.Id
-                });
+                Logger.LogError($"InsertRetrieveCurrentFlagsTasks failed because: {e}");
             }
             stopWatch.Stop();
             Console.WriteLine($"InsertRetrieveCurrentFlagsTasks took {stopWatch.Elapsed.TotalMilliseconds}ms");
@@ -241,11 +199,7 @@ namespace EnoEngine.Game
             }
             catch (Exception e)
             {
-                Logger.LogError(new EnoLogMessage()
-                {
-                    Message = $"InsertRetrieveOldFlagsTasks failed because: {e}",
-                    RoundId = currentRound.Id
-                });
+                Logger.LogError($"InsertRetrieveOldFlagsTasks failed because: {e}");
             }
             stopWatch.Stop();
             Console.WriteLine($"InsertRetrieveOldFlagsTasks took {stopWatch.Elapsed.TotalMilliseconds}ms");
@@ -267,11 +221,7 @@ namespace EnoEngine.Game
             }
             catch (Exception e)
             {
-                Logger.LogError(new EnoLogMessage()
-                {
-                    Message = $"InsertRetrieveCurrentNoisesTasks failed because: {e}",
-                    RoundId = currentRound.Id
-                });
+                Logger.LogError($"InsertRetrieveCurrentNoisesTasks failed because: {e}");
             }
             stopWatch.Stop();
             Console.WriteLine($"InsertRetrieveCurrentNoisesTasks took {stopWatch.Elapsed.TotalMilliseconds}ms");
@@ -293,7 +243,7 @@ namespace EnoEngine.Game
             var scoreboard = EnoDatabaseUtils.GetCurrentScoreboard(ServiceProvider, roundId);
             EnoCoreUtils.GenerateCurrentScoreboard(scoreboard, $"..{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}", roundId);
             jsonStopWatch.Stop();
-            Logger.LogStatistics(ScoreboardJsonGenerationFinishedMessage.Create(jsonStopWatch.ElapsedMilliseconds));
+            EnoLogger.LogStatistics(ScoreboardJsonGenerationFinishedMessage.Create(jsonStopWatch.ElapsedMilliseconds));
             return DateTime.UtcNow;
         }
 
@@ -308,16 +258,12 @@ namespace EnoEngine.Game
             }
             catch (Exception e)
             {
-                Logger.LogError(new EnoLogMessage()
-                {
-                    Message = $"CalculateTotalPoints failed because: {e}",
-                    RoundId = roundId
-                });
+                Logger.LogError($"CalculateTotalPoints failed because: {e}");
             }
             finally
             {
                 stopWatch.Stop();
-                Logger.LogStatistics(CalculateTotalPointsFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
+                EnoLogger.LogStatistics(CalculateTotalPointsFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
             }
         }
 
@@ -343,16 +289,12 @@ namespace EnoEngine.Game
             }
             catch (Exception e)
             {
-                Logger.LogError(new EnoLogMessage()
-                {
-                    Message = $"CalculateServicePoints failed because: {e}",
-                    RoundId = roundId
-                });
+                Logger.LogError($"CalculateServicePoints failed because: {e}");
             }
             finally
             {
                 stopWatch.Stop();
-                Logger.LogStatistics(CalculateServicePointsFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
+                EnoLogger.LogStatistics(CalculateServicePointsFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
             }
         }
 
@@ -367,21 +309,13 @@ namespace EnoEngine.Game
             }
             catch (Exception e)
             {
-                Logger.LogError(new EnoLogMessage()
-                {
-                    Message = $"RecordServiceStates failed because: {e}",
-                    RoundId = roundId
-                });
+                Logger.LogError($"RecordServiceStates failed because: {e}");
             }
             finally
             {
                 stopWatch.Stop();
-                Logger.LogStatistics(RecordServiceStatesFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
-                Logger.LogInfo(new EnoLogMessage()
-                {
-                    Message = $"RecordServiceStates took {stopWatch.ElapsedMilliseconds}ms",
-                    RoundId = roundId
-                });
+                EnoLogger.LogStatistics(RecordServiceStatesFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
+                Logger.LogInformation($"RecordServiceStates took {stopWatch.ElapsedMilliseconds}ms");
             }
         }
     }

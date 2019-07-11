@@ -20,17 +20,17 @@ namespace EnoEngine.FlagSubmission
     {
         private static readonly ConcurrentQueue<(Flag flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult> tcs)> FlagInsertsQueue
             = new ConcurrentQueue<(Flag, long, TaskCompletionSource<FlagSubmissionResult>)>();
-        private static readonly EnoLogger Logger = new EnoLogger(nameof(EnoEngine));
-        const int InsertSubmissionsRetries = 16;
-        const int InsertSubmissionsBatchSize = 1000;
+        private const int InsertSubmissionsBatchSize = 1000;
         readonly CancellationToken Token;
         readonly TcpListener ProductionListener = new TcpListener(IPAddress.IPv6Any, 1337);
         readonly TcpListener DebugListener = new TcpListener(IPAddress.IPv6Any, 1338);
         readonly IServiceProvider ServiceProvider;
         private readonly Task UpdateDatabaseTask;
+        private readonly ILogger Logger;
 
-        public FlagSubmissionEndpoint(IServiceProvider serviceProvider, CancellationToken token)
+        public FlagSubmissionEndpoint(IServiceProvider serviceProvider, ILogger logger, CancellationToken token)
         {
+            Logger = logger;
             Token = token;
             ProductionListener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
             DebugListener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
@@ -70,19 +70,9 @@ namespace EnoEngine.FlagSubmission
             catch (TaskCanceledException) { }
             catch (Exception e)
             {
-                Logger.LogFatal(new EnoLogMessage()
-                {
-                    Module = nameof(FlagSubmission),
-                    Function = nameof(RunDebugEndpoint),
-                    Message = $"RunDebugEndpoint failed: {EnoCoreUtils.FormatException(e)}"
-                });
+                Logger.LogCritical($"RunDebugEndpoint failed: {EnoCoreUtils.FormatException(e)}");
             }
-            Logger.LogInfo(new EnoLogMessage()
-            {
-                Module = nameof(FlagSubmission),
-                Function = nameof(RunDebugEndpoint),
-                Message = "RunDebugEndpoint finished"
-            });
+            Logger.LogInformation("RunDebugEndpoint finished");
         }
 
         public async Task RunProductionEndpoint()
@@ -116,19 +106,9 @@ namespace EnoEngine.FlagSubmission
             catch (TaskCanceledException) { }
             catch (Exception e)
             {
-                Logger.LogFatal(new EnoLogMessage()
-                {
-                    Module = nameof(FlagSubmission),
-                    Function = nameof(RunProductionEndpoint),
-                    Message = $"RunProductionEndpoint failed: {EnoCoreUtils.FormatException(e)}"
-                });
+                Logger.LogCritical($"RunProductionEndpoint failed: {EnoCoreUtils.FormatException(e)}");
             }
-            Logger.LogInfo(new EnoLogMessage()
-            {
-                Module = nameof(FlagSubmission),
-                Function = nameof(RunProductionEndpoint),
-                Message = "RunProductionEndpoint finished"
-            });
+            Logger.LogInformation("RunProductionEndpoint finished");
         }
 
         private static string FormatSubmissionResult(FlagSubmissionResult result)
@@ -173,12 +153,7 @@ namespace EnoEngine.FlagSubmission
             catch (IOException) { }
             catch (Exception e)
             {
-                Logger.LogError(new EnoLogMessage()
-                {
-                    Module = nameof(CTF),
-                    Function = nameof(HandleFlagSubmission),
-                    Message = $"HandleIdentifiedSubmissionClient() failed: {EnoCoreUtils.FormatException(e)}"
-                });
+                Logger.LogError($"HandleIdentifiedSubmissionClient() failed: {EnoCoreUtils.FormatException(e)}");
             }
         }
 
@@ -208,12 +183,7 @@ namespace EnoEngine.FlagSubmission
             }
             catch (Exception e)
             {
-                Logger.LogError(new EnoLogMessage()
-                {
-                    Module = nameof(CTF),
-                    Function = nameof(HandleFlagSubmission),
-                    Message = $"HandleFlabSubmission() failed: {EnoCoreUtils.FormatException(e)}"
-                });
+                Logger.LogError($"HandleFlabSubmission() failed: {EnoCoreUtils.FormatException(e)}");
                 return FlagSubmissionResult.UnknownError;
             }
         }
@@ -223,12 +193,12 @@ namespace EnoEngine.FlagSubmission
             try
             {
                 var lastQueueMessageTimestamp = DateTime.UtcNow;
-                Logger.LogStatistics(FlagsubmissionQueueSizeMessage.Create(FlagInsertsQueue.Count));
+                EnoLogger.LogStatistics(FlagsubmissionQueueSizeMessage.Create(FlagInsertsQueue.Count));
                 while (!Token.IsCancellationRequested)
                 {
                     if (DateTime.UtcNow.Subtract(lastQueueMessageTimestamp).Seconds > 5)
                     {
-                        Logger.LogStatistics(FlagsubmissionQueueSizeMessage.Create(FlagInsertsQueue.Count));
+                        EnoLogger.LogStatistics(FlagsubmissionQueueSizeMessage.Create(FlagInsertsQueue.Count));
                         lastQueueMessageTimestamp = DateTime.UtcNow;
                     }
                     var submissions = EnoCoreUtils.DrainQueue(FlagInsertsQueue, InsertSubmissionsBatchSize);
@@ -251,12 +221,7 @@ namespace EnoEngine.FlagSubmission
                         }
                         catch (Exception e)
                         {
-                            Logger.LogError(new EnoLogMessage()
-                            {
-                                Module = nameof(FlagSubmissionEndpoint),
-                                Function = nameof(InsertSubmissionsLoop),
-                                Message = $"InsertSubmissionsLoop dropping batch because: {EnoCoreUtils.FormatException(e)}"
-                            });
+                            Logger.LogError($"InsertSubmissionsLoop dropping batch because: {EnoCoreUtils.FormatException(e)}");
                             foreach (var (flag, attackerTeamId, tcs) in submissions)
                             {
                                 var t = Task.Run(() => tcs.TrySetResult(FlagSubmissionResult.UnknownError));
@@ -268,12 +233,7 @@ namespace EnoEngine.FlagSubmission
             catch (TaskCanceledException) { }
             catch (Exception e)
             {
-                Logger.LogFatal(new EnoLogMessage()
-                {
-                    Module = nameof(FlagSubmissionEndpoint),
-                    Function = nameof(InsertSubmissionsLoop),
-                    Message = $"InsertSubmissionsLoop failed: {EnoCoreUtils.FormatException(e)}"
-                });
+                Logger.LogCritical($"InsertSubmissionsLoop failed: {EnoCoreUtils.FormatException(e)}");
             }
         }
     }

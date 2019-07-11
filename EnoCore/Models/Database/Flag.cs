@@ -21,6 +21,10 @@ namespace EnoCore.Models
 
         public override string ToString()
         {
+            if (Id == 0)
+            {
+                throw new Exception("INVALID FLAG ID");
+            }
             byte[] flagContent = new byte[sizeof(int) * 3 + EnoCoreUtils.ENTROPY_IN_BYTES];
             BitConverter.GetBytes(Id).CopyTo(flagContent, 0);
             BitConverter.GetBytes(OwnerId).CopyTo(flagContent, sizeof(int));

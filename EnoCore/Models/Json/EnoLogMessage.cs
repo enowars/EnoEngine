@@ -1,5 +1,6 @@
 ﻿using EnoCore.Models.Database;
 using Newtonsoft.Json;
+using Serilog.Events;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -43,10 +44,41 @@ namespace EnoCore.Models.Json
                 Flag = task.Payload,
                 RoundId = task.CurrentRoundId,
                 TeamName = task.TeamName,
-                Timestamp = DateTime.UtcNow.ToLongTimeString(),
                 CheckerTaskId = task.Id,
                 FlagIndex = task.TaskIndex,
                 ServiceName = task.ServiceName
+            };
+        }
+
+        public static EnoLogMessage FromRound(Round round)
+        {
+            return new EnoLogMessage()
+            {
+                RoundId = round.Id
+            };
+        }
+
+        public static EnoLogMessage FromLogEvent(LogEvent logEvent)
+        {
+            logEvent.Properties.TryGetValue(nameof(CheckerTask), out LogEventPropertyValue checkerTaskProperty);
+            if (checkerTaskProperty is ScalarValue checkerTask)
+            {
+                var enomessage = FromCheckerTask((CheckerTask) checkerTask.Value);
+                enomessage.Message = logEvent.RenderMessage();
+                return enomessage;
+            }
+
+            logEvent.Properties.TryGetValue(nameof(Round), out LogEventPropertyValue roundProperty);
+            if (roundProperty is ScalarValue round)
+            {
+                var enomessage = FromRound((Round) round.Value);
+                enomessage.Message = logEvent.RenderMessage();
+                return enomessage;
+            }
+
+            return new EnoLogMessage()
+            {
+                Message = logEvent.RenderMessage()
             };
         }
     }
