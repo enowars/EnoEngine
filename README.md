@@ -1,4 +1,5 @@
 # ENOENGINE
+[![Build Status](https://dev.azure.com/ENOFLAG/ENOWARS/_apis/build/status/enowars.EnoEngine?branchName=master)](https://dev.azure.com/ENOFLAG/ENOWARS/_build/latest?definitionId=1&branchName=master)
 
 This is the engine powering our CTFs.
 
