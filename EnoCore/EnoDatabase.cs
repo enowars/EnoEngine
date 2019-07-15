@@ -307,7 +307,7 @@ namespace EnoCore
             statement.Append("insert into \"SubmittedFlags\" (\"FlagId\", \"AttackerTeamId\", \"RoundId\", \"SubmissionsCount\")\nvalues ");
             foreach (var (flag, attackerTeamId, result) in submissions)
             {
-                if (true)
+                if (flag.GameRoundId + flagValidityInRounds >= roundId)
                 {
                     if (!acceptedSubmissionsSet.Contains((flag.Id, attackerTeamId)))
                     {
@@ -848,7 +848,6 @@ namespace EnoCore
         {
             using (Logger.BeginEnoScope(roundId))
             {
-                return;
                 var stopwatch = new Stopwatch();
                 stopwatch.Start();
                 var oldSnapshots = await _context.ServiceStatsSnapshots
