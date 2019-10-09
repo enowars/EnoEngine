@@ -3,15 +3,17 @@ using System;
 using EnoCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace EnoCore.Migrations
 {
     [DbContext(typeof(EnoDatabaseContext))]
-    partial class EnoDatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20191011184410_m1")]
+    partial class m1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

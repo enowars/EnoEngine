@@ -63,7 +63,6 @@ namespace EnoCore
     public class EnoCoreUtils
     {
         const int DATABASE_RETRIES = 500;
-        internal static readonly int ENTROPY_IN_BYTES = 8;
         internal static readonly byte[] FLAG_SIGNING_KEY = Encoding.ASCII.GetBytes("suchasecretstornkkeytheywillneverguess");
         internal static readonly byte[] NOISE_SIGNING_KEY = Encoding.ASCII.GetBytes("anotherstrenksecrettheyvref24tr");
         public static string PostgresDomain => Environment.GetEnvironmentVariable("DATABASE_DOMAIN") ?? "localhost";
@@ -119,12 +118,10 @@ namespace EnoCore
             {
                 try
                 {
-                    using (var scope = serviceProvider.CreateScope())
-                    {
-                        var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                        await function(db);
-                        return;
-                    }
+                    using var scope = serviceProvider.CreateScope();
+                    var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
+                    await function(db);
+                    return;
                 }
                 catch (SocketException e)
                 {
@@ -145,11 +142,9 @@ namespace EnoCore
             {
                 try
                 {
-                    using (var scope = serviceProvider.CreateScope())
-                    {
-                        var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                        return await function(db);
-                    }
+                    using var scope = serviceProvider.CreateScope();
+                    var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
+                    return await function(db);
                 }
                 catch (SocketException e)
                 {
@@ -182,18 +177,14 @@ namespace EnoCore
 
         public static CheckerResult ParseCheckerResult(string result)
         {
-            switch (result) {
-                case "INTERNAL_ERROR":
-                    return CheckerResult.CheckerError;
-                case "OK":
-                    return CheckerResult.Ok;
-                case "MUMBLE":
-                    return CheckerResult.Mumble;
-                case "OFFLINE":
-                    return CheckerResult.Down;
-                default:
-                    return CheckerResult.CheckerError;
-            }
+            return result switch
+            {
+                "INTERNAL_ERROR" => CheckerResult.CheckerError,
+                "OK" => CheckerResult.Ok,
+                "MUMBLE" => CheckerResult.Mumble,
+                "OFFLINE" => CheckerResult.Down,
+                _ => CheckerResult.CheckerError,
+            };
         }
 
         public static string FormatException(Exception e)
@@ -216,16 +207,9 @@ namespace EnoCore
 
         internal static string GenerateNoise()
         {
-            var noiseContent = new byte[sizeof(int) * 3 + ENTROPY_IN_BYTES];
+            var noiseContent = new byte[sizeof(int) * 3];
             ThreadSafeRandom.NextBytes(noiseContent);
             return UrlSafify(Convert.ToBase64String(noiseContent));
-        }
-
-        internal static byte[] GenerateFlagEntropy()
-        {
-            var entropy = new byte[ENTROPY_IN_BYTES];
-            ThreadSafeRandom.NextBytes(entropy);
-            return entropy;
         }
 
         public static async Task DelayUntil(DateTime time, CancellationToken token)
@@ -275,17 +259,13 @@ namespace EnoCore
 
         public static ServiceStatus CheckerResultToServiceStatus(CheckerResult checkerResult)
         {
-            switch (checkerResult)
+            return checkerResult switch
             {
-                case CheckerResult.Ok:
-                    return ServiceStatus.Ok;
-                case CheckerResult.Mumble:
-                    return ServiceStatus.Mumble;
-                case CheckerResult.Down:
-                    return ServiceStatus.Down;
-                default:
-                    return ServiceStatus.CheckerError;
-            }
+                CheckerResult.Ok => ServiceStatus.Ok,
+                CheckerResult.Mumble => ServiceStatus.Mumble,
+                CheckerResult.Down => ServiceStatus.Down,
+                _ => ServiceStatus.CheckerError,
+            };
         }
     }
 }

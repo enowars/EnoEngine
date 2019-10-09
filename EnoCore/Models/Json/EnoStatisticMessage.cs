@@ -20,6 +20,7 @@ namespace EnoCore.Models.Json
         public ScoreboardJsonGenerationFinishedMessage ScoreboardJsonGenerationFinishedMessage { get; set; }
         // New Round
         public StartNewRoundFinishedMessage StartNewRoundFinishedMessage { get; set; }
+        public RoundCalculationMessage RoundEndCalculationMessage { get; set; }
     }
 
     public class FlagsubmissionBatchProcessedMessage
@@ -28,8 +29,15 @@ namespace EnoCore.Models.Json
         public long OkFlags { get; set; }
         public long DuplicateFlags { get; set; }
         public long OldFlags { get; set; }
+        public long SubmittedFlagsStatementDuration { get; set; }
+        public long FlagsStatementDuration { get; set; }
+        public long CommitDuration { get; set; }
 
-        public static EnoStatisticMessage Create(long flagsProcessed, long okFlags, long duplicateFlags, long oldFlags)
+        public static EnoStatisticMessage Create(long flagsProcessed, long okFlags,
+            long duplicateFlags, long oldFlags,
+            long submittedFlagsStatementDuration,
+            long flagsStatementDuration,
+            long commitDuration)
         {
             return new EnoStatisticMessage()
             {
@@ -38,7 +46,10 @@ namespace EnoCore.Models.Json
                     FlagsProcessed = flagsProcessed,
                     OkFlags = okFlags,
                     DuplicateFlags = duplicateFlags,
-                    OldFlags = oldFlags
+                    OldFlags = oldFlags,
+                    SubmittedFlagsStatementDuration = submittedFlagsStatementDuration,
+                    FlagsStatementDuration = flagsStatementDuration,
+                    CommitDuration = commitDuration
                 }
             };
         }
@@ -167,5 +178,14 @@ namespace EnoCore.Models.Json
                 }
             };
         }
+    }
+
+    public class RoundCalculationMessage
+    {
+
+    }
+
+    public class CalculateServiceStatsMessage
+    {
     }
 }
