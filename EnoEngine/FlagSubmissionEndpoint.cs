@@ -82,24 +82,35 @@ namespace EnoEngine.FlagSubmission
                 ProductionListener.Start();
                 while (!Token.IsCancellationRequested)
                 {
-                    var client = await ProductionListener.AcceptTcpClientAsync();
-                    var attackerAddress = ((IPEndPoint)client.Client.RemoteEndPoint).Address.GetAddressBytes();
-                    var attackerPrefix = new byte[EnoEngine.Configuration.TeamSubnetBytesLength];
-                    Array.Copy(attackerAddress, attackerPrefix, EnoEngine.Configuration.TeamSubnetBytesLength);
-                    var attackerPrefixString = BitConverter.ToString(attackerPrefix);
-                    long teamId;
-                    using (var scope = ServiceProvider.CreateScope())
+                    try
                     {
-                        var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                        teamId = await db.GetTeamIdByPrefix(attackerPrefixString);
-                    }
-                    var clientTask = Task.Run(async () =>
-                    {
-                        using (StreamReader reader = new StreamReader(client.GetStream()))
+                        var client = await ProductionListener.AcceptTcpClientAsync();
+                        var attackerAddress = ((IPEndPoint)client.Client.RemoteEndPoint).Address.GetAddressBytes();
+                        var attackerPrefix = new byte[EnoEngine.Configuration.TeamSubnetBytesLength];
+                        Array.Copy(attackerAddress, attackerPrefix, EnoEngine.Configuration.TeamSubnetBytesLength);
+                        var attackerPrefixString = BitConverter.ToString(attackerPrefix);
+                        long teamId;
+                        using (var scope = ServiceProvider.CreateScope())
                         {
-                            await HandleIdentifiedSubmissionClient(client, reader, teamId);
+                            var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
+                            teamId = await db.GetTeamIdByPrefix(attackerPrefixString);
                         }
-                    });
+                        var clientTask = Task.Run(async () =>
+                        {
+                            using (StreamReader reader = new StreamReader(client.GetStream()))
+                            {
+                                await HandleIdentifiedSubmissionClient(client, reader, teamId);
+                            }
+                        });
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        throw;
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.LogWarning($"RunProductionEndpoint failed to handle connection: {EnoCoreUtils.FormatException(e)}");
+                    }
                 }
             }
             catch (ObjectDisposedException) { }
