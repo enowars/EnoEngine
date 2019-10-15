@@ -36,7 +36,7 @@ namespace EnoCore
             var ctx = logEvent.Properties.GetValueOrDefault("SourceContext") as ScalarValue;
             enomessage.Module = ctx?.Value.ToString();
             enomessage.Severity = logEvent.Level.ToString();
-            output.Write($"{JsonConvert.SerializeObject(enomessage)}{output.NewLine}");
+            output.Write($"##ENOLOGMESSAGE {JsonConvert.SerializeObject(enomessage)}{output.NewLine}");
         }
     }
 }
