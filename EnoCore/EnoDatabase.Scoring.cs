@@ -80,14 +80,14 @@ namespace EnoCore
             }
 
             var latestServiceStates = await _context.RoundTeamServiceStates
-                .TagWith("CalculateServiceScores:latestServiceStates")
+                .TagWith("CalculateServiceStats:latestServiceStates")
                 .Where(rtts => rtts.ServiceId == service.Id)
                 .Where(rtts => rtts.GameRoundId == roundId)
                 .AsNoTracking()
                 .ToDictionaryAsync(rtss => rtss.TeamId);
 
             var lostFlags = (await _context.Flags
-                .TagWith("CreateSnapshot:lostFlags")
+                .TagWith("CalculateServiceStats:lostFlags")
                 .AsNoTracking()
                 .Where(f => f.ServiceId == service.Id)
                 .Where(f => f.RoundId >= newLatestSnapshotRoundId)
@@ -97,7 +97,7 @@ namespace EnoCore
                 .GroupBy(f => f.OwnerId, f => f.Captures)
                 .ToDictionary(g => g.Key, sf => sf.AsEnumerable());
             var capturedFlags = (await _context.SubmittedFlags
-                .TagWith("CreateSnapshot:capturedFlags")
+                .TagWith("CalculateServiceStats:capturedFlags")
                 .AsNoTracking()
                 .Where(sf => sf.FlagServiceId == service.Id)
                 .Where(sf => sf.FlagRoundId >= newLatestSnapshotRoundId)
@@ -111,13 +111,6 @@ namespace EnoCore
                 .Where(ss => ss.ServiceId == service.Id)
                 .ToDictionaryAsync(ss => ss.TeamId);
 
-            var serviceStates = await _context.RoundTeamServiceStates
-                    .TagWith("CreateSnapshot:serviceStates")
-                    .Where(rtts => rtts.ServiceId == service.Id)
-                    .Where(rtts => rtts.GameRoundId == newLatestSnapshotRoundId)
-                    .AsNoTracking()
-                    .ToDictionaryAsync(rtss => rtss.TeamId);
-
             foreach (var team in teams)
             {
                 double slaPoints = 0;
@@ -130,7 +123,7 @@ namespace EnoCore
                     defPoints = snapshot[team.Id].LostDefensePoints;
                 }
 
-                if (serviceStates.TryGetValue(team.Id, out var state))
+                if (latestServiceStates.TryGetValue(team.Id, out var state))
                 {
                     if (state.Status == ServiceStatus.Ok)
                         slaPoints += 1;
