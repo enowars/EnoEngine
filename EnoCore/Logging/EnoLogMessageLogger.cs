@@ -35,11 +35,13 @@ namespace EnoCore.Logging
         {
             if ((this as ILogger).IsEnabled(logLevel))
             {
-                EnoLogMessage message = new EnoLogMessage();
-                message.Message = exception?.Message ?? state.ToString();
-                message.Module = CategoryName;
-                message.Tool = Provider.Tool;
-                message.Timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+                EnoLogMessage message = new EnoLogMessage
+                {
+                    Message = exception?.Message ?? state.ToString(),
+                    Module = CategoryName,
+                    Tool = Provider.Tool,
+                    Timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+                };
 
                 if (Provider.ScopeProvider != null)
                 {

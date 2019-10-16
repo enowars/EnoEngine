@@ -750,7 +750,7 @@ namespace EnoCore
 
         public async Task<Round> PrepareRecalculation()
         {
-            await _context.Database.ExecuteSqlCommandAsync("delete from \"ServiceStatsSnapshots\";");
+            await _context.Database.ExecuteSqlRawAsync($"delete from \"{nameof(_context.ServiceStatsSnapshots)}\";");
             return await _context.Rounds
                 .OrderByDescending(r => r.Id)
                 .Skip(1)

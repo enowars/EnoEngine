@@ -25,7 +25,6 @@ namespace EnoCore.Logging
             ScopeProvider = scopeProvider;
         }
 
-
         public void Dispose() { }
     }
 }
