@@ -79,6 +79,13 @@ namespace EnoCore
                 _context.ServiceStatsSnapshots.AddRange(snapshot.Values);
             }
 
+            var latestServiceStates = await _context.RoundTeamServiceStates
+                .TagWith("CalculateServiceScores:latestServiceStates")
+                .Where(rtts => rtts.ServiceId == service.Id)
+                .Where(rtts => rtts.GameRoundId == roundId)
+                .AsNoTracking()
+                .ToDictionaryAsync(rtss => rtss.TeamId);
+
             var lostFlags = (await _context.Flags
                 .TagWith("CreateSnapshot:lostFlags")
                 .AsNoTracking()
@@ -136,6 +143,8 @@ namespace EnoCore
                 serviceStats[team.Id].ServiceLevelAgreementPoints = slaPoints;
                 serviceStats[team.Id].AttackPoints = attackPoints;
                 serviceStats[team.Id].LostDefensePoints = defPoints;
+                latestServiceStates.TryGetValue(team.Id, out var status_rtss);
+                serviceStats[team.Id].Status = status_rtss?.Status ?? ServiceStatus.CheckerError;
             }
             await _context.SaveChangesAsync();
         }

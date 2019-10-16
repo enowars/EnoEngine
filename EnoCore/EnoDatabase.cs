@@ -681,7 +681,6 @@ namespace EnoCore
 
         public async Task CalculateRoundTeamServiceStates(IServiceProvider serviceProvider, long roundId)
         {
-
             var teams = await _context.Teams.AsNoTracking().ToArrayAsync();
             var services = await _context.Services.AsNoTracking().ToArrayAsync();
 
