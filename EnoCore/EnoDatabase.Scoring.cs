@@ -231,6 +231,10 @@ namespace EnoCore
                         attackPoints += 1.0 / capture.Flag.Captures;
                     }
                 }
+                var teamSnapshot = newServiceSnapshot[team.Id];
+                teamSnapshot.ServiceLevelAgreementPoints = slaPoints;
+                teamSnapshot.AttackPoints = attackPoints;
+                teamSnapshot.LostDefensePoints = defPoints;
             }
             return newServiceSnapshot;
         }
