@@ -1,4 +1,5 @@
 ﻿using EnoCore;
+using EnoCore.Logging;
 using EnoCore.Models.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,18 +20,13 @@ namespace EnoEngine
     {
         public static void Main(string argument = null)
         {
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Override(DbLoggerCategory.Name, Serilog.Events.LogEventLevel.Warning)
-                .Enrich.FromLogContext()
-                .WriteTo.Async(a => a.File(new EnoCoreJsonFormatter("EnoEngine"), "../data/engine.log", fileSizeLimitBytes: null))
-                .WriteTo.Console(new EnoCoreTextFormatter())
-                .CreateLogger();
             var serviceProvider = new ServiceCollection()
                 .AddEnoEngine()
                 .AddLogging(loggingBuilder =>
                 {
                     loggingBuilder.AddFilter((category, level) => category != DbLoggerCategory.Database.Command.Name);
-                    loggingBuilder.AddSerilog(dispose: true);
+                    loggingBuilder.AddConsole();
+                    loggingBuilder.AddProvider(new EnoLogMessageLoggerProvider("EnoEngine"));
                 })
                 .BuildServiceProvider(validateScopes: true);
 

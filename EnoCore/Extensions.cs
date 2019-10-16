@@ -12,9 +12,7 @@ namespace EnoCore
         public static IDisposable BeginEnoScope(this ILogger logger, CheckerTask checkerTask)
         {
             return logger.BeginScope(new Dictionary<string, object> {
-                {
-                    nameof(CheckerTask), checkerTask
-                }
+                    [nameof(CheckerTask)] = checkerTask
             });
         }
 

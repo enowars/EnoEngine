@@ -1,11 +1,11 @@
 ﻿using EnoCore;
+using EnoCore.Logging;
 using EnoCore.Models.Database;
 using EnoCore.Models.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -33,11 +33,6 @@ namespace EnoLauncher
         public Program(ServiceProvider serviceProvider)
         {
             ServiceProvider = serviceProvider;
-            using (var scope = ServiceProvider.CreateScope())
-            {
-                var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                db.Migrate();
-            }
             UpdateDatabaseTask = Task.Run(async () => await UpdateDatabaseLoop());
             Logger = serviceProvider.GetRequiredService<ILogger<Program>>();
         }
@@ -160,14 +155,6 @@ namespace EnoLauncher
 
         static void Main(string[] args)
         {
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Override(DbLoggerCategory.Name, Serilog.Events.LogEventLevel.Warning)
-                .Enrich.FromLogContext()
-                .MinimumLevel.Debug()
-                .WriteTo.Async(a => a.File(new EnoCoreJsonFormatter("EnoLauncher"), "../data/launcher.log", fileSizeLimitBytes: null))
-                .WriteTo.Console(new EnoCoreTextFormatter())
-                .CreateLogger();
-
             var serviceProvider = new ServiceCollection()
                 .AddScoped<IEnoDatabase, EnoDatabase>()
                 .AddDbContextPool<EnoDatabaseContext>(options =>
@@ -179,7 +166,8 @@ namespace EnoLauncher
                 .AddLogging(loggingBuilder =>
                 {
                     loggingBuilder.AddFilter((category, level) => category != DbLoggerCategory.Database.Command.Name);
-                    loggingBuilder.AddSerilog(dispose: true);
+                    loggingBuilder.AddConsole();
+                    loggingBuilder.AddProvider(new EnoLogMessageLoggerProvider("EnoLauncher"));
                 })
                 .BuildServiceProvider(validateScopes: true);
             new Program(serviceProvider).Start();

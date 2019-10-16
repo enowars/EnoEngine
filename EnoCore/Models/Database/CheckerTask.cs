@@ -61,5 +61,7 @@ namespace EnoCore.Models.Database
         {
 
         }
+
+        public override string ToString() => "bad serilog";
     }
 }
