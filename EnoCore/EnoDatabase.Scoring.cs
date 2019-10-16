@@ -82,9 +82,30 @@ namespace EnoCore
             var latestServiceStates = await _context.RoundTeamServiceStates
                 .TagWith("CalculateServiceStats:latestServiceStates")
                 .Where(rtts => rtts.ServiceId == service.Id)
-                .Where(rtts => rtts.GameRoundId == roundId)
+                .Where(rtts => rtts.GameRoundId >= newLatestSnapshotRoundId)
+                .Where(rtts => rtts.GameRoundId <= roundId)
                 .AsNoTracking()
                 .ToDictionaryAsync(rtss => rtss.TeamId);
+
+            var stableServiceStates = await _context.RoundTeamServiceStates
+                .TagWith("CalculateServiceStats:stableServiceStates")
+                .Where(rtts => rtts.ServiceId == service.Id)
+                .Where(rtts => rtts.GameRoundId > oldSnapshotsRoundId)
+                .Where(rtts => rtts.GameRoundId <= newLatestSnapshotRoundId)
+                .GroupBy(rtss => new { rtss.TeamId, rtss.Status })
+                .Select(rtss => new { rtss.Key, Amount = rtss.Count() })
+                .AsNoTracking()
+                .ToDictionaryAsync(rtss => rtss.Key);
+
+            var volatileServiceStates = await _context.RoundTeamServiceStates
+                .TagWith("CalculateServiceStats:volatileServiceStates")
+                .Where(rtts => rtts.ServiceId == service.Id)
+                .Where(rtts => rtts.GameRoundId > newLatestSnapshotRoundId)
+                .Where(rtts => rtts.GameRoundId <= roundId)
+                .GroupBy(rtss => new { rtss.TeamId, rtss.Status })
+                .Select(rtss => new { rtss.Key, Amount = rtss.Count() })
+                .AsNoTracking()
+                .ToDictionaryAsync(rtss => rtss.Key);
 
             var lostFlags = (await _context.Flags
                 .TagWith("CalculateServiceStats:lostFlags")
@@ -96,6 +117,7 @@ namespace EnoCore
                 .ToArrayAsync())
                 .GroupBy(f => f.OwnerId, f => f.Captures)
                 .ToDictionary(g => g.Key, sf => sf.AsEnumerable());
+
             var capturedFlags = (await _context.SubmittedFlags
                 .TagWith("CalculateServiceStats:capturedFlags")
                 .AsNoTracking()
@@ -123,12 +145,13 @@ namespace EnoCore
                     defPoints = snapshot[team.Id].LostDefensePoints;
                 }
 
-                if (latestServiceStates.TryGetValue(team.Id, out var state))
+                if (stableServiceStates.TryGetValue(new { TeamId = team.Id, Status = ServiceStatus.Ok }, out var oks))
                 {
-                    if (state.Status == ServiceStatus.Ok)
-                        slaPoints += 1;
-                    if (state.Status == ServiceStatus.Recovering)
-                        slaPoints += 0.5;
+                    slaPoints += oks.Amount;
+                }
+                if (stableServiceStates.TryGetValue(new { TeamId = team.Id, Status = ServiceStatus.Recovering }, out var recoverings))
+                {
+                    slaPoints += recoverings.Amount / 2.0;
                 }
 
                 if (lostFlags.TryGetValue(team.Id, out var lostFlagsOfTeam))
