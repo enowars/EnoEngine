@@ -82,8 +82,7 @@ namespace EnoCore
             var latestServiceStates = await _context.RoundTeamServiceStates
                 .TagWith("CalculateServiceStats:latestServiceStates")
                 .Where(rtts => rtts.ServiceId == service.Id)
-                .Where(rtts => rtts.GameRoundId >= newLatestSnapshotRoundId)
-                .Where(rtts => rtts.GameRoundId <= roundId)
+                .Where(rtts => rtts.GameRoundId == roundId)
                 .AsNoTracking()
                 .ToDictionaryAsync(rtss => rtss.TeamId);
 
