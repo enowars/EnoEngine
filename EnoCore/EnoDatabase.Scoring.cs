@@ -111,6 +111,13 @@ namespace EnoCore
                 .Where(ss => ss.ServiceId == service.Id)
                 .ToDictionaryAsync(ss => ss.TeamId);
 
+            var serviceStates = await _context.RoundTeamServiceStates
+                    .TagWith("CreateSnapshot:serviceStates")
+                    .Where(rtts => rtts.ServiceId == service.Id)
+                    .Where(rtts => rtts.GameRoundId == newLatestSnapshotRoundId)
+                    .AsNoTracking()
+                    .ToDictionaryAsync(rtss => rtss.TeamId);
+
             foreach (var team in teams)
             {
                 double slaPoints = 0;
@@ -121,6 +128,14 @@ namespace EnoCore
                     slaPoints = snapshot[team.Id].ServiceLevelAgreementPoints;
                     attackPoints = snapshot[team.Id].AttackPoints;
                     defPoints = snapshot[team.Id].LostDefensePoints;
+                }
+
+                if (serviceStates.TryGetValue(team.Id, out var state))
+                {
+                    if (state.Status == ServiceStatus.Ok)
+                        slaPoints += 1;
+                    if (state.Status == ServiceStatus.Recovering)
+                        slaPoints += 0.5;
                 }
 
                 if (lostFlags.TryGetValue(team.Id, out var lostFlagsOfTeam))
@@ -151,6 +166,7 @@ namespace EnoCore
 
         private async Task<Dictionary<long, ServiceStatsSnapshot>> CreateServiceSnapshot(Team[] teams, long newLatestSnapshotRoundId, long serviceId)
         {
+            //TODO white existing snapshot
             var oldSnapshot = await GetSnapshot(teams, newLatestSnapshotRoundId - 1, serviceId);
             var lostFlags = (await _context.Flags
                 .TagWith("CreateSnapshot:lostFlags")
@@ -161,6 +177,7 @@ namespace EnoCore
                 .ToArrayAsync())
                 .GroupBy(f => f.OwnerId, f => f.Captures)
                 .ToDictionary(g => g.Key, sf => sf.AsEnumerable());
+
             var capturedFlags = (await _context.SubmittedFlags
                 .TagWith("CreateSnapshot:capturedFlags")
                 .AsNoTracking()
@@ -170,6 +187,13 @@ namespace EnoCore
                 .ToArrayAsync())
                 .GroupBy(sf => sf.AttackerTeamId)
                 .ToDictionary(sf => sf.Key, sf => sf.AsEnumerable());
+
+            var serviceStates = await _context.RoundTeamServiceStates
+                .TagWith("CreateSnapshot:serviceStates")
+                .Where(rtts => rtts.ServiceId == serviceId)
+                .Where(rtts => rtts.GameRoundId == newLatestSnapshotRoundId)
+                .AsNoTracking()
+                .ToDictionaryAsync(rtss => rtss.TeamId);
 
             var newServiceSnapshot = teams.ToDictionary(t => t.Id, t => new ServiceStatsSnapshot()
             {
@@ -188,6 +212,14 @@ namespace EnoCore
                     slaPoints = oldSnapshot[team.Id].ServiceLevelAgreementPoints;
                     attackPoints = oldSnapshot[team.Id].AttackPoints;
                     defPoints = oldSnapshot[team.Id].LostDefensePoints;
+                }
+
+                if (serviceStates.TryGetValue(team.Id, out var state))
+                {
+                    if (state.Status == ServiceStatus.Ok)
+                        slaPoints += 1;
+                    if (state.Status == ServiceStatus.Recovering)
+                        slaPoints += 0.5;
                 }
 
                 if (lostFlags.TryGetValue(team.Id, out var lostFlagsOfTeam))
