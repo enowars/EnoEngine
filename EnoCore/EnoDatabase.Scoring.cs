@@ -87,17 +87,7 @@ namespace EnoCore
                 .AsNoTracking()
                 .ToDictionaryAsync(rtss => rtss.TeamId);
 
-            var stableServiceStates = await _context.RoundTeamServiceStates
-                .TagWith("CalculateServiceStats:stableServiceStates")
-                .Where(rtts => rtts.ServiceId == service.Id)
-                .Where(rtts => rtts.GameRoundId > oldSnapshotsRoundId)
-                .Where(rtts => rtts.GameRoundId <= newLatestSnapshotRoundId)
-                .GroupBy(rtss => new { rtss.TeamId, rtss.Status })
-                .Select(rtss => new { rtss.Key, Amount = rtss.Count() })
-                .AsNoTracking()
-                .ToDictionaryAsync(rtss => rtss.Key);
-
-            var volatileServiceStates = await _context.RoundTeamServiceStates
+            var serviceStates = await _context.RoundTeamServiceStates
                 .TagWith("CalculateServiceStats:volatileServiceStates")
                 .Where(rtts => rtts.ServiceId == service.Id)
                 .Where(rtts => rtts.GameRoundId > newLatestSnapshotRoundId)
@@ -145,11 +135,11 @@ namespace EnoCore
                     defPoints = snapshot[team.Id].LostDefensePoints;
                 }
 
-                if (stableServiceStates.TryGetValue(new { TeamId = team.Id, Status = ServiceStatus.Ok }, out var oks))
+                if (serviceStates.TryGetValue(new { TeamId = team.Id, Status = ServiceStatus.Ok }, out var oks))
                 {
                     slaPoints += oks.Amount;
                 }
-                if (stableServiceStates.TryGetValue(new { TeamId = team.Id, Status = ServiceStatus.Recovering }, out var recoverings))
+                if (serviceStates.TryGetValue(new { TeamId = team.Id, Status = ServiceStatus.Recovering }, out var recoverings))
                 {
                     slaPoints += recoverings.Amount / 2.0;
                 }
