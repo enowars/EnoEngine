@@ -136,11 +136,11 @@ namespace EnoCore
 
                 if (serviceStates.TryGetValue(new { TeamId = team.Id, Status = ServiceStatus.Ok }, out var oks))
                 {
-                    slaPoints += oks.Amount;
+                    slaPoints += oks.Amount * Math.Sqrt(teams.Length);
                 }
                 if (serviceStates.TryGetValue(new { TeamId = team.Id, Status = ServiceStatus.Recovering }, out var recoverings))
                 {
-                    slaPoints += recoverings.Amount / 2.0;
+                    slaPoints += recoverings.Amount * Math.Sqrt(teams.Length) / 2.0;
                 }
 
                 if (lostFlags.TryGetValue(team.Id, out var lostFlagsOfTeam))
@@ -222,9 +222,9 @@ namespace EnoCore
                 if (serviceStates.TryGetValue(team.Id, out var state))
                 {
                     if (state.Status == ServiceStatus.Ok)
-                        slaPoints += 1;
+                        slaPoints += 1.0 * Math.Sqrt(teams.Length);
                     if (state.Status == ServiceStatus.Recovering)
-                        slaPoints += 0.5;
+                        slaPoints += 0.5 * Math.Sqrt(teams.Length);
                 }
 
                 if (lostFlags.TryGetValue(team.Id, out var lostFlagsOfTeam))
