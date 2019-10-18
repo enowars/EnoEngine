@@ -92,7 +92,6 @@ namespace EnoCore
             foreach (var ((serviceId, roundId, ownerId, roundOffset, attackerTeamId), count) in updatesArray)
             {
                 submittedFlagsStatement.Append($"({serviceId}, {roundId}, {ownerId}, {roundOffset}, {attackerTeamId}, {currentRoundId}, {count}),");
-                flagsStatement.Append($"update \"Flags\" set \"Captures\" = \"Captures\" + 1 where \"ServiceId\" = {serviceId} and \"RoundId\" = {roundId} and \"OwnerId\" = {ownerId} and \"RoundOffset\" = {roundOffset};\n");
             }
             submittedFlagsStatement.Length--; // Pointers are fun!
             submittedFlagsStatement.Append("\non conflict (\"FlagServiceId\", \"FlagRoundId\", \"FlagOwnerId\", \"FlagRoundOffset\", \"AttackerTeamId\") do update set \"SubmissionsCount\" = \"SubmittedFlags\".\"SubmissionsCount\" + excluded.\"SubmissionsCount\" returning \"FlagServiceId\", \"FlagOwnerId\", \"FlagRoundId\", \"FlagRoundOffset\", \"AttackerTeamId\", \"RoundId\", \"SubmissionsCount\";");
@@ -102,6 +101,13 @@ namespace EnoCore
             {
                 stopWatch.Restart();
                 var newSubmissions = await _context.SubmittedFlags.FromSqlRaw(submittedFlagsStatement.ToString()).ToArrayAsync();
+                foreach (var newSubmission in newSubmissions)
+                {
+                    if (newSubmission.SubmissionsCount == 1)
+                    {
+                        flagsStatement.Append($"update \"Flags\" set \"Captures\" = \"Captures\" + 1 where \"ServiceId\" = {newSubmission.FlagServiceId} and \"RoundId\" = {newSubmission.FlagRoundId} and \"OwnerId\" = {newSubmission.FlagOwnerId} and \"RoundOffset\" = {newSubmission.FlagRoundOffset};\n");
+                    }
+                }
                 submittedFlagsStatementDuration = stopWatch.ElapsedMilliseconds;
                 stopWatch.Restart();
                 await _context.Database.ExecuteSqlRawAsync(flagsStatement.ToString());
