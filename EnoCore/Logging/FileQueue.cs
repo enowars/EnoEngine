@@ -29,6 +29,7 @@ namespace EnoCore.Logging
 
         private async Task WriterTask()
         {
+            int i = 0;
             while (!CancelToken.IsCancellationRequested)
             {
                 try
@@ -36,6 +37,12 @@ namespace EnoCore.Logging
                     if (Queue.TryDequeue(out var data))
                     {
                         await Writer.WriteAsync(data);
+                        i += 1;
+                        if (i == 50)
+                        {
+                            await Writer.FlushAsync();
+                            i = 0;
+                        }
                     }
                     else
                     {
