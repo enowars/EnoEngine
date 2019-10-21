@@ -34,32 +34,33 @@
 			"WeightFactor": 1,
 			"Checkers": ["http://[::1]:8000"]
 		},
-		{
+        {
 			"Id": 2,
+			"Name": "DJBooth",
+			"FlagsPerRound": 1,
+			"NoisesPerRound": 0,
+			"HavocsPerRound": 0,
+			"WeightFactor": 1,
+			"Checkers": ["http://[::1]:8001"]
+		}
+		{
+			"Id": 3,
 			"Name": "casino",
 			"FlagsPerRound": 2,
 			"NoisesPerRound": 1,
 			"HavocsPerRound": 2,
 			"WeightFactor": 1,
-			"Checkers": ["http://[::1]:8001"]
+			"Checkers": ["http://[::1]:8002"]
 		},
 		{
-			"Id": 3,
+			"Id": 4,
 			"Name": "voting",
 			"FlagsPerRound": 1,
 			"NoisesPerRound": 1,
 			"HavocsPerRound": 1,
 			"WeightFactor": 1,
-			"Checkers": ["http://[::1]:8002"]
-		},
-		{
-			"Id": 4,
-			"Name": "djstand",
-			"FlagsPerRound": 1,
-			"NoisesPerRound": 1,
-			"HavocsPerRound": 1,
-			"WeightFactor": 1,
 			"Checkers": ["http://[::1]:8003"]
-		}
+		},
+
 	]
 }
