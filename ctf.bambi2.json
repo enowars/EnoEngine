@@ -60,7 +60,6 @@
 			"HavocsPerRound": 1,
 			"WeightFactor": 1,
 			"Checkers": ["http://[::1]:8003"]
-		},
-
+		}
 	]
 }
