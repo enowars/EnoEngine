@@ -28,7 +28,7 @@ namespace EnoLauncher
         private static readonly HttpClient Client = new HttpClient();
         private readonly Task UpdateDatabaseTask;
         private readonly ServiceProvider ServiceProvider;
-        private readonly Microsoft.Extensions.Logging.ILogger Logger;
+        private readonly ILogger Logger;
 
         public Program(ServiceProvider serviceProvider)
         {
@@ -162,7 +162,7 @@ namespace EnoLauncher
                 {
                     loggingBuilder.AddFilter(DbLoggerCategory.Name, LogLevel.Warning);
                     loggingBuilder.AddConsole();
-                    loggingBuilder.AddProvider(new EnoLogMessageLoggerProvider("EnoLauncher"));
+                    loggingBuilder.AddProvider(new EnoLogMessageLoggerProvider("EnoLauncher", LauncherCancelSource.Token));
                 })
                 .BuildServiceProvider(validateScopes: true);
             new Program(serviceProvider).Start();

@@ -21,9 +21,9 @@ namespace EnoCore.Logging
             CategoryName = categoryName;
         }
 
-        public IDisposable BeginScope<TState>(TState state)
+        public IDisposable? BeginScope<TState>(TState state)
         {
-            return Provider.ScopeProvider.Push(state);
+            return Provider.ScopeProvider?.Push(state);
         }
 
         public bool IsEnabled(LogLevel logLevel)
@@ -37,7 +37,7 @@ namespace EnoCore.Logging
             {
                 EnoLogMessage message = new EnoLogMessage
                 {
-                    Message = exception?.Message ?? state.ToString(),
+                    Message = exception?.Message ?? state?.ToString() ?? "",
                     Module = CategoryName,
                     Tool = Provider.Tool,
                     Timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
@@ -58,7 +58,7 @@ namespace EnoCore.Logging
                     },
                     state);
                 }
-                File.AppendAllText($"../data/{Provider.Tool}.log", $"##ENOLOGMESSAGE {JsonConvert.SerializeObject(message)}\n");
+                Provider.Log($"##ENOLOGMESSAGE {JsonConvert.SerializeObject(message)}\n");
             }
         }
     }

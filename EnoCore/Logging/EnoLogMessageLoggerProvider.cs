@@ -2,17 +2,20 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace EnoCore.Logging
 {
     public class EnoLogMessageLoggerProvider : ILoggerProvider, ISupportExternalScope
     {
-        public IExternalScopeProvider ScopeProvider { get; internal set; }
+        public IExternalScopeProvider? ScopeProvider { get; internal set; }
         public string Tool { get; }
+        private FileQueue Queue;
 
-        public EnoLogMessageLoggerProvider(string tool)
+        public EnoLogMessageLoggerProvider(string tool, CancellationToken token)
         {
             Tool = tool;
+            Queue = new FileQueue($"../data/{tool}", token);
         }
 
         public ILogger CreateLogger(string categoryName)
@@ -26,5 +29,10 @@ namespace EnoCore.Logging
         }
 
         public void Dispose() { }
+
+        public void Log(string data)
+        {
+            Queue.Enqueue(data);
+        }
     }
 }

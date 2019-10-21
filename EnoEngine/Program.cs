@@ -5,19 +5,23 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog;
-using Serilog.Events;
-using Serilog.Formatting;
-using Serilog.Formatting.Compact;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading;
 
 namespace EnoEngine
 {
     class Program
     {
+        private static CancellationTokenSource CancelSource = new CancellationTokenSource();
+
+        public static void Main()
+        {
+
+        }
+
         public static void Main(string argument = null)
         {
             var serviceProvider = new ServiceCollection()
@@ -26,7 +30,7 @@ namespace EnoEngine
                 {
                     loggingBuilder.AddFilter(DbLoggerCategory.Name, LogLevel.Warning);
                     loggingBuilder.AddConsole();
-                    loggingBuilder.AddProvider(new EnoLogMessageLoggerProvider("EnoEngine"));
+                    loggingBuilder.AddProvider(new EnoLogMessageLoggerProvider("EnoEngine", CancelSource.Token));
                 })
                 .BuildServiceProvider(validateScopes: true);
 

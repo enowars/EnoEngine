@@ -1,13 +1,11 @@
 ﻿using EnoEngine.FlagSubmission;
 using EnoEngine.Game;
 using EnoCore.Models;
-using Microsoft.Extensions.CommandLineUtils;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.CommandLine;
 using System.Threading;
 using System.Threading.Tasks;
 using EnoCore;
