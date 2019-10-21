@@ -27,6 +27,7 @@ namespace EnoCore.Migrations
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<string>("Address")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("CheckerResult")
@@ -36,6 +37,7 @@ namespace EnoCore.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("CheckerUrl")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<long>("CurrentRoundId")
@@ -45,6 +47,7 @@ namespace EnoCore.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("Payload")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<long>("RelatedRoundId")
@@ -57,6 +60,7 @@ namespace EnoCore.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<string>("ServiceName")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("StartTime")
@@ -66,12 +70,14 @@ namespace EnoCore.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<string>("TaskType")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<long>("TeamId")
                         .HasColumnType("bigint");
 
                     b.Property<string>("TeamName")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
@@ -130,6 +136,7 @@ namespace EnoCore.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<string>("StringRepresentation")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
@@ -263,6 +270,7 @@ namespace EnoCore.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("NoisesPerRound")
@@ -357,6 +365,7 @@ namespace EnoCore.Migrations
                         .HasColumnType("double precision");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<double>("ServiceLevelAgreementPoints")
@@ -366,6 +375,7 @@ namespace EnoCore.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<string>("TeamSubnet")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<double>("TotalPoints")

@@ -15,7 +15,7 @@ namespace EnoEngine
 {
     class Program
     {
-        private static CancellationTokenSource CancelSource = new CancellationTokenSource();
+        private static readonly CancellationTokenSource CancelSource = new CancellationTokenSource();
 
         public static void Main(string argument = null)
         {

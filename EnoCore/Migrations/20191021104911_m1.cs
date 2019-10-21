@@ -30,7 +30,7 @@ namespace EnoCore.Migrations
                 columns: table => new
                 {
                     Id = table.Column<long>(nullable: false),
-                    Name = table.Column<string>(nullable: true),
+                    Name = table.Column<string>(nullable: false),
                     FlagsPerRound = table.Column<int>(nullable: false),
                     NoisesPerRound = table.Column<int>(nullable: false),
                     HavocsPerRound = table.Column<int>(nullable: false),
@@ -47,8 +47,8 @@ namespace EnoCore.Migrations
                 columns: table => new
                 {
                     Id = table.Column<long>(nullable: false),
-                    Name = table.Column<string>(nullable: true),
-                    TeamSubnet = table.Column<string>(nullable: true),
+                    Name = table.Column<string>(nullable: false),
+                    TeamSubnet = table.Column<string>(nullable: false),
                     TotalPoints = table.Column<double>(nullable: false),
                     AttackPoints = table.Column<double>(nullable: false),
                     LostDefensePoints = table.Column<double>(nullable: false),
@@ -67,16 +67,16 @@ namespace EnoCore.Migrations
                 {
                     Id = table.Column<long>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    CheckerUrl = table.Column<string>(nullable: true),
-                    TaskType = table.Column<string>(nullable: true),
-                    Address = table.Column<string>(nullable: true),
+                    CheckerUrl = table.Column<string>(nullable: false),
+                    TaskType = table.Column<string>(nullable: false),
+                    Address = table.Column<string>(nullable: false),
                     ServiceId = table.Column<long>(nullable: false),
-                    ServiceName = table.Column<string>(nullable: true),
+                    ServiceName = table.Column<string>(nullable: false),
                     TeamId = table.Column<long>(nullable: false),
-                    TeamName = table.Column<string>(nullable: true),
+                    TeamName = table.Column<string>(nullable: false),
                     RelatedRoundId = table.Column<long>(nullable: false),
                     CurrentRoundId = table.Column<long>(nullable: false),
-                    Payload = table.Column<string>(nullable: true),
+                    Payload = table.Column<string>(nullable: false),
                     StartTime = table.Column<DateTime>(nullable: false),
                     MaxRunningTime = table.Column<int>(nullable: false),
                     RoundLength = table.Column<long>(nullable: false),
@@ -167,7 +167,7 @@ namespace EnoCore.Migrations
                 {
                     Id = table.Column<long>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    StringRepresentation = table.Column<string>(nullable: true),
+                    StringRepresentation = table.Column<string>(nullable: false),
                     OwnerId = table.Column<long>(nullable: false),
                     ServiceId = table.Column<long>(nullable: false),
                     RoundOffset = table.Column<int>(nullable: false),
