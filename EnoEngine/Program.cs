@@ -17,11 +17,6 @@ namespace EnoEngine
     {
         private static CancellationTokenSource CancelSource = new CancellationTokenSource();
 
-        public static void Main()
-        {
-
-        }
-
         public static void Main(string argument = null)
         {
             var serviceProvider = new ServiceCollection()

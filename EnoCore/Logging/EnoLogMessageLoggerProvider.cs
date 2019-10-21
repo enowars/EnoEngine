@@ -10,12 +10,12 @@ namespace EnoCore.Logging
     {
         public IExternalScopeProvider? ScopeProvider { get; internal set; }
         public string Tool { get; }
-        private FileQueue Queue;
+        private readonly FileQueue Queue;
 
         public EnoLogMessageLoggerProvider(string tool, CancellationToken token)
         {
             Tool = tool;
-            Queue = new FileQueue($"../data/{tool}", token);
+            Queue = new FileQueue($"../data/{tool}.log", token);
         }
 
         public ILogger CreateLogger(string categoryName)
