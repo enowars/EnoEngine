@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EnoCore.Migrations
 {
     [DbContext(typeof(EnoDatabaseContext))]
-    [Migration("20191021104911_m1")]
+    [Migration("20191024140415_m1")]
     partial class m1
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -49,7 +49,6 @@ namespace EnoCore.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("Payload")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<long>("RelatedRoundId")

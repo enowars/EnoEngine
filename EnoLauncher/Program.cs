@@ -99,42 +99,33 @@ namespace EnoLauncher
                 }
                 var content = new StringContent(JsonConvert.SerializeObject(task), Encoding.UTF8, "application/json");
                 cancelSource.CancelAfter(task.MaxRunningTime * 1000);
-                int retry = 0;
-                while (!cancelSource.IsCancellationRequested)
+                Logger.LogDebug($"LaunchCheckerTask {task.Id} POSTing {task.TaskType} to checker");
+                var response = await Client.PostAsync(new Uri(task.CheckerUrl), content, cancelSource.Token);
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
-                    Logger.LogTrace($"LaunchCheckerTask {task.Id} POSTing {task.TaskType} to checker");
-                    var response = await Client.PostAsync(new Uri(task.CheckerUrl), content, cancelSource.Token);
-                    if (response.StatusCode == HttpStatusCode.OK)
-                    {
-                        var responseString = (await response.Content.ReadAsStringAsync()).TrimEnd(Environment.NewLine.ToCharArray());
-                        Logger.LogDebug($"LaunchCheckerTask received {responseString}");
-                        dynamic responseJson = JsonConvert.DeserializeObject(responseString);
-                        string result = responseJson.result;
-                        var checkerResult = EnoCoreUtils.ParseCheckerResult(result);
-                        Logger.LogTrace($"LaunchCheckerTask {task.Id} returned {checkerResult}");
-                        task.CheckerResult = checkerResult;
-                        task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
-                        ResultsQueue.Enqueue(task);
-                        return;
-                    }
-                    else if (retry < MAX_RETRIES)
-                    {
-                        Logger.LogError($"LaunchCheckerTask {task.Id} returned {response.StatusCode}, retrying...");
-                        retry += 1;
-                    }
-                    else
-                    {
-                        Logger.LogError($"LaunchCheckerTask {task.Id} returned {response.StatusCode} ({(int)response.StatusCode})");
-                        task.CheckerResult = CheckerResult.CheckerError;
-                        task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
-                        ResultsQueue.Enqueue(task);
-                        return;
-                    }
+                    var responseString = (await response.Content.ReadAsStringAsync()).TrimEnd(Environment.NewLine.ToCharArray());
+                    Logger.LogDebug($"LaunchCheckerTask received {responseString}");
+                    dynamic responseJson = JsonConvert.DeserializeObject(responseString);
+                    string result = responseJson.result;
+                    var checkerResult = EnoCoreUtils.ParseCheckerResult(result);
+                    Logger.LogDebug($"LaunchCheckerTask {task.Id} returned {checkerResult}");
+                    task.CheckerResult = checkerResult;
+                    task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
+                    ResultsQueue.Enqueue(task);
+                    return;
+                }
+                else
+                {
+                    Logger.LogError($"LaunchCheckerTask {task.Id} returned {response.StatusCode} ({(int)response.StatusCode})");
+                    task.CheckerResult = CheckerResult.CheckerError;
+                    task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
+                    ResultsQueue.Enqueue(task);
+                    return;
                 }
             }
             catch (TaskCanceledException e)
             {
-                Logger.LogTrace($"{nameof(LaunchCheckerTask)} {task.Id} was cancelled: {EnoCoreUtils.FormatException(e)}");
+                Logger.LogError($"{nameof(LaunchCheckerTask)} {task.Id} was cancelled because it did not finish: {EnoCoreUtils.FormatException(e)}");
                 task.CheckerResult = CheckerResult.Down;
                 task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
                 ResultsQueue.Enqueue(task);

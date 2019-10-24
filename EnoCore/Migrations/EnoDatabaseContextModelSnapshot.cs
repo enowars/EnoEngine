@@ -47,7 +47,6 @@ namespace EnoCore.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("Payload")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<long>("RelatedRoundId")

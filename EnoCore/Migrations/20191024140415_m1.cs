@@ -76,7 +76,7 @@ namespace EnoCore.Migrations
                     TeamName = table.Column<string>(nullable: false),
                     RelatedRoundId = table.Column<long>(nullable: false),
                     CurrentRoundId = table.Column<long>(nullable: false),
-                    Payload = table.Column<string>(nullable: false),
+                    Payload = table.Column<string>(nullable: true),
                     StartTime = table.Column<DateTime>(nullable: false),
                     MaxRunningTime = table.Column<int>(nullable: false),
                     RoundLength = table.Column<long>(nullable: false),
