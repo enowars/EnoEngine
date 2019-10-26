@@ -34,6 +34,7 @@ namespace EnoCore.Logging
 
     public class  EnoStatisticsMessage
     {
+        public string MessageType => GetType().Name;
         public string Timestamp { get; } = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
     }
 
