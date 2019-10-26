@@ -22,13 +22,13 @@ namespace EnoCore.Logging
         {
             var message = new SubmissionBatchMessage(flagsProcessed,
                 okFlags, duplicateFlags, oldFlags, duration);
-            Queue.Enqueue(PREFIX + JsonConvert.ToString(message));
+            Queue.Enqueue(PREFIX + JsonConvert.SerializeObject(message));
         }
 
         public void CheckerTaskLaunchMessage(CheckerTask task)
         {
             var message = new CheckerTaskLaunchMessage(task);
-            Queue.Enqueue(PREFIX + JsonConvert.ToString(message));
+            Queue.Enqueue(PREFIX + JsonConvert.SerializeObject(message));
         }
     }
 
