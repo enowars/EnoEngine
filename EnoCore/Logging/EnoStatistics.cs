@@ -32,7 +32,7 @@ namespace EnoCore.Logging
 
         public EnoStatistics(string tool)
         {
-            Queue = new FileQueue($"../{tool}", CancellationToken.None);
+            Queue = new FileQueue($"../{tool}.statistics.log", CancellationToken.None);
         }
 
         public void SubmissionBatchMessage(long flagsProcessed, long okFlags,
