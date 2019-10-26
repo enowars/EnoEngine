@@ -17,6 +17,7 @@ using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net.Sockets;
 using System.Data;
+using EnoCore.Logging;
 
 namespace EnoCore
 {
@@ -40,7 +41,7 @@ namespace EnoCore
     public interface IEnoDatabase
     {
         DBInitializationResult ApplyConfig(JsonConfiguration configuration);
-        Task ProcessSubmissionsBatch(List<(Flag flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult> result)> submissions, long flagValidityInRounds);
+        Task ProcessSubmissionsBatch(List<(Flag flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult> result)> submissions, long flagValidityInRounds, EnoStatistics statistics);
         Task<(Round, Round, List<Flag>, List<Noise>, List<Havoc>)> CreateNewRound(DateTime begin, DateTime q2, DateTime q3, DateTime q4, DateTime end);
         Task CalculateRoundTeamServiceStates(IServiceProvider serviceProvider, long roundId);
         Task InsertPutFlagsTasks(long roundId, DateTime firstFlagTime, JsonConfiguration config);

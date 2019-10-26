@@ -1,4 +1,5 @@
-﻿using EnoCore.Models;
+﻿using EnoCore.Logging;
+using EnoCore.Models;
 using EnoCore.Models.Database;
 using EnoCore.Models.Json;
 using Microsoft.EntityFrameworkCore;
@@ -15,12 +16,12 @@ namespace EnoCore
 {
     public partial class EnoDatabase : IEnoDatabase
     {
-        public async Task ProcessSubmissionsBatch(List<(Flag flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult> result)> submissions, long flagValidityInRounds)
+        public async Task ProcessSubmissionsBatch(List<(Flag flag, long attackerTeamId,
+            TaskCompletionSource<FlagSubmissionResult> result)> submissions,
+            long flagValidityInRounds, EnoStatistics statistics)
         {
             var stopWatch = new Stopwatch();
-            long submittedFlagsStatementDuration;
-            long flagsStatementDuration;
-            long commitDuration;
+            stopWatch.Start();
             long okFlags = 0;
             long duplicateFlags = 0;
             long oldFlags = 0;
@@ -99,7 +100,6 @@ namespace EnoCore
             using var transaction = _context.Database.BeginTransaction();
             try
             {
-                stopWatch.Restart();
                 var newSubmissions = await _context.SubmittedFlags.FromSqlRaw(submittedFlagsStatement.ToString()).ToArrayAsync();
                 foreach (var newSubmission in newSubmissions)
                 {
@@ -108,22 +108,17 @@ namespace EnoCore
                         flagsStatement.Append($"update \"Flags\" set \"Captures\" = \"Captures\" + 1 where \"ServiceId\" = {newSubmission.FlagServiceId} and \"RoundId\" = {newSubmission.FlagRoundId} and \"OwnerId\" = {newSubmission.FlagOwnerId} and \"RoundOffset\" = {newSubmission.FlagRoundOffset};\n");
                     }
                 }
-                submittedFlagsStatementDuration = stopWatch.ElapsedMilliseconds;
-                stopWatch.Restart();
                 await _context.Database.ExecuteSqlRawAsync(flagsStatement.ToString());
-                flagsStatementDuration = stopWatch.ElapsedMilliseconds;
-                stopWatch.Restart();
                 await transaction.CommitAsync();
-                commitDuration = stopWatch.ElapsedMilliseconds;
             }
             catch (Exception e)
             {
                 await transaction.RollbackAsync();
                 throw e;
             }
-            EnoLogger.LogStatistics(FlagsubmissionBatchProcessedMessage.Create(submissions.Count,
-                okFlags, duplicateFlags, oldFlags, submittedFlagsStatementDuration,
-                flagsStatementDuration, commitDuration));
+            stopWatch.Stop();
+            statistics.SubmissionBatchMessage(submissions.Count,
+                okFlags, duplicateFlags, oldFlags, stopWatch.ElapsedMilliseconds);
         }
     }
 }

@@ -71,8 +71,7 @@ namespace EnoCore
         public async Task CalculateServiceStats(Team[] teams, long roundId,
             Service service, long oldSnapshotsRoundId, long newLatestSnapshotRoundId)
         {
-            var stats = new CalculateServiceStatsMessage();
-            Dictionary<long, ServiceStatsSnapshot> snapshot = null;
+            Dictionary<long, ServiceStatsSnapshot>? snapshot = null;
             if (newLatestSnapshotRoundId > 0)
             {
                 snapshot = await CreateServiceSnapshot(teams, newLatestSnapshotRoundId, service.Id);

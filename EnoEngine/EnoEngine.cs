@@ -17,6 +17,7 @@ using System.Diagnostics;
 using System.ComponentModel;
 using Microsoft.EntityFrameworkCore;
 using EnoCore.Models.Database;
+using EnoCore.Logging;
 
 namespace EnoEngine
 {
@@ -51,14 +52,16 @@ namespace EnoEngine
         private readonly IServiceProvider ServiceProvider;
         public static JsonConfiguration Configuration { get; set; }
 
-        readonly CTF EnoGame;
+        private readonly CTF EnoGame;
         private readonly ILogger Logger;
+        private readonly EnoStatistics Statistics;
 
         public EnoEngine(ILogger<EnoEngine> logger, IServiceProvider serviceProvider)
         {
             Logger = logger;
             ServiceProvider = serviceProvider;
-            EnoGame = new CTF(serviceProvider, logger, EngineCancelSource.Token);
+            Statistics = new EnoStatistics(nameof(EnoEngine));
+            EnoGame = new CTF(serviceProvider, logger, Statistics, EngineCancelSource.Token);
         }
 
         public async Task RunContest()

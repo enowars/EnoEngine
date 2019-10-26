@@ -27,11 +27,11 @@ namespace EnoCore
     {
         private static readonly RNGCryptoServiceProvider _global = new RNGCryptoServiceProvider();
         [ThreadStatic]
-        private static Random _local;
+        private static Random? _local;
 
         public static void NextBytes(byte[] array)
         {
-            Random inst = _local;
+            Random? inst = _local;
             if (inst == null)
             {
                 byte[] buffer = new byte[4];
@@ -44,7 +44,7 @@ namespace EnoCore
 
         public static int Next()
         {
-            Random inst = _local;
+            Random? inst = _local;
             if (inst == null)
             {
                 byte[] buffer = new byte[4];
@@ -70,7 +70,7 @@ namespace EnoCore
 
         public static async Task RetryDatabaseAction(Func<Task> function)
         {
-            Exception lastException = null;
+            Exception? lastException = null;
             for (int i = 0; i < DATABASE_RETRIES; i++)
             {
                 try
@@ -87,12 +87,14 @@ namespace EnoCore
                     lastException = e;
                 }
             }
+#pragma warning disable CS8597
             throw lastException;
+#pragma warning restore CS8597
         }
 
         public static async Task<T> RetryDatabaseAction<T>(Func<Task<T>> function)
         {
-            Exception lastException = null;
+            Exception? lastException = null;
             for (int i = 0; i < DATABASE_RETRIES; i++)
             {
                 try
@@ -108,12 +110,14 @@ namespace EnoCore
                     lastException = e;
                 }
             }
+#pragma warning disable CS8597
             throw lastException;
+#pragma warning restore CS8597
         }
 
         public static async Task RetryScopedDatabaseAction(IServiceProvider serviceProvider, Func<IEnoDatabase, Task> function)
         {
-            Exception lastException = null;
+            Exception? lastException = null;
             for (int i = 0; i < DATABASE_RETRIES; i++)
             {
                 try
@@ -132,12 +136,14 @@ namespace EnoCore
                     lastException = e;
                 }
             }
+#pragma warning disable CS8597
             throw lastException;
+#pragma warning restore CS8597
         }
 
         public static async Task<T> RetryScopedDatabaseAction<T>(IServiceProvider serviceProvider, Func<IEnoDatabase, Task<T>> function)
         {
-            Exception lastException = null;
+            Exception? lastException = null;
             for (int i = 0; i < DATABASE_RETRIES; i++)
             {
                 try
@@ -155,7 +161,9 @@ namespace EnoCore
                     lastException = e;
                 }
             }
+#pragma warning disable CS8597
             throw lastException;
+#pragma warning restore CS8597
         }
 
         public static List<T> DrainQueue<T>(ConcurrentQueue<T> queue, int max)
