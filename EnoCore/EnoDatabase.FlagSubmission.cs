@@ -27,8 +27,7 @@ namespace EnoCore
             long oldFlags = 0;
             var submittedFlagsStatement = new StringBuilder();
             var flagsStatement = new StringBuilder();
-            var acceptedSubmissions = new List<TaskCompletionSource<FlagSubmissionResult>>(submissions.Count);
-            var acceptedSubmissionsSet = new HashSet<(long, long)>();
+            var waitingTasks = new Dictionary<(long, long, long, long, long), TaskCompletionSource<FlagSubmissionResult>>();
             long currentRoundId = await _context.Rounds
                 .OrderByDescending(r => r.Id)
                 .Select(r => r.Id)
@@ -54,9 +53,8 @@ namespace EnoCore
                 }
                 else
                 {
+                    waitingTasks.Add((flag.ServiceId, flag.RoundId, flag.OwnerId, flag.RoundOffset, attackerTeamId), result);
                     updates.Add((flag.ServiceId, flag.RoundId, flag.OwnerId, flag.RoundOffset, attackerTeamId), 1);
-                    var t = Task.Run(() => tResult.TrySetResult(FlagSubmissionResult.Ok)); //TODO
-                    okFlags += 1;
                 }
             }
             if (updates.Count == 0)
@@ -103,9 +101,15 @@ namespace EnoCore
                 var newSubmissions = await _context.SubmittedFlags.FromSqlRaw(submittedFlagsStatement.ToString()).ToArrayAsync();
                 foreach (var newSubmission in newSubmissions)
                 {
+                    var tResult = waitingTasks[(newSubmission.FlagServiceId, newSubmission.FlagRoundId, newSubmission.FlagOwnerId, newSubmission.FlagRoundOffset, newSubmission.AttackerTeamId)];
                     if (newSubmission.SubmissionsCount == 1)
                     {
+                        var t = Task.Run(() => tResult.TrySetResult(FlagSubmissionResult.Ok));
                         flagsStatement.Append($"update \"Flags\" set \"Captures\" = \"Captures\" + 1 where \"ServiceId\" = {newSubmission.FlagServiceId} and \"RoundId\" = {newSubmission.FlagRoundId} and \"OwnerId\" = {newSubmission.FlagOwnerId} and \"RoundOffset\" = {newSubmission.FlagRoundOffset};\n");
+                    }
+                    else
+                    {
+                        var t = Task.Run(() => tResult.TrySetResult(FlagSubmissionResult.Duplicate));
                     }
                 }
                 await _context.Database.ExecuteSqlRawAsync(flagsStatement.ToString());
