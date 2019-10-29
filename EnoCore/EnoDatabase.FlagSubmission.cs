@@ -57,72 +57,73 @@ namespace EnoCore
                     updates.Add((flag.ServiceId, flag.RoundId, flag.OwnerId, flag.RoundOffset, attackerTeamId), 1);
                 }
             }
-            if (updates.Count == 0)
-                return;
-
-            // Sort the elements to prevent deadlocks from conflicting row lock orderings
-            var updatesArray = updates.ToArray();
-            Array.Sort(updatesArray, (a,b) =>
+            if (updates.Count > 0)
             {
-                if (a.Key.Item1 < b.Key.Item1)
-                    return 1;
-                if (a.Key.Item1 > b.Key.Item1)
-                    return -1;
-                if (a.Key.Item2 < b.Key.Item2)
-                    return 1;
-                if (a.Key.Item2 > b.Key.Item2)
-                    return -1;
-                if (a.Key.Item3 < b.Key.Item3)
-                    return 1;
-                if (a.Key.Item3 > b.Key.Item3)
-                    return -1;
-                if (a.Key.Item4 < b.Key.Item4)
-                    return 1;
-                if (a.Key.Item4 > b.Key.Item4)
-                    return -1;
-                if (a.Key.Item5 < b.Key.Item5)
-                    return 1;
-                if (a.Key.Item5 > b.Key.Item5)
-                    return -1;
-                return 0;
-            });
-
-            // Build the statements
-            foreach (var ((serviceId, roundId, ownerId, roundOffset, attackerTeamId), count) in updatesArray)
-            {
-                submittedFlagsStatement.Append($"({serviceId}, {roundId}, {ownerId}, {roundOffset}, {attackerTeamId}, {currentRoundId}, {count}),");
-            }
-            submittedFlagsStatement.Length--; // Pointers are fun!
-            submittedFlagsStatement.Append("\non conflict (\"FlagServiceId\", \"FlagRoundId\", \"FlagOwnerId\", \"FlagRoundOffset\", \"AttackerTeamId\") do update set \"SubmissionsCount\" = \"SubmittedFlags\".\"SubmissionsCount\" + excluded.\"SubmissionsCount\" returning \"FlagServiceId\", \"FlagOwnerId\", \"FlagRoundId\", \"FlagRoundOffset\", \"AttackerTeamId\", \"RoundId\", \"SubmissionsCount\";");
-
-            using var transaction = _context.Database.BeginTransaction();
-            try
-            {
-                var newSubmissions = await _context.SubmittedFlags.FromSqlRaw(submittedFlagsStatement.ToString()).ToArrayAsync();
-                foreach (var newSubmission in newSubmissions)
+                // Sort the elements to prevent deadlocks from conflicting row lock orderings
+                var updatesArray = updates.ToArray();
+                Array.Sort(updatesArray, (a, b) =>
                 {
-                    var tResult = waitingTasks[(newSubmission.FlagServiceId, newSubmission.FlagRoundId, newSubmission.FlagOwnerId, newSubmission.FlagRoundOffset, newSubmission.AttackerTeamId)];
-                    if (newSubmission.SubmissionsCount == 1)
-                    {
-                        okFlags += 1;
-                        var t = Task.Run(() => tResult.TrySetResult(FlagSubmissionResult.Ok));
-                        flagsStatement.Append($"update \"Flags\" set \"Captures\" = \"Captures\" + 1 where \"ServiceId\" = {newSubmission.FlagServiceId} and \"RoundId\" = {newSubmission.FlagRoundId} and \"OwnerId\" = {newSubmission.FlagOwnerId} and \"RoundOffset\" = {newSubmission.FlagRoundOffset};\n");
-                    }
-                    else
-                    {
-                        duplicateFlags += 1;
-                        var t = Task.Run(() => tResult.TrySetResult(FlagSubmissionResult.Duplicate));
-                    }
+                    if (a.Key.Item1 < b.Key.Item1)
+                        return 1;
+                    if (a.Key.Item1 > b.Key.Item1)
+                        return -1;
+                    if (a.Key.Item2 < b.Key.Item2)
+                        return 1;
+                    if (a.Key.Item2 > b.Key.Item2)
+                        return -1;
+                    if (a.Key.Item3 < b.Key.Item3)
+                        return 1;
+                    if (a.Key.Item3 > b.Key.Item3)
+                        return -1;
+                    if (a.Key.Item4 < b.Key.Item4)
+                        return 1;
+                    if (a.Key.Item4 > b.Key.Item4)
+                        return -1;
+                    if (a.Key.Item5 < b.Key.Item5)
+                        return 1;
+                    if (a.Key.Item5 > b.Key.Item5)
+                        return -1;
+                    return 0;
+                });
+
+                // Build the statements
+                foreach (var ((serviceId, roundId, ownerId, roundOffset, attackerTeamId), count) in updatesArray)
+                {
+                    submittedFlagsStatement.Append($"({serviceId}, {roundId}, {ownerId}, {roundOffset}, {attackerTeamId}, {currentRoundId}, {count}),");
                 }
-                await _context.Database.ExecuteSqlRawAsync(flagsStatement.ToString());
-                await transaction.CommitAsync();
+                submittedFlagsStatement.Length--; // Pointers are fun!
+                submittedFlagsStatement.Append("\non conflict (\"FlagServiceId\", \"FlagRoundId\", \"FlagOwnerId\", \"FlagRoundOffset\", \"AttackerTeamId\") do update set \"SubmissionsCount\" = \"SubmittedFlags\".\"SubmissionsCount\" + excluded.\"SubmissionsCount\" returning \"FlagServiceId\", \"FlagOwnerId\", \"FlagRoundId\", \"FlagRoundOffset\", \"AttackerTeamId\", \"RoundId\", \"SubmissionsCount\";");
+
+                using var transaction = _context.Database.BeginTransaction();
+                try
+                {
+                    var newSubmissions = await _context.SubmittedFlags.FromSqlRaw(submittedFlagsStatement.ToString()).ToArrayAsync();
+                    foreach (var newSubmission in newSubmissions)
+                    {
+                        var tResult = waitingTasks[(newSubmission.FlagServiceId, newSubmission.FlagRoundId, newSubmission.FlagOwnerId, newSubmission.FlagRoundOffset, newSubmission.AttackerTeamId)];
+                        if (newSubmission.SubmissionsCount == 1)
+                        {
+                            okFlags += 1;
+                            var t = Task.Run(() => tResult.TrySetResult(FlagSubmissionResult.Ok));
+                            flagsStatement.Append($"update \"Flags\" set \"Captures\" = \"Captures\" + 1 where \"ServiceId\" = {newSubmission.FlagServiceId} and \"RoundId\" = {newSubmission.FlagRoundId} and \"OwnerId\" = {newSubmission.FlagOwnerId} and \"RoundOffset\" = {newSubmission.FlagRoundOffset};\n");
+                        }
+                        else
+                        {
+                            duplicateFlags += 1;
+                            var t = Task.Run(() => tResult.TrySetResult(FlagSubmissionResult.Duplicate));
+                        }
+                    }
+                    await _context.Database.ExecuteSqlRawAsync(flagsStatement.ToString());
+                    await transaction.CommitAsync();
+                }
+                catch (Exception e)
+                {
+                    await transaction.RollbackAsync();
+                    throw e;
+                }
+                stopWatch.Stop();
+
             }
-            catch (Exception e)
-            {
-                await transaction.RollbackAsync();
-                throw e;
-            }
-            stopWatch.Stop();
             statistics.SubmissionBatchMessage(submissions.Count,
                 okFlags, duplicateFlags, oldFlags, stopWatch.ElapsedMilliseconds);
         }
