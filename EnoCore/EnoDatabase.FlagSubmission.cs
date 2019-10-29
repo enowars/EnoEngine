@@ -104,11 +104,13 @@ namespace EnoCore
                     var tResult = waitingTasks[(newSubmission.FlagServiceId, newSubmission.FlagRoundId, newSubmission.FlagOwnerId, newSubmission.FlagRoundOffset, newSubmission.AttackerTeamId)];
                     if (newSubmission.SubmissionsCount == 1)
                     {
+                        okFlags += 1;
                         var t = Task.Run(() => tResult.TrySetResult(FlagSubmissionResult.Ok));
                         flagsStatement.Append($"update \"Flags\" set \"Captures\" = \"Captures\" + 1 where \"ServiceId\" = {newSubmission.FlagServiceId} and \"RoundId\" = {newSubmission.FlagRoundId} and \"OwnerId\" = {newSubmission.FlagOwnerId} and \"RoundOffset\" = {newSubmission.FlagRoundOffset};\n");
                     }
                     else
                     {
+                        duplicateFlags += 1;
                         var t = Task.Run(() => tResult.TrySetResult(FlagSubmissionResult.Duplicate));
                     }
                 }
