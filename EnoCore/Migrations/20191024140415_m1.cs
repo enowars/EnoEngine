@@ -13,7 +13,7 @@ namespace EnoCore.Migrations
                 columns: table => new
                 {
                     Id = table.Column<long>(nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Begin = table.Column<DateTime>(nullable: false),
                     Quarter2 = table.Column<DateTime>(nullable: false),
                     Quarter3 = table.Column<DateTime>(nullable: false),
@@ -30,7 +30,7 @@ namespace EnoCore.Migrations
                 columns: table => new
                 {
                     Id = table.Column<long>(nullable: false),
-                    Name = table.Column<string>(nullable: true),
+                    Name = table.Column<string>(nullable: false),
                     FlagsPerRound = table.Column<int>(nullable: false),
                     NoisesPerRound = table.Column<int>(nullable: false),
                     HavocsPerRound = table.Column<int>(nullable: false),
@@ -47,8 +47,8 @@ namespace EnoCore.Migrations
                 columns: table => new
                 {
                     Id = table.Column<long>(nullable: false),
-                    Name = table.Column<string>(nullable: true),
-                    TeamSubnet = table.Column<string>(nullable: true),
+                    Name = table.Column<string>(nullable: false),
+                    TeamSubnet = table.Column<string>(nullable: false),
                     TotalPoints = table.Column<double>(nullable: false),
                     AttackPoints = table.Column<double>(nullable: false),
                     LostDefensePoints = table.Column<double>(nullable: false),
@@ -66,14 +66,14 @@ namespace EnoCore.Migrations
                 columns: table => new
                 {
                     Id = table.Column<long>(nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
-                    CheckerUrl = table.Column<string>(nullable: true),
-                    TaskType = table.Column<string>(nullable: true),
-                    Address = table.Column<string>(nullable: true),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    CheckerUrl = table.Column<string>(nullable: false),
+                    TaskType = table.Column<string>(nullable: false),
+                    Address = table.Column<string>(nullable: false),
                     ServiceId = table.Column<long>(nullable: false),
-                    ServiceName = table.Column<string>(nullable: true),
+                    ServiceName = table.Column<string>(nullable: false),
                     TeamId = table.Column<long>(nullable: false),
-                    TeamName = table.Column<string>(nullable: true),
+                    TeamName = table.Column<string>(nullable: false),
                     RelatedRoundId = table.Column<long>(nullable: false),
                     CurrentRoundId = table.Column<long>(nullable: false),
                     Payload = table.Column<string>(nullable: true),
@@ -99,27 +99,25 @@ namespace EnoCore.Migrations
                 name: "Flags",
                 columns: table => new
                 {
-                    Id = table.Column<long>(nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
-                    Entropy = table.Column<byte[]>(nullable: true),
                     OwnerId = table.Column<long>(nullable: false),
                     ServiceId = table.Column<long>(nullable: false),
                     RoundOffset = table.Column<int>(nullable: false),
-                    GameRoundId = table.Column<long>(nullable: false)
+                    RoundId = table.Column<long>(nullable: false),
+                    Captures = table.Column<long>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Flags", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Flags_Rounds_GameRoundId",
-                        column: x => x.GameRoundId,
-                        principalTable: "Rounds",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                    table.PrimaryKey("PK_Flags", x => new { x.ServiceId, x.RoundId, x.OwnerId, x.RoundOffset });
                     table.ForeignKey(
                         name: "FK_Flags_Teams_OwnerId",
                         column: x => x.OwnerId,
                         principalTable: "Teams",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Flags_Rounds_RoundId",
+                        column: x => x.RoundId,
+                        principalTable: "Rounds",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -135,7 +133,7 @@ namespace EnoCore.Migrations
                 columns: table => new
                 {
                     Id = table.Column<long>(nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     OwnerId = table.Column<long>(nullable: false),
                     ServiceId = table.Column<long>(nullable: false),
                     GameRoundId = table.Column<long>(nullable: false)
@@ -168,8 +166,8 @@ namespace EnoCore.Migrations
                 columns: table => new
                 {
                     Id = table.Column<long>(nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
-                    StringRepresentation = table.Column<string>(nullable: true),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    StringRepresentation = table.Column<string>(nullable: false),
                     OwnerId = table.Column<long>(nullable: false),
                     ServiceId = table.Column<long>(nullable: false),
                     RoundOffset = table.Column<int>(nullable: false),
@@ -202,16 +200,14 @@ namespace EnoCore.Migrations
                 name: "RoundTeamServiceStates",
                 columns: table => new
                 {
-                    Id = table.Column<long>(nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
-                    Status = table.Column<int>(nullable: false),
                     TeamId = table.Column<long>(nullable: false),
                     ServiceId = table.Column<long>(nullable: false),
-                    GameRoundId = table.Column<long>(nullable: false)
+                    GameRoundId = table.Column<long>(nullable: false),
+                    Status = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_RoundTeamServiceStates", x => x.Id);
+                    table.PrimaryKey("PK_RoundTeamServiceStates", x => new { x.ServiceId, x.TeamId, x.GameRoundId });
                     table.ForeignKey(
                         name: "FK_RoundTeamServiceStates_Rounds_GameRoundId",
                         column: x => x.GameRoundId,
@@ -237,7 +233,7 @@ namespace EnoCore.Migrations
                 columns: table => new
                 {
                     Id = table.Column<long>(nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     TeamId = table.Column<long>(nullable: false),
                     ServiceId = table.Column<long>(nullable: false),
                     AttackPoints = table.Column<double>(nullable: false),
@@ -266,18 +262,16 @@ namespace EnoCore.Migrations
                 name: "ServiceStatsSnapshots",
                 columns: table => new
                 {
-                    Id = table.Column<long>(nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     TeamId = table.Column<long>(nullable: false),
                     ServiceId = table.Column<long>(nullable: false),
+                    RoundId = table.Column<long>(nullable: false),
                     AttackPoints = table.Column<double>(nullable: false),
                     LostDefensePoints = table.Column<double>(nullable: false),
-                    ServiceLevelAgreementPoints = table.Column<double>(nullable: false),
-                    RoundId = table.Column<long>(nullable: false)
+                    ServiceLevelAgreementPoints = table.Column<double>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ServiceStatsSnapshots", x => x.Id);
+                    table.PrimaryKey("PK_ServiceStatsSnapshots", x => new { x.ServiceId, x.RoundId, x.TeamId });
                     table.ForeignKey(
                         name: "FK_ServiceStatsSnapshots_Rounds_RoundId",
                         column: x => x.RoundId,
@@ -302,26 +296,21 @@ namespace EnoCore.Migrations
                 name: "SubmittedFlags",
                 columns: table => new
                 {
-                    Id = table.Column<long>(nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
-                    FlagId = table.Column<long>(nullable: false),
+                    FlagServiceId = table.Column<long>(nullable: false),
+                    FlagOwnerId = table.Column<long>(nullable: false),
+                    FlagRoundId = table.Column<long>(nullable: false),
+                    FlagRoundOffset = table.Column<int>(nullable: false),
                     AttackerTeamId = table.Column<long>(nullable: false),
                     RoundId = table.Column<long>(nullable: false),
                     SubmissionsCount = table.Column<long>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_SubmittedFlags", x => x.Id);
+                    table.PrimaryKey("PK_SubmittedFlags", x => new { x.FlagServiceId, x.FlagRoundId, x.FlagOwnerId, x.FlagRoundOffset, x.AttackerTeamId });
                     table.ForeignKey(
                         name: "FK_SubmittedFlags_Teams_AttackerTeamId",
                         column: x => x.AttackerTeamId,
                         principalTable: "Teams",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_SubmittedFlags_Flags_FlagId",
-                        column: x => x.FlagId,
-                        principalTable: "Flags",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -330,12 +319,13 @@ namespace EnoCore.Migrations
                         principalTable: "Rounds",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_SubmittedFlags_Flags_FlagServiceId_FlagRoundId_FlagOwnerId_~",
+                        columns: x => new { x.FlagServiceId, x.FlagRoundId, x.FlagOwnerId, x.FlagRoundOffset },
+                        principalTable: "Flags",
+                        principalColumns: new[] { "ServiceId", "RoundId", "OwnerId", "RoundOffset" },
+                        onDelete: ReferentialAction.Cascade);
                 });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CheckerTasks_CheckerResult",
-                table: "CheckerTasks",
-                column: "CheckerResult");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CheckerTasks_CheckerTaskLaunchStatus",
@@ -343,29 +333,9 @@ namespace EnoCore.Migrations
                 column: "CheckerTaskLaunchStatus");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CheckerTasks_CurrentRoundId",
-                table: "CheckerTasks",
-                column: "CurrentRoundId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CheckerTasks_RelatedRoundId",
-                table: "CheckerTasks",
-                column: "RelatedRoundId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CheckerTasks_StartTime",
-                table: "CheckerTasks",
-                column: "StartTime");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_CheckerTasks_TeamId",
                 table: "CheckerTasks",
                 column: "TeamId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Flags_GameRoundId",
-                table: "Flags",
-                column: "GameRoundId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Flags_OwnerId",
@@ -373,9 +343,9 @@ namespace EnoCore.Migrations
                 column: "OwnerId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Flags_ServiceId",
+                name: "IX_Flags_RoundId",
                 table: "Flags",
-                column: "ServiceId");
+                column: "RoundId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Havocs_GameRoundId",
@@ -413,16 +383,6 @@ namespace EnoCore.Migrations
                 column: "GameRoundId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_RoundTeamServiceStates_ServiceId",
-                table: "RoundTeamServiceStates",
-                column: "ServiceId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_RoundTeamServiceStates_Status",
-                table: "RoundTeamServiceStates",
-                column: "Status");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_RoundTeamServiceStates_TeamId",
                 table: "RoundTeamServiceStates",
                 column: "TeamId");
@@ -443,30 +403,19 @@ namespace EnoCore.Migrations
                 column: "RoundId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ServiceStatsSnapshots_ServiceId",
-                table: "ServiceStatsSnapshots",
-                column: "ServiceId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_ServiceStatsSnapshots_TeamId",
                 table: "ServiceStatsSnapshots",
                 column: "TeamId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_SubmittedFlags_FlagId",
+                name: "IX_SubmittedFlags_AttackerTeamId",
                 table: "SubmittedFlags",
-                column: "FlagId");
+                column: "AttackerTeamId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_SubmittedFlags_RoundId",
                 table: "SubmittedFlags",
                 column: "RoundId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_SubmittedFlags_AttackerTeamId_FlagId",
-                table: "SubmittedFlags",
-                columns: new[] { "AttackerTeamId", "FlagId" },
-                unique: true);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -496,10 +445,10 @@ namespace EnoCore.Migrations
                 name: "Flags");
 
             migrationBuilder.DropTable(
-                name: "Rounds");
+                name: "Teams");
 
             migrationBuilder.DropTable(
-                name: "Teams");
+                name: "Rounds");
 
             migrationBuilder.DropTable(
                 name: "Services");

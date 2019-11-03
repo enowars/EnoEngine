@@ -16,14 +16,14 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using EnoCore.Models;
-
+using System.Linq;
 
 namespace FlagShooter
 {
     class Program
     {
         private static readonly CancellationTokenSource LauncherCancelSource = new CancellationTokenSource();
-        private readonly ILogger Logger;
+        private readonly ILogger<Program> Logger;
         private readonly ServiceProvider ServiceProvider;
         private readonly Dictionary<long, (TcpClient, StreamReader reader, StreamWriter writer)[]> TeamSockets =
             new Dictionary<long, (TcpClient, StreamReader reader, StreamWriter writer)[]>();
@@ -76,7 +76,7 @@ namespace FlagShooter
                     using (var scope = ServiceProvider.CreateScope())
                     {
                         var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                        var flags = await File.ReadAllLinesAsync(@"C:\Users\Benni\enowars3\flags.sorted");
+                        var flags = await db.RetrieveFlags(flagcount);
                         var tasks = new Task[AttackingTeams];
                         if (flags.Length > 0)
                         {
@@ -85,7 +85,7 @@ namespace FlagShooter
                         for (int i = 0; i < AttackingTeams; i++)
                         {
                             var ti = i;
-                            tasks[ti] = Task.Run(async () => await SendFlagsTask(flags, ti + 1));
+                            tasks[ti] = Task.Run(async () => await SendFlagsTask(flags.Select(f => f.ToString()).ToArray(), ti + 1));
                         }
                         await Task.WhenAll(tasks);
                         await Task.Delay(1000, LauncherCancelSource.Token);
@@ -143,6 +143,7 @@ namespace FlagShooter
                             pgoptions => pgoptions.EnableRetryOnFailure());
                     }, 2)
                     .AddScoped<IEnoDatabase, EnoDatabase>()
+                    .AddLogging(logging => logging.AddConsole())
                     .BuildServiceProvider(validateScopes: true);
                 new Program(serviceProvider).Start();
             }

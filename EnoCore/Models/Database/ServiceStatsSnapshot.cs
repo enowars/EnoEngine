@@ -6,7 +6,6 @@ namespace EnoCore.Models.Database
 {
     public class ServiceStatsSnapshot
     {
-        public long Id { get; set; }
         public long TeamId { get; set; }
         public Team Team { get; set; }
         public long ServiceId { get; set; }

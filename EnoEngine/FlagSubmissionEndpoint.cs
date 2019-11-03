@@ -1,4 +1,5 @@
 ﻿using EnoCore;
+using EnoCore.Logging;
 using EnoCore.Models;
 using EnoCore.Models.Json;
 using EnoEngine.Game;
@@ -21,17 +22,19 @@ namespace EnoEngine.FlagSubmission
         private static readonly ConcurrentQueue<(Flag flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult> tcs)> FlagInsertsQueue
             = new ConcurrentQueue<(Flag, long, TaskCompletionSource<FlagSubmissionResult>)>();
         private const int InsertSubmissionsBatchSize = 1000;
-        readonly CancellationToken Token;
+        private readonly CancellationToken Token;
+        private readonly EnoStatistics Statistics;
         readonly TcpListener ProductionListener = new TcpListener(IPAddress.IPv6Any, 1337);
         readonly TcpListener DebugListener = new TcpListener(IPAddress.IPv6Any, 1338);
         readonly IServiceProvider ServiceProvider;
         private readonly Task UpdateDatabaseTask;
         private readonly ILogger Logger;
 
-        public FlagSubmissionEndpoint(IServiceProvider serviceProvider, ILogger logger, CancellationToken token)
+        public FlagSubmissionEndpoint(IServiceProvider serviceProvider, ILogger logger, EnoStatistics statistics, CancellationToken token)
         {
             Logger = logger;
             Token = token;
+            Statistics = statistics;
             ProductionListener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
             DebugListener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
             Token.Register(() => ProductionListener.Stop());
@@ -82,24 +85,35 @@ namespace EnoEngine.FlagSubmission
                 ProductionListener.Start();
                 while (!Token.IsCancellationRequested)
                 {
-                    var client = await ProductionListener.AcceptTcpClientAsync();
-                    var attackerAddress = ((IPEndPoint)client.Client.RemoteEndPoint).Address.GetAddressBytes();
-                    var attackerPrefix = new byte[EnoEngine.Configuration.TeamSubnetBytesLength];
-                    Array.Copy(attackerAddress, attackerPrefix, EnoEngine.Configuration.TeamSubnetBytesLength);
-                    var attackerPrefixString = BitConverter.ToString(attackerPrefix);
-                    long teamId;
-                    using (var scope = ServiceProvider.CreateScope())
+                    try
                     {
-                        var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                        teamId = await db.GetTeamIdByPrefix(attackerPrefixString);
-                    }
-                    var clientTask = Task.Run(async () =>
-                    {
-                        using (StreamReader reader = new StreamReader(client.GetStream()))
+                        var client = await ProductionListener.AcceptTcpClientAsync();
+                        var attackerAddress = ((IPEndPoint)client.Client.RemoteEndPoint).Address.GetAddressBytes();
+                        var attackerPrefix = new byte[EnoEngine.Configuration.TeamSubnetBytesLength];
+                        Array.Copy(attackerAddress, attackerPrefix, EnoEngine.Configuration.TeamSubnetBytesLength);
+                        var attackerPrefixString = BitConverter.ToString(attackerPrefix);
+                        long teamId;
+                        using (var scope = ServiceProvider.CreateScope())
                         {
-                            await HandleIdentifiedSubmissionClient(client, reader, teamId);
+                            var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
+                            teamId = await db.GetTeamIdByPrefix(attackerPrefixString);
                         }
-                    });
+                        var clientTask = Task.Run(async () =>
+                        {
+                            using (StreamReader reader = new StreamReader(client.GetStream()))
+                            {
+                                await HandleIdentifiedSubmissionClient(client, reader, teamId);
+                            }
+                        });
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        throw;
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.LogWarning($"RunProductionEndpoint failed to handle connection: {EnoCoreUtils.FormatException(e)}");
+                    }
                 }
             }
             catch (ObjectDisposedException) { }
@@ -193,12 +207,12 @@ namespace EnoEngine.FlagSubmission
             try
             {
                 var lastQueueMessageTimestamp = DateTime.UtcNow;
-                EnoLogger.LogStatistics(FlagsubmissionQueueSizeMessage.Create(FlagInsertsQueue.Count));
+                //TODO EnoLogger.LogStatistics(FlagsubmissionQueueSizeMessage.Create(FlagInsertsQueue.Count));
                 while (!Token.IsCancellationRequested)
                 {
                     if (DateTime.UtcNow.Subtract(lastQueueMessageTimestamp).Seconds > 5)
                     {
-                        EnoLogger.LogStatistics(FlagsubmissionQueueSizeMessage.Create(FlagInsertsQueue.Count));
+                        //TODO EnoLogger.LogStatistics(FlagsubmissionQueueSizeMessage.Create(FlagInsertsQueue.Count));
                         lastQueueMessageTimestamp = DateTime.UtcNow;
                     }
                     var submissions = EnoCoreUtils.DrainQueue(FlagInsertsQueue, InsertSubmissionsBatchSize);
@@ -215,7 +229,7 @@ namespace EnoEngine.FlagSubmission
                                 using (var scope = ServiceProvider.CreateScope())
                                 {
                                     var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                                    await db.ProcessSubmissionsBatch(submissions, EnoEngine.Configuration.FlagValidityInRounds);
+                                    await db.ProcessSubmissionsBatch(submissions, EnoEngine.Configuration.FlagValidityInRounds, Statistics);
                                 }
                             });
                         }

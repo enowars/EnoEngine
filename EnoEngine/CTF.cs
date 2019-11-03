@@ -1,4 +1,5 @@
 ﻿using EnoCore;
+using EnoCore.Logging;
 using EnoCore.Models;
 using EnoCore.Models.Database;
 using EnoCore.Models.Json;
@@ -21,12 +22,12 @@ namespace EnoEngine.Game
         private readonly IServiceProvider ServiceProvider;
         private readonly CancellationToken Token;
 
-        public CTF(IServiceProvider serviceProvider, ILogger logger, CancellationToken token)
+        public CTF(IServiceProvider serviceProvider, ILogger logger, EnoStatistics statistics, CancellationToken token)
         {
             ServiceProvider = serviceProvider;
             Logger = logger;
             Token = token;
-            var flagSub = new FlagSubmissionEndpoint(serviceProvider, logger, token);
+            var flagSub = new FlagSubmissionEndpoint(serviceProvider, logger, statistics, token);
             Task.Run(async () => await flagSub.RunProductionEndpoint());
             Task.Run(async () => await flagSub.RunDebugEndpoint());
         }
@@ -80,7 +81,7 @@ namespace EnoEngine.Game
                 Logger.LogInformation($"All checker tasks for round {currentRound.Id} are created ({stopwatch.ElapsedMilliseconds}ms)");
                 await HandleRoundEnd(oldRound?.Id ?? 0);
                 Logger.LogInformation($"HandleRoundEnd for round {oldRound?.Id ?? 0} finished ({stopwatch.ElapsedMilliseconds}ms)");
-                EnoLogger.LogStatistics(StartNewRoundFinishedMessage.Create(oldRound?.Id ?? 0, stopwatch.ElapsedMilliseconds));
+                //TODO EnoLogger.LogStatistics(StartNewRoundFinishedMessage.Create(oldRound?.Id ?? 0, stopwatch.ElapsedMilliseconds));
             }
             catch (Exception e)
             {
@@ -243,7 +244,7 @@ namespace EnoEngine.Game
             var scoreboard = EnoDatabaseUtils.GetCurrentScoreboard(ServiceProvider, roundId);
             EnoCoreUtils.GenerateCurrentScoreboard(scoreboard, $"..{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}", roundId);
             jsonStopWatch.Stop();
-            EnoLogger.LogStatistics(ScoreboardJsonGenerationFinishedMessage.Create(jsonStopWatch.ElapsedMilliseconds));
+            //TODO EnoLogger.LogStatistics(ScoreboardJsonGenerationFinishedMessage.Create(jsonStopWatch.ElapsedMilliseconds));
             return DateTime.UtcNow;
         }
 
@@ -263,7 +264,7 @@ namespace EnoEngine.Game
             finally
             {
                 stopWatch.Stop();
-                EnoLogger.LogStatistics(CalculateTotalPointsFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
+                //TODO EnoLogger.LogStatistics(CalculateTotalPointsFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
             }
         }
 
@@ -294,7 +295,7 @@ namespace EnoEngine.Game
             finally
             {
                 stopWatch.Stop();
-                EnoLogger.LogStatistics(CalculateServicePointsFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
+                //TODO EnoLogger.LogStatistics(CalculateServicePointsFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
             }
         }
 
@@ -314,7 +315,7 @@ namespace EnoEngine.Game
             finally
             {
                 stopWatch.Stop();
-                EnoLogger.LogStatistics(RecordServiceStatesFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
+                //TODO EnoLogger.LogStatistics(RecordServiceStatesFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
                 Logger.LogInformation($"RecordServiceStates took {stopWatch.ElapsedMilliseconds}ms");
             }
         }

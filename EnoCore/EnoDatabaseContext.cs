@@ -39,9 +39,22 @@ namespace EnoCore
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<Flag>()
+                .HasKey(f => new { f.ServiceId, f.RoundId, f.OwnerId, f.RoundOffset });
+
+            modelBuilder.Entity<SubmittedFlag>()
+                .HasKey(sf => new { sf.FlagServiceId, sf.FlagRoundId, sf.FlagOwnerId, sf.FlagRoundOffset, sf.AttackerTeamId });
+
+            modelBuilder.Entity<RoundTeamServiceState>()
+                .HasKey(rtss => new { rtss.ServiceId, rtss.TeamId, rtss.GameRoundId });
+
+            modelBuilder.Entity<ServiceStatsSnapshot>()
+                .HasKey(sss => new { sss.ServiceId, sss.RoundId, sss.TeamId });
+
             modelBuilder.Entity<CheckerTask>()
                 .HasIndex(ct => ct.CheckerTaskLaunchStatus);
 
+            /*
             modelBuilder.Entity<CheckerTask>()
                 .HasIndex(ct => ct.StartTime);
 
@@ -56,13 +69,7 @@ namespace EnoCore
 
             modelBuilder.Entity<CheckerTask>()
                 .HasIndex(ct => ct.TeamId);
-
-            modelBuilder.Entity<SubmittedFlag>()
-                .HasIndex(sf => new { sf.AttackerTeamId, sf.FlagId })
-                .IsUnique();
-
-            modelBuilder.Entity<RoundTeamServiceState>()
-                .HasIndex(rtss => rtss.Status);
+                */
         }
     }
 }

@@ -1,0 +1,74 @@
+{
+	"FlagValidityInRounds": 2,
+	"CheckedRoundsPerRound": 3,
+	"RoundLengthInSeconds": 60,
+	"DnsSuffix": "enoctf.enoflag.de",
+	"TeamSubnetBytesLength": 16,
+	"Teams": [{
+		"Id": 1,
+		"Name": "teamname1",
+		"TeamSubnet": "::ffff:10.10.1.1"
+	},{
+		"Id": 2,
+		"Name": "teamname2",
+		"TeamSubnet": "::ffff:10.10.1.2"
+	},{
+		"Id": 3,
+		"Name": "teamname3",
+		"TeamSubnet": "::ffff:10.10.1.3"
+	},{
+		"Id": 4,
+		"Name": "teamname4",
+		"TeamSubnet": "::ffff:10.10.1.4"
+	},{
+		"Id": 5,
+		"Name": "teamname5",
+		"TeamSubnet": "::ffff:10.10.1.5"
+	},{
+		"Id": 6,
+		"Name": "teamname6",
+		"TeamSubnet": "::ffff:10.10.1.6"
+	},{
+		"Id": 7,
+		"Name": "teamname7",
+		"TeamSubnet": "::ffff:10.10.1.7"
+	},{
+		"Id": 8,
+		"Name": "teamname8",
+		"TeamSubnet": "::ffff:10.10.1.8"
+	}],
+	"Services": [{
+			"Id": 1,
+			"Name": "WASP",
+			"FlagsPerRound": 2,
+			"NoisesPerRound": 0,
+			"HavocsPerRound": 0,
+			"WeightFactor": 1,
+			"Checkers": ["http://[::1]:8000"]
+		},{
+			"Id": 2,
+			"Name": "DJBooth",
+			"FlagsPerRound": 1,
+			"NoisesPerRound": 0,
+			"HavocsPerRound": 0,
+			"WeightFactor": 1,
+			"Checkers": ["http://[::1]:8001"]
+		},{
+			"Id": 3,
+			"Name": "casino",
+			"FlagsPerRound": 2,
+			"NoisesPerRound": 1,
+			"HavocsPerRound": 2,
+			"WeightFactor": 1,
+			"Checkers": ["http://[::1]:8002"]
+		},{
+			"Id": 4,
+			"Name": "voting",
+			"FlagsPerRound": 1,
+			"NoisesPerRound": 1,
+			"HavocsPerRound": 1,
+			"WeightFactor": 1,
+			"Checkers": ["http://[::1]:8003"]
+		}
+	]
+}

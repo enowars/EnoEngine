@@ -43,7 +43,7 @@ namespace EnoCore.Models.Database
         [JsonProperty("round")]
         public long CurrentRoundId { get; set; }
         [JsonProperty("flag")]
-        public string Payload { get; set; }
+        public string? Payload { get; set; }
         [JsonIgnore]
         public DateTime StartTime { get; set; }
         [JsonProperty("timeout")]
@@ -61,5 +61,7 @@ namespace EnoCore.Models.Database
         {
 
         }
+
+        public override string ToString() => "bad serilog";
     }
 }
