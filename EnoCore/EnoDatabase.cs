@@ -446,7 +446,7 @@ namespace EnoCore
                 var checkers = config.Checkers[flag.ServiceId];
                 var checkerTask = new CheckerTask()
                 {
-                    Address = $"{flag.Service.Name.ToLower()}.team{flag.OwnerId}.{config.DnsSuffix}",
+                    Address = $"team{flag.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
                     MaxRunningTime = maxRunningTime,
                     Payload = flag.ToString(),
@@ -486,7 +486,7 @@ namespace EnoCore
                 var checkers = config.Checkers[noise.ServiceId];
                 tasks.Add(new CheckerTask()
                 {
-                    Address = $"{noise.Service.Name.ToLower()}.team{noise.OwnerId}.{config.DnsSuffix}",
+                    Address = $"team{noise.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
                     MaxRunningTime = maxRunningTime,
                     Payload = noise.StringRepresentation,
@@ -530,7 +530,7 @@ namespace EnoCore
                 var checkers = config.Checkers[havoc.ServiceId];
                 var task = new CheckerTask()
                 {
-                    Address = $"{havoc.Service.Name.ToLower()}.team{havoc.OwnerId}.{config.DnsSuffix}",
+                    Address = $"team{havoc.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
                     MaxRunningTime = quarterRound,
                     RelatedRoundId = havoc.GameRoundId,
@@ -567,7 +567,7 @@ namespace EnoCore
                 var checkers = config.Checkers[flag.ServiceId];
                 tasks.Add(new CheckerTask()
                 {
-                    Address = $"{flag.Service.Name.ToLower()}.team{flag.OwnerId}.{config.DnsSuffix}",
+                    Address = $"team{flag.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
                     MaxRunningTime = maxRunningTime,
                     Payload = flag.ToString(),
@@ -612,7 +612,7 @@ namespace EnoCore
                 var checkers = config.Checkers[oldFlag.ServiceId];
                 var task = new CheckerTask()
                 {
-                    Address = $"{oldFlag.Service.Name.ToLower()}.team{oldFlag.OwnerId}.{config.DnsSuffix}",
+                    Address = $"team{oldFlag.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
                     MaxRunningTime = quarterRound,
                     Payload = oldFlag.ToString(),
@@ -654,7 +654,7 @@ namespace EnoCore
                 var checkers = config.Checkers[noise.ServiceId];
                 tasks.Add(new CheckerTask()
                 {
-                    Address = $"{noise.Service.Name.ToLower()}.team{noise.OwnerId}.{config.DnsSuffix}",
+                    Address = $"team{noise.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
                     MaxRunningTime = maxRunningTime,
                     Payload = noise.StringRepresentation,
