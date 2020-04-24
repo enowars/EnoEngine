@@ -1,7 +1,7 @@
 {
-	"FlagValidityInRounds": 2,
+	"FlagValidityInRounds": 10,
 	"CheckedRoundsPerRound": 3,
-	"RoundLengthInSeconds": 60,
+	"RoundLengthInSeconds": 120,
 	"DnsSuffix": "bambi.ovh",
 	"TeamSubnetBytesLength": 16,
 	"Teams": [{
@@ -52,6 +52,38 @@
 		"Id": 12,
 		"Name": "Dwarf brocket",
 		"TeamSubnet": "::ffff:10.0.0.12"
+	},{
+		"Id": 13,
+		"Name": "Mule deer",
+		"TeamSubnet": "::ffff:10.0.0.13"
+	},{
+		"Id": 14,
+		"Name": "Fallow deer",
+		"TeamSubnet": "::ffff:10.0.0.14"
+	},{
+		"Id": 15,
+		"Name": "Javan rusa",
+		"TeamSubnet": "::ffff:10.0.0.15"
+	},{
+		"Id": 16,
+		"Name": "Sambar deer",
+		"TeamSubnet": "::ffff:10.0.0.16"
+	},{
+		"Id": 17,
+		"Name": "Reindeer",
+		"TeamSubnet": "::ffff:10.0.0.17"
+	},{
+		"Id": 18,
+		"Name": "Moose",
+		"TeamSubnet": "::ffff:10.0.0.18"
+	},{
+		"Id": 19,
+		"Name": "Eld's deer",
+		"TeamSubnet": "::ffff:10.0.0.19"
+	},{
+		"Id": 20,
+		"Name": "Indian hog deer",
+		"TeamSubnet": "::ffff:10.0.0.20"
 	}],
 	"Services": [{
 			"Id": 1,
@@ -71,20 +103,20 @@
 			"Checkers": ["http://192.168.1.1:8001"]
 		},{
 			"Id": 3,
-			"Name": "casino",
-			"FlagsPerRound": 2,
-			"NoisesPerRound": 1,
-			"HavocsPerRound": 2,
-			"WeightFactor": 1,
-			"Checkers": ["http://192.168.1.1:8002"]
-		},{
-			"Id": 4,
-			"Name": "voting",
+			"Name": "switzerland",
 			"FlagsPerRound": 1,
 			"NoisesPerRound": 1,
 			"HavocsPerRound": 1,
 			"WeightFactor": 1,
 			"Checkers": ["http://192.168.1.1:8003"]
+		},{
+			"Id": 4,
+			"Name": "teapot",
+			"FlagsPerRound": 1,
+			"NoisesPerRound": 0,
+			"HavocsPerRound": 1,
+			"WeightFactor": 1,
+			"Checkers": ["http://192.168.1.1:8004"]
 		}
 	]
 }
