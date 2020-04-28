@@ -1,0 +1,122 @@
+{
+	"FlagValidityInRounds": 10,
+	"CheckedRoundsPerRound": 3,
+	"RoundLengthInSeconds": 120,
+	"DnsSuffix": "bambi.ovh",
+	"TeamSubnetBytesLength": 16,
+	"Teams": [{
+		"Id": 1,
+		"Name": "Northern Pudú",
+		"TeamSubnet": "::ffff:10.0.0.1"
+	},{
+		"Id": 2,
+		"Name": "Southern Pudú",
+		"TeamSubnet": "::ffff:10.0.0.2"
+	},{
+		"Id": 3,
+		"Name": "Gray Brocket",
+		"TeamSubnet": "::ffff:10.0.0.3"
+	},{
+		"Id": 4,
+		"Name": "White-Tailed Deer",
+		"TeamSubnet": "::ffff:10.0.0.4"
+	},{
+		"Id": 5,
+		"Name": "Chital",
+		"TeamSubnet": "::ffff:10.0.0.5"
+	},{
+		"Id": 6,
+		"Name": "Chinese Muntjac",
+		"TeamSubnet": "::ffff:10.0.0.6"
+	},{
+		"Id": 7,
+		"Name": "Pygmy brocket",
+		"TeamSubnet": "::ffff:10.0.0.7"
+	},{
+		"Id": 8,
+		"Name": "Water Deer",
+		"TeamSubnet": "::ffff:10.0.0.8"
+	},{
+		"Id": 9,
+		"Name": "Brazilian Brocket",
+		"TeamSubnet": "::ffff:10.0.0.9"
+	},{
+		"Id": 10,
+		"Name": "Tufted Deer",
+		"TeamSubnet": "::ffff:10.0.0.10"
+	},{
+		"Id": 11,
+		"Name": "Siberian roe deer",
+		"TeamSubnet": "::ffff:10.0.0.11"
+	},{
+		"Id": 12,
+		"Name": "Dwarf brocket",
+		"TeamSubnet": "::ffff:10.0.0.12"
+	},{
+		"Id": 13,
+		"Name": "Mule deer",
+		"TeamSubnet": "::ffff:10.0.0.13"
+	},{
+		"Id": 14,
+		"Name": "Fallow deer",
+		"TeamSubnet": "::ffff:10.0.0.14"
+	},{
+		"Id": 15,
+		"Name": "Javan rusa",
+		"TeamSubnet": "::ffff:10.0.0.15"
+	},{
+		"Id": 16,
+		"Name": "Sambar deer",
+		"TeamSubnet": "::ffff:10.0.0.16"
+	},{
+		"Id": 17,
+		"Name": "Reindeer",
+		"TeamSubnet": "::ffff:10.0.0.17"
+	},{
+		"Id": 18,
+		"Name": "Moose",
+		"TeamSubnet": "::ffff:10.0.0.18"
+	},{
+		"Id": 19,
+		"Name": "Sangai",
+		"TeamSubnet": "::ffff:10.0.0.19"
+	},{
+		"Id": 20,
+		"Name": "Indian hog deer",
+		"TeamSubnet": "::ffff:10.0.0.20"
+	}],
+	"Services": [{
+			"Id": 1,
+			"Name": "WASP",
+			"FlagsPerRound": 2,
+			"NoisesPerRound": 0,
+			"HavocsPerRound": 0,
+			"WeightFactor": 1,
+			"Checkers": ["http://192.168.1.1:8000"]
+		},{
+			"Id": 2,
+			"Name": "DJBooth",
+			"FlagsPerRound": 1,
+			"NoisesPerRound": 0,
+			"HavocsPerRound": 0,
+			"WeightFactor": 1,
+			"Checkers": ["http://192.168.1.1:8001"]
+		},{
+			"Id": 3,
+			"Name": "switzerland",
+			"FlagsPerRound": 1,
+			"NoisesPerRound": 1,
+			"HavocsPerRound": 1,
+			"WeightFactor": 1,
+			"Checkers": ["http://192.168.1.1:8003"]
+		},{
+			"Id": 4,
+			"Name": "teapot",
+			"FlagsPerRound": 1,
+			"NoisesPerRound": 0,
+			"HavocsPerRound": 1,
+			"WeightFactor": 1,
+			"Checkers": ["http://192.168.1.1:8004"]
+		}
+	]
+}
