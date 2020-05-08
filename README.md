@@ -6,6 +6,12 @@ This is the engine powering our CTFs.
 
 For random reasons, it's written in C#.
 
+## Usage
+
+1. Create a ctf.json (see examples)
+2. Run EnoLauncher (`dotnet run --project EnoLauncher`)
+3. Run EnoEngine (`dotnet run --project EnoEngine`)
+
 ## Development
 
 Develop either in Visual Studio, or, for the FOSS people, for Visual Studio Code
