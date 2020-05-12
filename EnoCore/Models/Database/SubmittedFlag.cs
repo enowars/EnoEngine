@@ -6,6 +6,9 @@ using System.Text;
 
 namespace EnoCore.Models
 {
+    /// <summary>
+    /// PK: FlagServiceId, sf.FlagRoundId, sf.FlagOwnerId, sf.FlagRoundOffset, sf.AttackerTeamId
+    /// </summary>
     public class SubmittedFlag
     {
         public long FlagServiceId { get; set; }

@@ -29,7 +29,8 @@ namespace EnoCore
         Own,
         Old,
         UnknownError,
-        InvalidSenderError
+        InvalidSenderError,
+        SpamError
     }
 
     public struct DBInitializationResult
