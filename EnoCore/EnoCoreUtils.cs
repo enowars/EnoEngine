@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -263,6 +264,21 @@ namespace EnoCore
         public static string UrlUnSafify(string input)
         {
             return input.Replace("-", "+").Replace("_", "/");
+        }
+
+        public static void UrlUnSafify(Span<byte> input)
+        {
+            for (int i = 0; i < input.Length; i++)
+            {
+                if (input[i] == '-')
+                {
+                    input[i] = (byte)'+';
+                }
+                else if (input[i] == '_')
+                {
+                    input[i] = (byte)'/';
+                }
+            }
         }
 
         public static ServiceStatus CheckerResultToServiceStatus(CheckerResult checkerResult)

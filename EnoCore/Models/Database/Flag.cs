@@ -1,5 +1,8 @@
 ﻿using EnoCore.Models.Database;
 using System;
+using System.Buffers;
+using System.Buffers.Binary;
+using System.Buffers.Text;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -8,6 +11,9 @@ using System.Text;
 
 namespace EnoCore.Models
 {
+    /// <summary>
+    /// PK: ServiceId, RoundId, OwnerId, RoundOffset
+    /// </summary>
     public class Flag
     {
         public long OwnerId { get; set; }
@@ -36,26 +42,31 @@ namespace EnoCore.Models
             return "ENO" + EnoCoreUtils.UrlSafify(Convert.ToBase64String(flag));
         }
 
-        public static Flag FromString(string input)
+        public static Flag? Parse(ReadOnlySequence<byte> line)
         {
             try
             {
-                if (!input.StartsWith("ENO"))
-                {
-                    return null;
-                }
-                var flag = input.Substring(3);
-                var flagBytes = Convert.FromBase64String(EnoCoreUtils.UrlUnSafify(flag));
+                Span<byte> base64Bytes = stackalloc byte[(int)line.Length]; // Raw input
+                Span<byte> flagBytes = stackalloc byte[(int)line.Length];   // Decoded bytes
+                Span<byte> computedSignature = stackalloc byte[20];         // HMACSHA1 output is always 20 bytes
 
-                var serviceId = BitConverter.ToInt32(flagBytes, 0);
-                var roundOffset = BitConverter.ToInt32(flagBytes, sizeof(int));
-                var ownerId = BitConverter.ToInt32(flagBytes, 2 * sizeof(int));
-                var roundId = BitConverter.ToInt32(flagBytes, 3 * sizeof(int));
-                var flagSignature = new ArraySegment<byte>(flagBytes, 4 * sizeof(int),
-                                                           flagBytes.Length - (4 * sizeof(int)));
+                line.Slice(3).CopyTo(base64Bytes);                                              // Copy ROS to stack-alloced buffer
+                EnoCoreUtils.UrlUnSafify(base64Bytes);                                          // Do replacement magic
+                Base64.DecodeFromUtf8(base64Bytes, flagBytes, out var _, out var flagLength);   // Base64-decode the flag into flagBytes
+
+                // Deconstruct the flag
+                var serviceId = BinaryPrimitives.ReadInt32BigEndian(flagBytes);
+                var roundOffset = BinaryPrimitives.ReadInt32BigEndian(flagBytes.Slice(4, 4));
+                var ownerId = BinaryPrimitives.ReadInt32BigEndian(flagBytes.Slice(8, 4));
+                var roundId = BinaryPrimitives.ReadInt32BigEndian(flagBytes.Slice(12, 4));
+                var flagSignature = flagBytes[16..flagLength];
+
+                // Compute the hmac
                 using HMACSHA1 hmacsha1 = new HMACSHA1(EnoCoreUtils.FLAG_SIGNING_KEY);
-                byte[] hash = hmacsha1.ComputeHash(flagBytes, 0, sizeof(int) * 4);
-                if (!flagSignature.SequenceEqual(hash))
+                hmacsha1.TryComputeHash(flagBytes.Slice(0, 16), computedSignature, out var _);
+
+                // Showtime!
+                if (!flagSignature.SequenceEqual(computedSignature))
                 {
                     return null;
                 }
