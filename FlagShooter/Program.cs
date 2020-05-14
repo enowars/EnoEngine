@@ -23,7 +23,6 @@ namespace FlagShooter
     class Program
     {
         private static readonly CancellationTokenSource LauncherCancelSource = new CancellationTokenSource();
-        private readonly ILogger<Program> Logger;
         private readonly ServiceProvider ServiceProvider;
         private readonly Dictionary<long, (TcpClient, StreamReader reader, StreamWriter writer)[]> TeamSockets =
             new Dictionary<long, (TcpClient, StreamReader reader, StreamWriter writer)[]>();
@@ -73,23 +72,21 @@ namespace FlagShooter
             {
                 try
                 {
-                    using (var scope = ServiceProvider.CreateScope())
+                    using var scope = ServiceProvider.CreateScope();
+                    var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
+                    var flags = await db.RetrieveFlags(flagcount);
+                    var tasks = new Task[AttackingTeams];
+                    if (flags.Length > 0)
                     {
-                        var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                        var flags = await db.RetrieveFlags(flagcount);
-                        var tasks = new Task[AttackingTeams];
-                        if (flags.Length > 0)
-                        {
-                            Console.WriteLine($"Sending {flags.Length} flags");
-                        }
-                        for (int i = 0; i < AttackingTeams; i++)
-                        {
-                            var ti = i;
-                            tasks[ti] = Task.Run(async () => await SendFlagsTask(flags.Select(f => f.ToString()).ToArray(), ti + 1));
-                        }
-                        await Task.WhenAll(tasks);
-                        await Task.Delay(1000, LauncherCancelSource.Token);
+                        Console.WriteLine($"Sending {flags.Length} flags");
                     }
+                    for (int i = 0; i < AttackingTeams; i++)
+                    {
+                        var ti = i;
+                        tasks[ti] = Task.Run(async () => await SendFlagsTask(flags.Select(f => f.ToString()).ToArray(), ti + 1));
+                    }
+                    await Task.WhenAll(tasks);
+                    await Task.Delay(1000, LauncherCancelSource.Token);
                 }
                 catch (Exception e)
                 {

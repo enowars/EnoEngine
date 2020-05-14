@@ -7,6 +7,7 @@ namespace EnoCore.Models
 {
     public class Service
     {
+#pragma warning disable CS8618
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public long Id { get; set; }
         public string Name { get; set; }
@@ -16,5 +17,6 @@ namespace EnoCore.Models
         public long ServiceStatsId { get; set; }
         public List<ServiceStats> ServiceStats { get; set; }
         public bool Active { get; set; }
+#pragma warning restore CS8618
     }
 }

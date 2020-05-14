@@ -16,15 +16,16 @@ namespace EnoCore.Models
     /// </summary>
     public class Flag
     {
+#pragma warning disable CS8618
         public long OwnerId { get; set; }
         public Team Owner { get; set; }
         public long ServiceId { get; set; }
         public Service Service { get; set; }
         public int RoundOffset { get; set; }
         public long RoundId { get; set; }
+        public Round Round { get; set; }
         public long Captures { get; set; }
-
-        public virtual Round Round { get; set; }
+#pragma warning restore CS8618
 
         public override string ToString()
         {

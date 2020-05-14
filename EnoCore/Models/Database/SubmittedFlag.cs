@@ -11,6 +11,7 @@ namespace EnoCore.Models
     /// </summary>
     public class SubmittedFlag
     {
+#pragma warning disable CS8618
         public long FlagServiceId { get; set; }
         public long FlagOwnerId { get; set; }
         public long FlagRoundId { get; set; }
@@ -23,5 +24,6 @@ namespace EnoCore.Models
         public virtual Flag Flag { get; set; }
         public virtual Team AttackerTeam { get; set; }
         public virtual Round Round { get; set; }
+#pragma warning restore CS8618
     }
 }
