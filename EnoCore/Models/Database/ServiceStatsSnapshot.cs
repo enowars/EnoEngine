@@ -6,6 +6,7 @@ namespace EnoCore.Models.Database
 {
     public class ServiceStatsSnapshot
     {
+#pragma warning disable CS8618
         public long TeamId { get; set; }
         public Team Team { get; set; }
         public long ServiceId { get; set; }
@@ -15,5 +16,6 @@ namespace EnoCore.Models.Database
         public double ServiceLevelAgreementPoints { get; set; }
         public long RoundId { get; set; }
         public Round Round { get; set; }
+#pragma warning restore CS8618
     }
 }

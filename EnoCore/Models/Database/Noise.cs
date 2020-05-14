@@ -6,6 +6,7 @@ namespace EnoCore.Models.Database
 {
     public class Noise
     {
+#pragma warning disable CS8618
         public long Id { get; set; }
         public string StringRepresentation { get; set; }
         public long OwnerId { get; set; }
@@ -15,6 +16,7 @@ namespace EnoCore.Models.Database
         public int RoundOffset { get; set; }
         public long GameRoundId { get; set; }
         public Round GameRound { get; set; }
+#pragma warning restore CS8618
 
         public override string ToString()
         {

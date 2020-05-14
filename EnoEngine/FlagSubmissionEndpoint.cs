@@ -2,7 +2,6 @@
 using EnoCore.Logging;
 using EnoCore.Models;
 using EnoCore.Models.Json;
-using EnoEngine.Game;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
@@ -23,45 +22,47 @@ namespace EnoEngine.FlagSubmission
 {
     class FlagSubmissionEndpoint
     {
-        private static readonly ConcurrentQueue<(Flag flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult> tcs)> FlagInsertsQueue =
-            new ConcurrentQueue<(Flag, long, TaskCompletionSource<FlagSubmissionResult>)>();
         private static readonly Dictionary<long, Channel<(Flag Flag, TaskCompletionSource<FlagSubmissionResult> FeedbackSource)>> Channels =
             new Dictionary<long, Channel<(Flag, TaskCompletionSource<FlagSubmissionResult>)>>();
-        private const int InsertSubmissionsBatchSize = 1000;
         private const int MaximumLineLength = 100;
-        private static readonly byte[] MaximumLineLengthExceededMessage = Encoding.ASCII.GetBytes("GTFO\n");
-        private readonly CancellationToken Token;
-        private readonly EnoStatistics Statistics;
-        readonly TcpListener ProductionListener = new TcpListener(IPAddress.IPv6Any, 1337);
-        readonly TcpListener DebugListener = new TcpListener(IPAddress.IPv6Any, 1338);
-        readonly IServiceProvider ServiceProvider;
+        private readonly TcpListener ProductionListener = new TcpListener(IPAddress.IPv6Any, 1337);
+        private readonly TcpListener DebugListener = new TcpListener(IPAddress.IPv6Any, 1338);
         private readonly ILogger Logger;
+        private readonly JsonConfiguration Configuration;
+        private readonly IServiceProvider ServiceProvider;
+        private readonly EnoStatistics Statistics;
 
-        public FlagSubmissionEndpoint(IServiceProvider serviceProvider, ILogger logger, EnoStatistics statistics, CancellationToken token)
+        public FlagSubmissionEndpoint(IServiceProvider serviceProvider, ILogger<FlagSubmissionEndpoint> logger, JsonConfiguration configuration, EnoStatistics statistics)
         {
             Logger = logger;
-            Token = token;
+            Configuration = configuration;
             Statistics = statistics;
             ProductionListener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
             DebugListener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
-            Token.Register(() => ProductionListener.Stop());
-            Token.Register(() => DebugListener.Stop());
             ServiceProvider = serviceProvider;
-            Task.Run(async () => await InsertSubmissionsLoop(), CancellationToken.None);
         }
 
-        async Task ProcessLinesAsync(Socket socket, long teamId, CancellationToken token)
+        public void Start(CancellationToken token)
+        {
+            token.Register(() => ProductionListener.Stop());
+            token.Register(() => DebugListener.Stop());
+            Task.Factory.StartNew(async () => await InsertSubmissionsLoop(token), token);
+            Task.Factory.StartNew(async () => await RunProductionEndpoint(token), token);
+            Task.Factory.StartNew(async () => await RunDebugEndpoint(token), token);
+        }
+
+        async Task ProcessLinesAsync(Socket socket, long? teamId, CancellationToken token)
         {
             var pipe = new Pipe();
             Channel<Task<FlagSubmissionResult>> feedbackChannel = Channel.CreateUnbounded<Task<FlagSubmissionResult>>(new UnboundedChannelOptions() { SingleReader = true, SingleWriter = true });
-            Task writing = FillPipeAsync(socket, pipe.Writer, teamId, token);
-            Task reading = ReadPipeAsync(socket, pipe.Reader, feedbackChannel.Writer, teamId, token);
+            Task writing = FillPipeAsync(socket, pipe.Writer, token);
+            Task reading = ReadPipeAsync(pipe.Reader, feedbackChannel.Writer, teamId, token);
             Task responding = RespondAsync(socket, feedbackChannel.Reader, token);
             await Task.WhenAll(reading, writing, responding);
             socket.Close();
         }
 
-        async Task FillPipeAsync(Socket socket, PipeWriter writer, long teamId, CancellationToken token)
+        async Task FillPipeAsync(Socket socket, PipeWriter writer, CancellationToken token)
         {
             const int minimumBufferSize = 512;
             while (true)
@@ -97,7 +98,7 @@ namespace EnoEngine.FlagSubmission
             await writer.CompleteAsync();
         }
 
-        async Task ReadPipeAsync(Socket socket, PipeReader reader, ChannelWriter<Task<FlagSubmissionResult>> feedbackWriter, long teamId, CancellationToken token)
+        async Task ReadPipeAsync(PipeReader reader, ChannelWriter<Task<FlagSubmissionResult>> feedbackWriter, long? teamId, CancellationToken token)
         {
             while (true)
             {
@@ -107,7 +108,29 @@ namespace EnoEngine.FlagSubmission
                 while (TryReadLine(ref buffer, out ReadOnlySequence<byte> line))
                 {
                     // Process the line.
-                    await ProcessLine(line, teamId, feedbackWriter);
+                    if (teamId is long _teamId)
+                    {
+                        var flag = Flag.Parse(line);
+                        var tcs = new TaskCompletionSource<FlagSubmissionResult>();
+                        if (flag == null)
+                        {
+                            await feedbackWriter.WriteAsync(Task.FromResult(FlagSubmissionResult.Invalid));
+                        }
+                        else if (flag.OwnerId == _teamId)
+                        {
+                            await feedbackWriter.WriteAsync(Task.FromResult(FlagSubmissionResult.Own));
+                        }
+                        else
+                        {
+                            var channel = Channels[_teamId];
+                            await channel.Writer.WriteAsync((flag, tcs));
+                            await feedbackWriter.WriteAsync(tcs.Task);
+                        }
+                    }
+                    else
+                    {
+                        teamId = int.Parse(Encoding.ASCII.GetString(line.ToArray()));
+                    }
                 }
 
                 // Tell the PipeReader how much of the buffer has been consumed.
@@ -149,18 +172,6 @@ namespace EnoEngine.FlagSubmission
             }
         }
 
-        private async ValueTask ProcessLine(ReadOnlySequence<byte> line, long teamId, ChannelWriter<Task<FlagSubmissionResult>> feedbackWriter)
-        {
-            var flag = Flag.Parse(line);
-            var tcs = new TaskCompletionSource<FlagSubmissionResult>();
-            if (flag != null && flag.OwnerId != teamId)
-            {
-                var channel = Channels[teamId];
-                await channel.Writer.WriteAsync((flag, tcs));
-                await feedbackWriter.WriteAsync(tcs.Task);
-            }
-        }
-
         bool TryReadLine(ref ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> line)
         {
             // Look for a EOL in the buffer.
@@ -168,10 +179,6 @@ namespace EnoEngine.FlagSubmission
 
             if (position == null)
             {
-                if (buffer.Length > MaximumLineLength)
-                {
-                    throw new InvalidOperationException("That's not what 1 line per flag looks like");
-                }
                 line = default;
                 return false;
             }
@@ -182,24 +189,15 @@ namespace EnoEngine.FlagSubmission
             return true;
         }
 
-        public async Task RunDebugEndpoint()
+        public async Task RunDebugEndpoint(CancellationToken token)
         {
             try
             {
                 DebugListener.Start();
-                while (!Token.IsCancellationRequested)
+                while (!token.IsCancellationRequested)
                 {
                     var client = await DebugListener.AcceptTcpClientAsync();
-                    var attackerAddress = ((IPEndPoint)client.Client.RemoteEndPoint).Address.GetAddressBytes();
-                    var attackerPrefix = new byte[EnoEngine.Configuration.TeamSubnetBytesLength];
-                    Array.Copy(attackerAddress, attackerPrefix, EnoEngine.Configuration.TeamSubnetBytesLength);
-                    var attackerPrefixString = BitConverter.ToString(attackerPrefix);
-
-                    throw new NotImplementedException();
-                    //var clientTask = Task.Run(async () =>
-                    //{
-                        //await ProcessLinesAsync(client.Client, teamId, Token); //TODO
-                    //});
+                    var _ = ProcessLinesAsync(client.Client, null, token);
                 }
             }
             catch (ObjectDisposedException) { }
@@ -211,19 +209,19 @@ namespace EnoEngine.FlagSubmission
             Logger.LogInformation("RunDebugEndpoint finished");
         }
 
-        public async Task RunProductionEndpoint()
+        public async Task RunProductionEndpoint(CancellationToken token)
         {
             try
             {
                 ProductionListener.Start();
-                while (!Token.IsCancellationRequested)
+                while (!token.IsCancellationRequested)
                 {
                     try
                     {
                         var client = await ProductionListener.AcceptTcpClientAsync();
                         var attackerAddress = ((IPEndPoint)client.Client.RemoteEndPoint).Address.GetAddressBytes();
-                        var attackerPrefix = new byte[EnoEngine.Configuration.TeamSubnetBytesLength];
-                        Array.Copy(attackerAddress, attackerPrefix, EnoEngine.Configuration.TeamSubnetBytesLength);
+                        var attackerPrefix = new byte[Configuration.TeamSubnetBytesLength];
+                        Array.Copy(attackerAddress, attackerPrefix, Configuration.TeamSubnetBytesLength);
                         var attackerPrefixString = BitConverter.ToString(attackerPrefix);
                         long teamId;
                         using (var scope = ServiceProvider.CreateScope())
@@ -231,7 +229,7 @@ namespace EnoEngine.FlagSubmission
                             var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
                             teamId = await db.GetTeamIdByPrefix(attackerPrefixString);
                         }
-                        await ProcessLinesAsync(client.Client, teamId, Token);
+                        await ProcessLinesAsync(client.Client, teamId, token);
                     }
                     catch (TaskCanceledException)
                     {
@@ -268,17 +266,17 @@ namespace EnoEngine.FlagSubmission
             };
         }
 
-        async Task InsertSubmissionsLoop()
+        async Task InsertSubmissionsLoop(CancellationToken token)
         {
             try
             {
-                while (!Token.IsCancellationRequested)
+                while (!token.IsCancellationRequested)
                 {
                     List<(Flag flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult> result)> submissions = new List<(Flag flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult>)>();
                     foreach (var (teamid, channel) in Channels)
                     {
                         var reader = channel.Reader;
-                        while (await reader.WaitToReadAsync(Token))
+                        while (await reader.WaitToReadAsync(token))
                         {
                             while (reader.TryRead(out var item))
                             {
@@ -298,7 +296,7 @@ namespace EnoEngine.FlagSubmission
                             {
                                 using var scope = ServiceProvider.CreateScope();
                                 var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                                await db.ProcessSubmissionsBatch(submissions, EnoEngine.Configuration.FlagValidityInRounds, Statistics);
+                                await db.ProcessSubmissionsBatch(submissions, Configuration.FlagValidityInRounds, Statistics);
                             });
                         }
                         catch (Exception e)

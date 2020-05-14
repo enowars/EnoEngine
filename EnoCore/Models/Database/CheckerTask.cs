@@ -23,6 +23,7 @@ namespace EnoCore.Models.Database
 
     public class CheckerTask
     {
+#pragma warning disable CS8618
         [JsonProperty("runId")]
         public long Id { get; set; }
         public string CheckerUrl { get; set; }
@@ -56,11 +57,7 @@ namespace EnoCore.Models.Database
         public CheckerResult CheckerResult { get; set; }
         [JsonIgnore]
         public CheckerTaskLaunchStatus CheckerTaskLaunchStatus { get; set; }
-
-        public CheckerTask()
-        {
-
-        }
+#pragma warning restore CS8618
 
         public override string ToString() => "bad serilog";
     }
