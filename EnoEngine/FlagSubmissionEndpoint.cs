@@ -40,6 +40,10 @@ namespace EnoEngine.FlagSubmission
             ProductionListener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
             DebugListener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
             ServiceProvider = serviceProvider;
+            foreach (var team in configuration.Teams)
+            {
+                Channels[team.Id] = Channel.CreateBounded<(Flag, TaskCompletionSource<FlagSubmissionResult>)>(new BoundedChannelOptions(100) { SingleReader = false, SingleWriter = false });
+            }
         }
 
         public void Start(CancellationToken token)
@@ -54,7 +58,7 @@ namespace EnoEngine.FlagSubmission
         async Task ProcessLinesAsync(Socket socket, long? teamId, CancellationToken token)
         {
             var pipe = new Pipe();
-            Channel<Task<FlagSubmissionResult>> feedbackChannel = Channel.CreateUnbounded<Task<FlagSubmissionResult>>(new UnboundedChannelOptions() { SingleReader = true, SingleWriter = true });
+            Channel<Task<FlagSubmissionResult>> feedbackChannel = Channel.CreateUnbounded<Task<FlagSubmissionResult>>(new UnboundedChannelOptions() { SingleReader = true, SingleWriter = false });
             Task writing = FillPipeAsync(socket, pipe.Writer, token);
             Task reading = ReadPipeAsync(pipe.Reader, feedbackChannel.Writer, teamId, token);
             Task responding = RespondAsync(socket, feedbackChannel.Reader, token);
