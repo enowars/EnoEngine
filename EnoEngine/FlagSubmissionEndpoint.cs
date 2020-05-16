@@ -50,9 +50,9 @@ namespace EnoEngine.FlagSubmission
         {
             token.Register(() => ProductionListener.Stop());
             token.Register(() => DebugListener.Stop());
-            Task.Factory.StartNew(async () => await InsertSubmissionsLoop(token), token);
-            Task.Factory.StartNew(async () => await RunProductionEndpoint(token), token);
-            Task.Factory.StartNew(async () => await RunDebugEndpoint(token), token);
+            Task.Factory.StartNew(async () => await InsertSubmissionsLoop(token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
+            Task.Factory.StartNew(async () => await RunProductionEndpoint(token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
+            Task.Factory.StartNew(async () => await RunDebugEndpoint(token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
         }
 
         async Task ProcessLinesAsync(Socket socket, long? teamId, CancellationToken token)
@@ -233,7 +233,7 @@ namespace EnoEngine.FlagSubmission
                             var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
                             teamId = await db.GetTeamIdByPrefix(attackerPrefixString);
                         }
-                        await ProcessLinesAsync(client.Client, teamId, token);
+                        var _ = ProcessLinesAsync(client.Client, teamId, token);
                     }
                     catch (TaskCanceledException)
                     {
@@ -308,7 +308,7 @@ namespace EnoEngine.FlagSubmission
                             Logger.LogError($"InsertSubmissionsLoop dropping batch because: {EnoCoreUtils.FormatException(e)}");
                             foreach (var (flag, attackerTeamId, tcs) in submissions)
                             {
-                                var t = Task.Run(() => tcs.TrySetResult(FlagSubmissionResult.UnknownError));
+                                tcs.SetResult(FlagSubmissionResult.UnknownError);
                             }
                         }
                     }
