@@ -29,18 +29,19 @@ namespace EnoCore.Models
 
         public override string ToString()
         {
-            byte[] flagContent = new byte[sizeof(int) * 4];
-            BitConverter.GetBytes((int)ServiceId).CopyTo(flagContent, 0);
-            BitConverter.GetBytes((int)RoundOffset).CopyTo(flagContent, sizeof(int));
-            BitConverter.GetBytes((int)OwnerId).CopyTo(flagContent, 2 * sizeof(int));
-            BitConverter.GetBytes((int)RoundId).CopyTo(flagContent, 3 * sizeof(int));
+            Span<byte> flagContent = stackalloc byte[sizeof(int) * 4];
+            BitConverter.TryWriteBytes(flagContent, (int)ServiceId);
+            BitConverter.TryWriteBytes(flagContent.Slice(sizeof(int)), RoundOffset);
+            BitConverter.TryWriteBytes(flagContent.Slice(sizeof(int) * 2), (int)OwnerId);
+            BitConverter.TryWriteBytes(flagContent.Slice(sizeof(int) * 3), (int)RoundId);
 
             using HMACSHA1 hmacsha1 = new HMACSHA1(EnoCoreUtils.FLAG_SIGNING_KEY);
-            byte[] flagSignature = hmacsha1.ComputeHash(flagContent);
-            byte[] flag = new byte[flagContent.Length + flagSignature.Length];
-            flagContent.CopyTo(flag, 0);
-            flagSignature.CopyTo(flag, flagContent.Length);
-            return "ENO" + EnoCoreUtils.UrlSafify(Convert.ToBase64String(flag));
+            Span<byte> flagSignature = stackalloc byte[hmacsha1.HashSize + flagContent.Length];
+            hmacsha1.TryComputeHash(flagContent, flagSignature, out var _);
+            Span<byte> flagBytes = stackalloc byte[flagContent.Length + flagSignature.Length];
+            flagContent.CopyTo(flagBytes);
+            flagSignature.CopyTo(flagBytes.Slice(flagContent.Length));
+            return "ENO" + EnoCoreUtils.UrlSafify(Convert.ToBase64String(flagBytes));
         }
 
         public static Flag? Parse(ReadOnlySequence<byte> line)
