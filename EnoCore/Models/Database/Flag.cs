@@ -6,6 +6,7 @@ using System.Buffers.Text;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -16,6 +17,12 @@ namespace EnoCore.Models
     /// </summary>
     public class Flag
     {
+        private static readonly char[] ByteMap = new char[] { '̀', '́', '̂', '̃', '̄', '̅', '̆', '̇', '̈', '̉', '̊', '̋', '̌', '̍', '̎', '̏', '̐', '̑', '̒', '̓', '̔', '̕', '̖', '̗', '̘', '̙', '̚', '̛', '̜', '̝', '̞', '̟', '̠', '̡', '̢', '̣', '̤', '̥', '̦', '̧', '̨', '̩', '̪', '̫', '̬', '̭', '̮', '̯', '̰', '̱', '̲', '̳', '̴', '̵', '̶', '̷', '̸', '̹', '̺', '̻', '̼', '̽', '̾', '̿', '̀', '́', '͂', '̓', '̈́', 'ͅ', '͆', '͇', '͈', '͉', '͊', '͋', '͌', '͍', '͎', '͏', '͐', '͑', '͒', '͓', '͔', '͕', '͖', '͗', '͘', '͙', '͚', '͛', '͜', '͝', '͞', '͟', '͠', '͡', '͢', 'ͣ', 'ͤ', 'ͥ', 'ͦ', 'ͧ', 'ͨ', 'ͩ', 'ͪ', 'ͫ', 'ͬ', 'ͭ', 'ͮ', 'ͯ', '᪰', '᪱', '᪲', '᪳', '᪴', '᪵', '᪶', '᪷', '᪸', '᪹', '᪺', '᪻', '᪼', '᪽', '᪾', '᷀', '᷁', '᷂', '᷃', '᷄', '᷅', '᷆', '᷇', '᷈', '᷉', '᷊', '᷋', '᷌', '᷍', '᷎', '᷏', '᷐', '᷑', '᷒', 'ᷓ', 'ᷔ', 'ᷕ', 'ᷖ', 'ᷗ', 'ᷘ', 'ᷙ', 'ᷚ', 'ᷛ', 'ᷜ', 'ᷝ', 'ᷞ', 'ᷟ', 'ᷠ', 'ᷡ', 'ᷢ', 'ᷣ', 'ᷤ', 'ᷥ', 'ᷦ', 'ᷧ', 'ᷨ', 'ᷩ', 'ᷪ', 'ᷫ', 'ᷬ', 'ᷭ', 'ᷮ', 'ᷯ', 'ᷰ', 'ᷱ', 'ᷲ', 'ᷳ', 'ᷴ', '᷵', '᷻', '᷼', '᷽', '᷾', '᷿', '⃐', '⃑', '⃒', '⃓', '⃔', '⃕', '⃖', '⃗', '⃘', '⃙', '⃚', '⃛', '⃜', '⃝', '⃞', '⃟', '⃠', '⃡', '⃢', '⃣', '⃤', '⃥', '⃦', '⃧', '⃨', '⃩', '⃪', '⃫', '⃬', '⃭', '⃮', '⃯', '⃰', '︠', '︡', '︢', '︣', '︤', '︥', '︦', '︧', '︨', '︩', '︪', '︫', '︬', '︭', '︮', '︯', '゙', '゚', '⳯', '⳰', '⳱', '꣠', '꣡', '꣢', '꣣', '꣤', '꣥', '꣦', '꣧', '꣨', '꣩', '꣪', '꣫', '꣬', '꣭', '꣮', '꣯' };
+
+        private static readonly string[] Flagprefix = new string[]
+            {
+                "🏳️‍🌈"
+            };
 #pragma warning disable CS8618
         public long OwnerId { get; set; }
         public Team Owner { get; set; }
@@ -26,8 +33,32 @@ namespace EnoCore.Models
         public Round Round { get; set; }
         public long Captures { get; set; }
 #pragma warning restore CS8618
+        private string ToUtfString()
+        {
+            Span<byte> flagContent = stackalloc byte[sizeof(int) * 4];
+            BitConverter.TryWriteBytes(flagContent, (int)ServiceId);
+            BitConverter.TryWriteBytes(flagContent.Slice(sizeof(int)), RoundOffset);
+            BitConverter.TryWriteBytes(flagContent.Slice(sizeof(int) * 2), (int)OwnerId);
+            BitConverter.TryWriteBytes(flagContent.Slice(sizeof(int) * 3), (int)RoundId);
 
-        public override string ToString()
+            using HMACSHA1 hmacsha1 = new HMACSHA1(EnoCoreUtils.FLAG_SIGNING_KEY);
+            Span<byte> flagSignature = stackalloc byte[hmacsha1.HashSize + flagContent.Length];
+            hmacsha1.TryComputeHash(flagContent, flagSignature, out var _);
+            Span<byte> flagBytes = stackalloc byte[flagContent.Length + flagSignature.Length];
+            flagContent.CopyTo(flagBytes);
+            flagSignature.CopyTo(flagBytes.Slice(flagContent.Length));
+            return Flagprefix[ThreadSafeRandom.Next(Flagprefix.Length)] + Bytes2dia(flagBytes);
+        }
+        private string Bytes2dia(Span<byte> s)
+        {
+            string result = "";
+            foreach (byte c in s)
+            {
+                result += ByteMap[c];
+            }
+            return result;
+        }
+        private string ToNormalString()
         {
             Span<byte> flagContent = stackalloc byte[sizeof(int) * 4];
             BitConverter.TryWriteBytes(flagContent, (int)ServiceId);
@@ -43,6 +74,10 @@ namespace EnoCore.Models
             flagSignature.CopyTo(flagBytes.Slice(flagContent.Length));
             return "ENO" + EnoCoreUtils.UrlSafify(Convert.ToBase64String(flagBytes));
         }
+        public override string ToString()
+        {
+            return ToUtfString();
+        }
 
         public static Flag? Parse(ReadOnlySequence<byte> line)
         {
@@ -51,11 +86,9 @@ namespace EnoCore.Models
                 Span<byte> base64Bytes = stackalloc byte[(int)line.Length]; // Raw input
                 Span<byte> flagBytes = stackalloc byte[(int)line.Length];   // Decoded bytes
                 Span<byte> computedSignature = stackalloc byte[20];         // HMACSHA1 output is always 20 bytes
-
                 line.Slice(3).CopyTo(base64Bytes);                                              // Copy ROS to stack-alloced buffer
                 EnoCoreUtils.UrlUnSafify(base64Bytes);                                          // Do replacement magic
                 Base64.DecodeFromUtf8(base64Bytes, flagBytes, out var _, out var flagLength);   // Base64-decode the flag into flagBytes
-
                 // Deconstruct the flag
                 var serviceId = BinaryPrimitives.ReadInt32BigEndian(flagBytes);
                 var roundOffset = BinaryPrimitives.ReadInt32BigEndian(flagBytes.Slice(4, 4));
