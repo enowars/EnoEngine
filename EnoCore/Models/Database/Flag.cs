@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection.Metadata.Ecma335;
+using System.Runtime.Intrinsics.X86;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -52,10 +53,13 @@ namespace EnoCore.Models
         private string Bytes2dia(Span<byte> s)
         {
             string result = "";
+            string[] b = new string[4] { "W", "A", "R", "S" };
+            int i = 0;
             foreach (byte c in s)
             {
-                result += ByteMap[c];
+                b[i%4] += ByteMap[c];
             }
+            result = b[0] + b[1] + b[2] + b[3];
             return result;
         }
         private string ToNormalString()
