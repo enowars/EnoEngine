@@ -57,7 +57,7 @@ interface CheckerResultMessage {
 }
 ```
 
-Scoreboard output:
+## Scoreboard output:
 ```ts
 interface ScoreboardInfo {
 	CurrentRound: number;
