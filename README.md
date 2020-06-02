@@ -56,3 +56,44 @@ interface CheckerResultMessage {
     result: string; // "INTERNAL_ERROR", "OK", MUMBLE", or "OFFLINE"
 }
 ```
+
+Scoreboard output:
+```ts
+interface ScoreboardInfo {
+	CurrentRound: number;
+    Services: Service[];
+	Teams: Team[];
+}
+
+interface Team {
+    Name: string;                                                           //"teamname40"
+    TeamId: number;                                                         //40
+    TotalPoints: number;                                                    //2692.662622758371
+    AttackPoints: number;                                                   //0.0
+    LostDefensePoints: number;                                              //0.0
+    ServiceLevelAgreementPoints: number;                                    //2692.662622758371
+    ServiceDetails: ServiceDetail[];
+}
+
+interface ServiceDetail {
+    ServiceId: number;
+    AttackPoints: number;
+    LostDefensePoints: number;
+    ServiceLevelAgreementPoints: number;
+    ServiceStatus: number;
+}
+
+interface Service {
+    ServiceId: number;
+    ServiceName: string;
+    MaxStores: number;
+    FirstBloods: FirstBlood[];
+}
+interface FirstBlood {
+    TeamId: number;
+    Timestamp: string;
+    RoundId: number;
+    StoreDescription: string | null;
+    StoreIndex: number;
+}
+```
