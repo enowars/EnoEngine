@@ -89,6 +89,7 @@ interface Service {
     MaxStores: number;
     FirstBloods: FirstBlood[];
 }
+
 interface FirstBlood {
     TeamId: number;
     Timestamp: string;
