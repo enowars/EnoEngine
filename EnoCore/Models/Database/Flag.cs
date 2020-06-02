@@ -8,7 +8,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace EnoCore.Models
+namespace EnoCore.Models.Database
 {
     /// <summary>
     /// PK: ServiceId, RoundId, OwnerId, RoundOffset
