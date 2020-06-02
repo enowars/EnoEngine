@@ -58,6 +58,7 @@ namespace EnoCore.Models
             foreach (byte c in s)
             {
                 b[i%4] += ByteMap[c];
+                i++;
             }
             result = b[0] + b[1] + b[2] + b[3];
             return result;
