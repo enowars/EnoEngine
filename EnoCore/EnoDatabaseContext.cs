@@ -23,6 +23,7 @@ namespace EnoCore
 
     public class EnoDatabaseContext : DbContext
     {
+#pragma warning disable CS8618
         public DbSet<CheckerTask> CheckerTasks { get; set; }
         public DbSet<Flag> Flags { get; set; }
         public DbSet<Noise> Noises { get; set; }
@@ -36,6 +37,7 @@ namespace EnoCore
         public DbSet<ServiceStatsSnapshot> ServiceStatsSnapshots { get; set; }
 
         public EnoDatabaseContext(DbContextOptions<EnoDatabaseContext> options) : base(options) { }
+#pragma warning restore CS8618
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

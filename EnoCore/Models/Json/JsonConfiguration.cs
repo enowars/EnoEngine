@@ -7,6 +7,7 @@ namespace EnoCore.Models.Json
 {
     public class JsonConfiguration
     {
+#pragma warning disable CS8618
         public long FlagValidityInRounds { get; set; }
         public int CheckedRoundsPerRound { get; set; }
         public int RoundLengthInSeconds { get; set; }
@@ -16,6 +17,7 @@ namespace EnoCore.Models.Json
         public List<JsonConfigurationService> Services { get; set; } = new List<JsonConfigurationService>();
         [JsonIgnore]
         public Dictionary<long, string[]> Checkers { get; set; } = new Dictionary<long, string[]>();
+#pragma warning restore CS8618
 
         public void BuildCheckersDict()
         {

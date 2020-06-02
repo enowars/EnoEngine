@@ -6,6 +6,8 @@ namespace EnoCore.Models
 {
     public class EnoEngineScoreboardService
     {
+#pragma warning disable CS8618
         public string Name { get; set; }
+#pragma warning restore CS8618
     }
 }
