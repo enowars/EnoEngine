@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
-namespace EnoCore.Migrations
+namespace EnoDatabase.Migrations
 {
     [DbContext(typeof(EnoDatabaseContext))]
     partial class EnoDatabaseContextModelSnapshot : ModelSnapshot

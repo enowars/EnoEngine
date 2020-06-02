@@ -9,10 +9,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EnoCore", "EnoCore\EnoCore.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EnoLauncher", "EnoLauncher\EnoLauncher.csproj", "{EA5A8FD3-BA74-48B4-9282-C7EAA77B166C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlagShooter", "FlagShooter\FlagShooter.csproj", "{46A15780-216F-4997-AB46-536364F3CA7E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FlagShooter", "FlagShooter\FlagShooter.csproj", "{46A15780-216F-4997-AB46-536364F3CA7E}"
 	ProjectSection(ProjectDependencies) = postProject
 		{029F1DC6-3647-4088-8093-5737154CD457} = {029F1DC6-3647-4088-8093-5737154CD457}
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnoDatabase", "EnoDatabase\EnoDatabase.csproj", "{0B819339-3BEF-4D7F-9828-B54B132ED79F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,6 +38,10 @@ Global
 		{46A15780-216F-4997-AB46-536364F3CA7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{46A15780-216F-4997-AB46-536364F3CA7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{46A15780-216F-4997-AB46-536364F3CA7E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0B819339-3BEF-4D7F-9828-B54B132ED79F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B819339-3BEF-4D7F-9828-B54B132ED79F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B819339-3BEF-4D7F-9828-B54B132ED79F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B819339-3BEF-4D7F-9828-B54B132ED79F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

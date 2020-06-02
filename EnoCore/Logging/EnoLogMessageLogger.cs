@@ -1,12 +1,12 @@
 ﻿using EnoCore.Models.Database;
 using EnoCore.Models.Json;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Text.Json;
 
 namespace EnoCore.Logging
 {
@@ -58,7 +58,7 @@ namespace EnoCore.Logging
                     },
                     state);
                 }
-                Provider.Log($"##ENOLOGMESSAGE {JsonConvert.SerializeObject(message)}\n");
+                Provider.Log($"##ENOLOGMESSAGE {JsonSerializer.Serialize(message)}\n");
             }
         }
     }

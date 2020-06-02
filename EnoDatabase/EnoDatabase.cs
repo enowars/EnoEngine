@@ -1,4 +1,3 @@
-using EnoCore.Models;
 using Microsoft.EntityFrameworkCore;
 using EnoCore;
 using System;
@@ -18,8 +17,9 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Net.Sockets;
 using System.Data;
 using EnoCore.Logging;
+using EnoCore.Models;
 
-namespace EnoCore
+namespace EnoDatabase
 {
     public enum FlagSubmissionResult
     {

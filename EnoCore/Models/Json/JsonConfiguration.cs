@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -15,8 +14,7 @@ namespace EnoCore.Models.Json
         public int TeamSubnetBytesLength { get; set; }
         public List<JsonConfigurationTeam> Teams { get; set; } = new List<JsonConfigurationTeam>();
         public List<JsonConfigurationService> Services { get; set; } = new List<JsonConfigurationService>();
-        [JsonIgnore]
-        public Dictionary<long, string[]> Checkers { get; set; } = new Dictionary<long, string[]>();
+        public Dictionary<long, string[]> Checkers = new Dictionary<long, string[]>();
 #pragma warning restore CS8618
 
         public void BuildCheckersDict()

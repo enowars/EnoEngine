@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 
 namespace EnoCore.Models
@@ -8,7 +7,6 @@ namespace EnoCore.Models
     public class Service
     {
 #pragma warning disable CS8618
-        [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public long Id { get; set; }
         public string Name { get; set; }
         public int FlagsPerRound { get; set; }

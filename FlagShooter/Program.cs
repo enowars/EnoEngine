@@ -139,7 +139,7 @@ namespace FlagShooter
                             EnoCoreUtils.PostgresConnectionString,
                             pgoptions => pgoptions.EnableRetryOnFailure());
                     }, 2)
-                    .AddScoped<IEnoDatabase, EnoDatabase>()
+                    .AddScoped<IEnoDatabase, EnoCore>()
                     .AddLogging(logging => logging.AddConsole())
                     .BuildServiceProvider(validateScopes: true);
                 new Program(serviceProvider).Start();
