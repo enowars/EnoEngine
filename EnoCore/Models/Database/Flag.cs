@@ -4,12 +4,11 @@ using System.Buffers;
 using System.Buffers.Binary;
 using System.Buffers.Text;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace EnoCore.Models
+namespace EnoCore.Models.Database
 {
     /// <summary>
     /// PK: ServiceId, RoundId, OwnerId, RoundOffset
@@ -25,9 +24,10 @@ namespace EnoCore.Models
         public long RoundId { get; set; }
         public Round Round { get; set; }
         public long Captures { get; set; }
+        public virtual List<SubmittedFlag> FlagSubmissions { get; set; }
 #pragma warning restore CS8618
 
-        public override string ToString()
+        public string ToString(byte[] signingKey)
         {
             Span<byte> flagContent = stackalloc byte[sizeof(int) * 4];
             BitConverter.TryWriteBytes(flagContent, (int)ServiceId);
@@ -35,16 +35,16 @@ namespace EnoCore.Models
             BitConverter.TryWriteBytes(flagContent.Slice(sizeof(int) * 2), (int)OwnerId);
             BitConverter.TryWriteBytes(flagContent.Slice(sizeof(int) * 3), (int)RoundId);
 
-            using HMACSHA1 hmacsha1 = new HMACSHA1(EnoCoreUtils.FLAG_SIGNING_KEY);
+            using HMACSHA1 hmacsha1 = new HMACSHA1(signingKey);
             Span<byte> flagSignature = stackalloc byte[hmacsha1.HashSize + flagContent.Length];
             hmacsha1.TryComputeHash(flagContent, flagSignature, out var _);
             Span<byte> flagBytes = stackalloc byte[flagContent.Length + flagSignature.Length];
             flagContent.CopyTo(flagBytes);
             flagSignature.CopyTo(flagBytes.Slice(flagContent.Length));
-            return "ENO" + EnoCoreUtils.UrlSafify(Convert.ToBase64String(flagBytes));
+            return "ENO" + Convert.ToBase64String(flagBytes);
         }
 
-        public static Flag? Parse(ReadOnlySequence<byte> line)
+        public static Flag? Parse(ReadOnlySequence<byte> line, byte[] signingKey)
         {
             try
             {
@@ -53,7 +53,6 @@ namespace EnoCore.Models
                 Span<byte> computedSignature = stackalloc byte[20];         // HMACSHA1 output is always 20 bytes
 
                 line.Slice(3).CopyTo(base64Bytes);                                              // Copy ROS to stack-alloced buffer
-                EnoCoreUtils.UrlUnSafify(base64Bytes);                                          // Do replacement magic
                 Base64.DecodeFromUtf8(base64Bytes, flagBytes, out var _, out var flagLength);   // Base64-decode the flag into flagBytes
 
                 // Deconstruct the flag
@@ -64,7 +63,7 @@ namespace EnoCore.Models
                 var flagSignature = flagBytes[16..flagLength];
 
                 // Compute the hmac
-                using HMACSHA1 hmacsha1 = new HMACSHA1(EnoCoreUtils.FLAG_SIGNING_KEY);
+                using HMACSHA1 hmacsha1 = new HMACSHA1(signingKey);
                 hmacsha1.TryComputeHash(flagBytes.Slice(0, 16), computedSignature, out var _);
 
                 // Showtime!

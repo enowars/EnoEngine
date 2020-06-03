@@ -2,10 +2,12 @@
 using EnoCore.Logging;
 using EnoCore.Models.Database;
 using EnoCore.Models.Json;
+using EnoCore.Utils.LoggerExtensions;
+using EnoDatabase;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -14,6 +16,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -99,7 +102,7 @@ namespace EnoLauncher
                     Logger.LogTrace($"Task {task.Id} sleeping: {span}");
                     await Task.Delay(span);
                 }
-                var content = new StringContent(JsonConvert.SerializeObject(task), Encoding.UTF8, "application/json");
+                var content = new StringContent(JsonSerializer.Serialize(new CheckerTaskMessage(task)), Encoding.UTF8, "application/json");
                 cancelSource.CancelAfter(task.MaxRunningTime * 1000);
                 Statistics.CheckerTaskLaunchMessage(task);
                 Logger.LogDebug($"LaunchCheckerTask {task.Id} POSTing {task.TaskType} to checker");
@@ -108,9 +111,8 @@ namespace EnoLauncher
                 {
                     var responseString = (await response.Content.ReadAsStringAsync()).TrimEnd(Environment.NewLine.ToCharArray());
                     Logger.LogDebug($"LaunchCheckerTask received {responseString}");
-                    dynamic responseJson = JsonConvert.DeserializeObject(responseString);
-                    string result = responseJson.result;
-                    var checkerResult = EnoCoreUtils.ParseCheckerResult(result);
+                    var resultMessage = JsonSerializer.Deserialize<CheckerResultMessage>(responseString);
+                    var checkerResult = EnoCoreUtils.ParseCheckerResult(resultMessage.Result);
                     Logger.LogDebug($"LaunchCheckerTask {task.Id} returned {checkerResult}");
                     task.CheckerResult = checkerResult;
                     task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
@@ -120,7 +122,7 @@ namespace EnoLauncher
                 else
                 {
                     Logger.LogError($"LaunchCheckerTask {task.Id} returned {response.StatusCode} ({(int)response.StatusCode})");
-                    task.CheckerResult = CheckerResult.CheckerError;
+                    task.CheckerResult = CheckerResult.InternalError;
                     task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
                     ResultsQueue.Enqueue(task);
                     return;
@@ -129,14 +131,14 @@ namespace EnoLauncher
             catch (TaskCanceledException e)
             {
                 Logger.LogError($"{nameof(LaunchCheckerTask)} {task.Id} was cancelled because it did not finish: {EnoCoreUtils.FormatException(e)}");
-                task.CheckerResult = CheckerResult.Down;
+                task.CheckerResult = CheckerResult.Offline;
                 task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
                 ResultsQueue.Enqueue(task);
             }
             catch (Exception e)
             {
                 Logger.LogError($"{nameof(LaunchCheckerTask)} failed: {EnoCoreUtils.FormatException(e)}");
-                task.CheckerResult = CheckerResult.CheckerError;
+                task.CheckerResult = CheckerResult.InternalError;
                 task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
                 ResultsQueue.Enqueue(task);
             }
@@ -145,7 +147,7 @@ namespace EnoLauncher
         static void Main()
         {
             var serviceProvider = new ServiceCollection()
-                .AddScoped<IEnoDatabase, EnoDatabase>()
+                .AddScoped<IEnoDatabase, EnoDatabase.EnoDatabase>()
                 .AddDbContextPool<EnoDatabaseContext>(options =>
                 {
                     options.UseNpgsql(
@@ -157,7 +159,7 @@ namespace EnoLauncher
                     loggingBuilder.SetMinimumLevel(LogLevel.Debug);
                     loggingBuilder.AddFilter(DbLoggerCategory.Name, LogLevel.Warning);
                     loggingBuilder.AddConsole();
-                    loggingBuilder.AddProvider(new EnoLogMessageLoggerProvider("EnoLauncher", LauncherCancelSource.Token));
+                    loggingBuilder.AddProvider(new EnoLogMessageFileLoggerProvider("EnoLauncher", LauncherCancelSource.Token));
                 })
                 .BuildServiceProvider(validateScopes: true);
             new Program(serviceProvider).Start();

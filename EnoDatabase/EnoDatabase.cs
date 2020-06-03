@@ -1,4 +1,3 @@
-using EnoCore.Models;
 using Microsoft.EntityFrameworkCore;
 using EnoCore;
 using System;
@@ -18,8 +17,9 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Net.Sockets;
 using System.Data;
 using EnoCore.Logging;
+using EnoCore.Models;
 
-namespace EnoCore
+namespace EnoDatabase
 {
     public enum FlagSubmissionResult
     {
@@ -450,7 +450,7 @@ namespace EnoCore
                     Address = $"team{flag.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
                     MaxRunningTime = maxRunningTime,
-                    Payload = flag.ToString(),
+                    Payload = flag.ToString(EnoCoreUtils.FLAG_SIGNING_KEY),
                     RelatedRoundId = flag.RoundId,
                     CurrentRoundId = flag.RoundId,
                     StartTime = firstFlagTime,
@@ -571,7 +571,7 @@ namespace EnoCore
                     Address = $"team{flag.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
                     MaxRunningTime = maxRunningTime,
-                    Payload = flag.ToString(),
+                    Payload = flag.ToString(EnoCoreUtils.FLAG_SIGNING_KEY),
                     CurrentRoundId = flag.RoundId,
                     RelatedRoundId = flag.RoundId,
                     StartTime = q3,
@@ -616,7 +616,7 @@ namespace EnoCore
                     Address = $"team{oldFlag.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
                     MaxRunningTime = quarterRound,
-                    Payload = oldFlag.ToString(),
+                    Payload = oldFlag.ToString(EnoCoreUtils.FLAG_SIGNING_KEY),
                     RelatedRoundId = oldFlag.RoundId,
                     CurrentRoundId = currentRound.Id,
                     StartTime = time,

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace EnoCore.Models
+namespace EnoCore.Models.Database
 {
     public enum ServiceStatus
     {

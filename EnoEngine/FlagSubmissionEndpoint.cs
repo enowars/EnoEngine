@@ -1,7 +1,9 @@
 ﻿using EnoCore;
 using EnoCore.Logging;
 using EnoCore.Models;
+using EnoCore.Models.Database;
 using EnoCore.Models.Json;
+using EnoDatabase;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
@@ -114,7 +116,7 @@ namespace EnoEngine.FlagSubmission
                     // Process the line.
                     if (teamId is long _teamId)
                     {
-                        var flag = Flag.Parse(line);
+                        var flag = Flag.Parse(line, EnoCoreUtils.FLAG_SIGNING_KEY);
                         var tcs = new TaskCompletionSource<FlagSubmissionResult>();
                         if (flag == null)
                         {

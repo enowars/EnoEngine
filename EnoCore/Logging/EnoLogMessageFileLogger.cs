@@ -1,21 +1,21 @@
 ﻿using EnoCore.Models.Database;
 using EnoCore.Models.Json;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Text.Json;
 
 namespace EnoCore.Logging
 {
-    public class EnoLogMessageLogger : ILogger
+    public class EnoLogMessageFileLogger : ILogger
     {
-        public EnoLogMessageLoggerProvider Provider { get; }
-        public string CategoryName { get;  }
+        private readonly IEnoLogMessageProvider Provider;
+        private readonly string CategoryName;
 
-        public EnoLogMessageLogger(EnoLogMessageLoggerProvider provider, string categoryName)
+        public EnoLogMessageFileLogger(IEnoLogMessageProvider provider, string categoryName)
         {
             Provider = provider;
             CategoryName = categoryName;
@@ -40,7 +40,9 @@ namespace EnoCore.Logging
                     Message = exception?.Message ?? state?.ToString() ?? "",
                     Module = CategoryName,
                     Tool = Provider.Tool,
-                    Timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+                    Timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+                    Severity = Severity(logLevel),
+                    SeverityLevel = SeverityLevel(logLevel)
                 };
 
                 if (Provider.ScopeProvider != null)
@@ -58,8 +60,38 @@ namespace EnoCore.Logging
                     },
                     state);
                 }
-                Provider.Log($"##ENOLOGMESSAGE {JsonConvert.SerializeObject(message)}\n");
+                Provider.Log($"##ENOLOGMESSAGE {JsonSerializer.Serialize(message)}\n");
             }
+        }
+
+        private string Severity(LogLevel logLevel)
+        {
+            return logLevel switch
+            {
+                LogLevel.None => "DEBUG",
+                LogLevel.Trace => "DEBUG",
+                LogLevel.Debug => "DEBUG",
+                LogLevel.Information => "INFO",
+                LogLevel.Warning => "WARNING",
+                LogLevel.Error => "ERROR",
+                LogLevel.Critical => "CRITICAL",
+                _ => throw new InvalidOperationException()
+            };
+        }
+
+        private long SeverityLevel(LogLevel logLevel)
+        {
+            return logLevel switch
+            {
+                LogLevel.None => 0,
+                LogLevel.Trace => 0,
+                LogLevel.Debug => 0,
+                LogLevel.Information => 1,
+                LogLevel.Warning => 2,
+                LogLevel.Error => 3,
+                LogLevel.Critical => 4,
+                _ => throw new InvalidOperationException()
+            };
         }
     }
 }

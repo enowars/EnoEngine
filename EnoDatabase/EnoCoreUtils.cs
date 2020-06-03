@@ -10,6 +10,7 @@ using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using EnoCore.Models;
@@ -17,9 +18,8 @@ using EnoCore.Models.Database;
 using EnoCore.Models.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 
-namespace EnoCore
+namespace EnoDatabase
 {
 
     ///
@@ -64,7 +64,7 @@ namespace EnoCore
     public class EnoCoreUtils
     {
         const int DATABASE_RETRIES = 500;
-        internal static readonly byte[] FLAG_SIGNING_KEY = Encoding.ASCII.GetBytes("suchasecretstornkkeytheywillneverguess");
+        public static readonly byte[] FLAG_SIGNING_KEY = Encoding.ASCII.GetBytes("suchasecretstornkkeytheywillneverguess");
         internal static readonly byte[] NOISE_SIGNING_KEY = Encoding.ASCII.GetBytes("anotherstrenksecrettheyvref24tr");
         public static string PostgresDomain => Environment.GetEnvironmentVariable("DATABASE_DOMAIN") ?? "localhost";
         public static string PostgresConnectionString => $@"Server={PostgresDomain};Port=5432;Database=EnoDatabase;User Id=docker;Password=docker;Timeout=15;SslMode=Disable;";
@@ -188,11 +188,11 @@ namespace EnoCore
         {
             return result switch
             {
-                "INTERNAL_ERROR" => CheckerResult.CheckerError,
+                "INTERNAL_ERROR" => CheckerResult.InternalError,
                 "OK" => CheckerResult.Ok,
                 "MUMBLE" => CheckerResult.Mumble,
-                "OFFLINE" => CheckerResult.Down,
-                _ => CheckerResult.CheckerError,
+                "OFFLINE" => CheckerResult.Offline,
+                _ => CheckerResult.InternalError,
             };
         }
 
@@ -208,7 +208,7 @@ namespace EnoCore
 
         public static void GenerateCurrentScoreboard(EnoEngineScoreboard scoreboard, string path, long roundId)
         {
-            var json = JsonConvert.SerializeObject(scoreboard);
+            var json = JsonSerializer.Serialize(scoreboard);
             File.WriteAllText($"{path}scoreboard{roundId}.json", json);
             File.WriteAllText($"{path}scoreboard.json", json);
         }
@@ -287,7 +287,7 @@ namespace EnoCore
             {
                 CheckerResult.Ok => ServiceStatus.Ok,
                 CheckerResult.Mumble => ServiceStatus.Mumble,
-                CheckerResult.Down => ServiceStatus.Down,
+                CheckerResult.Offline => ServiceStatus.Down,
                 _ => ServiceStatus.CheckerError,
             };
         }

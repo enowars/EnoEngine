@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
-namespace EnoCore.Migrations
+namespace EnoDatabase.Migrations
 {
     public partial class m1 : Migration
     {

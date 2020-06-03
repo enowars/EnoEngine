@@ -1,45 +1,48 @@
 ﻿using EnoCore.Models.Database;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace EnoCore.Models.Json
 {
     public class EnoLogMessage
     {
-        [JsonProperty("tool")]
+        [JsonPropertyName("tool")]
         public string? Tool { get; set; }
-        [JsonProperty("type")]
+        [JsonPropertyName("type")]
         public string? Type { get; set; } = "infrastructure";
-        [JsonProperty("severity")]
-        public string? Severity { get; set; }
-        [JsonProperty("timestamp")]
+        [JsonPropertyName("severity")]
+        public string Severity { get; set; } = default!;
+        [JsonPropertyName("severityLevel")]
+        public long SeverityLevel { get; set; }
+        [JsonPropertyName("timestamp")]
         public string? Timestamp { get; set; }
-        [JsonProperty("module")]
+        [JsonPropertyName("module")]
         public string? Module { get; set; }
-        [JsonProperty("function")]
+        [JsonPropertyName("function")]
         public string? Function { get; set; }
-        [JsonProperty("flag")]
+        [JsonPropertyName("flag")]
         public string? Flag { get; set; }
-        [JsonProperty("flagIndex")]
+        [JsonPropertyName("flagIndex")]
         public long? FlagIndex { get; set; }
-        [JsonProperty("runId")]
-        public long? CheckerTaskId { get; set; }
-        [JsonProperty("round")]
+        [JsonPropertyName("runId")]
+        public long? RunId { get; set; }
+        [JsonPropertyName("roundId")]
         public long? RoundId { get; set; }
-        [JsonProperty("relatedRound")]
+        [JsonPropertyName("relatedRoundId")]
         public long? RelatedRoundId { get; set; }
-        [JsonProperty("message")]
-        public string? Message { get; set; }
-        [JsonProperty("teamName")]
+        [JsonPropertyName("message")]
+        public string Message { get; set; } = default!;
+        [JsonPropertyName("teamName")]
         public string? TeamName { get; set; }
-        [JsonProperty("serviceName")]
+        [JsonPropertyName("teamId")]
+        public long TeamId { get; set; }
+        [JsonPropertyName("serviceName")]
         public string? ServiceName { get; set; }
-        [JsonProperty("method")]
+        [JsonPropertyName("method")]
         public string? Method { get; set; }
-
 
         public void FromCheckerTask(CheckerTask task)
         {
@@ -47,18 +50,24 @@ namespace EnoCore.Models.Json
             RoundId = task.CurrentRoundId;
             RelatedRoundId = task.RelatedRoundId;
             TeamName = task.TeamName;
-            CheckerTaskId = task.Id;
+            TeamId = task.TeamId;
+            RunId = task.Id;
             FlagIndex = task.TaskIndex;
             ServiceName = task.ServiceName;
             Method = task.TaskType;
         }
 
-        public static EnoLogMessage FromRound(Round round)
+        public void FromCheckerTaskMessage(CheckerTaskMessage taskMessage)
         {
-            return new EnoLogMessage()
-            {
-                RoundId = round.Id
-            };
+            Flag = taskMessage.Flag;
+            RoundId = taskMessage.RoundId;
+            RelatedRoundId = taskMessage.RelatedRoundId;
+            TeamName = taskMessage.TeamName;
+            TeamId = taskMessage.TeamId;
+            RunId = taskMessage.RunId;
+            FlagIndex = taskMessage.FlagIndex;
+            ServiceName = taskMessage.ServiceName;
+            Method = taskMessage.Method;
         }
     }
 }

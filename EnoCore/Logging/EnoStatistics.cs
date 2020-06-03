@@ -1,8 +1,8 @@
 ﻿using EnoCore.Models.Database;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 
 namespace EnoCore.Logging
@@ -22,13 +22,13 @@ namespace EnoCore.Logging
         {
             var message = new SubmissionBatchMessage(flagsProcessed,
                 okFlags, duplicateFlags, oldFlags, duration);
-            Queue.Enqueue(PREFIX + JsonConvert.SerializeObject(message) + "\n");
+            Queue.Enqueue(PREFIX + JsonSerializer.Serialize(message) + "\n");
         }
 
         public void CheckerTaskLaunchMessage(CheckerTask task)
         {
             var message = new CheckerTaskLaunchMessage(task);
-            Queue.Enqueue(PREFIX + JsonConvert.SerializeObject(message) + "\n");
+            Queue.Enqueue(PREFIX + JsonSerializer.Serialize(message) + "\n");
         }
     }
 
