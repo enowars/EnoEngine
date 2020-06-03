@@ -47,6 +47,11 @@ namespace EnoDatabase
             modelBuilder.Entity<SubmittedFlag>()
                 .HasKey(sf => new { sf.FlagServiceId, sf.FlagRoundId, sf.FlagOwnerId, sf.FlagRoundOffset, sf.AttackerTeamId });
 
+            modelBuilder.Entity<SubmittedFlag>()
+                .HasOne(sf => sf.Flag)
+                .WithMany(f => f.FlagSubmissions)
+                .HasForeignKey(sf => new { sf.FlagServiceId, sf.FlagRoundId, sf.FlagOwnerId, sf.FlagRoundOffset });
+
             modelBuilder.Entity<RoundTeamServiceState>()
                 .HasKey(rtss => new { rtss.ServiceId, rtss.TeamId, rtss.GameRoundId });
 

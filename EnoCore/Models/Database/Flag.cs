@@ -24,6 +24,7 @@ namespace EnoCore.Models.Database
         public long RoundId { get; set; }
         public Round Round { get; set; }
         public long Captures { get; set; }
+        public virtual List<SubmittedFlag> FlagSubmissions { get; set; }
 #pragma warning restore CS8618
 
         public string ToString(byte[] signingKey)
