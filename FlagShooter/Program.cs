@@ -4,7 +4,6 @@ using EnoCore.Models.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -17,6 +16,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using EnoCore.Models;
 using System.Linq;
+using EnoDatabase;
 
 namespace FlagShooter
 {
@@ -139,7 +139,7 @@ namespace FlagShooter
                             EnoCoreUtils.PostgresConnectionString,
                             pgoptions => pgoptions.EnableRetryOnFailure());
                     }, 2)
-                    .AddScoped<IEnoDatabase, EnoCore>()
+                    .AddScoped<IEnoDatabase, EnoDatabase.EnoDatabase>()
                     .AddLogging(logging => logging.AddConsole())
                     .BuildServiceProvider(validateScopes: true);
                 new Program(serviceProvider).Start();
