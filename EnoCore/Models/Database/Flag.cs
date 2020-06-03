@@ -56,10 +56,10 @@ namespace EnoCore.Models.Database
                 Base64.DecodeFromUtf8(base64Bytes, flagBytes, out var _, out var flagLength);   // Base64-decode the flag into flagBytes
 
                 // Deconstruct the flag
-                var serviceId = BinaryPrimitives.ReadInt32BigEndian(flagBytes);
-                var roundOffset = BinaryPrimitives.ReadInt32BigEndian(flagBytes.Slice(4, 4));
-                var ownerId = BinaryPrimitives.ReadInt32BigEndian(flagBytes.Slice(8, 4));
-                var roundId = BinaryPrimitives.ReadInt32BigEndian(flagBytes.Slice(12, 4));
+                var serviceId = BinaryPrimitives.ReadInt32LittleEndian(flagBytes);
+                var roundOffset = BinaryPrimitives.ReadInt32LittleEndian(flagBytes.Slice(4, 4));
+                var ownerId = BinaryPrimitives.ReadInt32LittleEndian(flagBytes.Slice(8, 4));
+                var roundId = BinaryPrimitives.ReadInt32LittleEndian(flagBytes.Slice(12, 4));
                 var flagSignature = flagBytes[16..flagLength];
 
                 // Compute the hmac

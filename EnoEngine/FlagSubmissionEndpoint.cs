@@ -282,12 +282,9 @@ namespace EnoEngine.FlagSubmission
                     foreach (var (teamid, channel) in Channels)
                     {
                         var reader = channel.Reader;
-                        while (await reader.WaitToReadAsync(token))
+                        while (reader.TryRead(out var item))
                         {
-                            while (reader.TryRead(out var item))
-                            {
-                                submissions.Add((item.Flag, teamid, item.FeedbackSource));
-                            }
+                            submissions.Add((item.Flag, teamid, item.FeedbackSource));
                         }
                     }
                     if (submissions.Count == 0)

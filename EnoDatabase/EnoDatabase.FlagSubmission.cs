@@ -40,13 +40,13 @@ namespace EnoDatabase
                 var tResult = result;
                 if (flag.RoundId + flagValidityInRounds < currentRoundId)
                 {
-                    var t = Task.Run(() => tResult.TrySetResult(FlagSubmissionResult.Old));
+                    tResult.SetResult(FlagSubmissionResult.Old);
                     oldFlags += 1;
                     continue;
                 }
                 if (updates.TryGetValue((flag.ServiceId, flag.RoundId, flag.OwnerId, flag.RoundOffset, attackerTeamId), out var entry))
                 {
-                    var t = Task.Run(() => tResult.TrySetResult(FlagSubmissionResult.Duplicate));
+                    tResult.SetResult(FlagSubmissionResult.Duplicate);
                     entry += 1;
                     duplicateFlags += 1;
                 }
@@ -103,13 +103,13 @@ namespace EnoDatabase
                         if (newSubmission.SubmissionsCount == 1)
                         {
                             okFlags += 1;
-                            var t = Task.Run(() => tResult.TrySetResult(FlagSubmissionResult.Ok));
+                            tResult.SetResult(FlagSubmissionResult.Ok);
                             flagsStatement.Append($"update \"Flags\" set \"Captures\" = \"Captures\" + 1 where \"ServiceId\" = {newSubmission.FlagServiceId} and \"RoundId\" = {newSubmission.FlagRoundId} and \"OwnerId\" = {newSubmission.FlagOwnerId} and \"RoundOffset\" = {newSubmission.FlagRoundOffset};\n");
                         }
                         else
                         {
                             duplicateFlags += 1;
-                            var t = Task.Run(() => tResult.TrySetResult(FlagSubmissionResult.Duplicate));
+                            tResult.SetResult(FlagSubmissionResult.Duplicate);
                         }
                     }
                     await _context.Database.ExecuteSqlRawAsync(flagsStatement.ToString());
