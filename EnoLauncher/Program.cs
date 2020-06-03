@@ -2,6 +2,7 @@
 using EnoCore.Logging;
 using EnoCore.Models.Database;
 using EnoCore.Models.Json;
+using EnoCore.Utils.LoggerExtensions;
 using EnoDatabase;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,13 +22,6 @@ using System.Threading.Tasks;
 
 namespace EnoLauncher
 {
-    class CheckerResultMessage
-    {
-#pragma warning disable CS8618
-        public string Result { get; set; }
-#pragma warning restore CS8618
-    }
-
     class Program
     {
         private const int TASK_UPDATE_BATCH_SIZE = 500;
@@ -39,10 +33,6 @@ namespace EnoLauncher
         private readonly ServiceProvider ServiceProvider;
         private readonly EnoStatistics Statistics;
         private readonly ILogger Logger;
-        private readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions()
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
 
         public Program(ServiceProvider serviceProvider)
         {
@@ -112,7 +102,7 @@ namespace EnoLauncher
                     Logger.LogTrace($"Task {task.Id} sleeping: {span}");
                     await Task.Delay(span);
                 }
-                var content = new StringContent(JsonSerializer.Serialize(task, JsonOptions), Encoding.UTF8, "application/json");
+                var content = new StringContent(JsonSerializer.Serialize(new CheckerTaskMessage(task)), Encoding.UTF8, "application/json");
                 cancelSource.CancelAfter(task.MaxRunningTime * 1000);
                 Statistics.CheckerTaskLaunchMessage(task);
                 Logger.LogDebug($"LaunchCheckerTask {task.Id} POSTing {task.TaskType} to checker");
@@ -121,7 +111,7 @@ namespace EnoLauncher
                 {
                     var responseString = (await response.Content.ReadAsStringAsync()).TrimEnd(Environment.NewLine.ToCharArray());
                     Logger.LogDebug($"LaunchCheckerTask received {responseString}");
-                    var resultMessage = JsonSerializer.Deserialize<CheckerResultMessage>(responseString, JsonOptions);
+                    var resultMessage = JsonSerializer.Deserialize<CheckerResultMessage>(responseString);
                     var checkerResult = EnoCoreUtils.ParseCheckerResult(resultMessage.Result);
                     Logger.LogDebug($"LaunchCheckerTask {task.Id} returned {checkerResult}");
                     task.CheckerResult = checkerResult;

@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace EnoCore
+namespace EnoCore.Utils.LoggerExtensions
 {
     public static class LoggerExtensions
     {
@@ -25,5 +25,4 @@ namespace EnoCore
             });
         }
     }
-
 }

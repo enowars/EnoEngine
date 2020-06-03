@@ -40,7 +40,9 @@ namespace EnoCore.Logging
                     Message = exception?.Message ?? state?.ToString() ?? "",
                     Module = CategoryName,
                     Tool = Provider.Tool,
-                    Timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+                    Timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+                    Severity = Severity(logLevel),
+                    SeverityLevel = SeverityLevel(logLevel)
                 };
 
                 if (Provider.ScopeProvider != null)
@@ -60,6 +62,36 @@ namespace EnoCore.Logging
                 }
                 Provider.Log($"##ENOLOGMESSAGE {JsonSerializer.Serialize(message)}\n");
             }
+        }
+
+        private string Severity(LogLevel logLevel)
+        {
+            return logLevel switch
+            {
+                LogLevel.None => "DEBUG",
+                LogLevel.Trace => "DEBUG",
+                LogLevel.Debug => "DEBUG",
+                LogLevel.Information => "INFO",
+                LogLevel.Warning => "WARNING",
+                LogLevel.Error => "ERROR",
+                LogLevel.Critical => "CRITICAL",
+                _ => throw new InvalidOperationException()
+            };
+        }
+
+        private long SeverityLevel(LogLevel logLevel)
+        {
+            return logLevel switch
+            {
+                LogLevel.None => 0,
+                LogLevel.Trace => 0,
+                LogLevel.Debug => 0,
+                LogLevel.Information => 1,
+                LogLevel.Warning => 2,
+                LogLevel.Error => 3,
+                LogLevel.Critical => 4,
+                _ => throw new InvalidOperationException()
+            };
         }
     }
 }
