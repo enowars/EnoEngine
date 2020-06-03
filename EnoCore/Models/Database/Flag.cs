@@ -36,7 +36,7 @@ namespace EnoCore.Models.Database
             BitConverter.TryWriteBytes(flagContent.Slice(sizeof(int) * 3), (int)RoundId);
 
             using HMACSHA1 hmacsha1 = new HMACSHA1(signingKey);
-            Span<byte> flagSignature = stackalloc byte[hmacsha1.HashSize + flagContent.Length];
+            Span<byte> flagSignature = stackalloc byte[hmacsha1.HashSize/8];
             hmacsha1.TryComputeHash(flagContent, flagSignature, out var _);
             Span<byte> flagBytes = stackalloc byte[flagContent.Length + flagSignature.Length];
             flagContent.CopyTo(flagBytes);
