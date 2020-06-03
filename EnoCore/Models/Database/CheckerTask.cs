@@ -13,8 +13,8 @@ namespace EnoCore.Models.Database
 
     public enum CheckerResult
     {
-        CheckerError,
-        Down,
+        InternalError,
+        Offline,
         Mumble,
         Ok
     }

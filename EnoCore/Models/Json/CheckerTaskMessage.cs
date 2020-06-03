@@ -25,7 +25,7 @@ namespace EnoCore.Models.Json
         [JsonPropertyName("relatedRoundId")]
         public long RelatedRoundId { get; set; }
         [JsonPropertyName("roundId")]
-        public long Round { get; set; }
+        public long RoundId { get; set; }
         [JsonPropertyName("flag")]
         public string? Flag { get; set; }
         [JsonPropertyName("flagIndex")]
@@ -43,7 +43,7 @@ namespace EnoCore.Models.Json
             TeamId = task.TeamId;
             TeamName = task.TeamName;
             RelatedRoundId = task.RelatedRoundId;
-            Round = task.CurrentRoundId;
+            RoundId = task.CurrentRoundId;
             Flag = task.Payload;
             FlagIndex = task.TaskIndex;
         }

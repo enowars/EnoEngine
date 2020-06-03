@@ -60,7 +60,7 @@ namespace EnoEngine
                     loggingBuilder.SetMinimumLevel(LogLevel.Debug);
                     loggingBuilder.AddFilter(DbLoggerCategory.Name, LogLevel.Warning);
                     loggingBuilder.AddConsole();
-                    loggingBuilder.AddProvider(new EnoLogMessageLoggerProvider("EnoEngine", CancelSource.Token));
+                    loggingBuilder.AddProvider(new EnoLogMessageFileLoggerProvider("EnoEngine", CancelSource.Token));
                 })
                 .BuildServiceProvider(validateScopes: true);
 

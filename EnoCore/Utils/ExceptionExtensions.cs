@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace EnoCore.Logging
+namespace EnoCore.Utils
 {
     public static class ExceptionExtensions
     {

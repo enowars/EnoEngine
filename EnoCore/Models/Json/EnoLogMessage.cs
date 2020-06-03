@@ -57,12 +57,17 @@ namespace EnoCore.Models.Json
             Method = task.TaskType;
         }
 
-        public static EnoLogMessage FromRound(Round round)
+        public void FromCheckerTaskMessage(CheckerTaskMessage taskMessage)
         {
-            return new EnoLogMessage()
-            {
-                RoundId = round.Id
-            };
+            Flag = taskMessage.Flag;
+            RoundId = taskMessage.RoundId;
+            RelatedRoundId = taskMessage.RelatedRoundId;
+            TeamName = taskMessage.TeamName;
+            TeamId = taskMessage.TeamId;
+            RunId = taskMessage.RunId;
+            FlagIndex = taskMessage.FlagIndex;
+            ServiceName = taskMessage.ServiceName;
+            Method = taskMessage.Method;
         }
     }
 }

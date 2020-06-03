@@ -188,11 +188,11 @@ namespace EnoDatabase
         {
             return result switch
             {
-                "INTERNAL_ERROR" => CheckerResult.CheckerError,
+                "INTERNAL_ERROR" => CheckerResult.InternalError,
                 "OK" => CheckerResult.Ok,
                 "MUMBLE" => CheckerResult.Mumble,
-                "OFFLINE" => CheckerResult.Down,
-                _ => CheckerResult.CheckerError,
+                "OFFLINE" => CheckerResult.Offline,
+                _ => CheckerResult.InternalError,
             };
         }
 
@@ -287,7 +287,7 @@ namespace EnoDatabase
             {
                 CheckerResult.Ok => ServiceStatus.Ok,
                 CheckerResult.Mumble => ServiceStatus.Mumble,
-                CheckerResult.Down => ServiceStatus.Down,
+                CheckerResult.Offline => ServiceStatus.Down,
                 _ => ServiceStatus.CheckerError,
             };
         }

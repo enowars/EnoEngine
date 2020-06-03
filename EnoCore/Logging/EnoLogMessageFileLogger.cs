@@ -10,12 +10,12 @@ using System.Text.Json;
 
 namespace EnoCore.Logging
 {
-    public class EnoLogMessageLogger : ILogger
+    public class EnoLogMessageFileLogger : ILogger
     {
-        public EnoLogMessageLoggerProvider Provider { get; }
-        public string CategoryName { get;  }
+        private readonly IEnoLogMessageProvider Provider;
+        private readonly string CategoryName;
 
-        public EnoLogMessageLogger(EnoLogMessageLoggerProvider provider, string categoryName)
+        public EnoLogMessageFileLogger(IEnoLogMessageProvider provider, string categoryName)
         {
             Provider = provider;
             CategoryName = categoryName;
