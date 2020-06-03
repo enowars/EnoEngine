@@ -21,7 +21,7 @@ namespace EnoCore.Models.Json
         [JsonPropertyName("teamId")]
         public long TeamId { get; set; }
         [JsonPropertyName("teamName")]
-        public string Team { get; set; } = default!;
+        public string TeamName { get; set; } = default!;
         [JsonPropertyName("relatedRoundId")]
         public long RelatedRoundId { get; set; }
         [JsonPropertyName("roundId")]
@@ -41,7 +41,7 @@ namespace EnoCore.Models.Json
             ServiceId = task.ServiceId;
             ServiceName = task.ServiceName;
             TeamId = task.TeamId;
-            Team = task.TeamName;
+            TeamName = task.TeamName;
             RelatedRoundId = task.RelatedRoundId;
             Round = task.CurrentRoundId;
             Flag = task.Payload;

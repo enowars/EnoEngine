@@ -18,7 +18,6 @@ namespace EnoCore.Models
         public double ServiceLevelAgreementPoints { get => Team.ServiceLevelAgreementPoints; }
         public Dictionary<string, EnoEngineScoreboardEntryServiceDetails> ServiceDetails { get; set; }
 
-
         public EnoEngineScoreboardEntry(Team team, IEnumerable<ServiceStats> serviceStats)
         {
             Team = team;
