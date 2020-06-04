@@ -44,8 +44,8 @@ interface CheckerTaskMessage {
     serviceName: string;
     teamId: string;
     teamName: string;
-    relatedRoundId: number;
     roundId: number;
+    relatedRoundId: number;
     flag: string | null;
     flagIndex: number;
 }
