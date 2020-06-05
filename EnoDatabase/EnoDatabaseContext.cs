@@ -16,7 +16,7 @@ namespace EnoDatabase
         public EnoDatabaseContext CreateDbContext(string[] args)
         {
             var optionsBuilder = new DbContextOptionsBuilder<EnoDatabaseContext>();
-            optionsBuilder.UseNpgsql(EnoCoreUtils.PostgresConnectionString, pgoptions => pgoptions.EnableRetryOnFailure());
+            optionsBuilder.UseNpgsql(EnoDatabaseUtils.PostgresConnectionString, pgoptions => pgoptions.EnableRetryOnFailure());
             return new EnoDatabaseContext(optionsBuilder.Options);
         }
     }

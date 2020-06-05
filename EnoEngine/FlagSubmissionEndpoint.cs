@@ -116,7 +116,7 @@ namespace EnoEngine.FlagSubmission
                     // Process the line.
                     if (teamId is long _teamId)
                     {
-                        var flag = Flag.Parse(line, EnoCoreUtils.FLAG_SIGNING_KEY);
+                        var flag = Flag.Parse(line, EnoDatabaseUtils.FLAG_SIGNING_KEY);
                         var tcs = new TaskCompletionSource<FlagSubmissionResult>();
                         if (flag == null)
                         {
@@ -210,7 +210,7 @@ namespace EnoEngine.FlagSubmission
             catch (TaskCanceledException) { }
             catch (Exception e)
             {
-                Logger.LogCritical($"RunDebugEndpoint failed: {EnoCoreUtils.FormatException(e)}");
+                Logger.LogCritical($"RunDebugEndpoint failed: {EnoDatabaseUtils.FormatException(e)}");
             }
             Logger.LogInformation("RunDebugEndpoint finished");
         }
@@ -243,7 +243,7 @@ namespace EnoEngine.FlagSubmission
                     }
                     catch (Exception e)
                     {
-                        Logger.LogWarning($"RunProductionEndpoint failed to handle connection: {EnoCoreUtils.FormatException(e)}");
+                        Logger.LogWarning($"RunProductionEndpoint failed to handle connection: {EnoDatabaseUtils.FormatException(e)}");
                     }
                 }
             }
@@ -251,7 +251,7 @@ namespace EnoEngine.FlagSubmission
             catch (TaskCanceledException) { }
             catch (Exception e)
             {
-                Logger.LogCritical($"RunProductionEndpoint failed: {EnoCoreUtils.FormatException(e)}");
+                Logger.LogCritical($"RunProductionEndpoint failed: {EnoDatabaseUtils.FormatException(e)}");
             }
             Logger.LogInformation("RunProductionEndpoint finished");
         }
@@ -295,7 +295,7 @@ namespace EnoEngine.FlagSubmission
                     {
                         try
                         {
-                            await EnoCoreUtils.RetryDatabaseAction(async () =>
+                            await EnoDatabaseUtils.RetryDatabaseAction(async () =>
                             {
                                 using var scope = ServiceProvider.CreateScope();
                                 var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
@@ -304,7 +304,7 @@ namespace EnoEngine.FlagSubmission
                         }
                         catch (Exception e)
                         {
-                            Logger.LogError($"InsertSubmissionsLoop dropping batch because: {EnoCoreUtils.FormatException(e)}");
+                            Logger.LogError($"InsertSubmissionsLoop dropping batch because: {EnoDatabaseUtils.FormatException(e)}");
                             foreach (var (flag, attackerTeamId, tcs) in submissions)
                             {
                                 tcs.SetResult(FlagSubmissionResult.UnknownError);
@@ -316,7 +316,7 @@ namespace EnoEngine.FlagSubmission
             catch (TaskCanceledException) { }
             catch (Exception e)
             {
-                Logger.LogCritical($"InsertSubmissionsLoop failed: {EnoCoreUtils.FormatException(e)}");
+                Logger.LogCritical($"InsertSubmissionsLoop failed: {EnoDatabaseUtils.FormatException(e)}");
             }
         }
     }

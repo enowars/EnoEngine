@@ -1,4 +1,5 @@
 ﻿using EnoCore.Models.Database;
+using EnoCore.Utils;
 using System;
 using System.Buffers;
 using System.Buffers.Binary;
@@ -15,6 +16,12 @@ namespace EnoCore.Models.Database
     /// </summary>
     public class Flag
     {
+        private static readonly char[] ByteMap = new char[] { '̀', '́', '̂', '̃', '̄', '̅', '̆', '̇', '̈', '̉', '̊', '̋', '̌', '̍', '̎', '̏', '̐', '̑', '̒', '̓', '̔', '̕', '̖', '̗', '̘', '̙', '̚', '̛', '̜', '̝', '̞', '̟', '̠', '̡', '̢', '̣', '̤', '̥', '̦', '̧', '̨', '̩', '̪', '̫', '̬', '̭', '̮', '̯', '̰', '̱', '̲', '̳', '̴', '̵', '̶', '̷', '̸', '̹', '̺', '̻', '̼', '̽', '̾', '̿', '̀', '́', '͂', '̓', '̈́', 'ͅ', '͆', '͇', '͈', '͉', '͊', '͋', '͌', '͍', '͎', '͏', '͐', '͑', '͒', '͓', '͔', '͕', '͖', '͗', '͘', '͙', '͚', '͛', '͜', '͝', '͞', '͟', '͠', '͡', '͢', 'ͣ', 'ͤ', 'ͥ', 'ͦ', 'ͧ', 'ͨ', 'ͩ', 'ͪ', 'ͫ', 'ͬ', 'ͭ', 'ͮ', 'ͯ', '᪰', '᪱', '᪲', '᪳', '᪴', '᪵', '᪶', '᪷', '᪸', '᪹', '᪺', '᪻', '᪼', '᪽', '᪾', '᷀', '᷁', '᷂', '᷃', '᷄', '᷅', '᷆', '᷇', '᷈', '᷉', '᷊', '᷋', '᷌', '᷍', '᷎', '᷏', '᷐', '᷑', '᷒', 'ᷓ', 'ᷔ', 'ᷕ', 'ᷖ', 'ᷗ', 'ᷘ', 'ᷙ', 'ᷚ', 'ᷛ', 'ᷜ', 'ᷝ', 'ᷞ', 'ᷟ', 'ᷠ', 'ᷡ', 'ᷢ', 'ᷣ', 'ᷤ', 'ᷥ', 'ᷦ', 'ᷧ', 'ᷨ', 'ᷩ', 'ᷪ', 'ᷫ', 'ᷬ', 'ᷭ', 'ᷮ', 'ᷯ', 'ᷰ', 'ᷱ', 'ᷲ', 'ᷳ', 'ᷴ', '᷵', '᷻', '᷼', '᷽', '᷾', '᷿', '⃐', '⃑', '⃒', '⃓', '⃔', '⃕', '⃖', '⃗', '⃘', '⃙', '⃚', '⃛', '⃜', '⃝', '⃞', '⃟', '⃠', '⃡', '⃢', '⃣', '⃤', '⃥', '⃦', '⃧', '⃨', '⃩', '⃪', '⃫', '⃬', '⃭', '⃮', '⃯', '⃰', '︠', '︡', '︢', '︣', '︤', '︥', '︦', '︧', '︨', '︩', '︪', '︫', '︬', '︭', '︮', '︯', '゙', '゚', '⳯', '⳰', '⳱', '꣠', '꣡', '꣢', '꣣', '꣤', '꣥', '꣦', '꣧', '꣨', '꣩', '꣪', '꣫', '꣬', '꣭', '꣮', '꣯' };
+
+        private static readonly string[] Flagprefix = new string[]
+            {
+                "🏳️‍🌈"
+            };
 #pragma warning disable CS8618
         public long OwnerId { get; set; }
         public Team Owner { get; set; }
@@ -27,7 +34,7 @@ namespace EnoCore.Models.Database
         public virtual List<SubmittedFlag> FlagSubmissions { get; set; }
 #pragma warning restore CS8618
 
-        public string ToString(byte[] signingKey)
+        public string ToNormalString(byte[] signingKey)
         {
             Span<byte> flagContent = stackalloc byte[sizeof(int) * 4];
             BitConverter.TryWriteBytes(flagContent, (int)ServiceId);
@@ -42,6 +49,40 @@ namespace EnoCore.Models.Database
             flagContent.CopyTo(flagBytes);
             flagSignature.CopyTo(flagBytes.Slice(flagContent.Length));
             return "ENO" + Convert.ToBase64String(flagBytes);
+        }
+        public string ToUtfString(byte[] signingKey)
+        {
+            Span<byte> flagContent = stackalloc byte[sizeof(int) * 4];
+            BitConverter.TryWriteBytes(flagContent, (int)ServiceId);
+            BitConverter.TryWriteBytes(flagContent.Slice(sizeof(int)), RoundOffset);
+            BitConverter.TryWriteBytes(flagContent.Slice(sizeof(int) * 2), (int)OwnerId);
+            BitConverter.TryWriteBytes(flagContent.Slice(sizeof(int) * 3), (int)RoundId);
+
+            using HMACSHA1 hmacsha1 = new HMACSHA1(signingKey);
+            Span<byte> flagSignature = stackalloc byte[hmacsha1.HashSize + flagContent.Length];
+            hmacsha1.TryComputeHash(flagContent, flagSignature, out var _);
+            Span<byte> flagBytes = stackalloc byte[flagContent.Length + flagSignature.Length];
+            flagContent.CopyTo(flagBytes);
+            flagSignature.CopyTo(flagBytes.Slice(flagContent.Length));
+            return Flagprefix[ThreadSafeRandom.Next(Flagprefix.Length)] + Bytes2dia(flagBytes);
+        }
+        private string Bytes2dia(Span<byte> s)
+        {
+            string result = "";
+            string[] b = new string[4] { "W", "A", "R", "S" };
+            int i = 0;
+            foreach (byte c in s)
+            {
+                b[i % 4] += ByteMap[c];
+                i++;
+            }
+            result = b[0] + b[1] + b[2] + b[3];
+            return result;
+        }
+        public string ToString(byte[] signingKey)
+        {
+            //return this.ToNormalString(signingKey);
+            return this.ToUtfString(signingKey);
         }
 
         public static Flag? Parse(ReadOnlySequence<byte> line, byte[] signingKey)

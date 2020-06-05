@@ -52,7 +52,7 @@ namespace EnoEngine
                 .AddDbContextPool<EnoDatabaseContext>(options =>
                 {
                     options.UseNpgsql(
-                        EnoCoreUtils.PostgresConnectionString,
+                        EnoDatabaseUtils.PostgresConnectionString,
                         pgoptions => pgoptions.EnableRetryOnFailure());
                 }, 90)
                 .AddLogging(loggingBuilder =>

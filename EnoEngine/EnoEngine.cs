@@ -68,20 +68,20 @@ namespace EnoEngine
                 while (!EngineCancelSource.IsCancellationRequested)
                 {
                     var end = await StartNewRound();
-                    await EnoCoreUtils.DelayUntil(end, EngineCancelSource.Token);
+                    await EnoDatabaseUtils.DelayUntil(end, EngineCancelSource.Token);
                 }
             }
             catch (OperationCanceledException) { }
             catch (Exception e)
             {
-                Logger.LogError($"GameLoop failed: {EnoCoreUtils.FormatException(e)}");
+                Logger.LogError($"GameLoop failed: {EnoDatabaseUtils.FormatException(e)}");
             }
             Logger.LogInformation("GameLoop finished");
         }
 
         private async Task AwaitOldRound()
         {
-            var lastRound = await EnoCoreUtils.RetryScopedDatabaseAction(ServiceProvider,
+            var lastRound = await EnoDatabaseUtils.RetryScopedDatabaseAction(ServiceProvider,
                     async (IEnoDatabase db) => await db.GetLastRound());
 
             if (lastRound != null)
@@ -98,7 +98,7 @@ namespace EnoEngine
         public async Task RunRecalculation()
         {
             Logger.LogInformation("RunRecalculation()");
-            var lastFinishedRound = await EnoCoreUtils.RetryScopedDatabaseAction(ServiceProvider,
+            var lastFinishedRound = await EnoDatabaseUtils.RetryScopedDatabaseAction(ServiceProvider,
                 async (IEnoDatabase db) => await db.PrepareRecalculation());
 
             for (int i = 1; i <= lastFinishedRound.Id; i++)

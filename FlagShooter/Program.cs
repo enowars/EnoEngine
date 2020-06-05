@@ -90,7 +90,7 @@ namespace FlagShooter
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"FlagRunnerLoop retrying because: {EnoCoreUtils.FormatException(e)}");
+                    Console.WriteLine($"FlagRunnerLoop retrying because: {EnoDatabaseUtils.FormatException(e)}");
                 }
             }
         }
@@ -123,7 +123,7 @@ namespace FlagShooter
             }
             catch (Exception e)
             {
-                Console.WriteLine($"SendFlagTask failed because: {EnoCoreUtils.FormatException(e)}");
+                Console.WriteLine($"SendFlagTask failed because: {EnoDatabaseUtils.FormatException(e)}");
             }
         }
 
@@ -136,7 +136,7 @@ namespace FlagShooter
                 var serviceProvider = new ServiceCollection()
                     .AddDbContextPool<EnoDatabaseContext>(options => {
                         options.UseNpgsql(
-                            EnoCoreUtils.PostgresConnectionString,
+                            EnoDatabaseUtils.PostgresConnectionString,
                             pgoptions => pgoptions.EnableRetryOnFailure());
                     }, 2)
                     .AddScoped<IEnoDatabase, EnoDatabase.EnoDatabase>()
@@ -146,7 +146,7 @@ namespace FlagShooter
             }
             catch (Exception e)
             {
-                Console.WriteLine($"FlagShooter failed: {EnoCoreUtils.FormatException(e)}");
+                Console.WriteLine($"FlagShooter failed: {EnoDatabaseUtils.FormatException(e)}");
             }
         }
     }

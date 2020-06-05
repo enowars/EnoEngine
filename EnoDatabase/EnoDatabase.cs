@@ -150,7 +150,7 @@ namespace EnoDatabase
                         ErrorMessage = "Team must have a valid Id"
                     };
 
-                string teamSubnet = EnoCoreUtils.ExtractSubnet(team.TeamSubnet, config.TeamSubnetBytesLength);
+                string teamSubnet = EnoDatabaseUtils.ExtractSubnet(team.TeamSubnet, config.TeamSubnetBytesLength);
 
                 // check if team is already present
                 var dbTeam = _context.Teams
@@ -356,7 +356,7 @@ namespace EnoDatabase
                         var noise = new Noise()
                         {
                             Owner = team,
-                            StringRepresentation = EnoCoreUtils.GenerateNoise(),
+                            StringRepresentation = EnoDatabaseUtils.GenerateNoise(),
                             ServiceId = service.Id,
                             RoundOffset = i,
                             GameRound = round
@@ -450,7 +450,7 @@ namespace EnoDatabase
                     Address = $"team{flag.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
                     MaxRunningTime = maxRunningTime,
-                    Payload = flag.ToString(EnoCoreUtils.FLAG_SIGNING_KEY),
+                    Payload = flag.ToString(EnoDatabaseUtils.FLAG_SIGNING_KEY),
                     RelatedRoundId = flag.RoundId,
                     CurrentRoundId = flag.RoundId,
                     StartTime = firstFlagTime,
@@ -469,7 +469,7 @@ namespace EnoDatabase
             }
 
             var tasks_start_time = tasks.Select(x => x.StartTime).ToList();
-            tasks_start_time = EnoCoreUtils.Shuffle(tasks_start_time).ToList();
+            tasks_start_time = EnoDatabaseUtils.Shuffle(tasks_start_time).ToList();
             tasks = tasks_start_time.Zip(tasks, (a, b) => { b.StartTime = a; return b; }).ToArray();
 
             await InsertCheckerTasks(tasks);
@@ -508,7 +508,7 @@ namespace EnoDatabase
             }
 
             var tasks_start_time = tasks.Select(x => x.StartTime).ToList();
-            tasks_start_time = EnoCoreUtils.Shuffle(tasks_start_time).ToList();
+            tasks_start_time = EnoDatabaseUtils.Shuffle(tasks_start_time).ToList();
             tasks = tasks_start_time.Zip(tasks, (a, b) => { b.StartTime = a; return b; }).ToList();
 
             await InsertCheckerTasks(tasks);
@@ -551,7 +551,7 @@ namespace EnoDatabase
                 i++;
             }
             var tasks_start_time = havocTasks.Select(x => x.StartTime).ToList();
-            tasks_start_time = EnoCoreUtils.Shuffle(tasks_start_time).ToList();
+            tasks_start_time = EnoDatabaseUtils.Shuffle(tasks_start_time).ToList();
             havocTasks = tasks_start_time.Zip(havocTasks, (a, b) => { b.StartTime = a; return b; }).ToList();
             await InsertCheckerTasks(havocTasks);
         }
@@ -571,7 +571,7 @@ namespace EnoDatabase
                     Address = $"team{flag.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
                     MaxRunningTime = maxRunningTime,
-                    Payload = flag.ToString(EnoCoreUtils.FLAG_SIGNING_KEY),
+                    Payload = flag.ToString(EnoDatabaseUtils.FLAG_SIGNING_KEY),
                     CurrentRoundId = flag.RoundId,
                     RelatedRoundId = flag.RoundId,
                     StartTime = q3,
@@ -587,7 +587,7 @@ namespace EnoDatabase
                 q3 = q3.AddSeconds(timeDiff);
             }
             var tasks_start_time = tasks.Select(x => x.StartTime).ToList();
-            tasks_start_time = EnoCoreUtils.Shuffle(tasks_start_time).ToList();
+            tasks_start_time = EnoDatabaseUtils.Shuffle(tasks_start_time).ToList();
             tasks = tasks_start_time.Zip(tasks, (a, b) => { b.StartTime = a; return b; }).ToList();
 
             await InsertCheckerTasks(tasks);
@@ -616,7 +616,7 @@ namespace EnoDatabase
                     Address = $"team{oldFlag.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
                     MaxRunningTime = quarterRound,
-                    Payload = oldFlag.ToString(EnoCoreUtils.FLAG_SIGNING_KEY),
+                    Payload = oldFlag.ToString(EnoDatabaseUtils.FLAG_SIGNING_KEY),
                     RelatedRoundId = oldFlag.RoundId,
                     CurrentRoundId = currentRound.Id,
                     StartTime = time,
@@ -675,7 +675,7 @@ namespace EnoDatabase
             }
 
             var tasks_start_time = tasks.Select(x => x.StartTime).ToList();
-            tasks_start_time = EnoCoreUtils.Shuffle(tasks_start_time).ToList();
+            tasks_start_time = EnoDatabaseUtils.Shuffle(tasks_start_time).ToList();
             tasks = tasks_start_time.Zip(tasks, (a, b) => { b.StartTime = a; return b; }).ToList();
 
             await InsertCheckerTasks(tasks);
@@ -713,7 +713,7 @@ namespace EnoDatabase
                     ServiceStatus status = ServiceStatus.CheckerError;
                     if (currentRoundWorstResults.ContainsKey(key))
                     {
-                        status = EnoCoreUtils.CheckerResultToServiceStatus(currentRoundWorstResults[key]);
+                        status = EnoDatabaseUtils.CheckerResultToServiceStatus(currentRoundWorstResults[key]);
                     }
                     if (status == ServiceStatus.Ok && oldRoundsWorstResults.ContainsKey(key))
                     {

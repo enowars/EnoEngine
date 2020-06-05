@@ -79,7 +79,7 @@ namespace EnoLauncher
                 }
                 catch (Exception e)
                 {
-                    Logger.LogWarning($"LauncherLoop retrying because: {EnoCoreUtils.FormatException(e)}");
+                    Logger.LogWarning($"LauncherLoop retrying because: {EnoDatabaseUtils.FormatException(e)}");
                 }
             }
         }
@@ -112,7 +112,7 @@ namespace EnoLauncher
                     var responseString = (await response.Content.ReadAsStringAsync()).TrimEnd(Environment.NewLine.ToCharArray());
                     Logger.LogDebug($"LaunchCheckerTask received {responseString}");
                     var resultMessage = JsonSerializer.Deserialize<CheckerResultMessage>(responseString);
-                    var checkerResult = EnoCoreUtils.ParseCheckerResult(resultMessage.Result);
+                    var checkerResult = EnoDatabaseUtils.ParseCheckerResult(resultMessage.Result);
                     Logger.LogDebug($"LaunchCheckerTask {task.Id} returned {checkerResult}");
                     task.CheckerResult = checkerResult;
                     task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
@@ -130,14 +130,14 @@ namespace EnoLauncher
             }
             catch (TaskCanceledException e)
             {
-                Logger.LogError($"{nameof(LaunchCheckerTask)} {task.Id} was cancelled because it did not finish: {EnoCoreUtils.FormatException(e)}");
+                Logger.LogError($"{nameof(LaunchCheckerTask)} {task.Id} was cancelled because it did not finish: {EnoDatabaseUtils.FormatException(e)}");
                 task.CheckerResult = CheckerResult.Offline;
                 task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
                 ResultsQueue.Enqueue(task);
             }
             catch (Exception e)
             {
-                Logger.LogError($"{nameof(LaunchCheckerTask)} failed: {EnoCoreUtils.FormatException(e)}");
+                Logger.LogError($"{nameof(LaunchCheckerTask)} failed: {EnoDatabaseUtils.FormatException(e)}");
                 task.CheckerResult = CheckerResult.InternalError;
                 task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
                 ResultsQueue.Enqueue(task);
@@ -151,7 +151,7 @@ namespace EnoLauncher
                 .AddDbContextPool<EnoDatabaseContext>(options =>
                 {
                     options.UseNpgsql(
-                        EnoCoreUtils.PostgresConnectionString,
+                        EnoDatabaseUtils.PostgresConnectionString,
                         pgoptions => pgoptions.EnableRetryOnFailure());
                 }, 90)
                 .AddLogging(loggingBuilder =>
@@ -204,7 +204,7 @@ namespace EnoLauncher
                         catch (OperationCanceledException) { throw; }
                         catch (Exception e)
                         {
-                            Logger.LogInformation($"UpdateDatabase retrying because: {EnoCoreUtils.FormatException(e)}");
+                            Logger.LogInformation($"UpdateDatabase retrying because: {EnoDatabaseUtils.FormatException(e)}");
                         }
                     }
                 }
@@ -212,7 +212,7 @@ namespace EnoLauncher
             catch (TaskCanceledException) { }
             catch (Exception e)
             {
-                Logger.LogCritical($"UpdateDatabase failed: {EnoCoreUtils.FormatException(e)}");
+                Logger.LogCritical($"UpdateDatabase failed: {EnoDatabaseUtils.FormatException(e)}");
             }
         }
     }
