@@ -64,19 +64,31 @@ namespace EnoCore.Models.Database
             Span<byte> flagBytes = stackalloc byte[flagContent.Length + flagSignature.Length];
             flagContent.CopyTo(flagBytes);
             flagSignature.CopyTo(flagBytes.Slice(flagContent.Length));
-            Bytes2dia(flagBytes, out var flagString);
+            Bytes2Dia(flagBytes, out var flagString, out var bytesWritten);
             return Flagprefix[0] + flagString;
         }
-        private static void Bytes2dia(ReadOnlySpan<byte> b, out string s)
+        private static void Bytes2Dia(ReadOnlySpan<byte> b, out string s, out int bytesWritten)
         {
-            int i = 0;
+            bytesWritten = 0;
             var pattern = new string[4] { "W", "A", "R", "S" };
+            //var dbgstr = "";
+            //var lstr = new int[4] { 0, 0, 0, 0 };
             foreach (byte c in b)
             {
-                pattern[i % 4] += ByteMap[c];
-                i++;
+                pattern[bytesWritten % 4] += ByteMap[c];
+                bytesWritten++;
+                //dbgstr += $"({bytesWritten}, {c}, {ByteMap[c]}, {Encoding.UTF8.GetByteCount(ByteMap[c].ToString())})";
+                //lstr[bytesWritten % 4] += Encoding.UTF8.GetByteCount(ByteMap[c].ToString());
             }
             s = pattern[0] + pattern[1] + pattern[2] + pattern[3];
+            /*
+            var l0 = pattern[0].Length;
+            var l1 = pattern[1].Length;
+            var l2 = pattern[2].Length;
+            var l3 = pattern[3].Length;
+            string dbg = $"Bytes2Dia:{s.Length}||{Encoding.UTF8.GetByteCount(s)}||{l0}|{l1}|{l2}|{l3}||{lstr[0]}|{lstr[1]}|{lstr[2]}|{lstr[3]}"; 
+            Console.WriteLine(dbgstr);
+            Console.WriteLine(dbg);  */
         }
         private static bool getsinglebyte(char s, out byte b)
         {
@@ -93,12 +105,22 @@ namespace EnoCore.Models.Database
         {
             bytesWritten = 0;
             var pattern = new string[4] { "W", "A", "R", "S" };
-            var splitted = s.Split(pattern, StringSplitOptions.None);
+            var splitted = s.Split(pattern, StringSplitOptions.RemoveEmptyEntries);
+            /*
+            var lg = s.Length;
+            var l0 = splitted[0].Length;
+            var l1 = splitted[1].Length;
+            var l2 = splitted[2].Length;
+            var l3 = splitted[3].Length;
+            string dbg = $"Dia2Bytes:{lg}||{l0}|{l1}|{l2}|{l3}|";
+            Console.WriteLine(dbg);  */
             while (true)
             {
                 var element = splitted[bytesWritten % 4].ElementAtOrDefault((int)bytesWritten / 4);
-                if (element == '\0') return true;
-                if (!getsinglebyte(element, out b[bytesWritten])) return false;
+                if (element == '\0') 
+                    return true;
+                if (!getsinglebyte(element, out b[bytesWritten])) 
+                    return false;
                 bytesWritten++;
             }
         }
