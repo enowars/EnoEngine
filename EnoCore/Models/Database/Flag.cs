@@ -1,4 +1,5 @@
 ﻿using EnoCore.Utils;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Buffers;
 using System.Buffers.Binary;
@@ -129,12 +130,12 @@ namespace EnoCore.Models.Database
             //return this.ToNormalString(signingKey);
             return this.ToUtfString(signingKey);
         }
-        public static Flag? Parse(ReadOnlySequence<byte> line, byte[] signingKey)
+        public static Flag? Parse(ReadOnlySequence<byte> line, byte[] signingKey, ILogger logger)
         {
             //return ParseNormal(line, signingKey);
-            return ParseUtf(line, signingKey);
+            return ParseUtf(line, signingKey, logger);
         }
-        private static Flag? ParseUtf(ReadOnlySequence<byte> line, byte[] signingKey)
+        private static Flag? ParseUtf(ReadOnlySequence<byte> line, byte[] signingKey, ILogger logger)
         {
             try
             {
@@ -173,8 +174,9 @@ namespace EnoCore.Models.Database
                     };
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                logger.LogError(e.Message);
                 return null;
             }
         }
