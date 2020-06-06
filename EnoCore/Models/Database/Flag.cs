@@ -139,6 +139,7 @@ namespace EnoCore.Models.Database
         {
             try
             {
+                if (line.Length < 36) return null;
                 Span<byte> baseBytes = stackalloc byte[(int)line.Length - Encoding.UTF8.GetByteCount(Flagprefix[0])]; // Raw input
                 Span<byte> flagBytes = stackalloc byte[(int)line.Length];   // Decoded bytes
                 Span<byte> computedSignature = stackalloc byte[20];         // HMACSHA1 output is always 20 bytes                           
