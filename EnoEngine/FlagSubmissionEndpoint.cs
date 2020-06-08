@@ -48,21 +48,21 @@ namespace EnoEngine.FlagSubmission
             }
         }
 
-        public void Start(CancellationToken token)
+        public void Start(CancellationToken token, JsonConfiguration config)
         {
             token.Register(() => ProductionListener.Stop());
             token.Register(() => DebugListener.Stop());
             Task.Factory.StartNew(async () => await InsertSubmissionsLoop(token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
-            Task.Factory.StartNew(async () => await RunProductionEndpoint(token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
-            Task.Factory.StartNew(async () => await RunDebugEndpoint(token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
+            Task.Factory.StartNew(async () => await RunProductionEndpoint(config, token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
+            Task.Factory.StartNew(async () => await RunDebugEndpoint(config, token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
         }
 
-        async Task ProcessLinesAsync(Socket socket, long? teamId, CancellationToken token)
+        async Task ProcessLinesAsync(Socket socket, long? teamId, JsonConfiguration config, CancellationToken token)
         {
             var pipe = new Pipe();
             Channel<Task<FlagSubmissionResult>> feedbackChannel = Channel.CreateUnbounded<Task<FlagSubmissionResult>>(new UnboundedChannelOptions() { SingleReader = true, SingleWriter = false });
             Task writing = FillPipeAsync(socket, pipe.Writer, token);
-            Task reading = ReadPipeAsync(pipe.Reader, feedbackChannel.Writer, teamId, token);
+            Task reading = ReadPipeAsync(pipe.Reader, feedbackChannel.Writer, teamId, config, token);
             Task responding = RespondAsync(socket, feedbackChannel.Reader, token);
             await Task.WhenAll(reading, writing, responding);
             socket.Close();
@@ -104,7 +104,7 @@ namespace EnoEngine.FlagSubmission
             await writer.CompleteAsync();
         }
 
-        async Task ReadPipeAsync(PipeReader reader, ChannelWriter<Task<FlagSubmissionResult>> feedbackWriter, long? teamId, CancellationToken token)
+        async Task ReadPipeAsync(PipeReader reader, ChannelWriter<Task<FlagSubmissionResult>> feedbackWriter, long? teamId, JsonConfiguration config, CancellationToken token)
         {
             while (true)
             {
@@ -116,7 +116,7 @@ namespace EnoEngine.FlagSubmission
                     // Process the line.
                     if (teamId is long _teamId)
                     {
-                        var flag = Flag.Parse(line, EnoDatabaseUtils.FLAG_SIGNING_KEY, Logger);
+                        var flag = Flag.Parse(line, Encoding.ASCII.GetBytes(config.FlagSigningKey), Logger);
                         var tcs = new TaskCompletionSource<FlagSubmissionResult>();
                         if (flag == null)
                         {
@@ -195,7 +195,7 @@ namespace EnoEngine.FlagSubmission
             return true;
         }
 
-        public async Task RunDebugEndpoint(CancellationToken token)
+        public async Task RunDebugEndpoint(JsonConfiguration config, CancellationToken token)
         {
             try
             {
@@ -203,7 +203,7 @@ namespace EnoEngine.FlagSubmission
                 while (!token.IsCancellationRequested)
                 {
                     var client = await DebugListener.AcceptTcpClientAsync();
-                    var _ = ProcessLinesAsync(client.Client, null, token);
+                    var _ = ProcessLinesAsync(client.Client, null, config, token);
                 }
             }
             catch (ObjectDisposedException) { }
@@ -215,7 +215,7 @@ namespace EnoEngine.FlagSubmission
             Logger.LogInformation("RunDebugEndpoint finished");
         }
 
-        public async Task RunProductionEndpoint(CancellationToken token)
+        public async Task RunProductionEndpoint(JsonConfiguration config, CancellationToken token)
         {
             try
             {
@@ -235,7 +235,7 @@ namespace EnoEngine.FlagSubmission
                             var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
                             teamId = await db.GetTeamIdByPrefix(attackerPrefixString);
                         }
-                        var _ = ProcessLinesAsync(client.Client, teamId, token);
+                        var _ = ProcessLinesAsync(client.Client, teamId, config, token);
                     }
                     catch (TaskCanceledException)
                     {
