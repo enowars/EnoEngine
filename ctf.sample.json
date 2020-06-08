@@ -4,6 +4,8 @@
     "RoundLengthInSeconds": 60,
     "DnsSuffix": "eno.host",
     "TeamSubnetBytesLength": 6,
+	"FlagSigningKey": "ir7PRm0SzqzA0lmFyBfUv68E6Yb7cjbJDp6dummqwr0Od70Sar7P27HVY6oc8PuW",
+	"NoiseSigningKey": "cGSiyYn6VjTUxS7PZInBaCYW83KTaFJPq6zaWji0NGzJ6wpZMUDJKbgo8tkfT35w",
     "Teams": [{
         "Id": 1,
         "Name": "teamname1",
