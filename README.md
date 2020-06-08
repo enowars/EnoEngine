@@ -42,7 +42,7 @@ interface CheckerTaskMessage {
     address: string;
     serviceId: string;
     serviceName: string;
-    teamId: string;
+    teamId: number;
     teamName: string;
     roundId: number;
     relatedRoundId: number;
