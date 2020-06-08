@@ -35,7 +35,7 @@ namespace EnoEngine
             Configuration = configuration;
             ServiceProvider = serviceProvider;
             Statistics = enoStatistics;
-            submissionEndpoint.Start(EngineCancelSource.Token);
+            submissionEndpoint.Start(EngineCancelSource.Token, configuration);
         }
 
         public async Task RunContest()
