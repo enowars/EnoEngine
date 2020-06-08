@@ -40,7 +40,7 @@ interface CheckerTaskMessage {
     runId: number;
     method: string;
     address: string;
-    serviceId: string;
+    serviceId: number;
     serviceName: string;
     teamId: number;
     teamName: string;
