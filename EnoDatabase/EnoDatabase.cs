@@ -85,21 +85,21 @@ namespace EnoDatabase
                 return new DBInitializationResult
                 {
                     Success = false,
-                    ErrorMessage = "RoundLengthInSeconds must not be 0"
+                    ErrorMessage = $"RoundLengthInSeconds must be a positive integer, found {config.RoundLengthInSeconds}"
                 };
 
             if (config.CheckedRoundsPerRound <= 0)
                 return new DBInitializationResult
                 {
                     Success = false,
-                    ErrorMessage = "CheckedRoundsPerRound must not be 0"
+                    ErrorMessage = $"CheckedRoundsPerRound must be a positive integer, found {config.CheckedRoundsPerRound}"
                 };
 
-            if (config.FlagValidityInRounds < 1)
+            if (config.FlagValidityInRounds <= 0)
                 return new DBInitializationResult
                 {
                     Success = false,
-                    ErrorMessage = "CheckedRoundsPerRound must not be 0"
+                    ErrorMessage = $"CheckedRoundsPerRound must be a positive integer, found {config.FlagValidityInRounds}"
                 };
 
             Migrate();
