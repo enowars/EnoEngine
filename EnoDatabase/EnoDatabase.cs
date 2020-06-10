@@ -164,8 +164,9 @@ namespace EnoDatabase
                         TeamSubnet = teamSubnet,
                         Name = team.Name,
                         Id = team.Id,
-                        Active = team.Active
-                    });
+                        Active = team.Active,
+                        Address = team.Address
+                    }) ;
                 }
                 else
                 {

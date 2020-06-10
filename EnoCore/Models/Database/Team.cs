@@ -15,6 +15,7 @@ namespace EnoCore.Models.Database
         public double AttackPoints { get; set; }
         public double LostDefensePoints { get; set; }
         public double ServiceLevelAgreementPoints { get; set; }
+        public string? Address { get; set; }
         public List<RoundTeamServiceState> ServiceDetails { get; set; }
         public long ServiceStatsId { get; set; }
         public List<ServiceStats> ServiceStats { get; set; }
