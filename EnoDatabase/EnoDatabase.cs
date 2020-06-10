@@ -85,21 +85,21 @@ namespace EnoDatabase
                 return new DBInitializationResult
                 {
                     Success = false,
-                    ErrorMessage = "RoundLengthInSeconds must not be 0"
+                    ErrorMessage = $"RoundLengthInSeconds must be a positive integer, found {config.RoundLengthInSeconds}"
                 };
 
             if (config.CheckedRoundsPerRound <= 0)
                 return new DBInitializationResult
                 {
                     Success = false,
-                    ErrorMessage = "CheckedRoundsPerRound must not be 0"
+                    ErrorMessage = $"CheckedRoundsPerRound must be a positive integer, found {config.CheckedRoundsPerRound}"
                 };
 
-            if (config.FlagValidityInRounds < 1)
+            if (config.FlagValidityInRounds <= 0)
                 return new DBInitializationResult
                 {
                     Success = false,
-                    ErrorMessage = "CheckedRoundsPerRound must not be 0"
+                    ErrorMessage = $"CheckedRoundsPerRound must be a positive integer, found {config.FlagValidityInRounds}"
                 };
 
             Migrate();
@@ -164,8 +164,9 @@ namespace EnoDatabase
                         TeamSubnet = teamSubnet,
                         Name = team.Name,
                         Id = team.Id,
-                        Active = team.Active
-                    });
+                        Active = team.Active,
+                        Address = team.Address
+                    }) ;
                 }
                 else
                 {
@@ -447,7 +448,7 @@ namespace EnoDatabase
                 var checkers = config.Checkers[flag.ServiceId];
                 var checkerTask = new CheckerTask()
                 {
-                    Address = $"team{flag.OwnerId}.{config.DnsSuffix}",
+                    Address = flag.Owner.Address ?? $"team{flag.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
                     MaxRunningTime = maxRunningTime,
                     Payload = flag.ToString(Encoding.ASCII.GetBytes(config.FlagSigningKey)),
@@ -487,7 +488,7 @@ namespace EnoDatabase
                 var checkers = config.Checkers[noise.ServiceId];
                 tasks.Add(new CheckerTask()
                 {
-                    Address = $"team{noise.OwnerId}.{config.DnsSuffix}",
+                    Address = noise.Owner.Address ?? $"team{noise.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
                     MaxRunningTime = maxRunningTime,
                     Payload = noise.StringRepresentation,
@@ -531,7 +532,7 @@ namespace EnoDatabase
                 var checkers = config.Checkers[havoc.ServiceId];
                 var task = new CheckerTask()
                 {
-                    Address = $"team{havoc.OwnerId}.{config.DnsSuffix}",
+                    Address = havoc.Owner.Address ?? $"team{havoc.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
                     MaxRunningTime = quarterRound,
                     RelatedRoundId = havoc.GameRoundId,
@@ -568,7 +569,7 @@ namespace EnoDatabase
                 var checkers = config.Checkers[flag.ServiceId];
                 tasks.Add(new CheckerTask()
                 {
-                    Address = $"team{flag.OwnerId}.{config.DnsSuffix}",
+                    Address = flag.Owner.Address ?? $"team{flag.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
                     MaxRunningTime = maxRunningTime,
                     Payload = flag.ToString(Encoding.ASCII.GetBytes(config.FlagSigningKey)),
@@ -613,7 +614,7 @@ namespace EnoDatabase
                 var checkers = config.Checkers[oldFlag.ServiceId];
                 var task = new CheckerTask()
                 {
-                    Address = $"team{oldFlag.OwnerId}.{config.DnsSuffix}",
+                    Address = oldFlag.Owner.Address ?? $"team{oldFlag.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
                     MaxRunningTime = quarterRound,
                     Payload = oldFlag.ToString(Encoding.ASCII.GetBytes(config.FlagSigningKey)),
@@ -655,7 +656,7 @@ namespace EnoDatabase
                 var checkers = config.Checkers[noise.ServiceId];
                 tasks.Add(new CheckerTask()
                 {
-                    Address = $"team{noise.OwnerId}.{config.DnsSuffix}",
+                    Address = noise.Owner.Address ?? $"team{noise.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
                     MaxRunningTime = maxRunningTime,
                     Payload = noise.StringRepresentation,

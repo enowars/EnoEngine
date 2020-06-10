@@ -10,6 +10,7 @@ namespace EnoCore.Models.Json
         public string Name { get; set; }
         public string TeamSubnet { get; set; }
         public long Id { get; set; }
+        public string Address { get; set; }
         public bool Active { get; set; }
 #pragma warning restore CS8618
     }
