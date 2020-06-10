@@ -361,6 +361,9 @@ namespace EnoDatabase.Migrations
                     b.Property<bool>("Active")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("Address")
+                        .HasColumnType("text");
+
                     b.Property<double>("AttackPoints")
                         .HasColumnType("double precision");
 

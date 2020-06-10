@@ -55,6 +55,7 @@ namespace EnoDatabase.Migrations
                     AttackPoints = table.Column<double>(nullable: false),
                     LostDefensePoints = table.Column<double>(nullable: false),
                     ServiceLevelAgreementPoints = table.Column<double>(nullable: false),
+                    Address = table.Column<string>(nullable: true),
                     ServiceStatsId = table.Column<long>(nullable: false),
                     Active = table.Column<bool>(nullable: false)
                 },
