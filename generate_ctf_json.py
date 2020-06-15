@@ -12,7 +12,7 @@ for i in range(256):
     config += '''{
         "Id": '''+str(i+1)+''',
         "Name": "teamname'''+str(i+1)+'''",
-		"Address": "51.75.156.188",
+        "Address": "51.75.156.188",
         "TeamSubnet": "fd00:1337:'''+str(i+1)+'''::"
     },'''
 config = config[:-1]
