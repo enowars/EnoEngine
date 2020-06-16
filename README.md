@@ -2,7 +2,7 @@
 
 This is the engine powering our CTFs.
 
-For random reasons, it's written in C#.
+For performance reasons, it's written in C#.
 
 ## Usage
 
