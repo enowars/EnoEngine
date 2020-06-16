@@ -101,12 +101,12 @@ interface FirstBlood {
 ## Flagsubmission Endpoint:
 The Flagsubmission is done via a tcp connection to port 1337. There you can just send the flag or multiple flags delimited by \n characters. Each Flag will be checked by the backend and then a message is returned picked by this code:
 ```
-                FlagSubmissionResult.Ok => "VALID: Flag accepted!\n",
-                FlagSubmissionResult.Invalid => "INVALID: You have submitted an invalid string!\n",
-                FlagSubmissionResult.Duplicate => "RESUBMIT: You have already sent this flag!\n",
-                FlagSubmissionResult.Own => "OWNFLAG: This flag belongs to you!\n",
-                FlagSubmissionResult.Old => "OLD: You have submitted an old flag!\n",
-                FlagSubmissionResult.UnknownError => "ERROR: An unexpected error occured :(\n",
-                FlagSubmissionResult.InvalidSenderError => "ILLEGAL: Your IP address does not belong to any team's subnet!\n",
-                FlagSubmissionResult.SpamError => "SPAM: You should send 1 flag per line!\n",
+    FlagSubmissionResult.Ok => "VALID: Flag accepted!\n",
+    FlagSubmissionResult.Invalid => "INVALID: You have submitted an invalid string!\n",
+    FlagSubmissionResult.Duplicate => "RESUBMIT: You have already sent this flag!\n",
+    FlagSubmissionResult.Own => "OWNFLAG: This flag belongs to you!\n",
+    FlagSubmissionResult.Old => "OLD: You have submitted an old flag!\n",
+    FlagSubmissionResult.UnknownError => "ERROR: An unexpected error occured :(\n",
+    FlagSubmissionResult.InvalidSenderError => "ILLEGAL: Your IP address does not belong to any team's subnet!\n",
+    FlagSubmissionResult.SpamError => "SPAM: You should send 1 flag per line!\n",
 ```
