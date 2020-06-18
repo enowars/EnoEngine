@@ -151,15 +151,15 @@ namespace EnoDatabase
             return drains;
         }
 
-        public static CheckerResult ParseCheckerResult(string result)
+        public static CheckerResult ParseCheckerResult(string result)  //###TODO Remove
         {
             return result switch
             {
-                "INTERNAL_ERROR" => CheckerResult.InternalError,
-                "OK" => CheckerResult.Ok,
-                "MUMBLE" => CheckerResult.Mumble,
-                "OFFLINE" => CheckerResult.Offline,
-                _ => CheckerResult.InternalError,
+                "INTERNAL_ERROR" => CheckerResult.INTERNAL_ERROR,
+                "OK" => CheckerResult.OK,
+                "MUMBLE" => CheckerResult.MUMBLE,
+                "OFFLINE" => CheckerResult.OFFLINE,
+                _ => CheckerResult.INTERNAL_ERROR,
             };
         }
 
@@ -252,9 +252,9 @@ namespace EnoDatabase
         {
             return checkerResult switch
             {
-                CheckerResult.Ok => ServiceStatus.Ok,
-                CheckerResult.Mumble => ServiceStatus.Mumble,
-                CheckerResult.Offline => ServiceStatus.Down,
+                CheckerResult.OK => ServiceStatus.Ok,
+                CheckerResult.MUMBLE => ServiceStatus.Mumble,
+                CheckerResult.OFFLINE => ServiceStatus.Down,
                 _ => ServiceStatus.CheckerError,
             };
         }

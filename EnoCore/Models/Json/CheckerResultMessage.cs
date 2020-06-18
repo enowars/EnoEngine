@@ -1,11 +1,14 @@
-﻿using System.Text.Json.Serialization;
+﻿using EnoCore.Models.Database;
+using System.Text.Json.Serialization;
 
 namespace EnoCore.Models.Json
 {
     public class CheckerResultMessage
     {
         [JsonPropertyName("result")]
-        public string Result { get; set; } = default!;
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public CheckerResult Result { get; set; } = CheckerResult.INTERNAL_ERROR;
+        [JsonPropertyName("message")]
         public string Message { get; set; } = default!;
     }
 }
