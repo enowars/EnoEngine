@@ -18,6 +18,14 @@ Develop either in Visual Studio, or, for the FOSS people, in Visual Studio Code
 - run `dotnet restore`
 - open folder in VS Code
 
+## Database
+For creating a migration after changes, run this:
+```
+cd /EnoDatabase
+rm -r Migrations
+dotnet ef migrations add InitialMigrations --startup-project ../EnoEngine
+```
+
 ## Checker API
 
 Checkers are expected to respond to these requests:
