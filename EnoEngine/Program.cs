@@ -91,8 +91,6 @@ namespace EnoEngine
                     {
                         Console.WriteLine("Another Instance is already running");
                     }
-
-
                 }
                 finally
                 {
