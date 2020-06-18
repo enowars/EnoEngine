@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace EnoCore.Models.Json
 {
@@ -9,5 +6,6 @@ namespace EnoCore.Models.Json
     {
         [JsonPropertyName("result")]
         public string Result { get; set; } = default!;
+        public string Message { get; set; } = default!;
     }
 }
