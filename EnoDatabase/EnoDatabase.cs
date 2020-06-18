@@ -718,7 +718,7 @@ namespace EnoDatabase
                     }
                     if (status == ServiceStatus.Ok && oldRoundsWorstResults.ContainsKey(key))
                     {
-                        if (oldRoundsWorstResults[key] != CheckerResult.Ok)
+                        if (oldRoundsWorstResults[key] != CheckerResult.OK)
                         {
                             status = ServiceStatus.Recovering;
                         }

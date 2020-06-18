@@ -112,7 +112,7 @@ namespace EnoLauncher
                     var responseString = (await response.Content.ReadAsStringAsync()).TrimEnd(Environment.NewLine.ToCharArray());
                     Logger.LogDebug($"LaunchCheckerTask received {responseString}");
                     var resultMessage = JsonSerializer.Deserialize<CheckerResultMessage>(responseString);
-                    var checkerResult = EnoDatabaseUtils.ParseCheckerResult(resultMessage.Result);
+                    var checkerResult = resultMessage.Result;
                     Logger.LogDebug($"LaunchCheckerTask {task.Id} returned {checkerResult} with Message {resultMessage.Message}");
                     task.CheckerResult = checkerResult;
                     task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
@@ -122,7 +122,7 @@ namespace EnoLauncher
                 else
                 {
                     Logger.LogError($"LaunchCheckerTask {task.Id} returned {response.StatusCode} ({(int)response.StatusCode})");
-                    task.CheckerResult = CheckerResult.InternalError;
+                    task.CheckerResult = CheckerResult.INTERNAL_ERROR;
                     task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
                     ResultsQueue.Enqueue(task);
                     return;
@@ -131,14 +131,14 @@ namespace EnoLauncher
             catch (TaskCanceledException e)
             {
                 Logger.LogError($"{nameof(LaunchCheckerTask)} {task.Id} was cancelled because it did not finish: {EnoDatabaseUtils.FormatException(e)}");
-                task.CheckerResult = CheckerResult.Offline;
+                task.CheckerResult = CheckerResult.OFFLINE;
                 task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
                 ResultsQueue.Enqueue(task);
             }
             catch (Exception e)
             {
                 Logger.LogError($"{nameof(LaunchCheckerTask)} failed: {EnoDatabaseUtils.FormatException(e)}");
-                task.CheckerResult = CheckerResult.InternalError;
+                task.CheckerResult = CheckerResult.INTERNAL_ERROR;
                 task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
                 ResultsQueue.Enqueue(task);
             }

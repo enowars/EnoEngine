@@ -21,19 +21,19 @@ namespace EnoCore.Utils
                 reader.Read();
                 if(reader.ValueSpan.SequenceEqual(InternalErrorBytes))
                 {
-                    return CheckerResult.InternalError;
+                    return CheckerResult.INTERNAL_ERROR;
                 }
                 else if (reader.ValueSpan.SequenceEqual(OkBytes))
                 {
-                    return CheckerResult.Ok;
+                    return CheckerResult.OK;
                 }
                 else if (reader.ValueSpan.SequenceEqual(MumbleBytes))
                 {
-                    return CheckerResult.Mumble;
+                    return CheckerResult.MUMBLE;
                 }
                 else if (reader.ValueSpan.SequenceEqual(OfflineBytes))
                 {
-                    return CheckerResult.Offline;
+                    return CheckerResult.OFFLINE;
                 }
             }
             throw new JsonException();
@@ -42,19 +42,19 @@ namespace EnoCore.Utils
         public override void Write(Utf8JsonWriter writer, CheckerResult value, JsonSerializerOptions options)
         {
             writer.WriteStartObject();
-            if (value == CheckerResult.InternalError)
+            if (value == CheckerResult.INTERNAL_ERROR)
             {
                 writer.WriteString("result", InternalErrorBytes);
             }
-            else if (value == CheckerResult.Ok)
+            else if (value == CheckerResult.OK)
             {
                 writer.WriteString("result", OkBytes);
             }
-            else if (value == CheckerResult.Mumble)
+            else if (value == CheckerResult.MUMBLE)
             {
                 writer.WriteString("result", MumbleBytes);
             }
-            else if (value == CheckerResult.Offline)
+            else if (value == CheckerResult.OFFLINE)
             {
                 writer.WriteString("result", OfflineBytes);
             }

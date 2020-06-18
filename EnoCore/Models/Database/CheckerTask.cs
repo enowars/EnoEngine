@@ -13,10 +13,10 @@ namespace EnoCore.Models.Database
 
     public enum CheckerResult
     {
-        InternalError,
-        Offline,
-        Mumble,
-        Ok
+        INTERNAL_ERROR,
+        OFFLINE,
+        MUMBLE,
+        OK
     }
 
     public class CheckerTask
