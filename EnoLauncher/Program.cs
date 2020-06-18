@@ -113,7 +113,7 @@ namespace EnoLauncher
                     Logger.LogDebug($"LaunchCheckerTask received {responseString}");
                     var resultMessage = JsonSerializer.Deserialize<CheckerResultMessage>(responseString);
                     var checkerResult = EnoDatabaseUtils.ParseCheckerResult(resultMessage.Result);
-                    Logger.LogDebug($"LaunchCheckerTask {task.Id} returned {checkerResult}");
+                    Logger.LogDebug($"LaunchCheckerTask {task.Id} returned {checkerResult} with Message {resultMessage.Message}");
                     task.CheckerResult = checkerResult;
                     task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
                     ResultsQueue.Enqueue(task);
@@ -146,23 +146,47 @@ namespace EnoLauncher
 
         static void Main()
         {
-            var serviceProvider = new ServiceCollection()
-                .AddScoped<IEnoDatabase, EnoDatabase.EnoDatabase>()
-                .AddDbContextPool<EnoDatabaseContext>(options =>
+            const string mutexId = @"Global\EnoLauncher";
+            bool createdNew;
+            using (var mutex = new Mutex(false, mutexId, out createdNew))
+            {
+                try
                 {
-                    options.UseNpgsql(
-                        EnoDatabaseUtils.PostgresConnectionString,
-                        pgoptions => pgoptions.EnableRetryOnFailure());
-                }, 90)
-                .AddLogging(loggingBuilder =>
+                    if (mutex.WaitOne(10, false))
+                    {
+                        var serviceProvider = new ServiceCollection()
+                            .AddScoped<IEnoDatabase, EnoDatabase.EnoDatabase>()
+                            .AddDbContextPool<EnoDatabaseContext>(options =>
+                            {
+                                options.UseNpgsql(
+                                    EnoDatabaseUtils.PostgresConnectionString,
+                                    pgoptions => pgoptions.EnableRetryOnFailure());
+                            }, 90)
+                            .AddLogging(loggingBuilder =>
+                            {
+                                loggingBuilder.SetMinimumLevel(LogLevel.Debug);
+                                loggingBuilder.AddFilter(DbLoggerCategory.Name, LogLevel.Warning);
+                                loggingBuilder.AddConsole();
+                                loggingBuilder.AddProvider(new EnoLogMessageFileLoggerProvider("EnoLauncher", LauncherCancelSource.Token));
+                            })
+                            .BuildServiceProvider(validateScopes: true);
+                        new Program(serviceProvider).Start();
+                    }
+                    else
+                    {
+                        Console.WriteLine("Another Instance is already running");
+                    }
+
+
+                }
+                finally
                 {
-                    loggingBuilder.SetMinimumLevel(LogLevel.Debug);
-                    loggingBuilder.AddFilter(DbLoggerCategory.Name, LogLevel.Warning);
-                    loggingBuilder.AddConsole();
-                    loggingBuilder.AddProvider(new EnoLogMessageFileLoggerProvider("EnoLauncher", LauncherCancelSource.Token));
-                })
-                .BuildServiceProvider(validateScopes: true);
-            new Program(serviceProvider).Start();
+                    if (mutex != null)
+                    {
+                        mutex.Close();
+                    }
+                }
+            }
         }
 
         async Task UpdateDatabaseLoop()

@@ -24,7 +24,8 @@ namespace EnoEngine
         private static readonly string MODE_RECALCULATE = "recalculate";
         private static readonly CancellationTokenSource CancelSource = new CancellationTokenSource();
 
-        public static void Main(string? argument = null)
+
+        public static void Run(string? argument = null)
         {
             JsonConfiguration configuration;
             if (!File.Exists("ctf.json"))
@@ -72,6 +73,34 @@ namespace EnoEngine
             else
             {
                 engine.RunContest().Wait();
+            }
+        }
+        public static void Main(string? argument = null)
+        {
+            const string mutexId = @"Global\EnoEngine";
+            bool createdNew;
+            using (var mutex = new Mutex(false, mutexId, out createdNew))
+            {
+                try
+                {
+                    if (mutex.WaitOne(10, false))
+                    {
+                        Run(argument);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Another Instance is already running");
+                    }
+
+
+                }
+                finally
+                {
+                    if (mutex != null)
+                    {
+                        mutex.Close();
+                    }
+                }
             }
         }
     }
