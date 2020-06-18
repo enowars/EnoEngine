@@ -96,10 +96,7 @@ namespace EnoEngine
                 }
                 finally
                 {
-                    if (mutex != null)
-                    {
-                        mutex.Close();
-                    }
+                    mutex?.Close();
                 }
             }
         }

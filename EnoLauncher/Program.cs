@@ -181,10 +181,7 @@ namespace EnoLauncher
                 }
                 finally
                 {
-                    if (mutex != null)
-                    {
-                        mutex.Close();
-                    }
+                    mutex?.Close();
                 }
             }
         }
