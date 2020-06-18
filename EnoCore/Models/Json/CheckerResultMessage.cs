@@ -6,6 +6,7 @@ namespace EnoCore.Models.Json
     {
         [JsonPropertyName("result")]
         public string Result { get; set; } = default!;
+        [JsonPropertyName("Message")]
         public string Message { get; set; } = default!;
     }
 }
