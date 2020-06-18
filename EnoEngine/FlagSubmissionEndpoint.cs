@@ -116,7 +116,7 @@ namespace EnoEngine.FlagSubmission
                     // Process the line.
                     if (teamId is long _teamId)
                     {
-                        var flag = Flag.Parse(line, Encoding.ASCII.GetBytes(config.FlagSigningKey), Logger);
+                        var flag = Flag.Parse(line, Encoding.ASCII.GetBytes(config.FlagSigningKey), config.Encoding, Logger);
                         var tcs = new TaskCompletionSource<FlagSubmissionResult>();
                         if (flag == null)
                         {
