@@ -106,9 +106,11 @@ interface Service {
 interface FirstBlood {
     TeamId: number;
     Timestamp: string;                  // Timestamps according ISO-86-01 ("yyyy-MM-ddTHH:mm:ss.fffZ")
+    TimestampEpoch: number;             // Unix time in seconds
     RoundId: number;
     StoreDescription: string | null;
     StoreIndex: number;
+
 }
 ```
 ## Flagsubmission Endpoint:
