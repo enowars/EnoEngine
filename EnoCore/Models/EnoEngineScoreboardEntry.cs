@@ -16,16 +16,12 @@ namespace EnoCore.Models
         public double AttackPoints { get => Team.AttackPoints; }
         public double LostDefensePoints { get => Team.LostDefensePoints; }
         public double ServiceLevelAgreementPoints { get => Team.ServiceLevelAgreementPoints; }
-        public Dictionary<string, EnoEngineScoreboardEntryServiceDetails> ServiceDetails { get; set; }
+        public EnoEngineScoreboardEntryServiceDetails[] ServiceDetails { get; set; }
 
-        public EnoEngineScoreboardEntry(Team team, IEnumerable<ServiceStats> serviceStats)
+        public EnoEngineScoreboardEntry(Team team)
         {
             Team = team;
-            ServiceDetails = new Dictionary<string, EnoEngineScoreboardEntryServiceDetails>();
-            foreach (var service in serviceStats)
-            {
-                ServiceDetails.Add(service.ServiceId.ToString(), new EnoEngineScoreboardEntryServiceDetails(service));
-            }
+            ServiceDetails = team.ServiceStats.Select(s => new EnoEngineScoreboardEntryServiceDetails(s)).ToArray();
         }
     }
 }

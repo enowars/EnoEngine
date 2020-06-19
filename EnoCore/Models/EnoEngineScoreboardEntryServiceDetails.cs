@@ -14,6 +14,7 @@ namespace EnoCore.Models
         public double LostDefensePoints { get => ServiceStats.LostDefensePoints; }
         public double ServiceLevelAgreementPoints { get => ServiceStats.ServiceLevelAgreementPoints; }
         public ServiceStatus ServiceStatus { get => ServiceStats.Status;  }
+        public string Message { get => "Fuck off"; }
 
         public EnoEngineScoreboardEntryServiceDetails(ServiceStats serviceStats)
         {

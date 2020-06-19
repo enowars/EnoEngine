@@ -56,7 +56,7 @@ namespace EnoDatabase
         Task<List<CheckerTask>> RetrievePendingCheckerTasks(int maxAmount);
         Task CalculateTotalPoints();
         Task<Round> GetLastRound();
-        EnoEngineScoreboard GetCurrentScoreboard(long roundId);
+        Task<EnoEngineScoreboard> GetCurrentScoreboard(long roundId);
         /*Task UpdateTeamServiceStatsAndFillSnapshot(Service service, long teamsCount, long roundId, long teamId,
             ServiceStatsSnapshot oldSnapshot, ServiceStatsSnapshot newSnapshot,
             TeamServiceStates stableServiceState, TeamServiceStates volatileServiceState);*/

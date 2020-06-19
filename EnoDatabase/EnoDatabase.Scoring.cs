@@ -265,23 +265,64 @@ namespace EnoDatabase
             return oldSnapshots; //TODO (re)create if not complete
         }
 
-        public EnoEngineScoreboard GetCurrentScoreboard(long roundId)
+        public async Task<EnoEngineScoreboard> GetCurrentScoreboard(long roundId)
         {
-            var teams = _context.Teams.AsNoTracking().OrderByDescending(t => t.TotalPoints).ToList();
+            var teams = _context.Teams
+                .Include(t => t.ServiceStats)
+                .AsNoTracking()
+                .OrderByDescending(t => t.TotalPoints)
+                .ToList();
             var round = _context.Rounds
                 .AsNoTracking()
                 .Where(r => r.Id == roundId)
                 .FirstOrDefault();
-            var services = _context.Services.AsNoTracking().ToList();
-            var scoreboard = new EnoEngineScoreboard(round, services);
-            foreach (var team in teams)
+            var services = _context.Services
+                .AsNoTracking()
+                .ToList();
+            Dictionary<(long serviceid, long flagindex), EnoScoreboardFirstblood> firstbloods = new Dictionary<(long serviceid, long flagindex), EnoScoreboardFirstblood>();
+            /*
+select * from
+(select distinct on ("ServiceId", "RoundOffset")
+"RoundId", "Teams"."Name", "Services"."Name", "RoundOffset", "FlagId", "SubmittedFlags"."Id" as "SubmittedId"
+from "Flags"
+join "SubmittedFlags" on "SubmittedFlags"."FlagId" = "Flags"."Id"
+inner join "Teams" on "Teams"."Id" = "SubmittedFlags"."AttackerTeamId"
+inner join "Services" on "ServiceId" = "Services"."Id"
+where "Teams"."Name" <> 'ENOOP'
+order by "ServiceId", "RoundOffset", "SubmittedFlags"."Id" asc) xyz
+order by "SubmittedId" asc
+*/
+/*
+            var flags = await _context.SubmittedFlags.FromSqlRaw(@"select * from
+(select distinct on(""ServiceId"", ""RoundOffset"")
+""RoundId"", ""Teams"".""Name"", ""Services"".""Name"", ""RoundOffset"", ""FlagId"", ""SubmittedFlags"".""Id"" as ""SubmittedId""
+from ""Flags""
+join ""SubmittedFlags"" on ""SubmittedFlags"".""FlagId"" = ""Flags"".""Id""
+inner join ""Teams"" on ""Teams"".""Id"" = ""SubmittedFlags"".""AttackerTeamId""
+inner join ""Services"" on ""ServiceId"" = ""Services"".""Id""
+where ""Teams"".""Name"" <> 'ENOOP'
+order by ""ServiceId"", ""RoundOffset"", ""SubmittedFlags"".""Id"" asc) xyz
+order by ""SubmittedId"" asc").ToArrayAsync();
+            _context.SubmittedFlags
+                .Select(sf => new { sf.FlagServiceId, sf.FlagRoundOffset })
+                .Distinct()
+                .ToArray();
+                */
+            foreach (var service in services)
             {
-                var details = _context.ServiceStats
-                    .Where(ss => ss.TeamId == team.Id)
-                    .AsNoTracking()
-                    .ToList();
-                scoreboard.Teams.Add(new EnoEngineScoreboardEntry(team, details));
+                for (int i = 0; i < service.FlagsPerRound; i++)
+                {
+                    var fb = await _context.SubmittedFlags
+                        .Where(sf => sf.FlagServiceId == service.Id)
+                        .Where(sf => sf.FlagRoundOffset == service.FlagsPerRound)
+                        .SingleOrDefaultAsync();
+                    if (fb != null)
+                    {
+                        firstbloods[(fb.FlagServiceId, fb.FlagRoundOffset)] = new EnoScoreboardFirstblood(DateTime.UtcNow, fb.AttackerTeamId, round.Id, "StoreDescription", fb.FlagRoundOffset);
+                    }
+                }
             }
+            var scoreboard = new EnoEngineScoreboard(round, services, firstbloods, teams);
             return scoreboard;
         }
     }
