@@ -78,7 +78,7 @@ interface ScoreboardInfo {
 }
 
 interface Team {
-    Name: string;                               //"teamname40"
+    TeamName: string;                               //"teamname40"
     TeamId: number;                             //40
     TotalPoints: number;                        //2692.662622758371
     AttackPoints: number;                       //0.0
@@ -104,6 +104,7 @@ interface Service {
 }
 
 interface FirstBlood {
+    TeamName: string;
     TeamId: number;
     Timestamp: string;                  // Timestamps according ISO-86-01 ("yyyy-MM-ddTHH:mm:ss.fffZ")
     TimestampEpoch: number;             // Unix time in seconds
