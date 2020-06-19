@@ -61,7 +61,7 @@ interface CheckerTaskMessage {
 Response:
 ```ts
 interface CheckerResultMessage {
-    result: string; // "INTERNAL_ERROR", "OK", MUMBLE", or "OFFLINE"
+    result: string;                             // "INTERNAL_ERROR", "OK", MUMBLE", or "OFFLINE"
 }
 ```
 
@@ -69,17 +69,19 @@ interface CheckerResultMessage {
 ```ts
 interface ScoreboardInfo {
     CurrentRound: number;
+    StartTimestamp: number;                     // Timestamps according ISO-86-01 ("yyyy-MM-ddTHH:mm:ss.fffZ")
+    StartTimeEpoch: number;                     // Unix time in seconds
     Services: Service[];
     Teams: Team[];
 }
 
 interface Team {
-    Name: string;                                                           //"teamname40"
-    TeamId: number;                                                         //40
-    TotalPoints: number;                                                    //2692.662622758371
-    AttackPoints: number;                                                   //0.0
-    LostDefensePoints: number;                                              //0.0
-    ServiceLevelAgreementPoints: number;                                    //2692.662622758371
+    Name: string;                               //"teamname40"
+    TeamId: number;                             //40
+    TotalPoints: number;                        //2692.662622758371
+    AttackPoints: number;                       //0.0
+    LostDefensePoints: number;                  //0.0
+    ServiceLevelAgreementPoints: number;        //2692.662622758371
     ServiceDetails: ServiceDetail[];
 }
 
@@ -88,7 +90,8 @@ interface ServiceDetail {
     AttackPoints: number;
     LostDefensePoints: number;
     ServiceLevelAgreementPoints: number;
-    ServiceStatus: number;
+    ServiceStatus: string;                      // INTERNAL_ERROR,OFFLINE,MUMBLE,RECOVERING,OK,INACTIVE
+    Message: string | null;                     // Leave null for no message, otherwise the message is displayed
 }
 
 interface Service {
@@ -100,7 +103,7 @@ interface Service {
 
 interface FirstBlood {
     TeamId: number;
-    Timestamp: string;
+    Timestamp: string;                  // Timestamps according ISO-86-01 ("yyyy-MM-ddTHH:mm:ss.fffZ")
     RoundId: number;
     StoreDescription: string | null;
     StoreIndex: number;
