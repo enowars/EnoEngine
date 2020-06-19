@@ -69,6 +69,7 @@ interface CheckerResultMessage {
 ```ts
 interface ScoreboardInfo {
     CurrentRound: number;
+    StartTime: number;                   //timestamp of the start of the round
     Services: Service[];
     Teams: Team[];
 }
@@ -88,7 +89,8 @@ interface ServiceDetail {
     AttackPoints: number;
     LostDefensePoints: number;
     ServiceLevelAgreementPoints: number;
-    ServiceStatus: number;
+    ServiceStatus: string;               // "CheckerError", "Ok", "Recovering", "Mumble", "Down"
+    Message: string | null;              // Leave empty for no message, "" for Ok, therwise the message is displayed
 }
 
 interface Service {
