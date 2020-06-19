@@ -71,6 +71,8 @@ interface ScoreboardInfo {
     CurrentRound: number;
     StartTimestamp: number;                     // Timestamps according ISO-86-01 ("yyyy-MM-ddTHH:mm:ss.fffZ")
     StartTimeEpoch: number;                     // Unix time in seconds
+    EndTimestamp: number;                     // Timestamps according ISO-86-01 ("yyyy-MM-ddTHH:mm:ss.fffZ")
+    EndTimeEpoch: number;                     // Unix time in seconds
     Services: Service[];
     Teams: Team[];
 }
