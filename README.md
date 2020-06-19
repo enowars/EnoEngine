@@ -69,7 +69,8 @@ interface CheckerResultMessage {
 ```ts
 interface ScoreboardInfo {
     CurrentRound: number;
-    StartTime: number;                   // Unix time in seconds
+    StartTimestamp: number;                   // Timestamps according ISO-86-01 ("yyyy-MM-ddTHH:mm:ss.fffZ")
+    StartTimeEpoch: number;                   // Unix time in seconds
     Services: Service[];
     Teams: Team[];
 }
