@@ -104,7 +104,6 @@ interface Service {
 }
 
 interface FirstBlood {
-    TeamName: string;
     TeamId: number;
     Timestamp: string;                  // Timestamps according ISO-86-01 ("yyyy-MM-ddTHH:mm:ss.fffZ")
     TimestampEpoch: number;             // Unix time in seconds
