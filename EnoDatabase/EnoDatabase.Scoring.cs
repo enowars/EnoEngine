@@ -314,8 +314,9 @@ order by ""SubmittedId"" asc").ToArrayAsync();
                 {
                     var fb = await _context.SubmittedFlags
                         .Where(sf => sf.FlagServiceId == service.Id)
-                        .Where(sf => sf.FlagRoundOffset == service.FlagsPerRound)
-                        .SingleOrDefaultAsync();
+                        .Where(sf => sf.FlagRoundOffset == i)
+                        .OrderBy(sf => sf.RoundId)
+                        .FirstOrDefaultAsync();
                     if (fb != null)
                     {
                         firstbloods[(fb.FlagServiceId, fb.FlagRoundOffset)] = new EnoScoreboardFirstblood(DateTime.UtcNow, fb.AttackerTeamId, round.Id, "StoreDescription", fb.FlagRoundOffset);
