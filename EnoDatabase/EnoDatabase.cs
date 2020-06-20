@@ -56,7 +56,7 @@ namespace EnoDatabase
         Task<List<CheckerTask>> RetrievePendingCheckerTasks(int maxAmount);
         Task CalculateTotalPoints();
         Task<Round> GetLastRound();
-        EnoEngineScoreboard GetCurrentScoreboard(long roundId);
+        Task<EnoEngineScoreboard> GetCurrentScoreboard(long roundId);
         /*Task UpdateTeamServiceStatsAndFillSnapshot(Service service, long teamsCount, long roundId, long teamId,
             ServiceStatsSnapshot oldSnapshot, ServiceStatsSnapshot newSnapshot,
             TeamServiceStates stableServiceState, TeamServiceStates volatileServiceState);*/
@@ -283,7 +283,7 @@ namespace EnoDatabase
                             ServiceLevelAgreementPoints = 0,
                             Team = team,
                             Service = service,
-                            Status = ServiceStatus.Down
+                            Status = ServiceStatus.OFFLINE
                         });
                     }
                 }
@@ -711,16 +711,16 @@ namespace EnoDatabase
                 foreach (var service in services)
                 {
                     var key = new { ServiceId = service.Id, TeamId = team.Id };
-                    ServiceStatus status = ServiceStatus.CheckerError;
+                    ServiceStatus status = ServiceStatus.INTERNAL_ERROR;
                     if (currentRoundWorstResults.ContainsKey(key))
                     {
                         status = EnoDatabaseUtils.CheckerResultToServiceStatus(currentRoundWorstResults[key]);
                     }
-                    if (status == ServiceStatus.Ok && oldRoundsWorstResults.ContainsKey(key))
+                    if (status == ServiceStatus.OK && oldRoundsWorstResults.ContainsKey(key))
                     {
                         if (oldRoundsWorstResults[key] != CheckerResult.OK)
                         {
-                            status = ServiceStatus.Recovering;
+                            status = ServiceStatus.RECOVERING;
                         }
                     }
                     states[(key.ServiceId, key.TeamId)] = new RoundTeamServiceState()

@@ -30,11 +30,11 @@ namespace EnoDatabase
         //internal static readonly byte[] NOISE_SIGNING_KEY = Encoding.ASCII.GetBytes("anotherstrenksecrettheyvref24tr");
         public static string PostgresDomain => Environment.GetEnvironmentVariable("DATABASE_DOMAIN") ?? "localhost";
         public static string PostgresConnectionString => $@"Server={PostgresDomain};Port=5432;Database=EnoDatabase;User Id=docker;Password=docker;Timeout=15;SslMode=Disable;";
-        public static EnoEngineScoreboard GetCurrentScoreboard(IServiceProvider serviceProvider, long roundId)
+        public static async Task<EnoEngineScoreboard> GetCurrentScoreboard(IServiceProvider serviceProvider, long roundId)
         {
             using var scope = serviceProvider.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-            return db.GetCurrentScoreboard(roundId);
+            return await db.GetCurrentScoreboard(roundId);
         }
         public static async Task RetryDatabaseAction(Func<Task> function)
         {
@@ -252,10 +252,10 @@ namespace EnoDatabase
         {
             return checkerResult switch
             {
-                CheckerResult.OK => ServiceStatus.Ok,
-                CheckerResult.MUMBLE => ServiceStatus.Mumble,
-                CheckerResult.OFFLINE => ServiceStatus.Down,
-                _ => ServiceStatus.CheckerError,
+                CheckerResult.OK => ServiceStatus.OK,
+                CheckerResult.MUMBLE => ServiceStatus.MUMBLE,
+                CheckerResult.OFFLINE => ServiceStatus.OFFLINE,
+                _ => ServiceStatus.INTERNAL_ERROR,
             };
         }
     }
