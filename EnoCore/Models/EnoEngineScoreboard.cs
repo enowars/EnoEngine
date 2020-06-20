@@ -12,9 +12,9 @@ namespace EnoCore.Models
 
         public long? CurrentRound { get => Round?.Id; }
         public string? StartTimestamp { get => Round?.Begin.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ"); }
-        public double? StartEpoch { get => Round?.Begin.ToUniversalTime().Subtract(DateTime.UnixEpoch).TotalSeconds; }
+        public double? StartTimeEpoch { get => Round?.Begin.ToUniversalTime().Subtract(DateTime.UnixEpoch).TotalSeconds; }
         public string? EndTimestamp { get => Round?.End.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ"); }
-        public double? EndEpoch { get => Round?.End.ToUniversalTime().Subtract(DateTime.UnixEpoch).TotalSeconds; }
+        public double? EndTimeEpoch { get => Round?.End.ToUniversalTime().Subtract(DateTime.UnixEpoch).TotalSeconds; }
         public EnoEngineScoreboardService[] Services { get; private set; }
         public EnoEngineScoreboardEntry[] Teams { get; private set; }
 
