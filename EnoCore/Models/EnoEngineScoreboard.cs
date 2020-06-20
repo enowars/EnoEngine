@@ -18,10 +18,10 @@ namespace EnoCore.Models
         public EnoEngineScoreboardService[] Services { get; private set; }
         public EnoEngineScoreboardEntry[] Teams { get; private set; }
 
-        public EnoEngineScoreboard(Round round, List<Service> services, Dictionary<(long serviceid, long flagindex), EnoScoreboardFirstblood> firstbloods, List<Team> teams)
+        public EnoEngineScoreboard(Round round, List<Service> services, Dictionary<(long serviceid, long flagindex), EnoScoreboardFirstblood> firstBloods, List<Team> teams)
         {
             Round = round;
-            Services = services.Select(s => new EnoEngineScoreboardService(firstbloods
+            Services = services.Select(s => new EnoEngineScoreboardService(firstBloods
                     .Where(fbkv => fbkv.Key.serviceid == s.Id)
                     .Select(fbkv => fbkv.Value)
                     .ToArray(), s))

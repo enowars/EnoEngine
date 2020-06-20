@@ -11,10 +11,10 @@ namespace EnoCore.Models
         public long ServiceId { get; set; }
         public string ServiceName { get; set; }
         public long MaxStores { get; set; }
-        public EnoScoreboardFirstblood[] Firstbloods { get; private set; }
-        public EnoEngineScoreboardService(EnoScoreboardFirstblood[] firstbloods, Service service)
+        public EnoScoreboardFirstblood[] FirstBloods { get; private set; }
+        public EnoEngineScoreboardService(EnoScoreboardFirstblood[] firstBloods, Service service)
         {
-            Firstbloods = firstbloods;
+            FirstBloods = firstBloods;
             MaxStores = service.FlagsPerRound;
             ServiceId = service.Id;
             ServiceName = service.Name;
