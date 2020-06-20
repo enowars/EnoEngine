@@ -6,11 +6,12 @@ namespace EnoCore.Models.Database
 {
     public enum ServiceStatus
     {
-        CheckerError,
-        Ok,
-        Recovering,
-        Mumble,
-        Down
+        INTERNAL_ERROR,
+        OK,
+        RECOVERING,
+        MUMBLE,
+        OFFLINE,
+        INACTIVE
     }
 
     public class RoundTeamServiceState

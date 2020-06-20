@@ -132,11 +132,11 @@ namespace EnoDatabase
                     defPoints = snapshot[team.Id].LostDefensePoints;
                 }
 
-                if (serviceStates.TryGetValue(new { TeamId = team.Id, Status = ServiceStatus.Ok }, out var oks))
+                if (serviceStates.TryGetValue(new { TeamId = team.Id, Status = ServiceStatus.OK }, out var oks))
                 {
                     slaPoints += oks.Amount * Math.Sqrt(teams.Length);
                 }
-                if (serviceStates.TryGetValue(new { TeamId = team.Id, Status = ServiceStatus.Recovering }, out var recoverings))
+                if (serviceStates.TryGetValue(new { TeamId = team.Id, Status = ServiceStatus.RECOVERING }, out var recoverings))
                 {
                     slaPoints += recoverings.Amount * Math.Sqrt(teams.Length) / 2.0;
                 }
@@ -162,7 +162,7 @@ namespace EnoDatabase
                 serviceStats[team.Id].AttackPoints = attackPoints;
                 serviceStats[team.Id].LostDefensePoints = defPoints;
                 latestServiceStates.TryGetValue(team.Id, out var status_rtss);
-                serviceStats[team.Id].Status = status_rtss?.Status ?? ServiceStatus.CheckerError;
+                serviceStats[team.Id].Status = status_rtss?.Status ?? ServiceStatus.INTERNAL_ERROR;
             }
             await _context.SaveChangesAsync();
         }
@@ -219,9 +219,9 @@ namespace EnoDatabase
 
                 if (serviceStates.TryGetValue(team.Id, out var state))
                 {
-                    if (state.Status == ServiceStatus.Ok)
+                    if (state.Status == ServiceStatus.OK)
                         slaPoints += 1.0 * Math.Sqrt(teams.Length);
-                    if (state.Status == ServiceStatus.Recovering)
+                    if (state.Status == ServiceStatus.RECOVERING)
                         slaPoints += 0.5 * Math.Sqrt(teams.Length);
                 }
 

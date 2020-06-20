@@ -252,10 +252,10 @@ namespace EnoDatabase
         {
             return checkerResult switch
             {
-                CheckerResult.OK => ServiceStatus.Ok,
-                CheckerResult.MUMBLE => ServiceStatus.Mumble,
-                CheckerResult.OFFLINE => ServiceStatus.Down,
-                _ => ServiceStatus.CheckerError,
+                CheckerResult.OK => ServiceStatus.OK,
+                CheckerResult.MUMBLE => ServiceStatus.MUMBLE,
+                CheckerResult.OFFLINE => ServiceStatus.OFFLINE,
+                _ => ServiceStatus.INTERNAL_ERROR,
             };
         }
     }
