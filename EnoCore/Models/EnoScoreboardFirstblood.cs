@@ -9,8 +9,8 @@ namespace EnoCore.Models
     {
         private readonly DateTime FirstTime;
         public long TeamId { get; private set; }
-        public string Timestamp { get => FirstTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ"); }
-        public double TimeEpoch { get => FirstTime.ToUniversalTime().Subtract(DateTime.UnixEpoch).TotalSeconds; }
+        public string Timestamp { get => FirstTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"); }
+        public double TimeEpoch { get => FirstTime.Subtract(DateTime.UnixEpoch).TotalSeconds; }
         public long RoundId { get; private set; }
         public string? StoreDescription { get; private set; }
         public long StoreIndex { get; private set; }
