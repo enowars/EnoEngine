@@ -319,7 +319,7 @@ order by ""SubmittedId"" asc").ToArrayAsync();
                         .FirstOrDefaultAsync();
                     if (fb != null)
                     {
-                        firstbloods[(fb.FlagServiceId, fb.FlagRoundOffset)] = new EnoScoreboardFirstblood(DateTime.UtcNow, fb.AttackerTeamId, round.Id, "StoreDescription", fb.FlagRoundOffset);
+                        firstbloods[(fb.FlagServiceId, fb.FlagRoundOffset)] = new EnoScoreboardFirstblood(DateTime.UtcNow, fb.AttackerTeamId, fb.RoundId, "StoreDescription", fb.FlagRoundOffset);
                     }
                 }
             }
