@@ -278,6 +278,7 @@ namespace EnoDatabase
                 .FirstOrDefault();
             var services = _context.Services
                 .AsNoTracking()
+                .OrderBy(s => s.Id)
                 .ToList();
             Dictionary<(long serviceid, long flagindex), EnoScoreboardFirstblood> firstbloods = new Dictionary<(long serviceid, long flagindex), EnoScoreboardFirstblood>();
             /*
