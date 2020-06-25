@@ -60,6 +60,7 @@ interface Team {
     TeamSubnet: string;
     LogoUrl: string | null;
     FlagUrl: string | null;
+    Active: string | null;
 }
 ```
 
