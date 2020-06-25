@@ -49,13 +49,14 @@ interface Service {
     NoisesPerRound: number;
     HavocsPerRound: number;
     WeightFactor: number;
+    Active: string | null;
     Checkers: string[];
 }
 
 interface Team {
     Id: number;
     Name: string;
-    Address: string;
+    Address: string | null;
     TeamSubnet: string;
     LogoUrl: string | null;
     FlagUrl: string | null;
