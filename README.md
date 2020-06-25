@@ -5,14 +5,16 @@ This is the engine powering our CTFs.
 For performance reasons, it's written in C#.
 
 ## Usage
-
-1. Create a ctf.json (see examples)
-2. Run EnoLauncher (`dotnet run --project EnoLauncher`)
-3. Run EnoEngine (`dotnet run --project EnoEngine`)
+(0. Make sure the dependencies are installed: docker, docker-compose, dotnet sdk ...)
+1. Create a ctf.json (see below)
+2. Make sure the data folder exists (./../data/)
+3. Start up the Database (`docker-compose up -d`)
+4. Run EnoLauncher (`dotnet run --project EnoLauncher`)
+5. Run EnoEngine (`dotnet run --project EnoEngine`)
 
 ## Development
 
-Develop either in Visual Studio, or, for the FOSS people, in Visual Studio Code
+Develop either in Visual Studio, or, for the FOSS people, in Visual Studio Code:
 
 - install dotnet core (on Windows, `choco install dotnetcore-sdk`)
 - run `dotnet restore`
@@ -24,6 +26,40 @@ For creating a migration after changes, run this:
 cd /EnoDatabase
 rm -r Migrations
 dotnet ef migrations add InitialMigrations --startup-project ../EnoEngine
+```
+## ctf.json Format
+```ts
+interface ctfjson {
+    Title: string;
+    FlagValidityInRounds: number;
+    CheckedRoundsPerRound: number;
+    RoundLengthInSeconds: number;
+    DnsSuffix: string;
+    TeamSubnetBytesLength: number;
+    FlagSigningKey: string;
+    NoiseSigningKey: string;
+    Encoding: string | null;
+    Services: Service[];
+    Teams: Team[];
+}
+interface Service {
+    Id: number;
+    Name: string;
+    FlagsPerRound: number;
+    NoisesPerRound: number;
+    HavocsPerRound: number;
+    WeightFactor: number;
+    Checkers: string[];
+}
+
+interface Team {
+    Id: number;
+    Name: string;
+    Address: string;
+    TeamSubnet: string;
+    LogoUrl: string | null;
+    FlagUrl: string | null;
+}
 ```
 
 ## Checker API
