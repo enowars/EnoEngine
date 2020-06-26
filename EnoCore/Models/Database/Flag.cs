@@ -98,7 +98,7 @@ namespace EnoCore.Models.Database
             Console.WriteLine(dbgstr);
             Console.WriteLine(dbg);  */
         }
-        private static bool getsinglebyte(char s, out byte b)
+        private static bool Getsinglebyte(char s, out byte b)
         {
             for (int i = 0; i < 256; i++)
                 if (ByteMap[i] == s)
@@ -127,7 +127,7 @@ namespace EnoCore.Models.Database
                 var element = splitted[bytesWritten % 4].ElementAtOrDefault((int)bytesWritten / 4);
                 if (element == '\0') 
                     return true;
-                if (!getsinglebyte(element, out b[bytesWritten])) 
+                if (!Getsinglebyte(element, out b[bytesWritten])) 
                     return false;
                 bytesWritten++;
             }

@@ -78,24 +78,21 @@ namespace EnoEngine
         public static void Main(string? argument = null)
         {
             const string mutexId = @"Global\EnoEngine";
-            bool createdNew;
-            using (var mutex = new Mutex(false, mutexId, out createdNew))
+            using var mutex = new Mutex(false, mutexId, out bool _);
+            try
             {
-                try
+                if (mutex.WaitOne(10, false))
                 {
-                    if (mutex.WaitOne(10, false))
-                    {
-                        Run(argument);
-                    }
-                    else
-                    {
-                        Console.WriteLine("Another Instance is already running");
-                    }
+                    Run(argument);
                 }
-                finally
+                else
                 {
-                    mutex?.Close();
+                    Console.WriteLine("Another Instance is already running");
                 }
+            }
+            finally
+            {
+                mutex?.Close();
             }
         }
     }

@@ -209,7 +209,7 @@ namespace EnoEngine
             var jsonStopWatch = new Stopwatch();
             jsonStopWatch.Start();
             var scoreboard = await EnoDatabaseUtils.GetCurrentScoreboard(ServiceProvider, roundId);
-            EnoDatabaseUtils.GenerateCurrentScoreboard(scoreboard, $"..{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}", roundId);
+            EnoDatabaseUtils.GenerateCurrentScoreboard(scoreboard, EnoCore.Utils.Misc.dataDirectory, roundId);
             jsonStopWatch.Stop();
             //TODO EnoLogger.LogStatistics(ScoreboardJsonGenerationFinishedMessage.Create(jsonStopWatch.ElapsedMilliseconds));
             return DateTime.UtcNow;

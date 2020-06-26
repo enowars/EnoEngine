@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace EnoCore.Models
+namespace EnoCore.Models.Json
 {
     public class EnoEngineScoreboard
     {
