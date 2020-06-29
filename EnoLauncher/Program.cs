@@ -41,11 +41,7 @@ namespace EnoLauncher
             UpdateDatabaseTask = Task.Run(async () => await UpdateDatabaseLoop());
             Logger = serviceProvider.GetRequiredService<ILogger<Program>>();
         }
-        public static void GenerateScoreboardInfo(EnoEngineScoreboardInfo scoreboardinfo, string path, long roundId)
-        {
-            var json = JsonSerializer.Serialize(scoreboard);
-            File.WriteAllText(EnoCore.Utils.Misc.dataDirectory, json);
-        }
+
         public void Start()
         {
             JsonConfiguration configuration;
@@ -110,7 +106,7 @@ namespace EnoLauncher
             using var scope = Logger.BeginEnoScope(task);
             try
             {
-                Logger.LogTrace($"LaunchCheckerTask() for task {task.Id} ({task.TaskType}, currentRound={task.CurrentRoundId}, relatedRound={task.RelatedRoundId})");
+                Logger.LogTrace($"LaunchCheckerTask() for task {task.Id} ({task.Method}, currentRound={task.CurrentRoundId}, relatedRound={task.RelatedRoundId})");
                 var cancelSource = new CancellationTokenSource();
                 var now = DateTime.UtcNow;
                 var span = task.StartTime.Subtract(DateTime.UtcNow);
@@ -126,7 +122,7 @@ namespace EnoLauncher
                 var content = new StringContent(JsonSerializer.Serialize(new CheckerTaskMessage(task)), Encoding.UTF8, "application/json");
                 cancelSource.CancelAfter(task.MaxRunningTime * 1000);
                 Statistics.CheckerTaskLaunchMessage(task);
-                Logger.LogDebug($"LaunchCheckerTask {task.Id} POSTing {task.TaskType} to checker");
+                Logger.LogDebug($"LaunchCheckerTask {task.Id} POSTing {task.Method} to checker");
                 var response = await Client.PostAsync(new Uri(task.CheckerUrl), content, cancelSource.Token);
                 if (response.StatusCode == HttpStatusCode.OK)
                 {

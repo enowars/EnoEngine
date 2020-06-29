@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EnoCore.Models.Json;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -24,7 +25,7 @@ namespace EnoCore.Models.Database
 #pragma warning disable CS8618
         public long Id { get; set; }
         public string CheckerUrl { get; set; }
-        public string TaskType { get; set; }
+        public CheckerTaskMethod Method { get; set; }
         public string Address { get; set; }
         public long ServiceId { get; set; }
         public string ServiceName { get; set; }

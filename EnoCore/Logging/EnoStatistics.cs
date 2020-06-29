@@ -68,7 +68,7 @@ namespace EnoCore.Logging
         {
             RoundId = task.CurrentRoundId;
             ServiceName = task.ServiceName;
-            Method = task.TaskType;
+            Method = task.Method;
             TaskIndex = task.TaskIndex;
         }
     }
