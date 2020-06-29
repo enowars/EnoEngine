@@ -66,7 +66,7 @@ interface Team {
 
 ## Checker API
 
-Checkers are expected to respond to these requests:
+Checkers are expected to respond to these requests, providing a HTTP Status Code 200:
 
 ### `GET /service`
 Response:
