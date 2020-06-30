@@ -68,7 +68,9 @@ namespace EnoEngine
             var Client = new HttpClient();
             try
             {
-                var response = await Client.GetAsync($"{s.Checkers[0]}/service");
+                var cancelSource = new CancellationTokenSource();
+                cancelSource.CancelAfter(10 * 1000);
+                var response = await Client.GetAsync($"{s.Checkers[0]}/service", cancelSource.Token);
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
                     var responseString = (await response.Content.ReadAsStringAsync()).TrimEnd(Environment.NewLine.ToCharArray());
