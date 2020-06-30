@@ -1,4 +1,5 @@
 ﻿using EnoCore.Models.Database;
+using EnoCore.Models.Json;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -61,7 +62,7 @@ namespace EnoCore.Logging
     {
         public long RoundId { get; }
         public string ServiceName { get; }
-        public string Method { get; }
+        public CheckerTaskMethod Method { get; }
         public long TaskIndex { get; }
 
         public CheckerTaskLaunchMessage(CheckerTask task)
