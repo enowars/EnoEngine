@@ -42,7 +42,6 @@ namespace EnoCore.Models.Json
         [JsonPropertyName("serviceName")]
         public string? ServiceName { get; set; }
         [JsonPropertyName("method")]
-        [JsonConverter(typeof(JsonStringEnumConverter))]
         public string? Method { get; set; }
 
         public void FromCheckerTask(CheckerTask task)
