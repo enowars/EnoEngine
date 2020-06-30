@@ -72,7 +72,7 @@ namespace EnoEngine
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
                     var responseString = (await response.Content.ReadAsStringAsync()).TrimEnd(Environment.NewLine.ToCharArray());
-                    Logger.LogDebug($"GetCheckerInfo for Service {s.Name} received {responseString}");
+                    Logger.LogDebug($"GetCheckerInfo for Service {s.Name} received: \"{responseString}\"");
                     var resultMessage = JsonSerializer.Deserialize<CheckerInfoMessage>(responseString);
                     s.FlagsPerRound *= resultMessage.FlagCount;
                     s.NoisesPerRound *= resultMessage.NoiseCount;
