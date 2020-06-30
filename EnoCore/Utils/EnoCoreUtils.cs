@@ -20,7 +20,10 @@ using Microsoft.Extensions.Logging;
 
 namespace EnoCore.Utils
 {
-
+    public static class Misc
+    {
+        public static readonly string dataDirectory = $"..{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}";
+    }
     ///
     /// code used from https://devblogs.microsoft.com/pfxteam/getting-random-numbers-in-a-thread-safe-way/
     public static class ThreadSafeRandom

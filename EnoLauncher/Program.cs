@@ -44,6 +44,23 @@ namespace EnoLauncher
 
         public void Start()
         {
+            JsonConfiguration configuration;
+            if (!File.Exists("ctf.json"))
+            {
+                Console.WriteLine("Config (ctf.json) does not exist");
+                return;
+            }
+            try
+            {
+                var content = File.ReadAllText("ctf.json");
+                configuration = JsonSerializer.Deserialize<JsonConfiguration>(content);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Failed to load ctf.json: {e.Message}");
+                return;
+            }
+
             Client.Timeout = new TimeSpan(0, 1, 0);
             LauncherLoop().Wait();
         }
@@ -89,7 +106,7 @@ namespace EnoLauncher
             using var scope = Logger.BeginEnoScope(task);
             try
             {
-                Logger.LogTrace($"LaunchCheckerTask() for task {task.Id} ({task.TaskType}, currentRound={task.CurrentRoundId}, relatedRound={task.RelatedRoundId})");
+                Logger.LogTrace($"LaunchCheckerTask() for task {task.Id} ({task.Method}, currentRound={task.CurrentRoundId}, relatedRound={task.RelatedRoundId})");
                 var cancelSource = new CancellationTokenSource();
                 var now = DateTime.UtcNow;
                 var span = task.StartTime.Subtract(DateTime.UtcNow);
@@ -105,7 +122,7 @@ namespace EnoLauncher
                 var content = new StringContent(JsonSerializer.Serialize(new CheckerTaskMessage(task)), Encoding.UTF8, "application/json");
                 cancelSource.CancelAfter(task.MaxRunningTime * 1000);
                 Statistics.CheckerTaskLaunchMessage(task);
-                Logger.LogDebug($"LaunchCheckerTask {task.Id} POSTing {task.TaskType} to checker");
+                Logger.LogDebug($"LaunchCheckerTask {task.Id} POSTing {task.Method} to checker");
                 var response = await Client.PostAsync(new Uri(task.CheckerUrl), content, cancelSource.Token);
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
@@ -147,42 +164,39 @@ namespace EnoLauncher
         static void Main()
         {
             const string mutexId = @"Global\EnoLauncher";
-            bool createdNew;
-            using (var mutex = new Mutex(false, mutexId, out createdNew))
+            using var mutex = new Mutex(false, mutexId, out var _);
+            try
             {
-                try
+                if (mutex.WaitOne(10, false))
                 {
-                    if (mutex.WaitOne(10, false))
-                    {
-                        var serviceProvider = new ServiceCollection()
-                            .AddScoped<IEnoDatabase, EnoDatabase.EnoDatabase>()
-                            .AddDbContextPool<EnoDatabaseContext>(options =>
-                            {
-                                options.UseNpgsql(
-                                    EnoDatabaseUtils.PostgresConnectionString,
-                                    pgoptions => pgoptions.EnableRetryOnFailure());
-                            }, 90)
-                            .AddLogging(loggingBuilder =>
-                            {
-                                loggingBuilder.SetMinimumLevel(LogLevel.Debug);
-                                loggingBuilder.AddFilter(DbLoggerCategory.Name, LogLevel.Warning);
-                                loggingBuilder.AddConsole();
-                                loggingBuilder.AddProvider(new EnoLogMessageFileLoggerProvider("EnoLauncher", LauncherCancelSource.Token));
-                            })
-                            .BuildServiceProvider(validateScopes: true);
-                        new Program(serviceProvider).Start();
-                    }
-                    else
-                    {
-                        Console.WriteLine("Another Instance is already running");
-                    }
+                    var serviceProvider = new ServiceCollection()
+                        .AddScoped<IEnoDatabase, EnoDatabase.EnoDatabase>()
+                        .AddDbContextPool<EnoDatabaseContext>(options =>
+                        {
+                            options.UseNpgsql(
+                                EnoDatabaseUtils.PostgresConnectionString,
+                                pgoptions => pgoptions.EnableRetryOnFailure());
+                        }, 90)
+                        .AddLogging(loggingBuilder =>
+                        {
+                            loggingBuilder.SetMinimumLevel(LogLevel.Debug);
+                            loggingBuilder.AddFilter(DbLoggerCategory.Name, LogLevel.Warning);
+                            loggingBuilder.AddConsole();
+                            loggingBuilder.AddProvider(new EnoLogMessageFileLoggerProvider("EnoLauncher", LauncherCancelSource.Token));
+                        })
+                        .BuildServiceProvider(validateScopes: true);
+                    new Program(serviceProvider).Start();
+                }
+                else
+                {
+                    Console.WriteLine("Another Instance is already running");
+                }
 
 
-                }
-                finally
-                {
-                    mutex?.Close();
-                }
+            }
+            finally
+            {
+                mutex?.Close();
             }
         }
 

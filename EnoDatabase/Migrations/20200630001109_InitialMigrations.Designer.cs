@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EnoDatabase.Migrations
 {
     [DbContext(typeof(EnoDatabaseContext))]
-    [Migration("20200610003016_InitialMigrations")]
+    [Migration("20200630001109_InitialMigrations")]
     partial class InitialMigrations
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -48,6 +48,9 @@ namespace EnoDatabase.Migrations
                     b.Property<int>("MaxRunningTime")
                         .HasColumnType("integer");
 
+                    b.Property<int>("Method")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Payload")
                         .HasColumnType("text");
 
@@ -69,10 +72,6 @@ namespace EnoDatabase.Migrations
 
                     b.Property<long>("TaskIndex")
                         .HasColumnType("bigint");
-
-                    b.Property<string>("TaskType")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<long>("TeamId")
                         .HasColumnType("bigint");
@@ -237,18 +236,18 @@ namespace EnoDatabase.Migrations
                     b.Property<bool>("Active")
                         .HasColumnType("boolean");
 
-                    b.Property<int>("FlagsPerRound")
-                        .HasColumnType("integer");
+                    b.Property<long>("FlagsPerRound")
+                        .HasColumnType("bigint");
 
-                    b.Property<int>("HavocsPerRound")
-                        .HasColumnType("integer");
+                    b.Property<long>("HavocsPerRound")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("NoisesPerRound")
-                        .HasColumnType("integer");
+                    b.Property<long>("NoisesPerRound")
+                        .HasColumnType("bigint");
 
                     b.Property<long>("ServiceStatsId")
                         .HasColumnType("bigint");

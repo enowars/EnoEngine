@@ -6,12 +6,21 @@ using System.Text.Json.Serialization;
 
 namespace EnoCore.Models.Json
 {
+    public enum CheckerTaskMethod
+    {
+        putflag,
+        getflag,
+        putnoise,
+        getnoise,
+        havoc
+    }
     public class CheckerTaskMessage
     {
         [JsonPropertyName("runId")]
         public long RunId { get; set; }
         [JsonPropertyName("method")]
-        public string Method { get; set; } = default!;
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public CheckerTaskMethod Method { get; set; } = default!;
         [JsonPropertyName("address")]
         public string Address { get; set; } = default!;
         [JsonPropertyName("serviceId")]
@@ -30,13 +39,18 @@ namespace EnoCore.Models.Json
         public string? Flag { get; set; }
         [JsonPropertyName("flagIndex")]
         public long FlagIndex { get; set; }
-
+        [JsonPropertyName("timeout")]
+        public long Timeout { get; set; }
+        [JsonPropertyName("roundLength")]
+        public long RoundLength { get; set; }
         public CheckerTaskMessage() { }
 
         public CheckerTaskMessage(CheckerTask task)
         {
+            Timeout = task.MaxRunningTime;
+            RoundLength = task.RoundLength;
             RunId = task.Id;
-            Method = task.TaskType;
+            Method = task.Method;
             Address = task.Address;
             ServiceId = task.ServiceId;
             ServiceName = task.ServiceName;

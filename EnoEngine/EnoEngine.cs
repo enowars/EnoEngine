@@ -17,6 +17,9 @@ using Microsoft.EntityFrameworkCore;
 using EnoCore.Models.Database;
 using EnoCore.Logging;
 using EnoDatabase;
+using System.Net.Http;
+using System.Text.Json;
+using EnoCore.Utils;
 
 namespace EnoEngine
 {
@@ -46,6 +49,7 @@ namespace EnoEngine
                 e.Cancel = true;
                 EngineCancelSource.Cancel();
             };
+            await FetchAndApplyCheckersInfo(Configuration);
             var db = ServiceProvider.CreateScope().ServiceProvider.GetRequiredService<IEnoDatabase>();
             var result = db.ApplyConfig(Configuration);
             Configuration.BuildCheckersDict();
@@ -59,7 +63,48 @@ namespace EnoEngine
             }
         }
 
-        internal async Task GameLoop()
+        private async Task GetCheckerInfo (JsonConfigurationService s)
+        {
+            var Client = new HttpClient();
+            try
+            {
+                var response = await Client.GetAsync($"{s.Checkers[0]}/service");
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    var responseString = (await response.Content.ReadAsStringAsync()).TrimEnd(Environment.NewLine.ToCharArray());
+                    Logger.LogDebug($"GetCheckerInfo for Service {s.Name} received: \"{responseString}\"");
+                    var resultMessage = JsonSerializer.Deserialize<CheckerInfoMessage>(responseString);
+                    s.FlagsPerRound *= resultMessage.FlagCount;
+                    s.NoisesPerRound *= resultMessage.NoiseCount;
+                    s.HavocsPerRound *= resultMessage.HavocCount;
+                    if (s.FlagsPerRound == 0 && s.NoisesPerRound == 0 && s.HavocsPerRound == 0)
+                    {
+                        Logger.LogDebug($"GetCheckerInfo for Service {s.Name} setting inactive");
+                        s.Active = false;
+                    }
+                }
+                else
+                    Logger.LogError($"GetCheckerInfo: Service {s.Name} returned Status Code {response.StatusCode}");
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(e.ToFancyString());
+                s.Active = false;
+                return;
+            }
+        }
+        private async Task FetchAndApplyCheckersInfo(JsonConfiguration config)
+        {
+            List<Task> AllTasks = new List<Task>();
+            foreach (var s in config.Services)
+            {
+                Logger.LogDebug($"GetCheckerInfo: Fetching Information for {s.Name}");
+                AllTasks.Add(GetCheckerInfo(s));
+            }
+            await Task.WhenAll(AllTasks);
+        }
+
+        private async Task GameLoop()
         {
             try
             {

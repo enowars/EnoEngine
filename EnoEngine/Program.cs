@@ -43,6 +43,15 @@ namespace EnoEngine
                 Console.WriteLine($"Failed to load ctf.json: {e.Message}");
                 return;
             }
+            try
+            {
+                var scoreboard = new EnoEngineScoreboardInfo(configuration);
+                EnoDatabaseUtils.GenerateScoreboardInfo(scoreboard, EnoCore.Utils.Misc.dataDirectory);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Failed to generate scoreboardInfo.json: {e.Message}");
+            }
             var serviceProvider = new ServiceCollection()
                 .AddLogging()
                 .AddSingleton(configuration)
@@ -78,24 +87,21 @@ namespace EnoEngine
         public static void Main(string? argument = null)
         {
             const string mutexId = @"Global\EnoEngine";
-            bool createdNew;
-            using (var mutex = new Mutex(false, mutexId, out createdNew))
+            using var mutex = new Mutex(false, mutexId, out bool _);
+            try
             {
-                try
+                if (mutex.WaitOne(10, false))
                 {
-                    if (mutex.WaitOne(10, false))
-                    {
-                        Run(argument);
-                    }
-                    else
-                    {
-                        Console.WriteLine("Another Instance is already running");
-                    }
+                    Run(argument);
                 }
-                finally
+                else
                 {
-                    mutex?.Close();
+                    Console.WriteLine("Another Instance is already running");
                 }
+            }
+            finally
+            {
+                mutex?.Close();
             }
         }
     }

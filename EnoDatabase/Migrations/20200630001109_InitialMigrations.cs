@@ -32,9 +32,9 @@ namespace EnoDatabase.Migrations
                     Id = table.Column<long>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Name = table.Column<string>(nullable: false),
-                    FlagsPerRound = table.Column<int>(nullable: false),
-                    NoisesPerRound = table.Column<int>(nullable: false),
-                    HavocsPerRound = table.Column<int>(nullable: false),
+                    FlagsPerRound = table.Column<long>(nullable: false),
+                    NoisesPerRound = table.Column<long>(nullable: false),
+                    HavocsPerRound = table.Column<long>(nullable: false),
                     ServiceStatsId = table.Column<long>(nullable: false),
                     Active = table.Column<bool>(nullable: false)
                 },
@@ -71,7 +71,7 @@ namespace EnoDatabase.Migrations
                     Id = table.Column<long>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     CheckerUrl = table.Column<string>(nullable: false),
-                    TaskType = table.Column<string>(nullable: false),
+                    Method = table.Column<int>(nullable: false),
                     Address = table.Column<string>(nullable: false),
                     ServiceId = table.Column<long>(nullable: false),
                     ServiceName = table.Column<string>(nullable: false),

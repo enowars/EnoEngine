@@ -179,7 +179,11 @@ namespace EnoDatabase
             File.WriteAllText($"{path}scoreboard{roundId}.json", json);
             File.WriteAllText($"{path}scoreboard.json", json);
         }
-
+        public static void GenerateScoreboardInfo(EnoEngineScoreboardInfo scoreboardinfo, string path)
+        {
+            var json = JsonSerializer.Serialize(scoreboardinfo);
+            File.WriteAllText($"{path}scoreboard.json", json);
+        }
 
         internal static string GenerateNoise()
         {
