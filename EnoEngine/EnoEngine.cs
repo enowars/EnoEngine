@@ -79,11 +79,12 @@ namespace EnoEngine
                     s.HavocsPerRound *= resultMessage.HavocCount;
                     if (s.FlagsPerRound == 0 && s.NoisesPerRound == 0 && s.HavocsPerRound == 0)
                     {
-                        Logger.LogDebug($"GetCheckerInfo for Service {s.Name} setting inactive")
+                        Logger.LogDebug($"GetCheckerInfo for Service {s.Name} setting inactive");
                         s.Active = false;
                     }
-                }else
-                    Logger.LogError($"GetCheckerInfo: Service {s.Name} returned Status Code {response.StatusCode}")
+                }
+                else
+                    Logger.LogError($"GetCheckerInfo: Service {s.Name} returned Status Code {response.StatusCode}");
             }
             catch (Exception e)
             {
