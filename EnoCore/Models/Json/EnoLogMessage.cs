@@ -42,7 +42,7 @@ namespace EnoCore.Models.Json
         [JsonPropertyName("serviceName")]
         public string? ServiceName { get; set; }
         [JsonPropertyName("method")]
-        public CheckerTaskMethod? Method { get; set; }
+        public string? Method { get; set; }
 
         public void FromCheckerTask(CheckerTask task)
         {
@@ -54,7 +54,7 @@ namespace EnoCore.Models.Json
             RunId = task.Id;
             FlagIndex = task.TaskIndex;
             ServiceName = task.ServiceName;
-            Method = task.Method;
+            Method = task.Method.ToString();
         }
 
         public void FromCheckerTaskMessage(CheckerTaskMessage taskMessage)
@@ -67,7 +67,7 @@ namespace EnoCore.Models.Json
             RunId = taskMessage.RunId;
             FlagIndex = taskMessage.FlagIndex;
             ServiceName = taskMessage.ServiceName;
-            Method = taskMessage.Method;
+            Method = taskMessage.Method.ToString();
         }
     }
 }
