@@ -69,7 +69,7 @@ namespace EnoEngine
             try
             {
                 var response = await Client.GetAsync($"{s.Checkers[0]}/service");
-                if (response.IsSuccessStatusCode)
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
                     var responseString = (await response.Content.ReadAsStringAsync()).TrimEnd(Environment.NewLine.ToCharArray());
                     Logger.LogDebug($"GetCheckerInfo for Service {s.Name} received {responseString}");
@@ -77,12 +77,17 @@ namespace EnoEngine
                     s.FlagsPerRound *= resultMessage.FlagCount;
                     s.NoisesPerRound *= resultMessage.NoiseCount;
                     s.HavocsPerRound *= resultMessage.HavocCount;
-                    if (s.FlagsPerRound == 0 && s.NoisesPerRound == 0 && s.HavocsPerRound == 0) s.Active = false;
-                }
+                    if (s.FlagsPerRound == 0 && s.NoisesPerRound == 0 && s.HavocsPerRound == 0)
+                    {
+                        Logger.LogDebug($"GetCheckerInfo for Service {s.Name} setting inactive")
+                        s.Active = false;
+                    }
+                }else
+                    Logger.LogError($"GetCheckerInfo: Service {s.Name} returned Status Code {response.StatusCode}")
             }
             catch (Exception e)
             {
-                Logger.LogDebug(e.ToFancyString());
+                Logger.LogError(e.ToFancyString());
                 s.Active = false;
                 return;
             }
@@ -92,6 +97,7 @@ namespace EnoEngine
             List<Task> AllTasks = new List<Task>();
             foreach (var s in config.Services)
             {
+                Logger.LogDebug($"GetCheckerInfo: Fetching Information for {s.Name}");
                 AllTasks.Add(GetCheckerInfo(s));
             }
             await Task.WhenAll(AllTasks);
