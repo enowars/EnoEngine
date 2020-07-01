@@ -182,7 +182,7 @@ namespace EnoDatabase
         public static void GenerateScoreboardInfo(EnoEngineScoreboardInfo scoreboardinfo, string path)
         {
             var json = JsonSerializer.Serialize(scoreboardinfo);
-            File.WriteAllText($"{path}scoreboard.json", json);
+            File.WriteAllText($"{path}scoreboardInfo.json", json);
         }
 
         internal static string GenerateNoise()
