@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EnoDatabase.Migrations
 {
     [DbContext(typeof(EnoDatabaseContext))]
-    [Migration("20200630001109_InitialMigrations")]
+    [Migration("20200701225650_InitialMigrations")]
     partial class InitialMigrations
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -44,6 +44,9 @@ namespace EnoDatabase.Migrations
 
                     b.Property<long>("CurrentRoundId")
                         .HasColumnType("bigint");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("text");
 
                     b.Property<int>("MaxRunningTime")
                         .HasColumnType("integer");
@@ -214,6 +217,9 @@ namespace EnoDatabase.Migrations
                     b.Property<long>("GameRoundId")
                         .HasColumnType("bigint");
 
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("text");
+
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
@@ -266,6 +272,9 @@ namespace EnoDatabase.Migrations
 
                     b.Property<double>("AttackPoints")
                         .HasColumnType("double precision");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("text");
 
                     b.Property<double>("LostDefensePoints")
                         .HasColumnType("double precision");

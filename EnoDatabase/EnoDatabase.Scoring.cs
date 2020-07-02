@@ -163,6 +163,7 @@ namespace EnoDatabase
                 serviceStats[team.Id].LostDefensePoints = defPoints;
                 latestServiceStates.TryGetValue(team.Id, out var status_rtss);
                 serviceStats[team.Id].Status = status_rtss?.Status ?? ServiceStatus.INTERNAL_ERROR;
+                serviceStats[team.Id].ErrorMessage = status_rtss?.ErrorMessage;
             }
             await _context.SaveChangesAsync();
         }

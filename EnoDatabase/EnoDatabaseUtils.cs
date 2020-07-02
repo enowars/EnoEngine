@@ -26,8 +26,6 @@ namespace EnoDatabase
     {
 
         const int DATABASE_RETRIES = 500;
-        //public static readonly byte[] FLAG_SIGNING_KEY = Encoding.ASCII.GetBytes("suchasecretstornkkeytheywillneverguess");
-        //internal static readonly byte[] NOISE_SIGNING_KEY = Encoding.ASCII.GetBytes("anotherstrenksecrettheyvref24tr");
         public static string PostgresDomain => Environment.GetEnvironmentVariable("DATABASE_DOMAIN") ?? "localhost";
         public static string PostgresConnectionString => $@"Server={PostgresDomain};Port=5432;Database=EnoDatabase;User Id=docker;Password=docker;Timeout=15;SslMode=Disable;";
         public static async Task<EnoEngineScoreboard> GetCurrentScoreboard(IServiceProvider serviceProvider, long roundId)

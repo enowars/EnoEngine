@@ -85,6 +85,7 @@ namespace EnoDatabase.Migrations
                     RoundLength = table.Column<long>(nullable: false),
                     TaskIndex = table.Column<long>(nullable: false),
                     CheckerResult = table.Column<int>(nullable: false),
+                    ErrorMessage = table.Column<string>(nullable: true),
                     CheckerTaskLaunchStatus = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
@@ -206,7 +207,8 @@ namespace EnoDatabase.Migrations
                     TeamId = table.Column<long>(nullable: false),
                     ServiceId = table.Column<long>(nullable: false),
                     GameRoundId = table.Column<long>(nullable: false),
-                    Status = table.Column<int>(nullable: false)
+                    Status = table.Column<int>(nullable: false),
+                    ErrorMessage = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -242,7 +244,8 @@ namespace EnoDatabase.Migrations
                     AttackPoints = table.Column<double>(nullable: false),
                     LostDefensePoints = table.Column<double>(nullable: false),
                     ServiceLevelAgreementPoints = table.Column<double>(nullable: false),
-                    Status = table.Column<int>(nullable: false)
+                    Status = table.Column<int>(nullable: false),
+                    ErrorMessage = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {

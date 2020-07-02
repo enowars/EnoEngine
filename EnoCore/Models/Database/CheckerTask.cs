@@ -22,6 +22,7 @@ namespace EnoCore.Models.Database
 
     public class CheckerTask
     {
+        public object Key;
 #pragma warning disable CS8618
         public long Id { get; set; }
         public string CheckerUrl { get; set; }
@@ -39,6 +40,7 @@ namespace EnoCore.Models.Database
         public long RoundLength { get; set; }
         public long TaskIndex { get; set; }
         public CheckerResult CheckerResult { get; set; }
+        public string? ErrorMessage { get; set; }
         public CheckerTaskLaunchStatus CheckerTaskLaunchStatus { get; set; }
 #pragma warning restore CS8618
     }

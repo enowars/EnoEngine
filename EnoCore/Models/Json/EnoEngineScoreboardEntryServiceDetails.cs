@@ -17,7 +17,7 @@ namespace EnoCore.Models.Json
         [JsonPropertyName("ServiceStatus")]
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public ServiceStatus ServiceStatus { get => ServiceStats.Status;  }
-        public string Message { get => "No checker details available"; }
+        public string? Message { get => ServiceStats.ErrorMessage; }
 
         public EnoEngineScoreboardEntryServiceDetails(ServiceStats serviceStats)
         {

@@ -132,6 +132,7 @@ namespace EnoLauncher
                     var checkerResult = resultMessage.Result;
                     Logger.LogDebug($"LaunchCheckerTask {task.Id} returned {checkerResult} with Message {resultMessage.Message}");
                     task.CheckerResult = checkerResult;
+                    task.ErrorMessage = resultMessage.Message;
                     task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
                     ResultsQueue.Enqueue(task);
                     return;
