@@ -686,6 +686,8 @@ namespace EnoDatabase
 
             Logger.LogError("Before Statement");
             var currentRoundWorstResults = new Dictionary<(long ServiceId, long TeamId), CheckerTask?>();
+            var sw = new Stopwatch();
+            sw.Start();
             foreach (var t in teams)
                 foreach (var s in services)
             {
@@ -734,6 +736,8 @@ namespace EnoDatabase
                             .FirstOrDefaultAsync() ?? null;
 
             }
+            sw.Stop();
+            Logger.LogInformation($"CalculateRoundTeamServiceStates: Data Aggregation took {sw.ElapsedMilliseconds}ms");
             /*var currentRoundWorstResults = await _context.CheckerTasks
                 .TagWith("CalculateRoundTeamServiceStates:currentRoundTasks")
                 .Where(ct => ct.CurrentRoundId == roundId)
@@ -779,8 +783,8 @@ namespace EnoDatabase
                     {
                         if (currentRoundWorstResults[key2] != null)
                         {
-                            status = EnoDatabaseUtils.CheckerResultToServiceStatus(currentRoundWorstResults[key2].CheckerResult);
-                            message = currentRoundWorstResults[key2].ErrorMessage;
+                            status = EnoDatabaseUtils.CheckerResultToServiceStatus(currentRoundWorstResults[key2]!.CheckerResult);
+                            message = currentRoundWorstResults[key2]!.ErrorMessage;
                         }
                         else
                         {
