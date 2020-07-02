@@ -57,9 +57,6 @@ namespace EnoDatabase
         Task CalculateTotalPoints();
         Task<Round> GetLastRound();
         Task<EnoEngineScoreboard> GetCurrentScoreboard(long roundId);
-        /*Task UpdateTeamServiceStatsAndFillSnapshot(Service service, long teamsCount, long roundId, long teamId,
-            ServiceStatsSnapshot oldSnapshot, ServiceStatsSnapshot newSnapshot,
-            TeamServiceStates stableServiceState, TeamServiceStates volatileServiceState);*/
         void Migrate();
         Task UpdateTaskCheckerTaskResults(Memory<CheckerTask> tasks);
         Task<(long newLatestSnapshotRoundId, long oldSnapshotRoundId, Service[] services, Team[] teams)> GetPointCalculationFrame(long roundId, JsonConfiguration configuration);
@@ -687,14 +684,78 @@ namespace EnoDatabase
             var teams = await _context.Teams.AsNoTracking().ToArrayAsync();
             var services = await _context.Services.AsNoTracking().ToArrayAsync();
 
-            var currentRoundWorstResults = await _context.CheckerTasks
+            Logger.LogError("Before Statement");
+            var currentRoundWorstResults = new Dictionary<(long ServiceId, long TeamId), CheckerTask?>();
+            foreach (var t in teams)
+                foreach (var s in services)
+            {
+                    currentRoundWorstResults[(s.Id, t.Id)] =
+                        await _context.CheckerTasks
+                            .TagWith("CalculateRoundTeamServiceStates:currentRoundTasks")
+                            .Where(ct => ct.CurrentRoundId == roundId)
+                            .Where(ct => ct.RelatedRoundId == roundId)
+                            .Where(ct => ct.TeamId == t.Id)
+                            .Where(ct => ct.ServiceId == s.Id)
+                            .Where(ct => ct.CheckerResult == CheckerResult.INTERNAL_ERROR)
+                            .OrderBy(ct => ct.StartTime)
+                            .Select(ct => new CheckerTask()
+                            {
+                                CheckerResult = ct.CheckerResult,
+                                ErrorMessage = ct.ErrorMessage
+                            })
+                            .FirstOrDefaultAsync() ??
+                                                await _context.CheckerTasks
+                            .TagWith("CalculateRoundTeamServiceStates:currentRoundTasks")
+                            .Where(ct => ct.CurrentRoundId == roundId)
+                            .Where(ct => ct.RelatedRoundId == roundId)
+                            .Where(ct => ct.TeamId == t.Id)
+                            .Where(ct => ct.ServiceId == s.Id)
+                            .Where(ct => ct.CheckerResult == CheckerResult.OFFLINE)
+                            .OrderBy(ct => ct.StartTime)
+                            .Select(ct => new CheckerTask()
+                            {
+                                CheckerResult = ct.CheckerResult,
+                                ErrorMessage = ct.ErrorMessage
+                            })
+                            .FirstOrDefaultAsync() ??
+                                                    await _context.CheckerTasks
+                            .TagWith("CalculateRoundTeamServiceStates:currentRoundTasks")
+                            .Where(ct => ct.CurrentRoundId == roundId)
+                            .Where(ct => ct.RelatedRoundId == roundId)
+                            .Where(ct => ct.TeamId == t.Id)
+                            .Where(ct => ct.ServiceId == s.Id)
+                            .Where(ct => ct.CheckerResult == CheckerResult.MUMBLE)
+                            .OrderBy(ct => ct.StartTime)
+                            .Select(ct => new CheckerTask()
+                            {
+                                CheckerResult = ct.CheckerResult,
+                                ErrorMessage = ct.ErrorMessage
+                            })
+                            .FirstOrDefaultAsync() ?? null;
+
+            }
+            /*var currentRoundWorstResults = await _context.CheckerTasks
+                .TagWith("CalculateRoundTeamServiceStates:currentRoundTasks")
+                .Where(ct => ct.CurrentRoundId == roundId)
+                .Where(ct => ct.RelatedRoundId == roundId)
+                .Where (ct => ct.CheckerResult, ct => ct.ServiceId, ct => ct.TeamId */
+            /*var currentRoundWorstResults = await _context.CheckerTasks
                 .TagWith("CalculateRoundTeamServiceStates:currentRoundTasks")
                 .Where(ct => ct.CurrentRoundId == roundId)
                 .Where(ct => ct.RelatedRoundId == roundId)
                 .GroupBy(ct => new { ct.ServiceId, ct.TeamId })
-                .Select(g => new { g.Key, WorstResult = g.Min(ct => ct.CheckerResult) })
+                .Select(g => g.Take(1).ToList())
+                //.OrderBy(o => o.CheckerResult)
+                //.Distinct()
+                //.Select(g => new { key = g.Key, result = new CheckerTask{
+                //    CheckerResult = g.Select(r=>r.CheckerResult).FirstOrDefault(),
+                //    ErrorMessage = g.Select(r => r.ErrorMessage).FirstOrDefault()
+                //} })
+                //.OrderBy(s=> s.CheckerResult).Take(1) })
+                //.Select(g => new { g.Key, WorstResult = g.Min(ct => ct.CheckerResult) })
                 .AsNoTracking()
-                .ToDictionaryAsync(g => g.Key, g => g.WorstResult);
+                .ToListAsync();
+                //.ToDictionaryAsync(g => g.key, g => g.result);  */
 
             var oldRoundsWorstResults = await _context.CheckerTasks
                 .TagWith("CalculateRoundTeamServiceStates:oldRoundsTasks")
@@ -710,11 +771,22 @@ namespace EnoDatabase
             {
                 foreach (var service in services)
                 {
+                    var key2 = (service.Id, team.Id);
                     var key = new { ServiceId = service.Id, TeamId = team.Id };
                     ServiceStatus status = ServiceStatus.INTERNAL_ERROR;
-                    if (currentRoundWorstResults.ContainsKey(key))
+                    string? message = null;
+                    if (currentRoundWorstResults.ContainsKey(key2))
                     {
-                        status = EnoDatabaseUtils.CheckerResultToServiceStatus(currentRoundWorstResults[key]);
+                        if (currentRoundWorstResults[key2] != null)
+                        {
+                            status = EnoDatabaseUtils.CheckerResultToServiceStatus(currentRoundWorstResults[key2].CheckerResult);
+                            message = currentRoundWorstResults[key2].ErrorMessage;
+                        }
+                        else
+                        {
+                            status = ServiceStatus.OK;
+                            message = null;
+                        }
                     }
                     if (status == ServiceStatus.OK && oldRoundsWorstResults.ContainsKey(key))
                     {
@@ -728,7 +800,8 @@ namespace EnoDatabase
                         GameRoundId = roundId,
                         ServiceId = key.ServiceId,
                         TeamId = key.TeamId,
-                        Status = status
+                        Status = status,
+                        ErrorMessage = message
                     };
                 }
             }

@@ -18,6 +18,7 @@ namespace EnoCore.Models.Database
     {
 #pragma warning disable CS8618
         public ServiceStatus Status { get; set; }
+        public string? ErrorMessage { get; set; }
         public long TeamId { get; set; }
 
         public Team Team { get; set; }

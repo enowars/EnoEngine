@@ -16,6 +16,7 @@ namespace EnoCore.Models.Database
         public double LostDefensePoints { get; set; }
         public double ServiceLevelAgreementPoints { get; set; }
         public ServiceStatus Status { get; set; }
+        public string? ErrorMessage { get; set; }
 #pragma warning restore CS8618
     }
 }
