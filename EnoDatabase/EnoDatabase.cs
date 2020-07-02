@@ -737,7 +737,7 @@ namespace EnoDatabase
 
             }
             sw.Stop();
-            Logger.LogInformation($"CalculateRoundTeamServiceStates: Data Aggregation took {sw.ElapsedMilliseconds}ms");
+            Logger.LogInformation($"CalculateRoundTeamServiceStates: Data Aggregation for {teams.Length} Teams and {services.Length} Services took {sw.ElapsedMilliseconds}ms");
             /*var currentRoundWorstResults = await _context.CheckerTasks
                 .TagWith("CalculateRoundTeamServiceStates:currentRoundTasks")
                 .Where(ct => ct.CurrentRoundId == roundId)
