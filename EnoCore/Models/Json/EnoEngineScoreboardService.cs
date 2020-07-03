@@ -15,7 +15,7 @@ namespace EnoCore.Models.Json
         public EnoEngineScoreboardService(EnoScoreboardFirstblood[] firstBloods, Service service)
         {
             FirstBloods = firstBloods;
-            MaxStores = service.FlagsPerRound;
+            MaxStores = service.FetchedFlagsPerRound;
             ServiceId = service.Id;
             ServiceName = service.Name;
         }
