@@ -22,7 +22,6 @@ namespace EnoCore.Models.Database
 
     public class CheckerTask
     {
-        public object Key;
 #pragma warning disable CS8618
         public long Id { get; set; }
         public string CheckerUrl { get; set; }
