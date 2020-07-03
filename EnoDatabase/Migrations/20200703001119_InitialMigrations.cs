@@ -334,14 +334,14 @@ namespace EnoDatabase.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_CheckerTasks_CheckerTaskLaunchStatus",
-                table: "CheckerTasks",
-                column: "CheckerTaskLaunchStatus");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_CheckerTasks_TeamId",
                 table: "CheckerTasks",
                 column: "TeamId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CheckerTasks_CurrentRoundId_RelatedRoundId_TeamId_ServiceId~",
+                table: "CheckerTasks",
+                columns: new[] { "CurrentRoundId", "RelatedRoundId", "TeamId", "ServiceId", "CheckerResult" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Flags_OwnerId",
