@@ -9,6 +9,9 @@ namespace EnoCore.Models.Database
 #pragma warning disable CS8618
         public long Id { get; set; }
         public string Name { get; set; }
+        public long FetchedFlagsPerRound { get; set; } = 1;
+        public long FetchedNoisesPerRound { get; set; } = 1;
+        public long FetchedHavocsPerRound { get; set; } = 1;
         public long FlagsPerRound { get; set; }
         public long NoisesPerRound { get; set; }
         public long HavocsPerRound { get; set; }

@@ -30,14 +30,14 @@ namespace EnoEngine
         private readonly ILogger Logger;
         private readonly JsonConfiguration Configuration;
         private readonly IServiceProvider ServiceProvider;
-        private readonly EnoStatistics Statistics;
+        //private readonly EnoStatistics Statistics;
 
-        public EnoEngine(ILogger<EnoEngine> logger, JsonConfiguration configuration, IServiceProvider serviceProvider, EnoStatistics enoStatistics, FlagSubmissionEndpoint submissionEndpoint)
+        public EnoEngine(ILogger<EnoEngine> logger, JsonConfiguration configuration, IServiceProvider serviceProvider/*, EnoStatistics enoStatistics*/, FlagSubmissionEndpoint submissionEndpoint)
         {
             Logger = logger;
             Configuration = configuration;
             ServiceProvider = serviceProvider;
-            Statistics = enoStatistics;
+            //Statistics = enoStatistics;
             submissionEndpoint.Start(EngineCancelSource.Token, configuration);
         }
 
@@ -76,9 +76,9 @@ namespace EnoEngine
                     var responseString = (await response.Content.ReadAsStringAsync()).TrimEnd(Environment.NewLine.ToCharArray());
                     Logger.LogDebug($"GetCheckerInfo for Service {s.Name} received: \"{responseString}\"");
                     var resultMessage = JsonSerializer.Deserialize<CheckerInfoMessage>(responseString);
-                    s.FlagsPerRound *= resultMessage.FlagCount;
-                    s.NoisesPerRound *= resultMessage.NoiseCount;
-                    s.HavocsPerRound *= resultMessage.HavocCount;
+                    s.FetchedFlagsPerRound = resultMessage.FlagCount;
+                    s.FetchedNoisesPerRound = resultMessage.NoiseCount;
+                    s.FetchedHavocsPerRound = resultMessage.HavocCount;
                     if (s.FlagsPerRound == 0 && s.NoisesPerRound == 0 && s.HavocsPerRound == 0)
                     {
                         Logger.LogDebug($"GetCheckerInfo for Service {s.Name} setting inactive");
@@ -90,6 +90,7 @@ namespace EnoEngine
             }
             catch (Exception e)
             {
+                Logger.LogError($"GetCheckerInfo Failed for Service {s.Name}");
                 Logger.LogError(e.ToFancyString());
                 s.Active = false;
                 return;
