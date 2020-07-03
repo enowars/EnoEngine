@@ -68,7 +68,7 @@ namespace EnoEngine
                 .AddLogging(loggingBuilder =>
                 {
                     loggingBuilder.SetMinimumLevel(LogLevel.Debug);
-                    loggingBuilder.AddFilter(DbLoggerCategory.Name, LogLevel.Debug);
+                    loggingBuilder.AddFilter(DbLoggerCategory.Name, LogLevel.Warning);
                     loggingBuilder.AddConsole();
                     loggingBuilder.AddProvider(new EnoLogMessageFileLoggerProvider("EnoEngine", CancelSource.Token));
                 })
