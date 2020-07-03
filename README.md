@@ -100,6 +100,7 @@ Response:
 ```ts
 interface CheckerResultMessage {
     result: string;                             // "INTERNAL_ERROR", "OK", MUMBLE", or "OFFLINE"
+    message: string | null;
 }
 ```
 
