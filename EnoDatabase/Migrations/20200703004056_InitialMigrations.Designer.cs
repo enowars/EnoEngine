@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EnoDatabase.Migrations
 {
     [DbContext(typeof(EnoDatabaseContext))]
-    [Migration("20200703001119_InitialMigrations")]
+    [Migration("20200703004056_InitialMigrations")]
     partial class InitialMigrations
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -241,6 +241,15 @@ namespace EnoDatabase.Migrations
 
                     b.Property<bool>("Active")
                         .HasColumnType("boolean");
+
+                    b.Property<long>("FetchedFlagsPerRound")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("FetchedHavocsPerRound")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("FetchedNoisesPerRound")
+                        .HasColumnType("bigint");
 
                     b.Property<long>("FlagsPerRound")
                         .HasColumnType("bigint");

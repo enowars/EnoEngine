@@ -312,11 +312,11 @@ order by ""SubmittedId"" asc").ToArrayAsync();
                 */
             foreach (var service in services)
             {
-                for (int i = 0; i < service.FlagsPerRound; i++)
+                for (int i = 0; i < service.FetchedFlagsPerRound; i++)
                 {
                     var fb = await _context.SubmittedFlags
                         .Where(sf => sf.FlagServiceId == service.Id)
-                        .Where(sf => sf.FlagRoundOffset == i)
+                        .Where(sf => sf.FlagRoundOffset % service.FetchedFlagsPerRound == i)
                         .OrderBy(sf => sf.RoundId)
                         .FirstOrDefaultAsync();
                     if (fb != null)

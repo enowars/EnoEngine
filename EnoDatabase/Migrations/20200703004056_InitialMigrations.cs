@@ -32,6 +32,9 @@ namespace EnoDatabase.Migrations
                     Id = table.Column<long>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Name = table.Column<string>(nullable: false),
+                    FetchedFlagsPerRound = table.Column<long>(nullable: false),
+                    FetchedNoisesPerRound = table.Column<long>(nullable: false),
+                    FetchedHavocsPerRound = table.Column<long>(nullable: false),
                     FlagsPerRound = table.Column<long>(nullable: false),
                     NoisesPerRound = table.Column<long>(nullable: false),
                     HavocsPerRound = table.Column<long>(nullable: false),
