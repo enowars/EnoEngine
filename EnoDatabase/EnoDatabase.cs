@@ -240,6 +240,9 @@ namespace EnoDatabase
                         FlagsPerRound = service.FlagsPerRound,
                         NoisesPerRound = service.NoisesPerRound,
                         HavocsPerRound = service.HavocsPerRound,
+                        FetchedFlagsPerRound = service.FetchedFlagsPerRound,
+                        FetchedNoisesPerRound = service.FetchedNoisesPerRound,
+                        FetchedHavocsPerRound = service.FetchedHavocsPerRound,
                         Active = service.Active
                     });
                 }
@@ -684,7 +687,7 @@ namespace EnoDatabase
             var teams = await _context.Teams.AsNoTracking().ToArrayAsync();
             var services = await _context.Services.AsNoTracking().ToArrayAsync();
 
-            Logger.LogError("Before Statement");
+            //Logger.LogError("Before Statement");
             var currentRoundWorstResults = new Dictionary<(long ServiceId, long TeamId), CheckerTask?>();
             var sw = new Stopwatch();
             sw.Start();

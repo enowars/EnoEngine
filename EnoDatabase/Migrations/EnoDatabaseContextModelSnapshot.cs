@@ -240,6 +240,15 @@ namespace EnoDatabase.Migrations
                     b.Property<bool>("Active")
                         .HasColumnType("boolean");
 
+                    b.Property<long>("FetchedFlagsPerRound")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("FetchedHavocsPerRound")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("FetchedNoisesPerRound")
+                        .HasColumnType("bigint");
+
                     b.Property<long>("FlagsPerRound")
                         .HasColumnType("bigint");
 
