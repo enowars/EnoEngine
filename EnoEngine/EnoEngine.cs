@@ -30,14 +30,14 @@ namespace EnoEngine
         private readonly ILogger Logger;
         private readonly JsonConfiguration Configuration;
         private readonly IServiceProvider ServiceProvider;
-        //private readonly EnoStatistics Statistics;
+        private readonly EnoStatistics Statistics;
 
-        public EnoEngine(ILogger<EnoEngine> logger, JsonConfiguration configuration, IServiceProvider serviceProvider/*, EnoStatistics enoStatistics*/, FlagSubmissionEndpoint submissionEndpoint)
+        public EnoEngine(ILogger<EnoEngine> logger, JsonConfiguration configuration, IServiceProvider serviceProvider, EnoStatistics enoStatistics, FlagSubmissionEndpoint submissionEndpoint)
         {
             Logger = logger;
             Configuration = configuration;
             ServiceProvider = serviceProvider;
-            //Statistics = enoStatistics;
+            Statistics = enoStatistics;
             submissionEndpoint.Start(EngineCancelSource.Token, configuration);
         }
 
