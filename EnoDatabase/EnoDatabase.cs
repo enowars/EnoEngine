@@ -403,7 +403,7 @@ namespace EnoDatabase
         public async Task<List<CheckerTask>> RetrievePendingCheckerTasks(int maxAmount)
         {
             var strategy = _context.Database.CreateExecutionStrategy();
-            await strategy.ExecuteAsync(async () =>
+            return await strategy.ExecuteAsync(async () =>
             {
                 using var transaction = _context.Database.BeginTransaction();
                 try
