@@ -695,6 +695,7 @@ namespace EnoDatabase
                             .TagWith("CalculateRoundTeamServiceStates:currentRoundTasks")
                             .Where(ct => ct.CurrentRoundId == roundId)
                             .Where(ct => ct.RelatedRoundId == roundId)
+                            .Where(ct => ct.CheckerResult != CheckerResult.OK)
                             .OrderBy(ct => ct.CheckerResult)
                             .ThenBy(ct => ct.StartTime)
                             .ToListAsync();
