@@ -51,14 +51,14 @@ namespace EnoCore.Models.Database
             BitConverter.TryWriteBytes(flagContent.Slice(sizeof(int) * 3), (int)RoundId);
 
             using HMACSHA1 hmacsha1 = new HMACSHA1(signingKey);
-            Span<byte> flagSignature = stackalloc byte[hmacsha1.HashSize/8];
+            Span<byte> flagSignature = stackalloc byte[hmacsha1.HashSize / 8];
             hmacsha1.TryComputeHash(flagContent, flagSignature, out var _);
             Span<byte> flagBytes = stackalloc byte[flagContent.Length + flagSignature.Length];
             flagContent.CopyTo(flagBytes);
             flagSignature.CopyTo(flagBytes.Slice(flagContent.Length));
             return "ENO" + Convert.ToBase64String(flagBytes);
         }
-        private string ToUtfString(byte[] signingKey)
+        public string ToUtfString(byte[] signingKey)
         {
             Span<byte> flagContent = stackalloc byte[sizeof(int) * 4];
             BitConverter.TryWriteBytes(flagContent, (int)ServiceId);
@@ -67,7 +67,7 @@ namespace EnoCore.Models.Database
             BitConverter.TryWriteBytes(flagContent.Slice(sizeof(int) * 3), (int)RoundId);
 
             using HMACSHA1 hmacsha1 = new HMACSHA1(signingKey);
-            Span<byte> flagSignature = stackalloc byte[hmacsha1.HashSize/8];
+            Span<byte> flagSignature = stackalloc byte[hmacsha1.HashSize / 8];
             hmacsha1.TryComputeHash(flagContent, flagSignature, out var _);
             Span<byte> flagBytes = stackalloc byte[flagContent.Length + flagSignature.Length];
             flagContent.CopyTo(flagBytes);
@@ -125,9 +125,9 @@ namespace EnoCore.Models.Database
             while (true)
             {
                 var element = splitted[bytesWritten % 4].ElementAtOrDefault((int)bytesWritten / 4);
-                if (element == '\0') 
+                if (element == '\0')
                     return true;
-                if (!Getsinglebyte(element, out b[bytesWritten])) 
+                if (!Getsinglebyte(element, out b[bytesWritten]))
                     return false;
                 bytesWritten++;
             }

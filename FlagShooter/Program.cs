@@ -12,6 +12,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using EnoCore.Models;
@@ -26,27 +27,44 @@ namespace FlagShooter
         private readonly ServiceProvider ServiceProvider;
         private readonly Dictionary<long, (TcpClient, StreamReader reader, StreamWriter writer)[]> TeamSockets =
             new Dictionary<long, (TcpClient, StreamReader reader, StreamWriter writer)[]>();
-        private readonly long AttackingTeams = 50;
-        private readonly int SubmissionConnectionsPerTeam = 100;
+        private readonly int FlagCount;
+        private readonly int TeamStart;
+        private readonly int RoundDelay;
+        private readonly int TeamCount;
+        private readonly int SubmissionConnectionsPerTeam;
+        private readonly JsonConfiguration Configuration;
 
-        public Program(ServiceProvider serviceProvider)
+        public Program(ServiceProvider serviceProvider, int flagCount, int roundDelay, int teamStart, int teamCount, int teamConnections, JsonConfiguration configuration)
         {
             ServiceProvider = serviceProvider;
+            FlagCount = flagCount;
+            TeamStart = teamStart;
+            RoundDelay = roundDelay;
+            TeamCount = teamCount;
+            SubmissionConnectionsPerTeam = teamConnections;
+            Configuration = configuration;
             using (var scope = ServiceProvider.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
                 db.Migrate();
             }
-            for (int i = 0; i < AttackingTeams; i++)
+            Console.WriteLine("Initializing connections");
+            for (int i = 0; i < TeamCount; i++)
             {
-                TeamSockets[i+1] = new (TcpClient, StreamReader reader, StreamWriter writer)[SubmissionConnectionsPerTeam];
+                Console.WriteLine($"Initializing team {i}");
+                TeamSockets[i + 1] = new (TcpClient, StreamReader reader, StreamWriter writer)[SubmissionConnectionsPerTeam];
                 for (int j = 0; j < SubmissionConnectionsPerTeam; j++)
                 {
+                    Console.WriteLine($"Initializing conn {j}");
                     var tcpClient = new TcpClient();
                     tcpClient.Connect("localhost", 1338);
                     (TcpClient tcpClient, StreamReader, StreamWriter writer) client = (tcpClient, new StreamReader(tcpClient.GetStream()), new StreamWriter(tcpClient.GetStream()));
                     client.writer.AutoFlush = true;
-                    client.writer.Write($"{i + 200}\n");
+
+                    Console.WriteLine($"Writing to team {i}");
+                    Console.WriteLine($"Writing to team {TeamStart}");
+                    Console.WriteLine($"Writing to team {(i + TeamStart)}");
+                    client.writer.Write($"{i + TeamStart}\n");
                     TeamSockets[i + 1][j] = client;
                 }
             }
@@ -67,26 +85,25 @@ namespace FlagShooter
 
             Console.WriteLine("$FlagRunnerLoop starting");
 
-            var flagcount = 10000;
             while (!LauncherCancelSource.IsCancellationRequested)
             {
                 try
                 {
                     using var scope = ServiceProvider.CreateScope();
                     var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                    var flags = await db.RetrieveFlags(flagcount);
-                    var tasks = new Task[AttackingTeams];
+                    var flags = await db.RetrieveFlags(FlagCount);
+                    var tasks = new Task[TeamCount];
                     if (flags.Length > 0)
                     {
                         Console.WriteLine($"Sending {flags.Length} flags");
                     }
-                    for (int i = 0; i < AttackingTeams; i++)
+                    for (int i = 0; i < TeamCount; i++)
                     {
                         var ti = i;
-                        tasks[ti] = Task.Run(async () => await SendFlagsTask(flags.Select(f => f.ToString()).ToArray(), ti + 1));
+                        tasks[ti] = Task.Run(async () => await SendFlagsTask(flags.Select(f => f.ToUtfString(Encoding.UTF8.GetBytes(Configuration.FlagSigningKey))).ToArray(), ti + 1));
                     }
                     await Task.WhenAll(tasks);
-                    await Task.Delay(1000, LauncherCancelSource.Token);
+                    await Task.Delay(RoundDelay, LauncherCancelSource.Token);
                 }
                 catch (Exception e)
                 {
@@ -101,7 +118,7 @@ namespace FlagShooter
             {
                 var connections = TeamSockets[teamId];
                 var tasks = new List<Task>(SubmissionConnectionsPerTeam);
-                for (int i = 0; i < flags.Length; i+= SubmissionConnectionsPerTeam)
+                for (int i = 0; i < flags.Length; i += SubmissionConnectionsPerTeam)
                 {
                     for (int j = 0; j < SubmissionConnectionsPerTeam; j++)
                     {
@@ -112,8 +129,9 @@ namespace FlagShooter
                             int tj = j;
                             tasks.Add(Task.Run(async () =>
                             {
+                                // Console.WriteLine($"Sending flag {flags[ti + tj]}");
                                 await con.writer.WriteAsync($"{flags[ti + tj]}\n");
-                                await con.reader.ReadLineAsync();
+                                Console.WriteLine(await con.reader.ReadLineAsync());
                             }));
                         }
                     }
@@ -128,13 +146,31 @@ namespace FlagShooter
         }
 
 
-        static void Main(string[] args)
+        static void Main(int flagCount = 10000, int roundDelay = 1000, int teamStart = 1, int teamCount = 10, int teamConnections = 1)
         {
             try
             {
                 Console.WriteLine($"FlagShooter starting");
+                JsonConfiguration configuration;
+                if (!File.Exists("ctf.json"))
+                {
+                    Console.WriteLine("Config (ctf.json) does not exist");
+                    return;
+                }
+                try
+                {
+                    var content = File.ReadAllText("ctf.json");
+                    configuration = JsonSerializer.Deserialize<JsonConfiguration>(content);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Failed to load ctf.json: {e.Message}");
+                    return;
+                }
+
                 var serviceProvider = new ServiceCollection()
-                    .AddDbContextPool<EnoDatabaseContext>(options => {
+                    .AddDbContextPool<EnoDatabaseContext>(options =>
+                    {
                         options.UseNpgsql(
                             EnoDatabaseUtils.PostgresConnectionString,
                             pgoptions => pgoptions.EnableRetryOnFailure());
@@ -142,7 +178,7 @@ namespace FlagShooter
                     .AddScoped<IEnoDatabase, EnoDatabase.EnoDatabase>()
                     .AddLogging(logging => logging.AddConsole())
                     .BuildServiceProvider(validateScopes: true);
-                new Program(serviceProvider).Start();
+                new Program(serviceProvider, flagCount, roundDelay, teamStart, teamCount, teamConnections, configuration).Start();
             }
             catch (Exception e)
             {
