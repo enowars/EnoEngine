@@ -402,15 +402,25 @@ namespace EnoDatabase
 
         public async Task<List<CheckerTask>> RetrievePendingCheckerTasks(int maxAmount)
         {
-            var tasks = await _context.CheckerTasks
-                .Where(t => t.CheckerTaskLaunchStatus == CheckerTaskLaunchStatus.New)
-                .OrderBy(t => t.StartTime)
-                .Take(maxAmount)
-                .ToListAsync();
-            // TODO update launch status without delaying operation
-            tasks.ForEach((t) => t.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Launched);
-            await _context.SaveChangesAsync();
-            return tasks;
+            using var transaction = _context.Database.BeginTransaction();
+            try
+            {
+                var tasks = await _context.CheckerTasks
+                    .Where(t => t.CheckerTaskLaunchStatus == CheckerTaskLaunchStatus.New)
+                    .OrderBy(t => t.StartTime)
+                    .Take(maxAmount)
+                    .ToListAsync();
+                // TODO update launch status without delaying operation
+                tasks.ForEach((t) => t.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Launched);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+                return tasks;
+            }
+            catch (Exception e)
+            {
+                await transaction.RollbackAsync();
+                throw e;
+            }
         }
 
         public async Task<Flag[]> RetrieveFlags(int maxAmount)
@@ -607,7 +617,7 @@ namespace EnoDatabase
                 .ToArrayAsync();
             List<CheckerTask> oldFlagsCheckerTasks = new List<CheckerTask>(oldFlags.Count());
             double timeDiff = (double)quarterRound / oldFlags.Count();
-            DateTime time = currentRound.Begin.AddSeconds(quarterRound)
+            DateTime time = currentRound.Begin.AddSeconds(quarterRound);
             int i = 0;
             foreach (var oldFlag in oldFlags)
             {

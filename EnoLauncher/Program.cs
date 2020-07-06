@@ -25,6 +25,7 @@ namespace EnoLauncher
     class Program
     {
         private const int TASK_UPDATE_BATCH_SIZE = 500;
+        private const int LAUNCHER_THREADS = 4;
         private const int MAX_RETRIES = 1;
         private static readonly ConcurrentQueue<CheckerTask> ResultsQueue = new ConcurrentQueue<CheckerTask>();
         private static readonly CancellationTokenSource LauncherCancelSource = new CancellationTokenSource();
@@ -62,7 +63,12 @@ namespace EnoLauncher
             }
 
             Client.Timeout = new TimeSpan(0, 1, 0);
-            LauncherLoop().Wait();
+            var loops = new Task[LAUNCHER_THREADS];
+            for (int i = 0;i<LAUNCHER_THREADS; i++)
+            {
+                loops[i] = LauncherLoop();
+            }
+            Task.WaitAll(loops);
         }
 
         public async Task LauncherLoop()
@@ -80,7 +86,7 @@ namespace EnoLauncher
                 {
                     using var scope = ServiceProvider.CreateScope();
                     var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                    var tasks = await db.RetrievePendingCheckerTasks(1000);
+                    var tasks = await db.RetrievePendingCheckerTasks(100);
                     if (tasks.Count > 0)
                     {
                         Logger.LogDebug($"Scheduling {tasks.Count} tasks");
@@ -120,7 +126,7 @@ namespace EnoLauncher
                     await Task.Delay(span);
                 }
                 var content = new StringContent(JsonSerializer.Serialize(new CheckerTaskMessage(task)), Encoding.UTF8, "application/json");
-                cancelSource.CancelAfter(task.MaxRunningTime * 1000);
+                cancelSource.CancelAfter(task.MaxRunningTime);
                 Statistics.CheckerTaskLaunchMessage(task);
                 Logger.LogDebug($"LaunchCheckerTask {task.Id} POSTing {task.Method} to checker");
                 var response = await Client.PostAsync(new Uri(task.CheckerUrl), content, cancelSource.Token);
