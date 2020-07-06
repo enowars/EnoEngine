@@ -59,8 +59,10 @@ namespace EnoDatabase
                 .HasKey(sss => new { sss.ServiceId, sss.RoundId, sss.TeamId });
 
             modelBuilder.Entity<CheckerTask>()
-                //.HasIndex(ct => ct.CheckerTaskLaunchStatus);
-                .HasIndex(ct => new { ct.CurrentRoundId , ct.RelatedRoundId, ct.TeamId, ct.ServiceId, ct.CheckerResult});
+                .HasIndex(ct => new { ct.CurrentRoundId, ct.RelatedRoundId, ct.TeamId, ct.ServiceId, ct.CheckerResult });
+
+            modelBuilder.Entity<CheckerTask>()
+                .HasIndex(ct => new { ct.CheckerTaskLaunchStatus, ct.StartTime });
 
             /*
                 .Where(ct => ct.CurrentRoundId == roundId)
