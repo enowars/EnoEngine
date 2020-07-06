@@ -44,7 +44,7 @@ namespace EnoDatabase
         DBInitializationResult ApplyConfig(JsonConfiguration configuration);
         Task ProcessSubmissionsBatch(List<(Flag flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult> result)> submissions, long flagValidityInRounds, EnoStatistics statistics);
         Task<(Round, Round, List<Flag>, List<Noise>, List<Havoc>)> CreateNewRound(DateTime begin, DateTime q2, DateTime q3, DateTime q4, DateTime end);
-        Task CalculateRoundTeamServiceStates(IServiceProvider serviceProvider, long roundId);
+        Task CalculateRoundTeamServiceStates(IServiceProvider serviceProvider, long roundId, EnoStatistics statistics);
         Task InsertPutFlagsTasks(long roundId, DateTime firstFlagTime, JsonConfiguration config);
         Task InsertPutNoisesTasks(Round currentRound, IEnumerable<Noise> currentNoises, JsonConfiguration config);
         Task InsertHavocsTasks(long roundId, DateTime begin, JsonConfiguration config);
@@ -682,7 +682,7 @@ namespace EnoDatabase
             await InsertCheckerTasks(tasks);
         }
 
-        public async Task CalculateRoundTeamServiceStates(IServiceProvider serviceProvider, long roundId)
+        public async Task CalculateRoundTeamServiceStates(IServiceProvider serviceProvider, long roundId, EnoStatistics statistics)
         {
             var teams = await _context.Teams.AsNoTracking().ToArrayAsync();
             var services = await _context.Services.AsNoTracking().ToArrayAsync();
@@ -740,6 +740,7 @@ namespace EnoDatabase
 
             }
             sw.Stop();
+            statistics.CheckerTaskFinishedMessage(roundId, "", sw.ElapsedMilliseconds);
             Logger.LogInformation($"CalculateRoundTeamServiceStates: Data Aggregation for {teams.Length} Teams and {services.Length} Services took {sw.ElapsedMilliseconds}ms");
             /*var currentRoundWorstResults = await _context.CheckerTasks
                 .TagWith("CalculateRoundTeamServiceStates:currentRoundTasks")

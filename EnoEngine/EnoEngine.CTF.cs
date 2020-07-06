@@ -273,7 +273,7 @@ namespace EnoEngine
             try
             {
                 await EnoDatabaseUtils.RetryScopedDatabaseAction(ServiceProvider,
-                    async (IEnoDatabase db) => await db.CalculateRoundTeamServiceStates(ServiceProvider, roundId));
+                    async (IEnoDatabase db) => await db.CalculateRoundTeamServiceStates(ServiceProvider, roundId, Statistics));
             }
             catch (Exception e)
             {
