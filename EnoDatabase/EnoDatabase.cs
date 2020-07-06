@@ -596,7 +596,7 @@ namespace EnoDatabase
 
         public async Task InsertRetrieveOldFlagsTasks(Round currentRound, int oldRoundsCount, JsonConfiguration config)
         {
-            int quarterRound = config.RoundLengthInSeconds / 4;
+            double quarterRound = config.RoundLengthInSeconds / 4;
             var oldFlags = await _context.Flags
                 .TagWith("InsertRetrieveOldFlagsTasks:oldFlags")
                 .Where(f => f.RoundId  >= currentRound.Id - oldRoundsCount) // TODO skipped IDs
@@ -606,8 +606,8 @@ namespace EnoDatabase
                 .AsNoTracking()
                 .ToArrayAsync();
             List<CheckerTask> oldFlagsCheckerTasks = new List<CheckerTask>(oldFlags.Count());
-            double timeDiff = (double)quarterRound * 3 / oldFlags.Count();
-            DateTime time = currentRound.Begin;
+            double timeDiff = (double)quarterRound / oldFlags.Count();
+            DateTime time = currentRound.Begin.AddSeconds(quarterRound)
             int i = 0;
             foreach (var oldFlag in oldFlags)
             {
@@ -616,7 +616,7 @@ namespace EnoDatabase
                 {
                     Address = oldFlag.Owner.Address ?? $"team{oldFlag.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
-                    MaxRunningTime = quarterRound,
+                    MaxRunningTime = (int)(quarterRound*1000),
                     Payload = oldFlag.ToString(Encoding.ASCII.GetBytes(config.FlagSigningKey), config.Encoding),
                     RelatedRoundId = oldFlag.RoundId,
                     CurrentRoundId = currentRound.Id,
