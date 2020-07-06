@@ -87,7 +87,7 @@ namespace EnoDatabase.Migrations
 
                     b.HasIndex("CheckerTaskLaunchStatus", "StartTime");
 
-                    b.HasIndex("CurrentRoundId", "RelatedRoundId", "TeamId", "ServiceId", "CheckerResult");
+                    b.HasIndex("CurrentRoundId", "RelatedRoundId", "CheckerResult");
 
                     b.ToTable("CheckerTasks");
                 });

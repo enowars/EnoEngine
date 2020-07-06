@@ -347,9 +347,9 @@ namespace EnoDatabase.Migrations
                 columns: new[] { "CheckerTaskLaunchStatus", "StartTime" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_CheckerTasks_CurrentRoundId_RelatedRoundId_TeamId_ServiceId~",
+                name: "IX_CheckerTasks_CurrentRoundId_RelatedRoundId_CheckerResult",
                 table: "CheckerTasks",
-                columns: new[] { "CurrentRoundId", "RelatedRoundId", "TeamId", "ServiceId", "CheckerResult" });
+                columns: new[] { "CurrentRoundId", "RelatedRoundId", "CheckerResult" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Flags_OwnerId",

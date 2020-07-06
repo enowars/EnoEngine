@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EnoDatabase.Migrations
 {
     [DbContext(typeof(EnoDatabaseContext))]
-    [Migration("20200706195901_InitialMigrations")]
+    [Migration("20200706215822_InitialMigrations")]
     partial class InitialMigrations
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -89,7 +89,7 @@ namespace EnoDatabase.Migrations
 
                     b.HasIndex("CheckerTaskLaunchStatus", "StartTime");
 
-                    b.HasIndex("CurrentRoundId", "RelatedRoundId", "TeamId", "ServiceId", "CheckerResult");
+                    b.HasIndex("CurrentRoundId", "RelatedRoundId", "CheckerResult");
 
                     b.ToTable("CheckerTasks");
                 });
