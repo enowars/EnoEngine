@@ -31,6 +31,11 @@ namespace EnoCore.Logging
             var message = new CheckerTaskLaunchMessage(task);
             Queue.Enqueue(PREFIX + JsonSerializer.Serialize(message) + "\n");
         }
+        public void CheckerTaskFinishedMessage(long roundId, string message, long time)
+        {
+            var msg = new CheckerTaskFinishedMessage(roundId, message, time);
+            Queue.Enqueue(PREFIX + JsonSerializer.Serialize(msg) + "\n");
+        }
     }
 
     public class EnoStatisticsMessage
@@ -62,15 +67,28 @@ namespace EnoCore.Logging
     {
         public long RoundId { get; }
         public string ServiceName { get; }
-        public CheckerTaskMethod Method { get; }
+        public string Method { get; }
         public long TaskIndex { get; }
 
         public CheckerTaskLaunchMessage(CheckerTask task)
         {
             RoundId = task.CurrentRoundId;
             ServiceName = task.ServiceName;
-            Method = task.Method;
+            Method = task.Method.ToString();
             TaskIndex = task.TaskIndex;
+        }
+    }
+    public class CheckerTaskFinishedMessage : EnoStatisticsMessage
+    {
+        public long RoundId { get; }
+        public long Time { get; }
+        public string Message { get; }
+
+        public CheckerTaskFinishedMessage(long roundId, string message, long time)
+        {
+            RoundId = roundId;
+            Message = message;
+            Time = time;
         }
     }
 }

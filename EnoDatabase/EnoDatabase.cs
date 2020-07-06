@@ -709,7 +709,7 @@ namespace EnoDatabase
                                 ErrorMessage = ct.ErrorMessage
                             })
                             .FirstOrDefaultAsync() ??
-                                                await _context.CheckerTasks
+                        await _context.CheckerTasks
                             .TagWith("CalculateRoundTeamServiceStates:currentRoundTasks")
                             .Where(ct => ct.CurrentRoundId == roundId)
                             .Where(ct => ct.RelatedRoundId == roundId)
@@ -723,7 +723,7 @@ namespace EnoDatabase
                                 ErrorMessage = ct.ErrorMessage
                             })
                             .FirstOrDefaultAsync() ??
-                                                    await _context.CheckerTasks
+                        await _context.CheckerTasks
                             .TagWith("CalculateRoundTeamServiceStates:currentRoundTasks")
                             .Where(ct => ct.CurrentRoundId == roundId)
                             .Where(ct => ct.RelatedRoundId == roundId)
