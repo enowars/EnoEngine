@@ -691,9 +691,25 @@ namespace EnoDatabase
             var currentRoundWorstResults = new Dictionary<(long ServiceId, long TeamId), CheckerTask?>();
             var sw = new Stopwatch();
             sw.Start();
+            var foo = await _context.CheckerTasks
+                            .TagWith("CalculateRoundTeamServiceStates:currentRoundTasks")
+                            .Where(ct => ct.CurrentRoundId == roundId)
+                            .Where(ct => ct.RelatedRoundId == roundId)
+                            .OrderBy(ct => ct.CheckerResult)
+                            .ThenBy(ct => ct.StartTime)
+                            .ToListAsync();
+            foreach (var e in foo)
+            {
+                if (!currentRoundWorstResults.ContainsKey((e.ServiceId, e.TeamId)))
+                {
+                    currentRoundWorstResults[(e.ServiceId, e.TeamId)] = e;
+                }
+            }
+
+            /*
             foreach (var t in teams)
                 foreach (var s in services)
-            {
+                {
                     currentRoundWorstResults[(s.Id, t.Id)] =
                         await _context.CheckerTasks
                             .TagWith("CalculateRoundTeamServiceStates:currentRoundTasks")
@@ -738,7 +754,7 @@ namespace EnoDatabase
                             })
                             .FirstOrDefaultAsync() ?? null;
 
-            }
+                }*/
             sw.Stop();
             statistics.CheckerTaskFinishedMessage(roundId, "", sw.ElapsedMilliseconds);
             Logger.LogInformation($"CalculateRoundTeamServiceStates: Data Aggregation for {teams.Length} Teams and {services.Length} Services took {sw.ElapsedMilliseconds}ms");
