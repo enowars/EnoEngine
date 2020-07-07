@@ -215,17 +215,12 @@ namespace EnoLauncher
                 {
                     CheckerTask[] results = new CheckerTask[TASK_UPDATE_BATCH_SIZE];
                     int i = 0;
-                    while (i < TASK_UPDATE_BATCH_SIZE)
+                    for (; i < TASK_UPDATE_BATCH_SIZE;i++)
                     {
                         if (ResultsQueue.TryDequeue(out var result))
-                        {
                             results[i] = result;
-                            i += 1;
-                        }
                         else
-                        {
                             break;
-                        }
                     }
                     
                     while (!LauncherCancelSource.IsCancellationRequested)
