@@ -25,7 +25,7 @@ namespace EnoLauncher
     class Program
     {
         private const int TASK_UPDATE_BATCH_SIZE = 500;
-        private const int LAUNCHER_THREADS = 4;
+        private const int LAUNCHER_THREADS = 1;
         private const int MAX_RETRIES = 1;
         private static readonly ConcurrentQueue<CheckerTask> ResultsQueue = new ConcurrentQueue<CheckerTask>();
         private static readonly CancellationTokenSource LauncherCancelSource = new CancellationTokenSource();
