@@ -453,7 +453,7 @@ namespace EnoDatabase
                 .Include(f => f.Owner)
                 .ToArrayAsync();
 
-            int maxRunningTime = config.RoundLengthInSeconds / 4;
+            double maxRunningTime = config.RoundLengthInSeconds / 4;
             double timeDiff = (maxRunningTime - 5) / (double)currentFlags.Count();
             var tasks = new CheckerTask[currentFlags.Length];
             int i = 0;
@@ -464,7 +464,7 @@ namespace EnoDatabase
                 {
                     Address = flag.Owner.Address ?? $"team{flag.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
-                    MaxRunningTime = maxRunningTime,
+                    MaxRunningTime = (int)(maxRunningTime * 1000),
                     Payload = flag.ToString(Encoding.ASCII.GetBytes(config.FlagSigningKey), config.Encoding),
                     RelatedRoundId = flag.RoundId,
                     CurrentRoundId = flag.RoundId,
@@ -492,7 +492,7 @@ namespace EnoDatabase
 
         public async Task InsertPutNoisesTasks(Round currentRound, IEnumerable<Noise> currentNoises, JsonConfiguration config)
         {
-            int maxRunningTime = config.RoundLengthInSeconds / 4;
+            double maxRunningTime = config.RoundLengthInSeconds / 4;
             double timeDiff = (maxRunningTime - 5) / (double)currentNoises.Count();
             DateTime firstFlagTime = currentRound.Begin;
             var tasks = new List<CheckerTask>(currentNoises.Count());
@@ -504,7 +504,7 @@ namespace EnoDatabase
                 {
                     Address = noise.Owner.Address ?? $"team{noise.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
-                    MaxRunningTime = maxRunningTime,
+                    MaxRunningTime = (int)(maxRunningTime*1000),
                     Payload = noise.StringRepresentation,
                     RelatedRoundId = noise.GameRoundId,
                     CurrentRoundId = noise.GameRoundId,
@@ -531,7 +531,7 @@ namespace EnoDatabase
 
         public async Task InsertHavocsTasks(long roundId, DateTime begin, JsonConfiguration config)
         {
-            int quarterRound = config.RoundLengthInSeconds / 4;
+            double quarterRound = config.RoundLengthInSeconds / 4;
 
             var currentHavocs = await _context.Havocs
                 .Where(f => f.GameRoundId == roundId)
@@ -548,7 +548,7 @@ namespace EnoDatabase
                 {
                     Address = havoc.Owner.Address ?? $"team{havoc.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
-                    MaxRunningTime = quarterRound,
+                    MaxRunningTime = (int)(quarterRound * 1000),
                     RelatedRoundId = havoc.GameRoundId,
                     CurrentRoundId = roundId,
                     StartTime = begin,
@@ -585,7 +585,7 @@ namespace EnoDatabase
                 {
                     Address = flag.Owner.Address ?? $"team{flag.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
-                    MaxRunningTime = maxRunningTime,
+                    MaxRunningTime = maxRunningTime*1000,
                     Payload = flag.ToString(Encoding.ASCII.GetBytes(config.FlagSigningKey), config.Encoding),
                     CurrentRoundId = flag.RoundId,
                     RelatedRoundId = flag.RoundId,
@@ -660,7 +660,7 @@ namespace EnoDatabase
 
         public async Task InsertRetrieveCurrentNoisesTasks(Round currentRound, List<Noise> currentNoises, JsonConfiguration config)
         {
-            int maxRunningTime = config.RoundLengthInSeconds / 4;
+            double maxRunningTime = config.RoundLengthInSeconds / 4;
             double timeDiff = (maxRunningTime - 5) / (double)currentNoises.Count();
             var tasks = new List<CheckerTask>(currentNoises.Count());
             DateTime q3 = currentRound.Quarter3;
@@ -672,7 +672,7 @@ namespace EnoDatabase
                 {
                     Address = noise.Owner.Address ?? $"team{noise.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
-                    MaxRunningTime = maxRunningTime,
+                    MaxRunningTime = (int)(maxRunningTime*1000),
                     Payload = noise.StringRepresentation,
                     CurrentRoundId = noise.GameRoundId,
                     RelatedRoundId = noise.GameRoundId,
