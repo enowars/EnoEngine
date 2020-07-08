@@ -188,7 +188,7 @@ namespace EnoLauncher
                         {
                             loggingBuilder.SetMinimumLevel(LogLevel.Debug);
                             loggingBuilder.AddFilter(DbLoggerCategory.Name, LogLevel.Warning);
-                            //loggingBuilder.AddConsole();
+                            loggingBuilder.AddConsole();
                             loggingBuilder.AddProvider(new EnoLogMessageFileLoggerProvider("EnoLauncher", LauncherCancelSource.Token));
                         })
                         .BuildServiceProvider(validateScopes: true);
