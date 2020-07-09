@@ -163,7 +163,7 @@ namespace EnoDatabase
                         Id = team.Id,
                         Active = team.Active,
                         Address = team.Address
-                    }) ;
+                    });
                 }
                 else
                 {
@@ -171,6 +171,7 @@ namespace EnoDatabase
                     dbTeam.Name = team.Name;
                     dbTeam.Id = team.Id;
                     dbTeam.Active = team.Active;
+                    dbTeam.Address = team.Address;
                     staleDbTeamIds.Remove(team.Id);
                 }
             }
@@ -294,7 +295,7 @@ namespace EnoDatabase
                 Success = true
             };
         }
-        
+
         public async Task<(Round, Round, List<Flag>, List<Noise>, List<Havoc>)> CreateNewRound(DateTime begin, DateTime q2, DateTime q3, DateTime q4, DateTime end)
         {
             var oldRound = await _context.Rounds
@@ -438,7 +439,8 @@ namespace EnoDatabase
             return flags;
         }
 
-        public async Task<Round> GetLastRound(){
+        public async Task<Round> GetLastRound()
+        {
             var round = await _context.Rounds
                 .OrderByDescending(f => f.Id)
                 .FirstOrDefaultAsync();
@@ -504,7 +506,7 @@ namespace EnoDatabase
                 {
                     Address = noise.Owner.Address ?? $"team{noise.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
-                    MaxRunningTime = (int)(maxRunningTime*1000),
+                    MaxRunningTime = (int)(maxRunningTime * 1000),
                     Payload = noise.StringRepresentation,
                     RelatedRoundId = noise.GameRoundId,
                     CurrentRoundId = noise.GameRoundId,
@@ -585,7 +587,7 @@ namespace EnoDatabase
                 {
                     Address = flag.Owner.Address ?? $"team{flag.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
-                    MaxRunningTime = maxRunningTime*1000,
+                    MaxRunningTime = maxRunningTime * 1000,
                     Payload = flag.ToString(Encoding.ASCII.GetBytes(config.FlagSigningKey), config.Encoding),
                     CurrentRoundId = flag.RoundId,
                     RelatedRoundId = flag.RoundId,
@@ -613,7 +615,7 @@ namespace EnoDatabase
             double quarterRound = config.RoundLengthInSeconds / 4;
             var oldFlags = await _context.Flags
                 .TagWith("InsertRetrieveOldFlagsTasks:oldFlags")
-                .Where(f => f.RoundId  >= currentRound.Id - oldRoundsCount) // TODO skipped IDs
+                .Where(f => f.RoundId >= currentRound.Id - oldRoundsCount) // TODO skipped IDs
                 .Where(f => f.RoundId != currentRound.Id)
                 .Include(f => f.Owner)
                 .Include(f => f.Service)
@@ -630,7 +632,7 @@ namespace EnoDatabase
                 {
                     Address = oldFlag.Owner.Address ?? $"team{oldFlag.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
-                    MaxRunningTime = (int)(quarterRound*1000),
+                    MaxRunningTime = (int)(quarterRound * 1000),
                     Payload = oldFlag.ToString(Encoding.ASCII.GetBytes(config.FlagSigningKey), config.Encoding),
                     RelatedRoundId = oldFlag.RoundId,
                     CurrentRoundId = currentRound.Id,
@@ -672,7 +674,7 @@ namespace EnoDatabase
                 {
                     Address = noise.Owner.Address ?? $"team{noise.OwnerId}.{config.DnsSuffix}",
                     CheckerUrl = checkers[i % checkers.Length],
-                    MaxRunningTime = (int)(maxRunningTime*1000),
+                    MaxRunningTime = (int)(maxRunningTime * 1000),
                     Payload = noise.StringRepresentation,
                     CurrentRoundId = noise.GameRoundId,
                     RelatedRoundId = noise.GameRoundId,
