@@ -406,7 +406,7 @@ namespace EnoDatabase
             var strategy = _context.Database.CreateExecutionStrategy();
             return await strategy.ExecuteAsync(async () =>
             {
-                using var transaction = _context.Database.BeginTransaction();
+                using var transaction = _context.Database.BeginTransaction(IsolationLevel.Serializable);
                 try
                 {
                     var tasks = await _context.CheckerTasks
