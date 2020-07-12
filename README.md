@@ -94,6 +94,7 @@ interface CheckerTaskMessage {
     relatedRoundId: number;
     flag: string | null;
     flagIndex: number;
+    timeout: number;                            // Timeout in miliseconds
 }
 ```
 Response:
