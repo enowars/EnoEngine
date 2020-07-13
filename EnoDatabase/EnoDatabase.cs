@@ -46,9 +46,9 @@ namespace EnoDatabase
         Task ProcessSubmissionsBatch(List<(Flag flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult> result)> submissions, long flagValidityInRounds, EnoStatistics statistics);
         Task<(Round, Round, List<Flag>, List<Noise>, List<Havoc>)> CreateNewRound(DateTime begin, DateTime q2, DateTime q3, DateTime q4, DateTime end);
         Task CalculateRoundTeamServiceStates(IServiceProvider serviceProvider, long roundId, EnoStatistics statistics);
-        Task InsertPutFlagsTasks(long roundId, DateTime firstFlagTime, JsonConfiguration config);
+        Task InsertPutFlagsTasks(Round round, IEnumerable<Flag> currentFlags, JsonConfiguration config);
         Task InsertPutNoisesTasks(Round currentRound, IEnumerable<Noise> currentNoises, JsonConfiguration config);
-        Task InsertHavocsTasks(long roundId, DateTime begin, JsonConfiguration config);
+        Task InsertHavocsTasks(Round currentRound, IEnumerable<Havoc> currentHavocs, JsonConfiguration config);
         Task<Flag[]> RetrieveFlags(int maxAmount);
         Task InsertRetrieveCurrentFlagsTasks(Round round, List<Flag> currentFlags, JsonConfiguration config);
         Task InsertRetrieveOldFlagsTasks(Round currentRound, int oldRoundsCount, JsonConfiguration config);
@@ -311,6 +311,7 @@ namespace EnoDatabase
                 End = end
             };
             _context.Rounds.Add(round);
+            await _context.SaveChangesAsync();
             var teams = await _context.Teams
                 .ToArrayAsync();
             var services = await _context.Services
@@ -318,8 +319,6 @@ namespace EnoDatabase
             var flags = GenerateFlagsForRound(round, teams, services);
             var noises = GenerateNoisesForRound(round, teams, services);
             var havocs = GenerateHavocsForRound(round, teams, services);
-            _context.SaveChanges();
-            Debug.WriteLine(flags[0]);
             return (oldRound, round, flags, noises, havocs);
         }
 
@@ -335,6 +334,8 @@ namespace EnoDatabase
                         var flag = new Flag()
                         {
                             Owner = team,
+                            OwnerId = team.Id,
+                            Service = service,
                             ServiceId = service.Id,
                             RoundOffset = i,
                             Round = round
@@ -343,7 +344,6 @@ namespace EnoDatabase
                     }
                 }
             }
-            _context.Flags.AddRange(newFlags);
             return newFlags;
         }
 
@@ -359,7 +359,9 @@ namespace EnoDatabase
                         var noise = new Noise()
                         {
                             Owner = team,
+                            OwnerId = team.Id,
                             StringRepresentation = EnoDatabaseUtils.GenerateNoise(),
+                            Service = service,
                             ServiceId = service.Id,
                             RoundOffset = i,
                             GameRound = round
@@ -368,7 +370,6 @@ namespace EnoDatabase
                     }
                 }
             }
-            _context.Noises.AddRange(newNoises);
             return newNoises;
         }
 
@@ -384,6 +385,8 @@ namespace EnoDatabase
                         var havoc = new Havoc()
                         {
                             Owner = team,
+                            OwnerId = team.Id,
+                            Service = service,
                             ServiceId = service.Id,
                             GameRound = round
                         };
@@ -391,7 +394,6 @@ namespace EnoDatabase
                     }
                 }
             }
-            _context.Havocs.AddRange(newHavocs);
             return newHavocs;
         }
 
@@ -449,17 +451,12 @@ namespace EnoDatabase
             return round;
         }
 
-        public async Task InsertPutFlagsTasks(long roundId, DateTime firstFlagTime, JsonConfiguration config)
+        public async Task InsertPutFlagsTasks(Round round, IEnumerable<Flag> currentFlags, JsonConfiguration config)
         {
-            var currentFlags = await _context.Flags
-                .Where(f => f.RoundId == roundId)
-                .Include(f => f.Service)
-                .Include(f => f.Owner)
-                .ToArrayAsync();
-
+            var firstFlagTime = round.Begin;
             double maxRunningTime = config.RoundLengthInSeconds / 4;
-            double timeDiff = (maxRunningTime - 5) / (double)currentFlags.Count();
-            var tasks = new CheckerTask[currentFlags.Length];
+            double timeDiff = (maxRunningTime - 2) / currentFlags.Count();
+            var tasks = new CheckerTask[currentFlags.Count()];
             int i = 0;
             foreach (var flag in currentFlags)
             {
@@ -533,18 +530,13 @@ namespace EnoDatabase
             await InsertCheckerTasks(tasks);
         }
 
-        public async Task InsertHavocsTasks(long roundId, DateTime begin, JsonConfiguration config)
+        public async Task InsertHavocsTasks(Round currentRound, IEnumerable<Havoc> currentHavocs, JsonConfiguration config)
         {
             double quarterRound = config.RoundLengthInSeconds / 4;
-
-            var currentHavocs = await _context.Havocs
-                .Where(f => f.GameRoundId == roundId)
-                .Include(f => f.Service)
-                .Include(f => f.Owner)
-                .ToArrayAsync();
             double timeDiff = (double)quarterRound * 3 / currentHavocs.Count();
             List<CheckerTask> havocTasks = new List<CheckerTask>(currentHavocs.Count());
             int i = 0;
+            var begin = currentRound.Begin;
             foreach (var havoc in currentHavocs)
             {
                 var checkers = config.Checkers[havoc.ServiceId];
@@ -554,7 +546,7 @@ namespace EnoDatabase
                     CheckerUrl = checkers[i % checkers.Length],
                     MaxRunningTime = (int)(quarterRound * 1000),
                     RelatedRoundId = havoc.GameRoundId,
-                    CurrentRoundId = roundId,
+                    CurrentRoundId = currentRound.Id,
                     StartTime = begin,
                     TaskIndex = 0,
                     Method = CheckerTaskMethod.havoc,

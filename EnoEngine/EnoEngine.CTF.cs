@@ -44,9 +44,9 @@ namespace EnoEngine
                 Logger.LogInformation($"CreateNewRound for {currentRound.Id} finished ({stopwatch.ElapsedMilliseconds}ms)");
 
                 // insert put tasks
-                var insertPutNewFlagsTask = Task.Run(async () => await InsertPutNewFlagsTasks(currentRound.Id, begin));
+                var insertPutNewFlagsTask = Task.Run(async () => await InsertPutNewFlagsTasks(currentRound, newFlags));
                 var insertPutNewNoisesTask = Task.Run(async () => await InsertPutNewNoisesTasks(currentRound, newNoises));
-                var insertHavocsTask = Task.Run(async () => await InsertHavocsTasks(currentRound, begin));
+                var insertHavocsTask = Task.Run(async () => await InsertHavocsTasks(currentRound, newHavocs));
 
                 await insertPutNewFlagsTask;
                 await insertPutNewNoisesTask;
@@ -73,7 +73,7 @@ namespace EnoEngine
             return end;
         }
 
-        private async Task InsertPutNewFlagsTasks(long roundId, DateTime begin)
+        private async Task InsertPutNewFlagsTasks(Round currentRound, IEnumerable<Flag> newflags)
         {
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
@@ -82,7 +82,7 @@ namespace EnoEngine
                 await EnoDatabaseUtils.RetryDatabaseAction(async () =>
                 {
                     using var scope = ServiceProvider.CreateScope();
-                    await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertPutFlagsTasks(roundId, begin, Configuration);
+                    await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertPutFlagsTasks(currentRound, newflags, Configuration);
                 });
             }
             catch (Exception e)
@@ -114,7 +114,7 @@ namespace EnoEngine
             Console.WriteLine($"InsertPutNewNoisesTasks took {stopWatch.Elapsed.TotalMilliseconds}ms");
         }
 
-        private async Task InsertHavocsTasks(Round currentRound, DateTime begin)
+        private async Task InsertHavocsTasks(Round currentRound, IEnumerable<Havoc> newHavocs)
         {
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
@@ -123,7 +123,7 @@ namespace EnoEngine
                 await EnoDatabaseUtils.RetryDatabaseAction(async () =>
                 {
                     using var scope = ServiceProvider.CreateScope();
-                    await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertHavocsTasks(currentRound.Id, begin, Configuration);
+                    await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertHavocsTasks(currentRound, newHavocs, Configuration);
                 });
             }
             catch (Exception e)

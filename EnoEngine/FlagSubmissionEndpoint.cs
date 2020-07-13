@@ -281,9 +281,11 @@ namespace EnoEngine.FlagSubmission
                     List<(Flag flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult> result)> submissions = new List<(Flag flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult>)>();
                     foreach (var (teamid, channel) in Channels)
                     {
+                        int SubmissionsPerTeam = 0;
                         var reader = channel.Reader;
-                        while (reader.TryRead(out var item))
+                        while (reader.TryRead(out var item) && SubmissionsPerTeam<100)
                         {
+                            SubmissionsPerTeam++;
                             submissions.Add((item.Flag, teamid, item.FeedbackSource));
                         }
                     }

@@ -25,13 +25,13 @@ namespace EnoDatabase
             long duplicateFlags = 0;
             long oldFlags = 0;
             var submittedFlagsStatement = new StringBuilder();
-            var flagsStatement = new StringBuilder();
+            //var flagsStatement = new StringBuilder();
             var waitingTasks = new Dictionary<(long, long, long, long, long), TaskCompletionSource<FlagSubmissionResult>>();
             long currentRoundId = await _context.Rounds
                 .OrderByDescending(r => r.Id)
                 .Select(r => r.Id)
                 .FirstAsync();
-            submittedFlagsStatement.Append("insert into \"SubmittedFlags\" (\"FlagServiceId\", \"FlagRoundId\", \"FlagOwnerId\", \"FlagRoundOffset\", \"AttackerTeamId\", \"RoundId\", \"SubmissionsCount\")\nvalues ");
+            submittedFlagsStatement.Append($"insert into \"{nameof(EnoDatabaseContext.SubmittedFlags)}\" (\"{nameof(SubmittedFlag.FlagServiceId)}\", \"{nameof(SubmittedFlag.FlagRoundId)}\", \"{nameof(SubmittedFlag.FlagOwnerId)}\", \"{nameof(SubmittedFlag.FlagRoundOffset)}\", \"{nameof(SubmittedFlag.AttackerTeamId)}\", \"{nameof(SubmittedFlag.RoundId)}\", \"{nameof(SubmittedFlag.SubmissionsCount)}\")\nvalues ");
 
             // Filter for duplicates within this batch
             var updates = new Dictionary<(long, long, long, long, long), long>(submissions.Count);
@@ -91,7 +91,7 @@ namespace EnoDatabase
                     submittedFlagsStatement.Append($"({serviceId}, {roundId}, {ownerId}, {roundOffset}, {attackerTeamId}, {currentRoundId}, {count}),");
                 }
                 submittedFlagsStatement.Length--; // Pointers are fun!
-                submittedFlagsStatement.Append("\non conflict (\"FlagServiceId\", \"FlagRoundId\", \"FlagOwnerId\", \"FlagRoundOffset\", \"AttackerTeamId\") do update set \"SubmissionsCount\" = \"SubmittedFlags\".\"SubmissionsCount\" + excluded.\"SubmissionsCount\" returning \"FlagServiceId\", \"FlagOwnerId\", \"FlagRoundId\", \"FlagRoundOffset\", \"AttackerTeamId\", \"RoundId\", \"SubmissionsCount\";");
+                submittedFlagsStatement.Append($"\non conflict (\"{nameof(SubmittedFlag.FlagServiceId)}\", \"{nameof(SubmittedFlag.FlagRoundId)}\", \"{nameof(SubmittedFlag.FlagOwnerId)}\", \"{nameof(SubmittedFlag.FlagRoundOffset)}\", \"{nameof(SubmittedFlag.AttackerTeamId)}\") do update set \"{nameof(SubmittedFlag.SubmissionsCount)}\" = \"{nameof(SubmittedFlag)}\".\"{nameof(SubmittedFlag.SubmissionsCount)}\" + excluded.\"{nameof(SubmittedFlag.SubmissionsCount)}\" returning \"{nameof(SubmittedFlag.FlagServiceId)}\", \"{nameof(SubmittedFlag.FlagOwnerId)}\", \"{nameof(SubmittedFlag.FlagRoundId)}\", \"{nameof(SubmittedFlag.FlagRoundOffset)}\", \"{nameof(SubmittedFlag.AttackerTeamId)}\", \"{nameof(SubmittedFlag.RoundId)}\", \"{nameof(SubmittedFlag.SubmissionsCount)}\";");
 
                 using var transaction = _context.Database.BeginTransaction();
                 try
@@ -104,7 +104,7 @@ namespace EnoDatabase
                         {
                             okFlags += 1;
                             tResult.SetResult(FlagSubmissionResult.Ok);
-                            flagsStatement.Append($"update \"Flags\" set \"Captures\" = \"Captures\" + 1 where \"ServiceId\" = {newSubmission.FlagServiceId} and \"RoundId\" = {newSubmission.FlagRoundId} and \"OwnerId\" = {newSubmission.FlagOwnerId} and \"RoundOffset\" = {newSubmission.FlagRoundOffset};\n");
+                            //flagsStatement.Append($"update \"Flags\" set \"Captures\" = \"Captures\" + 1 where \"ServiceId\" = {newSubmission.FlagServiceId} and \"RoundId\" = {newSubmission.FlagRoundId} and \"OwnerId\" = {newSubmission.FlagOwnerId} and \"RoundOffset\" = {newSubmission.FlagRoundOffset};\n");
                         }
                         else
                         {
@@ -112,13 +112,13 @@ namespace EnoDatabase
                             tResult.SetResult(FlagSubmissionResult.Duplicate);
                         }
                     }
-                    await _context.Database.ExecuteSqlRawAsync(flagsStatement.ToString());
+                    //await _context.Database.ExecuteSqlRawAsync(flagsStatement.ToString());
                     await transaction.CommitAsync();
                 }
                 catch (Exception e)
                 {
                     await transaction.RollbackAsync();
-                    throw e;
+                    throw new Exception($"Rollbacking Transaction in {nameof(ProcessSubmissionsBatch)}", e);
                 }
                 stopWatch.Stop();
 

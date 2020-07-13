@@ -33,6 +33,7 @@ namespace EnoDatabase
             var services = await _context.Services
                 .AsNoTracking()
                 .ToArrayAsync();
+
             var teams = await _context.Teams
                 .AsNoTracking()
                 .ToArrayAsync();

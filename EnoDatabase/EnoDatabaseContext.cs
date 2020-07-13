@@ -25,9 +25,7 @@ namespace EnoDatabase
     {
 #pragma warning disable CS8618
         public DbSet<CheckerTask> CheckerTasks { get; set; }
-        public DbSet<Flag> Flags { get; set; }
-        public DbSet<Noise> Noises { get; set; }
-        public DbSet<Havoc> Havocs { get; set; }
+        //public DbSet<Flag> Flags { get; set; }
         public DbSet<Service> Services { get; set; }
         public DbSet<Team> Teams { get; set; }
         public DbSet<Round> Rounds { get; set; }
@@ -41,8 +39,8 @@ namespace EnoDatabase
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Flag>()
-                .HasKey(f => new { f.ServiceId, f.RoundId, f.OwnerId, f.RoundOffset });
+            //modelBuilder.Entity<Flag>()
+            //    .HasKey(f => new { f.ServiceId, f.RoundId, f.OwnerId, f.RoundOffset });
 
             modelBuilder.Entity<SubmittedFlag>()
                 .HasKey(sf => new { sf.FlagServiceId, sf.FlagRoundId, sf.FlagOwnerId, sf.FlagRoundOffset, sf.AttackerTeamId });
