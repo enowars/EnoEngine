@@ -25,7 +25,6 @@ namespace EnoDatabase
     {
 #pragma warning disable CS8618
         public DbSet<CheckerTask> CheckerTasks { get; set; }
-        //public DbSet<Flag> Flags { get; set; }
         public DbSet<Service> Services { get; set; }
         public DbSet<Team> Teams { get; set; }
         public DbSet<Round> Rounds { get; set; }
@@ -39,19 +38,11 @@ namespace EnoDatabase
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            //modelBuilder.Entity<Flag>()
-            //    .HasKey(f => new { f.ServiceId, f.RoundId, f.OwnerId, f.RoundOffset });
-
-            modelBuilder.Entity<SubmittedFlag>()
+            modelBuilder.Entity<SubmittedFlag>() // Primary Key
                 .HasKey(sf => new { sf.FlagServiceId, sf.FlagRoundId, sf.FlagOwnerId, sf.FlagRoundOffset, sf.AttackerTeamId });
 
             modelBuilder.Entity<SubmittedFlag>()
                 .HasIndex(sf => new { sf.FlagServiceId, sf.FlagRoundOffset, sf.Timestamp });
-
-            modelBuilder.Entity<SubmittedFlag>()
-                .HasOne(sf => sf.Flag)
-                .WithMany(f => f.FlagSubmissions)
-                .HasForeignKey(sf => new { sf.FlagServiceId, sf.FlagRoundId, sf.FlagOwnerId, sf.FlagRoundOffset });
 
             modelBuilder.Entity<RoundTeamServiceState>()
                 .HasKey(rtss => new { rtss.ServiceId, rtss.TeamId, rtss.GameRoundId });

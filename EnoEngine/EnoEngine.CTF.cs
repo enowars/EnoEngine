@@ -1,6 +1,7 @@
 ﻿using EnoCore;
 using EnoCore.Models;
 using EnoCore.Models.Database;
+using EnoCore.Models.Json;
 using EnoDatabase;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -34,11 +35,15 @@ namespace EnoEngine
                 List<Flag> newFlags;
                 List<Noise> newNoises;
                 List<Havoc> newHavocs;
+                Team[] teams;
+                Service[] services;
 
                 // start the next round
                 using (var scope = ServiceProvider.CreateScope())
                 {
                     var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
+                    teams = await db.RetrieveTeams();
+                    services = await db.RetrieveServices();
                     (oldRound, currentRound, newFlags, newNoises, newHavocs) = await db.CreateNewRound(begin, q2, q3, q4, end);
                 }
                 Logger.LogInformation($"CreateNewRound for {currentRound.Id} finished ({stopwatch.ElapsedMilliseconds}ms)");
@@ -54,7 +59,7 @@ namespace EnoEngine
 
                 // insert get tasks
                 var insertRetrieveCurrentFlagsTask = Task.Run(async () => await InsertRetrieveCurrentFlagsTasks(currentRound, newFlags));
-                var insertRetrieveOldFlagsTask = Task.Run(async () => await InsertRetrieveOldFlagsTasks(currentRound));
+                var insertRetrieveOldFlagsTask = Task.Run(async () => await InsertRetrieveOldFlagsTasks(currentRound, teams, services));
                 var insertGetCurrentNoisesTask = Task.Run(async () => await InsertGetCurrentNoisesTask(currentRound, newNoises));
 
                 await insertRetrieveCurrentFlagsTask;
@@ -155,7 +160,7 @@ namespace EnoEngine
             Console.WriteLine($"InsertRetrieveCurrentFlagsTasks took {stopWatch.Elapsed.TotalMilliseconds}ms");
         }
 
-        private async Task InsertRetrieveOldFlagsTasks(Round currentRound)
+        private async Task InsertRetrieveOldFlagsTasks(Round currentRound, Team[] teams, Service[] services)
         {
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
@@ -164,7 +169,8 @@ namespace EnoEngine
                 await EnoDatabaseUtils.RetryDatabaseAction(async () =>
                 {
                     using var scope = ServiceProvider.CreateScope();
-                    await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertRetrieveOldFlagsTasks(currentRound, Configuration.CheckedRoundsPerRound - 1, Configuration);
+                    //Round currentRound, Team[] teams, Service[] services, long oldRoundsCount, JsonConfiguration config
+                    await scope.ServiceProvider.GetRequiredService<IEnoDatabase>().InsertRetrieveOldFlagsTasks(currentRound, teams, services,Configuration);
                 });
             }
             catch (Exception e)

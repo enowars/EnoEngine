@@ -19,7 +19,6 @@ namespace EnoCore.Models.Database
         public long RoundId { get; set; }
         public long SubmissionsCount { get; set; }
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
-        public virtual Flag Flag { get; set; }
         public virtual Team AttackerTeam { get; set; }
         public virtual Round Round { get; set; }
 #pragma warning restore CS8618
