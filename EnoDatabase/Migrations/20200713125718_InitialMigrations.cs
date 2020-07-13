@@ -311,7 +311,8 @@ namespace EnoDatabase.Migrations
                     FlagRoundOffset = table.Column<int>(nullable: false),
                     AttackerTeamId = table.Column<long>(nullable: false),
                     RoundId = table.Column<long>(nullable: false),
-                    SubmissionsCount = table.Column<long>(nullable: false)
+                    SubmissionsCount = table.Column<long>(nullable: false),
+                    Timestamp = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -430,6 +431,11 @@ namespace EnoDatabase.Migrations
                 name: "IX_SubmittedFlags_RoundId",
                 table: "SubmittedFlags",
                 column: "RoundId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SubmittedFlags_FlagServiceId_FlagRoundOffset_Timestamp",
+                table: "SubmittedFlags",
+                columns: new[] { "FlagServiceId", "FlagRoundOffset", "Timestamp" });
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

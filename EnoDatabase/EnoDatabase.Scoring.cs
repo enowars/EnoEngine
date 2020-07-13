@@ -317,7 +317,7 @@ order by ""SubmittedId"" asc").ToArrayAsync();
                     var fb = await _context.SubmittedFlags
                         .Where(sf => sf.FlagServiceId == service.Id)
                         .Where(sf => sf.FlagRoundOffset % service.FetchedFlagsPerRound == i)
-                        .OrderBy(sf => sf.RoundId)
+                        .OrderBy(sf => sf.Timestamp)
                         .FirstOrDefaultAsync();
                     if (fb != null)
                     {

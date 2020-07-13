@@ -18,6 +18,7 @@ using System.Net.Sockets;
 using System.Data;
 using EnoCore.Logging;
 using EnoCore.Models;
+using EnoCore.Utils;
 
 namespace EnoDatabase
 {
@@ -423,6 +424,7 @@ namespace EnoDatabase
                 catch (Exception e)
                 {
                     await transaction.RollbackAsync();
+                    Logger.LogDebug($"RetrievePendingCheckerTasks: Rolling Back Transaction{e.ToFancyString()}");
                     throw e;
                 }
             });

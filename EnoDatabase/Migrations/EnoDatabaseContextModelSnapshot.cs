@@ -361,11 +361,16 @@ namespace EnoDatabase.Migrations
                     b.Property<long>("SubmissionsCount")
                         .HasColumnType("bigint");
 
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp without time zone");
+
                     b.HasKey("FlagServiceId", "FlagRoundId", "FlagOwnerId", "FlagRoundOffset", "AttackerTeamId");
 
                     b.HasIndex("AttackerTeamId");
 
                     b.HasIndex("RoundId");
+
+                    b.HasIndex("FlagServiceId", "FlagRoundOffset", "Timestamp");
 
                     b.ToTable("SubmittedFlags");
                 });

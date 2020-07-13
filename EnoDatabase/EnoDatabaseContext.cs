@@ -48,6 +48,9 @@ namespace EnoDatabase
                 .HasKey(sf => new { sf.FlagServiceId, sf.FlagRoundId, sf.FlagOwnerId, sf.FlagRoundOffset, sf.AttackerTeamId });
 
             modelBuilder.Entity<SubmittedFlag>()
+                .HasIndex(sf => new { sf.FlagServiceId, sf.FlagRoundOffset, sf.Timestamp });
+
+            modelBuilder.Entity<SubmittedFlag>()
                 .HasOne(sf => sf.Flag)
                 .WithMany(f => f.FlagSubmissions)
                 .HasForeignKey(sf => new { sf.FlagServiceId, sf.FlagRoundId, sf.FlagOwnerId, sf.FlagRoundOffset });
@@ -59,36 +62,10 @@ namespace EnoDatabase
                 .HasKey(sss => new { sss.ServiceId, sss.RoundId, sss.TeamId });
 
             modelBuilder.Entity<CheckerTask>()
-                //.HasIndex(ct => new { ct.CurrentRoundId, ct.RelatedRoundId, ct.TeamId, ct.ServiceId, ct.CheckerResult });
                 .HasIndex(ct => new { ct.CurrentRoundId, ct.RelatedRoundId, ct.CheckerResult });
 
             modelBuilder.Entity<CheckerTask>()
                 .HasIndex(ct => new { ct.CheckerTaskLaunchStatus, ct.StartTime });
-
-            /*
-                .Where(ct => ct.CurrentRoundId == roundId)
-                .Where(ct => ct.RelatedRoundId == roundId)
-                .Where(ct => ct.TeamId == t.Id)
-                .Where(ct => ct.ServiceId == s.Id)
-                .Where(ct => ct.CheckerResult == CheckerResult.INTERNAL_ERROR)
-                            */
-
-            /*
-            modelBuilder.Entity<CheckerTask>()
-                .HasIndex(ct => ct.StartTime);
-
-            modelBuilder.Entity<CheckerTask>()
-                .HasIndex(ct => ct.CurrentRoundId);
-
-            modelBuilder.Entity<CheckerTask>()
-                .HasIndex(ct => ct.RelatedRoundId);
-
-            modelBuilder.Entity<CheckerTask>()
-                .HasIndex(ct => ct.CheckerResult);
-
-            modelBuilder.Entity<CheckerTask>()
-                .HasIndex(ct => ct.TeamId);
-                */
         }
     }
 }

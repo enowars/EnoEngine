@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EnoDatabase.Migrations
 {
     [DbContext(typeof(EnoDatabaseContext))]
-    [Migration("20200706215822_InitialMigrations")]
+    [Migration("20200713125718_InitialMigrations")]
     partial class InitialMigrations
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -363,11 +363,16 @@ namespace EnoDatabase.Migrations
                     b.Property<long>("SubmissionsCount")
                         .HasColumnType("bigint");
 
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp without time zone");
+
                     b.HasKey("FlagServiceId", "FlagRoundId", "FlagOwnerId", "FlagRoundOffset", "AttackerTeamId");
 
                     b.HasIndex("AttackerTeamId");
 
                     b.HasIndex("RoundId");
+
+                    b.HasIndex("FlagServiceId", "FlagRoundOffset", "Timestamp");
 
                     b.ToTable("SubmittedFlags");
                 });
