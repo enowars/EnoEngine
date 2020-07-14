@@ -81,7 +81,7 @@ namespace FlagShooter
             {
                 long i = 0;
                 if (sb != null)
-                    if (sb.CurrentRound != null)
+                    if (sb.CurrentRound != null && sb.CurrentRound >0)
                     {
                         for (long r = sb.CurrentRound.Value; r > Math.Max(sb.CurrentRound.Value - Configuration.FlagValidityInRounds, 1); r--)
                             for (int team = 0; team < Configuration.Teams.Count; team++)
@@ -92,7 +92,7 @@ namespace FlagShooter
 
                                         result.Add(SubmitFlag(new Flag()
                                         {
-                                            RoundId = (sb.CurrentRound - r) ?? 0,
+                                            RoundId = r,
                                             OwnerId = team,
                                             ServiceId = s.ServiceId,
                                             RoundOffset = store
