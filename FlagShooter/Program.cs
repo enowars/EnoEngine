@@ -219,9 +219,11 @@ namespace FlagShooter
                     Console.WriteLine($"Failed to load ctf.json: {e.Message}");
                     return;
                 }
+                var path = Directory.GetParent(Directory.GetCurrentDirectory()).FullName;
+                Console.WriteLine($"Path ís: {path}");
                 Watch = new FileSystemWatcher()
                 {
-                    Path = Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory()).FullName, "data"),
+                    Path = Path.Combine(path, "data"),
                     NotifyFilter =  NotifyFilters.LastWrite |
                                     NotifyFilters.LastAccess |
                                     NotifyFilters.FileName,
