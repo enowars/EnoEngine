@@ -13,8 +13,8 @@ namespace EnoCore.Models.Json
         public double? StartTimeEpoch { get; set; }
         public string? EndTimestamp { get; set; }
         public double? EndTimeEpoch { get; set; }
-        public EnoEngineScoreboardService[] Services { get; private set; }
-        public EnoEngineScoreboardEntry[] Teams { get; private set; }
+        public EnoEngineScoreboardService[] Services { get; set; }
+        public EnoEngineScoreboardEntry[] Teams { get; set; }
         public EnoEngineScoreboard ()
         {
 

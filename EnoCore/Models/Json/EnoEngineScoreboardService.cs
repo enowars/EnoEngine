@@ -19,6 +19,11 @@ namespace EnoCore.Models.Json
             ServiceId = service.Id;
             ServiceName = service.Name;
         }
+
+        protected EnoEngineScoreboardService()
+        {
+
+        }
 #pragma warning restore CS8618
     }
 }

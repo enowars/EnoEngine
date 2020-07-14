@@ -23,5 +23,9 @@ namespace EnoCore.Models.Json
             Team = team;
             ServiceDetails = team.ServiceStats.Select(s => new EnoEngineScoreboardEntryServiceDetails(s)).ToArray();
         }
+        protected EnoEngineScoreboardEntry()
+        {
+
+        }
     }
 }

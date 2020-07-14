@@ -19,22 +19,23 @@ using EnoCore.Models;
 using System.Linq;
 using EnoDatabase;
 using EnoCore.Utils;
+using System.Threading.Channels;
 
 namespace FlagShooter
 {
     class Program
     {
-        private static readonly CancellationTokenSource LauncherCancelSource = new CancellationTokenSource();
-        private readonly Dictionary<long, (TcpClient, StreamReader reader, StreamWriter writer)[]> TeamSockets =
-            new Dictionary<long, (TcpClient, StreamReader reader, StreamWriter writer)[]>();
+        private static readonly CancellationTokenSource CancelSource = new CancellationTokenSource();
         private readonly int FlagCount;
         private readonly int TeamStart;
         private readonly int RoundDelay;
         private readonly int TeamCount;
         private readonly int SubmissionConnectionsPerTeam;
         private readonly JsonConfiguration Configuration;
+        private List<ChannelWriter<byte[]>> FlagWriters;
+
         private static FileSystemWatcher Watch;
-        private static EnoEngineScoreboard sb;
+        private static EnoEngineScoreboard? sb;
 
         public Program(int flagCount, int roundDelay, int teamStart, int teamCount, int teamConnections, JsonConfiguration configuration)
         {
@@ -44,35 +45,38 @@ namespace FlagShooter
             TeamCount = teamCount;
             SubmissionConnectionsPerTeam = teamConnections;
             Configuration = configuration;
-            Console.WriteLine("Initializing connections");
+            FlagWriters = new List<ChannelWriter<byte[]>>();
             for (int i = 0; i < TeamCount; i++)
             {
-                Console.WriteLine($"Initializing team {i}");
-                TeamSockets[i + 1] = new (TcpClient, StreamReader reader, StreamWriter writer)[SubmissionConnectionsPerTeam];
                 for (int j = 0; j < SubmissionConnectionsPerTeam; j++)
                 {
-                    Console.WriteLine($"Initializing conn {j}");
-                    var tcpClient = new TcpClient();
-                    tcpClient.Connect("localhost", 1338);
-                    (TcpClient tcpClient, StreamReader, StreamWriter writer) client = (tcpClient, new StreamReader(tcpClient.GetStream()), new StreamWriter(tcpClient.GetStream()));
-                    client.writer.AutoFlush = true;
-
-                    Console.WriteLine($"Writing to team {i}");
-                    Console.WriteLine($"Writing to team {TeamStart}");
-                    Console.WriteLine($"Writing to team {(i + TeamStart)}");
-                    client.writer.Write($"{i + TeamStart}\n");
-                    TeamSockets[i + 1][j] = client;
+                    var channel = Channel.CreateBounded<byte[]>(new BoundedChannelOptions(1000)
+                    {
+                        SingleWriter = true
+                    });
+                    Task.Run(async () => await FlagSubmissionClient.Create(channel.Reader, i + teamStart));
+                    FlagWriters.Add(channel.Writer);
                 }
             }
+        }
+
+        private List<Task> SubmitFlag(Flag f)
+        {
+            var tasks = new List<Task>();
+            foreach (var writer in FlagWriters)
+            {
+                tasks.Add(Task.Run(async () => await writer.WriteAsync(Encoding.UTF8.GetBytes(f.ToString(Encoding.UTF8.GetBytes(Configuration.FlagSigningKey), Configuration.Encoding) + "\n"))));
+            }
+            return tasks;
         }
 
         public void Start()
         {
             FlagRunnerLoop().Wait();
         }
-        public List<Flag> generateFlags(long FlagCount)
+        public List<List<Task>> BeginSubmitFlags(long FlagCount)
         {
-            var result = new List<Flag>();
+            var result = new List<List<Task>>();
             try
             {
                 long i = 0;
@@ -85,13 +89,14 @@ namespace FlagShooter
                                     for (int store = 0; store < s.MaxStores; store++)
                                     {
                                         if (i++ > FlagCount) return result;
-                                        result.Add(new Flag()
+
+                                        result.Add(SubmitFlag(new Flag()
                                         {
                                             RoundId = (sb.CurrentRound - r) ?? 0,
                                             OwnerId = team,
                                             ServiceId = s.ServiceId,
                                             RoundOffset = store
-                                        });
+                                        }));
                                     }
 
                         Console.WriteLine($"Not Enough Flags available, requested {FlagCount} and got {i}");
@@ -110,30 +115,16 @@ namespace FlagShooter
 
         public async Task FlagRunnerLoop()
         {
-            Console.WriteLine("$FlagRunnerLoop starting");
-
-            while (!LauncherCancelSource.IsCancellationRequested)
+            Console.WriteLine($"FlagRunnerLoop starting");
+            while (!CancelSource.IsCancellationRequested)
             {
                 try
                 {
-                    var flags = generateFlags(FlagCount);
-                    var tasks = new Task[TeamCount];
-                    if (flags.Count > 0)
-                    {
-                        Console.WriteLine($"Sending {flags.Count} flags");
-
-                        for (int i = 0; i < TeamCount; i++)
-                        {
-                            var ti = i;
-                            tasks[ti] = Task.Run(async () => await SendFlagsTask(flags.Select(f => f.ToString(Encoding.UTF8.GetBytes(Configuration.FlagSigningKey), Configuration.Encoding)).ToArray(), ti + 1));
-                        }
-                        await Task.WhenAll(tasks);
-                        await Task.Delay(RoundDelay, LauncherCancelSource.Token);
-                    }
-                    else
-                    {
-                        await Task.Delay(1000);
-                    }
+                    Console.WriteLine($"Next batch of flags, current round {sb?.CurrentRound}");
+                    var taskLists = BeginSubmitFlags(FlagCount);
+                    foreach (var taskList in taskLists)
+                        await Task.WhenAll(taskList);
+                    await Task.Delay(RoundDelay, CancelSource.Token);
                 }
                 catch (Exception e)
                 {
@@ -141,39 +132,7 @@ namespace FlagShooter
                 }
             }
         }
-
-        private async Task SendFlagsTask(string[] flags, long teamId)
-        {
-            try
-            {
-                var connections = TeamSockets[teamId];
-                var tasks = new List<Task>(SubmissionConnectionsPerTeam);
-                for (int i = 0; i < flags.Length; i += SubmissionConnectionsPerTeam)
-                {
-                    for (int j = 0; j < SubmissionConnectionsPerTeam; j++)
-                    {
-                        if (i + j < flags.Length)
-                        {
-                            var con = connections[j];
-                            int ti = i;
-                            int tj = j;
-                            tasks.Add(Task.Run(async () =>
-                            {
-                                // Console.WriteLine($"Sending flag {flags[ti + tj]}");
-                                await con.writer.WriteAsync($"{flags[ti + tj]}\n");
-                                Console.WriteLine(await con.reader.ReadLineAsync());
-                            }));
-                        }
-                    }
-                    await Task.WhenAll(tasks);
-                    tasks.Clear();
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine($"SendFlagTask failed because: {EnoDatabaseUtils.FormatException(e)}");
-            }
-        }
+        
         private static void ParseScoreboard(string fileName)
         {
             if (!File.Exists(fileName))

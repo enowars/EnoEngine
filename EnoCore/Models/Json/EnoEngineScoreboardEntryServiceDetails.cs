@@ -23,5 +23,10 @@ namespace EnoCore.Models.Json
         {
             ServiceStats = serviceStats;
         }
+
+        protected EnoEngineScoreboardEntryServiceDetails()
+        {
+
+        }
     }
 }
