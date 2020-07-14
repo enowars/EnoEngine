@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using EnoCore.Models;
 using System.Linq;
 using EnoDatabase;
+using EnoCore.Utils;
 
 namespace FlagShooter
 {
@@ -71,27 +72,35 @@ namespace FlagShooter
         }
         public List<Flag> generateFlags(long FlagCount)
         {
-            long i = 0;
-            var result = new List<Flag>();
-            if (sb.CurrentRound != null)
+            try
             {
-                for (long r = sb.CurrentRound.Value; r > Math.Max(sb.CurrentRound.Value - Configuration.FlagValidityInRounds, 1); r--)
-                    for (int team = 0; team < Configuration.Teams.Count; team++)
-                        foreach (var s in sb.Services)
-                            for (int store = 0; store < s.MaxStores; store++)
-                            {
-                                if (i++ > FlagCount) return result;
-                                result.Add(new Flag()
+                long i = 0;
+                var result = new List<Flag>();
+                if (sb.CurrentRound != null)
+                {
+                    for (long r = sb.CurrentRound.Value; r > Math.Max(sb.CurrentRound.Value - Configuration.FlagValidityInRounds, 1); r--)
+                        for (int team = 0; team < Configuration.Teams.Count; team++)
+                            foreach (var s in sb.Services)
+                                for (int store = 0; store < s.MaxStores; store++)
                                 {
-                                    RoundId = (sb.CurrentRound - r) ?? 0,
-                                    OwnerId = team,
-                                    ServiceId = s.ServiceId,
-                                    RoundOffset = store
-                                });
-                            }
+                                    if (i++ > FlagCount) return result;
+                                    result.Add(new Flag()
+                                    {
+                                        RoundId = (sb.CurrentRound - r) ?? 0,
+                                        OwnerId = team,
+                                        ServiceId = s.ServiceId,
+                                        RoundOffset = store
+                                    });
+                                }
+                }
+                Console.WriteLine($"Not Enough Flags available, requested {FlagCount} and got {i}");
+                return result;
             }
-            Console.WriteLine($"Not Enough Flags available, requested {FlagCount} and got {i}");
-            return result;
+            catch (Exception e)
+            {
+                Console.WriteLine($"Exception Generating flags: {e.ToFancyString()}");
+                throw e;
+            }
         }
 
         public async Task FlagRunnerLoop()
