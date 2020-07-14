@@ -221,13 +221,13 @@ namespace FlagShooter
                 }
                 Watch = new FileSystemWatcher()
                 {
-                    Path = "./../data/",
+                    Path = @".\..\data\",
                     NotifyFilter =  NotifyFilters.LastWrite |
                                     NotifyFilters.LastAccess |
                                     NotifyFilters.FileName,
                 };
                 Watch.Filters.Add("scoreboard.json");
-                Watch.Filters.Add("scoreboardInfo.json");
+                //Watch.Filters.Add("scoreboardInfo.json");
                 Watch.Changed += OnChanged;
                 Watch.Created += OnChanged;
                 Watch.Deleted += OnChanged;
