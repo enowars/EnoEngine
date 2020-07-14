@@ -58,7 +58,7 @@ namespace EnoCore.Models.Database
             flagSignature.CopyTo(flagBytes.Slice(flagContent.Length));
             return "ENO" + Convert.ToBase64String(flagBytes);
         }
-        public string ToUtfString(byte[] signingKey)
+        private string ToUtfString(byte[] signingKey)
         {
             Span<byte> flagContent = stackalloc byte[sizeof(int) * 4];
             BitConverter.TryWriteBytes(flagContent, (int)ServiceId);

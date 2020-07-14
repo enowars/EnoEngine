@@ -44,6 +44,10 @@ namespace EnoDatabase
                     oldFlags += 1;
                     continue;
                 }
+                if (flag.RoundId>currentRoundId)
+                {
+                    Logger.LogError($"A Future Flag was submitted: Round is {currentRoundId}, Flag's round is {flag.RoundId}");
+                }
                 if (updates.TryGetValue((flag.ServiceId, flag.RoundId, flag.OwnerId, flag.RoundOffset, attackerTeamId), out var entry))
                 {
                     tResult.SetResult(FlagSubmissionResult.Duplicate);

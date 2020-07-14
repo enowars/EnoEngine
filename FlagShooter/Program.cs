@@ -24,7 +24,6 @@ namespace FlagShooter
     class Program
     {
         private static readonly CancellationTokenSource LauncherCancelSource = new CancellationTokenSource();
-        private readonly ServiceProvider ServiceProvider;
         private readonly Dictionary<long, (TcpClient, StreamReader reader, StreamWriter writer)[]> TeamSockets =
             new Dictionary<long, (TcpClient, StreamReader reader, StreamWriter writer)[]>();
         private readonly int FlagCount;
@@ -33,21 +32,17 @@ namespace FlagShooter
         private readonly int TeamCount;
         private readonly int SubmissionConnectionsPerTeam;
         private readonly JsonConfiguration Configuration;
+        private static FileSystemWatcher Watch;
+        private static EnoEngineScoreboard sb;
 
-        public Program(ServiceProvider serviceProvider, int flagCount, int roundDelay, int teamStart, int teamCount, int teamConnections, JsonConfiguration configuration)
+        public Program(int flagCount, int roundDelay, int teamStart, int teamCount, int teamConnections, JsonConfiguration configuration)
         {
-            ServiceProvider = serviceProvider;
             FlagCount = flagCount;
             TeamStart = teamStart;
             RoundDelay = roundDelay;
             TeamCount = teamCount;
             SubmissionConnectionsPerTeam = teamConnections;
             Configuration = configuration;
-            using (var scope = ServiceProvider.CreateScope())
-            {
-                var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                db.Migrate();
-            }
             Console.WriteLine("Initializing connections");
             for (int i = 0; i < TeamCount; i++)
             {
@@ -74,33 +69,49 @@ namespace FlagShooter
         {
             FlagRunnerLoop().Wait();
         }
+        public List<Flag> generateFlags(long FlagCount)
+        {
+            long i = 0;
+            var result = new List<Flag>();
+            if (sb.CurrentRound != null)
+            {
+                for (long r = sb.CurrentRound.Value; r > Math.Max(sb.CurrentRound.Value - Configuration.FlagValidityInRounds, 1); r--)
+                    for (int team = 0; team < Configuration.Teams.Count; team++)
+                        foreach (var s in sb.Services)
+                            for (int store = 0; store < s.MaxStores; store++)
+                            {
+                                if (i++ > FlagCount) return result;
+                                result.Add(new Flag()
+                                {
+                                    RoundId = (sb.CurrentRound - r) ?? 0,
+                                    OwnerId = team,
+                                    ServiceId = s.ServiceId,
+                                    RoundOffset = store
+                                });
+                            }
+            }
+            Console.WriteLine($"Not Enough Flags available, requested {FlagCount} and got {i}");
+            return result;
+        }
 
         public async Task FlagRunnerLoop()
         {
-            using (var scope = ServiceProvider.CreateScope())
-            {
-                var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                db.Migrate();
-            }
-
             Console.WriteLine("$FlagRunnerLoop starting");
 
             while (!LauncherCancelSource.IsCancellationRequested)
             {
                 try
                 {
-                    using var scope = ServiceProvider.CreateScope();
-                    var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                    var flags = await db.RetrieveFlags(FlagCount);
+                    var flags = generateFlags(FlagCount);
                     var tasks = new Task[TeamCount];
-                    if (flags.Length > 0)
+                    if (flags.Count > 0)
                     {
-                        Console.WriteLine($"Sending {flags.Length} flags");
+                        Console.WriteLine($"Sending {flags.Count} flags");
                     }
                     for (int i = 0; i < TeamCount; i++)
                     {
                         var ti = i;
-                        tasks[ti] = Task.Run(async () => await SendFlagsTask(flags.Select(f => f.ToUtfString(Encoding.UTF8.GetBytes(Configuration.FlagSigningKey))).ToArray(), ti + 1));
+                        tasks[ti] = Task.Run(async () => await SendFlagsTask(flags.Select(f => f.ToString(Encoding.UTF8.GetBytes(Configuration.FlagSigningKey), Configuration.Encoding)).ToArray(), ti + 1));
                     }
                     await Task.WhenAll(tasks);
                     await Task.Delay(RoundDelay, LauncherCancelSource.Token);
@@ -144,7 +155,30 @@ namespace FlagShooter
                 Console.WriteLine($"SendFlagTask failed because: {EnoDatabaseUtils.FormatException(e)}");
             }
         }
+        private static void ParseScoreboard(string fileName)
+        {
+            if (!File.Exists(fileName))
+            {
+                Console.WriteLine($"Config {fileName} does not exist");
+                return;
+            }
+            try
+            {
+                var content = File.ReadAllText(fileName);
+                sb = JsonSerializer.Deserialize<EnoEngineScoreboard>(content);
 
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Failed to load {fileName}: {e.Message}");
+                return;
+            }
+        }
+        private static void OnChanged(object source, FileSystemEventArgs e)
+        {
+            Console.WriteLine($"File: {e.FullPath} {e.ChangeType}");
+            if (e.Name.Contains("scoreboard.json")) ParseScoreboard(e.FullPath);
+        }
 
         static void Main(int flagCount = 10000, int roundDelay = 1000, int teamStart = 1, int teamCount = 10, int teamConnections = 1)
         {
@@ -167,18 +201,20 @@ namespace FlagShooter
                     Console.WriteLine($"Failed to load ctf.json: {e.Message}");
                     return;
                 }
+                Watch = new FileSystemWatcher()
+                {
+                    Path = "./../data/",
+                    NotifyFilter =  NotifyFilters.LastWrite |
+                                    NotifyFilters.LastAccess |
+                                    NotifyFilters.FileName,
+                };
+                Watch.Filters.Add("scoreboard.json");
+                Watch.Filters.Add("scoreboardInfo.json");
+                Watch.Changed += OnChanged;
+                Watch.Created += OnChanged;
+                Watch.Deleted += OnChanged;
 
-                var serviceProvider = new ServiceCollection()
-                    .AddDbContextPool<EnoDatabaseContext>(options =>
-                    {
-                        options.UseNpgsql(
-                            EnoDatabaseUtils.PostgresConnectionString,
-                            pgoptions => pgoptions.EnableRetryOnFailure());
-                    }, 2)
-                    .AddScoped<IEnoDatabase, EnoDatabase.EnoDatabase>()
-                    .AddLogging(logging => logging.AddConsole())
-                    .BuildServiceProvider(validateScopes: true);
-                new Program(serviceProvider, flagCount, roundDelay, teamStart, teamCount, teamConnections, configuration).Start();
+                new Program(flagCount, roundDelay, teamStart, teamCount, teamConnections, configuration).Start();
             }
             catch (Exception e)
             {
