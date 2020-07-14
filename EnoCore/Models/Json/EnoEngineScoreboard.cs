@@ -15,7 +15,10 @@ namespace EnoCore.Models.Json
         public double? EndTimeEpoch { get; set; }
         public EnoEngineScoreboardService[] Services { get; private set; }
         public EnoEngineScoreboardEntry[] Teams { get; private set; }
+        public EnoEngineScoreboard ()
+        {
 
+        }
         public EnoEngineScoreboard(Round round, List<Service> services, Dictionary<(long serviceid, long flagindex), EnoScoreboardFirstblood> firstBloods, List<Team> teams)
         {
             CurrentRound = round?.Id;
