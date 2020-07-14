@@ -76,24 +76,28 @@ namespace FlagShooter
             {
                 long i = 0;
                 var result = new List<Flag>();
-                if (sb.CurrentRound != null)
-                {
-                    for (long r = sb.CurrentRound.Value; r > Math.Max(sb.CurrentRound.Value - Configuration.FlagValidityInRounds, 1); r--)
-                        for (int team = 0; team < Configuration.Teams.Count; team++)
-                            foreach (var s in sb.Services)
-                                for (int store = 0; store < s.MaxStores; store++)
-                                {
-                                    if (i++ > FlagCount) return result;
-                                    result.Add(new Flag()
+                if (sb != null)
+                    if (sb.CurrentRound != null)
+                    {
+                        for (long r = sb.CurrentRound.Value; r > Math.Max(sb.CurrentRound.Value - Configuration.FlagValidityInRounds, 1); r--)
+                            for (int team = 0; team < Configuration.Teams.Count; team++)
+                                foreach (var s in sb.Services)
+                                    for (int store = 0; store < s.MaxStores; store++)
                                     {
-                                        RoundId = (sb.CurrentRound - r) ?? 0,
-                                        OwnerId = team,
-                                        ServiceId = s.ServiceId,
-                                        RoundOffset = store
-                                    });
-                                }
-                }
-                Console.WriteLine($"Not Enough Flags available, requested {FlagCount} and got {i}");
+                                        if (i++ > FlagCount) return result;
+                                        result.Add(new Flag()
+                                        {
+                                            RoundId = (sb.CurrentRound - r) ?? 0,
+                                            OwnerId = team,
+                                            ServiceId = s.ServiceId,
+                                            RoundOffset = store
+                                        });
+                                    }
+
+                        Console.WriteLine($"Not Enough Flags available, requested {FlagCount} and got {i}");
+                        return result;
+                    }
+                Console.WriteLine($"No Flags could be generated, Scoreboard data not Found");
                 return result;
             }
             catch (Exception e)
@@ -116,14 +120,19 @@ namespace FlagShooter
                     if (flags.Count > 0)
                     {
                         Console.WriteLine($"Sending {flags.Count} flags");
+
+                        for (int i = 0; i < TeamCount; i++)
+                        {
+                            var ti = i;
+                            tasks[ti] = Task.Run(async () => await SendFlagsTask(flags.Select(f => f.ToString(Encoding.UTF8.GetBytes(Configuration.FlagSigningKey), Configuration.Encoding)).ToArray(), ti + 1));
+                        }
+                        await Task.WhenAll(tasks);
+                        await Task.Delay(RoundDelay, LauncherCancelSource.Token);
                     }
-                    for (int i = 0; i < TeamCount; i++)
+                    else
                     {
-                        var ti = i;
-                        tasks[ti] = Task.Run(async () => await SendFlagsTask(flags.Select(f => f.ToString(Encoding.UTF8.GetBytes(Configuration.FlagSigningKey), Configuration.Encoding)).ToArray(), ti + 1));
+                        await Task.Delay(1000);
                     }
-                    await Task.WhenAll(tasks);
-                    await Task.Delay(RoundDelay, LauncherCancelSource.Token);
                 }
                 catch (Exception e)
                 {
