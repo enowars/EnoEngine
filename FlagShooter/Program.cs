@@ -103,6 +103,7 @@ namespace FlagShooter
             catch (Exception e)
             {
                 Console.WriteLine($"Exception Generating flags: {e.ToFancyString()}");
+                return result;
                 //throw e;
             }
         }
