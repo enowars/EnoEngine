@@ -220,10 +220,12 @@ namespace FlagShooter
                     return;
                 }
                 var path = Directory.GetParent(Directory.GetCurrentDirectory()).FullName;
-                Console.WriteLine($"Path ís: {path}");
+                Console.WriteLine($"Path is: {path}");
+                path = Path.Combine(path, "data");
+                Console.WriteLine($"Path is: {path}");
                 Watch = new FileSystemWatcher()
                 {
-                    Path = Path.Combine(path, "data"),
+                    Path = path,
                     NotifyFilter =  NotifyFilters.LastWrite |
                                     NotifyFilters.LastAccess |
                                     NotifyFilters.FileName,
