@@ -221,7 +221,7 @@ namespace FlagShooter
                 }
                 Watch = new FileSystemWatcher()
                 {
-                    Path = Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory()).FullName, "/data"),
+                    Path = Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory()).FullName, "data"),
                     NotifyFilter =  NotifyFilters.LastWrite |
                                     NotifyFilters.LastAccess |
                                     NotifyFilters.FileName,
