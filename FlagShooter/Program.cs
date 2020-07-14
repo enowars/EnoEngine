@@ -72,10 +72,10 @@ namespace FlagShooter
         }
         public List<Flag> generateFlags(long FlagCount)
         {
+            var result = new List<Flag>();
             try
             {
                 long i = 0;
-                var result = new List<Flag>();
                 if (sb != null)
                     if (sb.CurrentRound != null)
                     {
