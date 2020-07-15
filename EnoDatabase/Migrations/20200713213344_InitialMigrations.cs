@@ -103,107 +103,6 @@ namespace EnoDatabase.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Flags",
-                columns: table => new
-                {
-                    OwnerId = table.Column<long>(nullable: false),
-                    ServiceId = table.Column<long>(nullable: false),
-                    RoundOffset = table.Column<int>(nullable: false),
-                    RoundId = table.Column<long>(nullable: false),
-                    Captures = table.Column<long>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Flags", x => new { x.ServiceId, x.RoundId, x.OwnerId, x.RoundOffset });
-                    table.ForeignKey(
-                        name: "FK_Flags_Teams_OwnerId",
-                        column: x => x.OwnerId,
-                        principalTable: "Teams",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Flags_Rounds_RoundId",
-                        column: x => x.RoundId,
-                        principalTable: "Rounds",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Flags_Services_ServiceId",
-                        column: x => x.ServiceId,
-                        principalTable: "Services",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Havocs",
-                columns: table => new
-                {
-                    Id = table.Column<long>(nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    OwnerId = table.Column<long>(nullable: false),
-                    ServiceId = table.Column<long>(nullable: false),
-                    GameRoundId = table.Column<long>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Havocs", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Havocs_Rounds_GameRoundId",
-                        column: x => x.GameRoundId,
-                        principalTable: "Rounds",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Havocs_Teams_OwnerId",
-                        column: x => x.OwnerId,
-                        principalTable: "Teams",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Havocs_Services_ServiceId",
-                        column: x => x.ServiceId,
-                        principalTable: "Services",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Noises",
-                columns: table => new
-                {
-                    Id = table.Column<long>(nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    StringRepresentation = table.Column<string>(nullable: false),
-                    OwnerId = table.Column<long>(nullable: false),
-                    ServiceId = table.Column<long>(nullable: false),
-                    RoundOffset = table.Column<int>(nullable: false),
-                    GameRoundId = table.Column<long>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Noises", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Noises_Rounds_GameRoundId",
-                        column: x => x.GameRoundId,
-                        principalTable: "Rounds",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Noises_Teams_OwnerId",
-                        column: x => x.OwnerId,
-                        principalTable: "Teams",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Noises_Services_ServiceId",
-                        column: x => x.ServiceId,
-                        principalTable: "Services",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "RoundTeamServiceStates",
                 columns: table => new
                 {
@@ -329,12 +228,6 @@ namespace EnoDatabase.Migrations
                         principalTable: "Rounds",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_SubmittedFlags_Flags_FlagServiceId_FlagRoundId_FlagOwnerId_~",
-                        columns: x => new { x.FlagServiceId, x.FlagRoundId, x.FlagOwnerId, x.FlagRoundOffset },
-                        principalTable: "Flags",
-                        principalColumns: new[] { "ServiceId", "RoundId", "OwnerId", "RoundOffset" },
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
@@ -351,46 +244,6 @@ namespace EnoDatabase.Migrations
                 name: "IX_CheckerTasks_CurrentRoundId_RelatedRoundId_CheckerResult",
                 table: "CheckerTasks",
                 columns: new[] { "CurrentRoundId", "RelatedRoundId", "CheckerResult" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Flags_OwnerId",
-                table: "Flags",
-                column: "OwnerId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Flags_RoundId",
-                table: "Flags",
-                column: "RoundId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Havocs_GameRoundId",
-                table: "Havocs",
-                column: "GameRoundId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Havocs_OwnerId",
-                table: "Havocs",
-                column: "OwnerId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Havocs_ServiceId",
-                table: "Havocs",
-                column: "ServiceId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Noises_GameRoundId",
-                table: "Noises",
-                column: "GameRoundId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Noises_OwnerId",
-                table: "Noises",
-                column: "OwnerId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Noises_ServiceId",
-                table: "Noises",
-                column: "ServiceId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RoundTeamServiceStates_GameRoundId",
@@ -444,12 +297,6 @@ namespace EnoDatabase.Migrations
                 name: "CheckerTasks");
 
             migrationBuilder.DropTable(
-                name: "Havocs");
-
-            migrationBuilder.DropTable(
-                name: "Noises");
-
-            migrationBuilder.DropTable(
                 name: "RoundTeamServiceStates");
 
             migrationBuilder.DropTable(
@@ -462,16 +309,13 @@ namespace EnoDatabase.Migrations
                 name: "SubmittedFlags");
 
             migrationBuilder.DropTable(
-                name: "Flags");
+                name: "Services");
 
             migrationBuilder.DropTable(
                 name: "Teams");
 
             migrationBuilder.DropTable(
                 name: "Rounds");
-
-            migrationBuilder.DropTable(
-                name: "Services");
         }
     }
 }

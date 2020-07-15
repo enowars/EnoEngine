@@ -33,6 +33,7 @@ namespace EnoDatabase
             var services = await _context.Services
                 .AsNoTracking()
                 .ToArrayAsync();
+
             var teams = await _context.Teams
                 .AsNoTracking()
                 .ToArrayAsync();
@@ -94,27 +95,38 @@ namespace EnoDatabase
                 .AsNoTracking()
                 .ToDictionaryAsync(rtss => rtss.Key);
 
-            var lostFlags = (await _context.Flags
+            // FlagServiceId, FlagRoundId, FlagOwnerId, FlagRoundOffset
+            var lostFlags = (await _context.SubmittedFlags
                 .TagWith("CalculateServiceStats:lostFlags")
                 .AsNoTracking()
-                .Where(f => f.ServiceId == service.Id)
-                .Where(f => f.RoundId > newLatestSnapshotRoundId)
-                .Where(f => f.RoundId <= roundId)
-                .Where(f => f.Captures > 0)
+                .Where(sf => sf.FlagServiceId == service.Id)
+                .Where(sf => sf.RoundId > newLatestSnapshotRoundId)
+                .Where(sf => sf.RoundId <= roundId)
+                .GroupBy(sf => new { sf.FlagServiceId, sf.FlagRoundId, sf.FlagOwnerId, sf.FlagRoundOffset })
+                .Select(g => new { g.Key, Captures = g.Count() })           // Flag -> LossesOfFlag
                 .ToArrayAsync())
-                .GroupBy(f => f.OwnerId, f => f.Captures)
-                .ToDictionary(g => g.Key, sf => sf.AsEnumerable());
+                .GroupBy(f => f.Key.FlagOwnerId, f => f.Captures)           // This is not a SQL GROUP BY
+                .ToDictionary(g => g.Key, g => g.AsEnumerable());           // TeamId -> [LossesOfFlag]
 
             var capturedFlags = (await _context.SubmittedFlags
                 .TagWith("CalculateServiceStats:capturedFlags")
                 .AsNoTracking()
                 .Where(sf => sf.FlagServiceId == service.Id)
-                .Where(sf => sf.FlagRoundId > newLatestSnapshotRoundId)
-                .Where(sf => sf.FlagRoundId <= roundId)
-                .Include(sf => sf.Flag)
+                .Where(sf => sf.RoundId > newLatestSnapshotRoundId)
+                .Where(sf => sf.RoundId <= roundId)
                 .ToArrayAsync())
-                .GroupBy(sf => sf.AttackerTeamId)
+                .GroupBy(sf => sf.AttackerTeamId)                           // This is not a SQL GROUP BY
                 .ToDictionary(sf => sf.Key, sf => sf.AsEnumerable());
+
+            var allCapturesOfFlags = await _context.SubmittedFlags
+                .TagWith("CalculateServiceStats:allCapturesOfFlags")
+                .AsNoTracking()
+                .Where(sf => sf.FlagServiceId == service.Id)
+                .Where(sf => sf.RoundId > newLatestSnapshotRoundId)
+                .Where(sf => sf.RoundId <= roundId)
+                .GroupBy(sf => new { sf.FlagRoundId, sf.FlagOwnerId, sf.FlagRoundOffset })
+                .Select(g => new { g.Key, Amount = g.Count() })
+                .ToDictionaryAsync(g => g.Key);
 
             var serviceStats = await _context.ServiceStats
                 .Where(ss => ss.ServiceId == service.Id)
@@ -154,7 +166,7 @@ namespace EnoDatabase
                     attackPoints += capturedFlagsOfTeam.Count();
                     foreach (var capture in capturedFlagsOfTeam)
                     {
-                        attackPoints += 1.0 / capture.Flag.Captures;
+                        attackPoints += 1.0 / allCapturesOfFlags[new { capture.FlagRoundId, capture.FlagOwnerId, capture.FlagRoundOffset }].Amount;
                     }
                 }
 
@@ -170,26 +182,26 @@ namespace EnoDatabase
 
         private async Task<Dictionary<long, ServiceStatsSnapshot>> CreateServiceSnapshot(Team[] teams, long newLatestSnapshotRoundId, long serviceId)
         {
-            //TODO white existing snapshot
+            //TODO delete existing snapshot?
             var oldSnapshot = await GetSnapshot(teams, newLatestSnapshotRoundId - 1, serviceId);
-            var lostFlags = (await _context.Flags
+            var lostFlags = (await _context.SubmittedFlags
                 .TagWith("CreateSnapshot:lostFlags")
                 .AsNoTracking()
-                .Where(f => f.ServiceId == serviceId)
-                .Where(f => f.RoundId == newLatestSnapshotRoundId)
-                .Where(f => f.Captures > 0)
+                .Where(sf => sf.FlagServiceId == serviceId)
+                .Where(sf => sf.RoundId == newLatestSnapshotRoundId)
+                .GroupBy(sf => new { sf.FlagServiceId, sf.FlagRoundId, sf.FlagOwnerId, sf.FlagRoundOffset })
+                .Select(g => new { g.Key, Captures = g.Count() })       // Flag -> LossesOfFlag
                 .ToArrayAsync())
-                .GroupBy(f => f.OwnerId, f => f.Captures)
-                .ToDictionary(g => g.Key, sf => sf.AsEnumerable());
+                .GroupBy(f => f.Key.FlagOwnerId, f => f.Captures)       // This is not a SQL GROUP BY
+                .ToDictionary(g => g.Key, g => g.AsEnumerable());       // TeamId -> [LossesOfFlag]
 
             var capturedFlags = (await _context.SubmittedFlags
-                .TagWith("CreateSnapshot:capturedFlags")
+                .TagWith("CalculateServiceStats:capturedFlags")
                 .AsNoTracking()
                 .Where(sf => sf.FlagServiceId == serviceId)
-                .Where(sf => sf.FlagRoundId == newLatestSnapshotRoundId)
-                .Include(sf => sf.Flag)
+                .Where(sf => sf.RoundId == newLatestSnapshotRoundId)
                 .ToArrayAsync())
-                .GroupBy(sf => sf.AttackerTeamId)
+                .GroupBy(sf => sf.AttackerTeamId)                           // This is not a SQL GROUP BY
                 .ToDictionary(sf => sf.Key, sf => sf.AsEnumerable());
 
             var serviceStates = await _context.RoundTeamServiceStates
@@ -198,6 +210,15 @@ namespace EnoDatabase
                 .Where(rtts => rtts.GameRoundId == newLatestSnapshotRoundId)
                 .AsNoTracking()
                 .ToDictionaryAsync(rtss => rtss.TeamId);
+
+            var allCapturesOfFlags = await _context.SubmittedFlags
+                .TagWith("CalculateServiceStats:allCapturesOfFlags")
+                .AsNoTracking()
+                .Where(sf => sf.FlagServiceId == serviceId)
+                .Where(sf => sf.RoundId == newLatestSnapshotRoundId)
+                .GroupBy(sf => new { sf.FlagRoundId, sf.FlagOwnerId, sf.FlagRoundOffset })
+                .Select(g => new { g.Key, Amount = g.Count() })
+                .ToDictionaryAsync(g => g.Key);
 
             var newServiceSnapshot = teams.ToDictionary(t => t.Id, t => new ServiceStatsSnapshot()
             {
@@ -239,7 +260,7 @@ namespace EnoDatabase
                     attackPoints += capturedFlagsOfTeam.Count();
                     foreach (var capture in capturedFlagsOfTeam)
                     {
-                        attackPoints += 1.0 / capture.Flag.Captures;
+                        attackPoints += 1.0 / allCapturesOfFlags[new { capture.FlagRoundId, capture.FlagOwnerId, capture.FlagRoundOffset }].Amount;
                     }
                 }
                 var teamSnapshot = newServiceSnapshot[team.Id];
@@ -282,34 +303,6 @@ namespace EnoDatabase
                 .OrderBy(s => s.Id)
                 .ToList();
             Dictionary<(long serviceid, long flagindex), EnoScoreboardFirstblood> firstbloods = new Dictionary<(long serviceid, long flagindex), EnoScoreboardFirstblood>();
-            /*
-select * from
-(select distinct on ("ServiceId", "RoundOffset")
-"RoundId", "Teams"."Name", "Services"."Name", "RoundOffset", "FlagId", "SubmittedFlags"."Id" as "SubmittedId"
-from "Flags"
-join "SubmittedFlags" on "SubmittedFlags"."FlagId" = "Flags"."Id"
-inner join "Teams" on "Teams"."Id" = "SubmittedFlags"."AttackerTeamId"
-inner join "Services" on "ServiceId" = "Services"."Id"
-where "Teams"."Name" <> 'ENOOP'
-order by "ServiceId", "RoundOffset", "SubmittedFlags"."Id" asc) xyz
-order by "SubmittedId" asc
-*/
-/*
-            var flags = await _context.SubmittedFlags.FromSqlRaw(@"select * from
-(select distinct on(""ServiceId"", ""RoundOffset"")
-""RoundId"", ""Teams"".""Name"", ""Services"".""Name"", ""RoundOffset"", ""FlagId"", ""SubmittedFlags"".""Id"" as ""SubmittedId""
-from ""Flags""
-join ""SubmittedFlags"" on ""SubmittedFlags"".""FlagId"" = ""Flags"".""Id""
-inner join ""Teams"" on ""Teams"".""Id"" = ""SubmittedFlags"".""AttackerTeamId""
-inner join ""Services"" on ""ServiceId"" = ""Services"".""Id""
-where ""Teams"".""Name"" <> 'ENOOP'
-order by ""ServiceId"", ""RoundOffset"", ""SubmittedFlags"".""Id"" asc) xyz
-order by ""SubmittedId"" asc").ToArrayAsync();
-            _context.SubmittedFlags
-                .Select(sf => new { sf.FlagServiceId, sf.FlagRoundOffset })
-                .Distinct()
-                .ToArray();
-                */
             foreach (var service in services)
             {
                 for (int i = 0; i < service.FetchedFlagsPerRound; i++)

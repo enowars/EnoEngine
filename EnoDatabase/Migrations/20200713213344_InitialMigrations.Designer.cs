@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EnoDatabase.Migrations
 {
     [DbContext(typeof(EnoDatabaseContext))]
-    [Migration("20200713125718_InitialMigrations")]
+    [Migration("20200713213344_InitialMigrations")]
     partial class InitialMigrations
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -92,93 +92,6 @@ namespace EnoDatabase.Migrations
                     b.HasIndex("CurrentRoundId", "RelatedRoundId", "CheckerResult");
 
                     b.ToTable("CheckerTasks");
-                });
-
-            modelBuilder.Entity("EnoCore.Models.Database.Flag", b =>
-                {
-                    b.Property<long>("ServiceId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("RoundId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("OwnerId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("RoundOffset")
-                        .HasColumnType("integer");
-
-                    b.Property<long>("Captures")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("ServiceId", "RoundId", "OwnerId", "RoundOffset");
-
-                    b.HasIndex("OwnerId");
-
-                    b.HasIndex("RoundId");
-
-                    b.ToTable("Flags");
-                });
-
-            modelBuilder.Entity("EnoCore.Models.Database.Havoc", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
-
-                    b.Property<long>("GameRoundId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("OwnerId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("ServiceId")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GameRoundId");
-
-                    b.HasIndex("OwnerId");
-
-                    b.HasIndex("ServiceId");
-
-                    b.ToTable("Havocs");
-                });
-
-            modelBuilder.Entity("EnoCore.Models.Database.Noise", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
-
-                    b.Property<long>("GameRoundId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("OwnerId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("RoundOffset")
-                        .HasColumnType("integer");
-
-                    b.Property<long>("ServiceId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("StringRepresentation")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GameRoundId");
-
-                    b.HasIndex("OwnerId");
-
-                    b.HasIndex("ServiceId");
-
-                    b.ToTable("Noises");
                 });
 
             modelBuilder.Entity("EnoCore.Models.Database.Round", b =>
@@ -427,69 +340,6 @@ namespace EnoDatabase.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("EnoCore.Models.Database.Flag", b =>
-                {
-                    b.HasOne("EnoCore.Models.Database.Team", "Owner")
-                        .WithMany()
-                        .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("EnoCore.Models.Database.Round", "Round")
-                        .WithMany()
-                        .HasForeignKey("RoundId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("EnoCore.Models.Database.Service", "Service")
-                        .WithMany()
-                        .HasForeignKey("ServiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("EnoCore.Models.Database.Havoc", b =>
-                {
-                    b.HasOne("EnoCore.Models.Database.Round", "GameRound")
-                        .WithMany()
-                        .HasForeignKey("GameRoundId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("EnoCore.Models.Database.Team", "Owner")
-                        .WithMany()
-                        .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("EnoCore.Models.Database.Service", "Service")
-                        .WithMany()
-                        .HasForeignKey("ServiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("EnoCore.Models.Database.Noise", b =>
-                {
-                    b.HasOne("EnoCore.Models.Database.Round", "GameRound")
-                        .WithMany()
-                        .HasForeignKey("GameRoundId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("EnoCore.Models.Database.Team", "Owner")
-                        .WithMany()
-                        .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("EnoCore.Models.Database.Service", "Service")
-                        .WithMany()
-                        .HasForeignKey("ServiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("EnoCore.Models.Database.RoundTeamServiceState", b =>
                 {
                     b.HasOne("EnoCore.Models.Database.Round", "GameRound")
@@ -558,12 +408,6 @@ namespace EnoDatabase.Migrations
                     b.HasOne("EnoCore.Models.Database.Round", "Round")
                         .WithMany()
                         .HasForeignKey("RoundId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("EnoCore.Models.Database.Flag", "Flag")
-                        .WithMany("FlagSubmissions")
-                        .HasForeignKey("FlagServiceId", "FlagRoundId", "FlagOwnerId", "FlagRoundOffset")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
