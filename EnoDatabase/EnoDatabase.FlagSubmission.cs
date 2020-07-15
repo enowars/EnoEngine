@@ -31,7 +31,7 @@ namespace EnoDatabase
                 .OrderByDescending(r => r.Id)
                 .Select(r => r.Id)
                 .FirstAsync();
-            submittedFlagsStatement.Append($"insert into \"{nameof(EnoDatabaseContext.SubmittedFlags)}\" (\"{nameof(SubmittedFlag.FlagServiceId)}\", \"{nameof(SubmittedFlag.FlagRoundId)}\", \"{nameof(SubmittedFlag.FlagOwnerId)}\", \"{nameof(SubmittedFlag.FlagRoundOffset)}\", \"{nameof(SubmittedFlag.AttackerTeamId)}\", \"{nameof(SubmittedFlag.RoundId)}\", \"{nameof(SubmittedFlag.SubmissionsCount)}\")\nvalues ");
+            submittedFlagsStatement.Append($"insert into \"{nameof(EnoDatabaseContext.SubmittedFlags)}\" (\"{nameof(SubmittedFlag.FlagServiceId)}\", \"{nameof(SubmittedFlag.FlagRoundId)}\", \"{nameof(SubmittedFlag.FlagOwnerId)}\", \"{nameof(SubmittedFlag.FlagRoundOffset)}\", \"{nameof(SubmittedFlag.AttackerTeamId)}\", \"{nameof(SubmittedFlag.RoundId)}\", \"{nameof(SubmittedFlag.SubmissionsCount)}\", \"{nameof(SubmittedFlag.Timestamp)}\")\nvalues ");
 
             // Filter for duplicates within this batch
             var updates = new Dictionary<(long, long, long, long, long), long>(submissions.Count);
@@ -92,10 +92,10 @@ namespace EnoDatabase
                 // Build the statements
                 foreach (var ((serviceId, roundId, ownerId, roundOffset, attackerTeamId), count) in updatesArray)
                 {
-                    submittedFlagsStatement.Append($"({serviceId}, {roundId}, {ownerId}, {roundOffset}, {attackerTeamId}, {currentRoundId}, {count}),");
+                    submittedFlagsStatement.Append($"({serviceId}, {roundId}, {ownerId}, {roundOffset}, {attackerTeamId}, {currentRoundId}, {count}, NOW()),");
                 }
                 submittedFlagsStatement.Length--; // Pointers are fun!
-                submittedFlagsStatement.Append($"\non conflict (\"{nameof(SubmittedFlag.FlagServiceId)}\", \"{nameof(SubmittedFlag.FlagRoundId)}\", \"{nameof(SubmittedFlag.FlagOwnerId)}\", \"{nameof(SubmittedFlag.FlagRoundOffset)}\", \"{nameof(SubmittedFlag.AttackerTeamId)}\") do update set \"{nameof(SubmittedFlag.SubmissionsCount)}\" = \"{nameof(EnoDatabaseContext.SubmittedFlags)}\".\"{nameof(SubmittedFlag.SubmissionsCount)}\" + excluded.\"{nameof(SubmittedFlag.SubmissionsCount)}\" returning \"{nameof(SubmittedFlag.FlagServiceId)}\", \"{nameof(SubmittedFlag.FlagOwnerId)}\", \"{nameof(SubmittedFlag.FlagRoundId)}\", \"{nameof(SubmittedFlag.FlagRoundOffset)}\", \"{nameof(SubmittedFlag.AttackerTeamId)}\", \"{nameof(SubmittedFlag.RoundId)}\", \"{nameof(SubmittedFlag.SubmissionsCount)}\";");
+                submittedFlagsStatement.Append($"\non conflict (\"{nameof(SubmittedFlag.FlagServiceId)}\", \"{nameof(SubmittedFlag.FlagRoundId)}\", \"{nameof(SubmittedFlag.FlagOwnerId)}\", \"{nameof(SubmittedFlag.FlagRoundOffset)}\", \"{nameof(SubmittedFlag.AttackerTeamId)}\") do update set \"{nameof(SubmittedFlag.SubmissionsCount)}\" = \"{nameof(EnoDatabaseContext.SubmittedFlags)}\".\"{nameof(SubmittedFlag.SubmissionsCount)}\" + excluded.\"{nameof(SubmittedFlag.SubmissionsCount)}\" returning \"{nameof(SubmittedFlag.FlagServiceId)}\", \"{nameof(SubmittedFlag.FlagOwnerId)}\", \"{nameof(SubmittedFlag.FlagRoundId)}\", \"{nameof(SubmittedFlag.FlagRoundOffset)}\", \"{nameof(SubmittedFlag.AttackerTeamId)}\", \"{nameof(SubmittedFlag.RoundId)}\", \"{nameof(SubmittedFlag.SubmissionsCount)}\", \"{nameof(SubmittedFlag.Timestamp)}\";");
 
                 using var transaction = _context.Database.BeginTransaction();
                 try
