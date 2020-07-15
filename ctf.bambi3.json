@@ -1,0 +1,85 @@
+{
+	"FlagValidityInRounds": 15,
+	"CheckedRoundsPerRound": 3,
+	"RoundLengthInSeconds": 60,
+	"DnsSuffix": "bambi.ovh",
+	"TeamSubnetBytesLength": 16,
+	"FlagSigningKey": "ir7PRm0SzqzA0lmFyBfUv68E6Yb7cjbJDp6dummqwr0Od70Sar7P27HVY6oc8Pux",
+	"NoiseSigningKey": "cGSiyYn6VjTUxS7PZInBaCYW83KTaFJPq6zaWji0NGzJ6wpZMUDJKbgo8tkfT35x",
+	"Encoding": "Legacy",
+	"Teams": [{
+		"Id": 1,
+		"Name": "Northern Pudú",
+		"TeamSubnet": "::ffff:10.0.0.1"
+	},{
+		"Id": 2,
+		"Name": "Southern Pudú",
+		"TeamSubnet": "::ffff:10.0.0.2"
+	},{
+		"Id": 3,
+		"Name": "Gray Brocket",
+		"TeamSubnet": "::ffff:10.0.0.3"
+	},{
+		"Id": 4,
+		"Name": "White-Tailed Deer",
+		"TeamSubnet": "::ffff:10.0.0.4"
+	},{
+		"Id": 5,
+		"Name": "Chital",
+		"TeamSubnet": "::ffff:10.0.0.5"
+	},{
+		"Id": 6,
+		"Name": "Chinese Muntjac",
+		"TeamSubnet": "::ffff:10.0.0.6"
+	},{
+		"Id": 7,
+		"Name": "Pygmy brocket",
+		"TeamSubnet": "::ffff:10.0.0.7"
+	},{
+		"Id": 8,
+		"Name": "Water Deer",
+		"TeamSubnet": "::ffff:10.0.0.8"
+	},{
+		"Id": 9,
+		"Name": "Brazilian Brocket",
+		"TeamSubnet": "::ffff:10.0.0.9"
+	},{
+		"Id": 10,
+		"Name": "Tufted Deer",
+		"TeamSubnet": "::ffff:10.0.0.10"
+	}],
+	"Services": [{
+			"Id": 1,
+			"Name": "WASP",
+			"FlagsPerRound": 2,
+			"NoisesPerRound": 0,
+			"HavocsPerRound": 0,
+			"WeightFactor": 1,
+			"Checkers": ["http://192.168.1.1:8000"]
+		},{
+			"Id": 2,
+			"Name": "DJBooth",
+			"FlagsPerRound": 1,
+			"NoisesPerRound": 0,
+			"HavocsPerRound": 0,
+			"WeightFactor": 1,
+			"Checkers": ["http://192.168.1.1:8001"]
+		},{
+			"Id": 3,
+			"Name": "switzerland",
+			"FlagsPerRound": 1,
+			"NoisesPerRound": 1,
+			"HavocsPerRound": 1,
+			"WeightFactor": 1,
+			"Checkers": ["http://192.168.1.1:8003"]
+		},{
+			"Id": 4,
+			"Name": "teapot",
+			"FlagsPerRound": 1,
+			"NoisesPerRound": 0,
+			"HavocsPerRound": 1,
+			"WeightFactor": 1,
+			"Checkers": ["http://192.168.1.1:8004"]
+		}
+	]
+}
