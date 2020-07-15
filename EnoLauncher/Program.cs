@@ -64,7 +64,7 @@ namespace EnoLauncher
 
             Client.Timeout = new TimeSpan(0, 1, 0);
             var loops = new Task[LAUNCHER_THREADS];
-            for (int i = 0;i<LAUNCHER_THREADS; i++)
+            for (int i = 0; i < LAUNCHER_THREADS; i++)
             {
                 loops[i] = LauncherLoop();
             }
@@ -140,6 +140,7 @@ namespace EnoLauncher
                     task.CheckerResult = checkerResult;
                     task.ErrorMessage = resultMessage.Message;
                     task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
+                    Statistics.CheckerTaskFinishedMessage(task);
                     ResultsQueue.Enqueue(task);
                     return;
                 }
@@ -148,6 +149,7 @@ namespace EnoLauncher
                     Logger.LogError($"LaunchCheckerTask {task.Id} {task.Method} returned {response.StatusCode} ({(int)response.StatusCode})");
                     task.CheckerResult = CheckerResult.INTERNAL_ERROR;
                     task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
+                    Statistics.CheckerTaskFinishedMessage(task);
                     ResultsQueue.Enqueue(task);
                     return;
                 }
@@ -157,6 +159,7 @@ namespace EnoLauncher
                 Logger.LogError($"{nameof(LaunchCheckerTask)} {task.Id} {task.Method}  was cancelled because it did not finish");
                 task.CheckerResult = CheckerResult.OFFLINE;
                 task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
+                Statistics.CheckerTaskFinishedMessage(task);
                 ResultsQueue.Enqueue(task);
             }
             catch (Exception e)
@@ -164,6 +167,7 @@ namespace EnoLauncher
                 Logger.LogError($"{nameof(LaunchCheckerTask)} {task.Id} failed: {EnoDatabaseUtils.FormatException(e)}");
                 task.CheckerResult = CheckerResult.INTERNAL_ERROR;
                 task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
+                Statistics.CheckerTaskFinishedMessage(task);
                 ResultsQueue.Enqueue(task);
             }
         }
@@ -213,14 +217,14 @@ namespace EnoLauncher
                 {
                     CheckerTask[] results = new CheckerTask[TASK_UPDATE_BATCH_SIZE];
                     int i = 0;
-                    for (; i < TASK_UPDATE_BATCH_SIZE;i++)
+                    for (; i < TASK_UPDATE_BATCH_SIZE; i++)
                     {
                         if (ResultsQueue.TryDequeue(out var result))
                             results[i] = result;
                         else
                             break;
                     }
-                    
+
                     while (!LauncherCancelSource.IsCancellationRequested)
                     {
                         try

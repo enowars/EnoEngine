@@ -31,9 +31,14 @@ namespace EnoCore.Logging
             var message = new CheckerTaskLaunchMessage(task);
             Queue.Enqueue(PREFIX + JsonSerializer.Serialize(message) + "\n");
         }
-        public void CheckerTaskFinishedMessage(long roundId, string message, long time)
+        public void CheckerTaskAggregateMessage(long roundId, string message, long time)
         {
             var msg = new CheckerTaskAggregateMessage(roundId, message, time);
+            Queue.Enqueue(PREFIX + JsonSerializer.Serialize(msg) + "\n");
+        }
+        public void CheckerTaskFinishedMessage(CheckerTask task)
+        {
+            var msg = new CheckerTaskFinishedMessage(task);
             Queue.Enqueue(PREFIX + JsonSerializer.Serialize(msg) + "\n");
         }
     }
@@ -84,6 +89,8 @@ namespace EnoCore.Logging
         public string ServiceName { get; }
         public string Method { get; }
         public long TaskIndex { get; }
+        public double Duration { get; }
+        public string Result { get; }
 
         public CheckerTaskFinishedMessage(CheckerTask task)
         {
@@ -91,6 +98,8 @@ namespace EnoCore.Logging
             ServiceName = task.ServiceName;
             Method = task.Method.ToString();
             TaskIndex = task.TaskIndex;
+            Duration = (DateTime.UtcNow - task.StartTime).TotalSeconds;
+            Result = task.CheckerResult.ToString();
         }
     }
     public class CheckerTaskAggregateMessage : EnoStatisticsMessage
