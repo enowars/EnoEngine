@@ -25,7 +25,7 @@ namespace EnoLauncher
     class Program
     {
         private const int TASK_UPDATE_BATCH_SIZE = 500;
-        private const int LAUNCHER_THREADS = 8;
+        private const int LAUNCHER_THREADS = 1;
         private const int MAX_RETRIES = 1;
         private static readonly ConcurrentQueue<CheckerTask> ResultsQueue = new ConcurrentQueue<CheckerTask>();
         private static readonly CancellationTokenSource LauncherCancelSource = new CancellationTokenSource();
@@ -86,7 +86,7 @@ namespace EnoLauncher
                 {
                     using var scope = ServiceProvider.CreateScope();
                     var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                    var tasks = await db.RetrievePendingCheckerTasks(100);
+                    var tasks = await db.RetrievePendingCheckerTasks(500);
                     if (tasks.Count > 0)
                     {
                         Logger.LogDebug($"Scheduling {tasks.Count} tasks");
@@ -129,7 +129,7 @@ namespace EnoLauncher
                 cancelSource.CancelAfter(task.MaxRunningTime);
                 Statistics.CheckerTaskLaunchMessage(task);
                 Logger.LogDebug($"LaunchCheckerTask {task.Id} POSTing {task.Method} to checker");
-                var response = await Client.PostAsync(new Uri(task.CheckerUrl), content, cancelSource.Token);
+                var response = await Client.PostAsync(task.CheckerUrl, content, cancelSource.Token);
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
                     var responseString = (await response.Content.ReadAsStringAsync()).TrimEnd(Environment.NewLine.ToCharArray());
@@ -145,23 +145,23 @@ namespace EnoLauncher
                 }
                 else
                 {
-                    Logger.LogError($"LaunchCheckerTask {task.Id} returned {response.StatusCode} ({(int)response.StatusCode})");
+                    Logger.LogError($"LaunchCheckerTask {task.Id} {task.Method} returned {response.StatusCode} ({(int)response.StatusCode})");
                     task.CheckerResult = CheckerResult.INTERNAL_ERROR;
                     task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
                     ResultsQueue.Enqueue(task);
                     return;
                 }
             }
-            catch (TaskCanceledException e)
+            catch (TaskCanceledException)
             {
-                Logger.LogError($"{nameof(LaunchCheckerTask)} {task.Id} was cancelled because it did not finish: {EnoDatabaseUtils.FormatException(e)}");
+                Logger.LogError($"{nameof(LaunchCheckerTask)} {task.Id} {task.Method}  was cancelled because it did not finish");
                 task.CheckerResult = CheckerResult.OFFLINE;
                 task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
                 ResultsQueue.Enqueue(task);
             }
             catch (Exception e)
             {
-                Logger.LogError($"{nameof(LaunchCheckerTask)} failed: {EnoDatabaseUtils.FormatException(e)}");
+                Logger.LogError($"{nameof(LaunchCheckerTask)} {task.Id} failed: {EnoDatabaseUtils.FormatException(e)}");
                 task.CheckerResult = CheckerResult.INTERNAL_ERROR;
                 task.CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done;
                 ResultsQueue.Enqueue(task);
@@ -198,8 +198,6 @@ namespace EnoLauncher
                 {
                     Console.WriteLine("Another Instance is already running");
                 }
-
-
             }
             finally
             {
