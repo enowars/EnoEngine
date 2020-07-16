@@ -25,27 +25,44 @@ namespace EnoEngine.FlagSubmission
 {
     class FlagSubmissionEndpoint
     {
-        private static readonly Dictionary<long, Channel<(Flag Flag, TaskCompletionSource<FlagSubmissionResult> FeedbackSource)>> Channels =
+        private readonly Dictionary<long, Channel<(Flag Flag, TaskCompletionSource<FlagSubmissionResult> FeedbackSource)>> Channels =
             new Dictionary<long, Channel<(Flag, TaskCompletionSource<FlagSubmissionResult>)>>();
+        private readonly Dictionary<long, TeamFlagSubmissionStatistic> SubmissionStatistics = new Dictionary<long, TeamFlagSubmissionStatistic>();
         private const int MaximumLineLength = 100;
         private readonly TcpListener ProductionListener = new TcpListener(IPAddress.IPv6Any, 1337);
         private readonly TcpListener DebugListener = new TcpListener(IPAddress.IPv6Any, 1338);
         private readonly ILogger Logger;
         private readonly JsonConfiguration Configuration;
         private readonly IServiceProvider ServiceProvider;
-        private readonly EnoStatistics Statistics;
+        private readonly EnoStatistics EnoStatistics;
 
         public FlagSubmissionEndpoint(IServiceProvider serviceProvider, ILogger<FlagSubmissionEndpoint> logger, JsonConfiguration configuration, EnoStatistics statistics)
         {
             Logger = logger;
             Configuration = configuration;
-            Statistics = statistics;
+            EnoStatistics = statistics;
             ProductionListener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
             DebugListener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
             ServiceProvider = serviceProvider;
             foreach (var team in configuration.Teams)
             {
                 Channels[team.Id] = Channel.CreateBounded<(Flag, TaskCompletionSource<FlagSubmissionResult>)>(new BoundedChannelOptions(100) { SingleReader = false, SingleWriter = false });
+                SubmissionStatistics[team.Id] = new TeamFlagSubmissionStatistic(team.Id);
+            }
+        }
+
+        public async Task LogSubmissionStatistics(long teamId, CancellationToken token)
+        {
+            var statistic = SubmissionStatistics[teamId];
+            while (!token.IsCancellationRequested)
+            {
+                var okFlags = Interlocked.Exchange(ref statistic.OkFlags, 0);
+                var oldFlags = Interlocked.Exchange(ref statistic.OldFlags, 0);
+                var ownFlags = Interlocked.Exchange(ref statistic.OwnFlags, 0);
+                var duplicateFlags = Interlocked.Exchange(ref statistic.DuplicateFlags, 0);
+                var invalidFlags = Interlocked.Exchange(ref statistic.InvalidFlags, 0);
+                EnoStatistics.FlagSubmissionStatisticsMessage(teamId, okFlags, duplicateFlags, oldFlags, invalidFlags, ownFlags);
+                await Task.Delay(5000);
             }
         }
 
@@ -53,6 +70,10 @@ namespace EnoEngine.FlagSubmission
         {
             token.Register(() => ProductionListener.Stop());
             token.Register(() => DebugListener.Stop());
+            foreach (var team in SubmissionStatistics)
+            {
+                Task.Run(async () => await LogSubmissionStatistics(team.Key, token));
+            }
             Task.Factory.StartNew(async () => await InsertSubmissionsLoop(token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
             Task.Factory.StartNew(async () => await RunProductionEndpoint(config, token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
             Task.Factory.StartNew(async () => await RunDebugEndpoint(config, token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
@@ -64,7 +85,7 @@ namespace EnoEngine.FlagSubmission
             Channel<Task<FlagSubmissionResult>> feedbackChannel = Channel.CreateUnbounded<Task<FlagSubmissionResult>>(new UnboundedChannelOptions() { SingleReader = true, SingleWriter = false });
             Task writing = FillPipeAsync(socket, pipe.Writer, token);
             Task reading = ReadPipeAsync(pipe.Reader, feedbackChannel.Writer, teamId, config, token);
-            Task responding = RespondAsync(socket, feedbackChannel.Reader, token);
+            Task responding = RespondAsync(socket, teamId, feedbackChannel.Reader, token);
             await Task.WhenAll(reading, writing, responding);
             socket.Close();
         }
@@ -161,13 +182,37 @@ namespace EnoEngine.FlagSubmission
             await reader.CompleteAsync();
         }
 
-        private async Task RespondAsync(Socket socket, ChannelReader<Task<FlagSubmissionResult>> feedbackReader, CancellationToken token)
+        private async Task RespondAsync(Socket socket, long? teamId, ChannelReader<Task<FlagSubmissionResult>> feedbackReader, CancellationToken token)
         {
+            TeamFlagSubmissionStatistic? statistic = null;
+            if (teamId != null)
+                statistic = SubmissionStatistics[teamId.Value];
             while (await feedbackReader.WaitToReadAsync(token))
             {
                 while (feedbackReader.TryRead(out var itemTask))
                 {
                     var item = await itemTask;
+                    if (statistic != null)
+                    {
+                        switch (item)
+                        {
+                            case FlagSubmissionResult.Ok:
+                                Interlocked.Increment(ref statistic.OkFlags);
+                                break;
+                            case FlagSubmissionResult.Duplicate:
+                                Interlocked.Increment(ref statistic.DuplicateFlags);
+                                break;
+                            case FlagSubmissionResult.Invalid:
+                                Interlocked.Increment(ref statistic.InvalidFlags);
+                                break;
+                            case FlagSubmissionResult.Old:
+                                Interlocked.Increment(ref statistic.OldFlags);
+                                break;
+                            case FlagSubmissionResult.Own:
+                                Interlocked.Increment(ref statistic.OwnFlags);
+                                break;
+                        }
+                    }
                     var itemBytes = Encoding.ASCII.GetBytes(FormatSubmissionResult(item)); //TODO don't serialize every time
                     await socket.SendAsync(itemBytes, SocketFlags.None, token);  //TODO enforce batching
                     if (item == FlagSubmissionResult.SpamError)
@@ -308,7 +353,7 @@ namespace EnoEngine.FlagSubmission
                             {
                                 using var scope = ServiceProvider.CreateScope();
                                 var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                                await db.ProcessSubmissionsBatch(submissions, Configuration.FlagValidityInRounds, Statistics);
+                                await db.ProcessSubmissionsBatch(submissions, Configuration.FlagValidityInRounds, EnoStatistics);
                             });
                         }
                         catch (Exception e)
