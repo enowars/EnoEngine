@@ -54,7 +54,7 @@ namespace EnoDatabase
         Task<Flag[]> RetrieveFlags(int maxAmount);
         Task InsertRetrieveCurrentFlagsTasks(Round round, List<Flag> currentFlags, JsonConfiguration config);
         Task InsertRetrieveOldFlagsTasks(Round currentRound, Team[] teams, Service[] services, JsonConfiguration config);
-        Task<long> GetTeamIdByPrefix(string attackerPrefixString);
+        Task<Team?> GetTeamIdByPrefix(string attackerPrefixString);
         Task InsertRetrieveCurrentNoisesTasks(Round currentRound, List<Noise> currentNoises, JsonConfiguration config);
         Task<List<CheckerTask>> RetrievePendingCheckerTasks(int maxAmount);
         Task CalculateTotalPoints();
@@ -787,12 +787,11 @@ namespace EnoDatabase
             await _context.SaveChangesAsync();
         }
 
-        public async Task<long> GetTeamIdByPrefix(string attackerPrefixString)
+        public async Task<Team?> GetTeamIdByPrefix(string attackerPrefixString)
         {
             return await _context.Teams
                 .Where(t => t.TeamSubnet == attackerPrefixString)
-                .Select(t => t.Id)
-                .SingleAsync();
+                .SingleOrDefaultAsync();
         }
 
         public async Task<Round> PrepareRecalculation()

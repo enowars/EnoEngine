@@ -230,26 +230,18 @@ namespace EnoEngine.FlagSubmission
                         var attackerPrefix = new byte[Configuration.TeamSubnetBytesLength];
                         Array.Copy(attackerAddress, attackerPrefix, Configuration.TeamSubnetBytesLength);
                         var attackerPrefixString = BitConverter.ToString(attackerPrefix);
-                        long teamId;
-                        try
+                        using var scope = ServiceProvider.CreateScope();
+                        var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
+                        var team = await db.GetTeamIdByPrefix(attackerPrefixString);
+                        if (team != null)
                         {
-                            using (var scope = ServiceProvider.CreateScope())
-                            {
-                                var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                                teamId = await db.GetTeamIdByPrefix(attackerPrefixString);
-                            }
-                            var _ = ProcessLinesAsync(client.Client, teamId, config, token);
+                            var t = Task.Run(async () => await ProcessLinesAsync(client.Client, team.Id, config, token));
                         }
-                        catch (Exception e)
+                        else
                         {
-                            Logger.LogError(e.ToFancyString());
-                            try
-                            {
-                                var itemBytes = Encoding.ASCII.GetBytes(FormatSubmissionResult(FlagSubmissionResult.InvalidSenderError)); //TODO don't serialize every time
-                                await client.Client.SendAsync(itemBytes, SocketFlags.None, token);
-                                client.Close();
-                            }
-                            catch { }
+                            var itemBytes = Encoding.ASCII.GetBytes(FormatSubmissionResult(FlagSubmissionResult.InvalidSenderError)); //TODO don't serialize every time
+                            await client.Client.SendAsync(itemBytes, SocketFlags.None, token);
+                            client.Close();
                         }
                     }
                     catch (TaskCanceledException)
