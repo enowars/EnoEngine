@@ -38,6 +38,10 @@ namespace FlagShooter
                 while (true)
                 {
                     string? result = await reader.ReadLineAsync();
+                    if (result == "")
+                    {
+                        break;
+                    }
                     if (!(result + "\n" == Misc.SubmissionResultOk ||
                         result + "\n" == Misc.SubmissionResultOld ||
                         result + "\n" == Misc.SubmissionResultDuplicate ||
