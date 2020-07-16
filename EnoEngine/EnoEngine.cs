@@ -31,6 +31,7 @@ namespace EnoEngine
         private readonly JsonConfiguration Configuration;
         private readonly IServiceProvider ServiceProvider;
         private readonly EnoStatistics Statistics;
+        private readonly FlagSubmissionEndpoint SubmissionEndpoint;
 
         public EnoEngine(ILogger<EnoEngine> logger, JsonConfiguration configuration, IServiceProvider serviceProvider, EnoStatistics enoStatistics, FlagSubmissionEndpoint submissionEndpoint)
         {
@@ -38,7 +39,7 @@ namespace EnoEngine
             Configuration = configuration;
             ServiceProvider = serviceProvider;
             Statistics = enoStatistics;
-            submissionEndpoint.Start(EngineCancelSource.Token, configuration);
+            SubmissionEndpoint = submissionEndpoint;
         }
 
         public async Task RunContest()
@@ -52,6 +53,7 @@ namespace EnoEngine
             await FetchAndApplyCheckersInfo(Configuration);
             var db = ServiceProvider.CreateScope().ServiceProvider.GetRequiredService<IEnoDatabase>();
             var result = db.ApplyConfig(Configuration);
+            SubmissionEndpoint.Start(EngineCancelSource.Token, Configuration);
             Configuration.BuildCheckersDict();
             if (result.Success)
             {
@@ -63,7 +65,7 @@ namespace EnoEngine
             }
         }
 
-        private async Task GetCheckerInfo (JsonConfigurationService s)
+        private async Task GetCheckerInfo(JsonConfigurationService s)
         {
             var Client = new HttpClient();
             try
