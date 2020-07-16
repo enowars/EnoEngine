@@ -38,7 +38,7 @@ namespace FlagShooter
                 while (true)
                 {
                     string? result = await reader.ReadLineAsync();
-                    if (result == "")
+                    if (result == null || result == "")
                     {
                         throw new Exception($"result empty (connected={Client.Client.Connected})");
                     }
@@ -47,7 +47,7 @@ namespace FlagShooter
                         result + "\n" == Misc.SubmissionResultDuplicate ||
                         result + "\n" == Misc.SubmissionResultOwn))
                     {
-                        Console.WriteLine($"received unexpected {result}");
+                        Console.WriteLine($"received unexpected {result} ({result.Length}");
                     }
                 }
             }
