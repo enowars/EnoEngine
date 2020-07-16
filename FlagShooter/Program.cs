@@ -25,16 +25,16 @@ namespace FlagShooter
 {
     class Program
     {
-        private static readonly CancellationTokenSource CancelSource = new CancellationTokenSource();
+        private static readonly CancellationTokenSource FlagShooterCancelSource = new CancellationTokenSource();
         private readonly int FlagCount;
         private readonly int TeamStart;
         private readonly int RoundDelay;
         private readonly int TeamCount;
         private readonly int SubmissionConnectionsPerTeam;
         private readonly JsonConfiguration Configuration;
-        private List<ChannelWriter<byte[]>> FlagWriters;
+        private readonly List<ChannelWriter<byte[]>> FlagWriters;
 
-        private static FileSystemWatcher Watch;
+        //private static FileSystemWatcher Watch;
         private static EnoEngineScoreboard? sb;
 
         public Program(int flagCount, int roundDelay, int teamStart, int teamCount, int teamConnections, JsonConfiguration configuration)
@@ -58,11 +58,11 @@ namespace FlagShooter
                     {
                         try
                         {
-                            await FlagSubmissionClient.Create(channel.Reader, i + teamStart);
+                            await FlagSubmissionClient.Create(channel.Reader, i + TeamStart);
                         }
                         catch (Exception e)
                         {
-                            Console.WriteLine($"Failed to create FlagSubmissionClient {j} for team {i + teamStart}: {e.Message} ({e.GetType()})");
+                            Console.WriteLine($"Failed to create FlagSubmissionClient {j} for team {i + TeamStart}: {e.Message} ({e.GetType()})");
                         }
                     });
                     FlagWriters.Add(channel.Writer);
@@ -126,7 +126,7 @@ namespace FlagShooter
         public async Task FlagRunnerLoop()
         {
             Console.WriteLine($"FlagRunnerLoop starting");
-            while (!CancelSource.IsCancellationRequested)
+            while (!FlagShooterCancelSource.IsCancellationRequested)
             {
                 try
                 {
@@ -134,7 +134,7 @@ namespace FlagShooter
                     var taskLists = BeginSubmitFlags(FlagCount);
                     foreach (var taskList in taskLists)
                         await Task.WhenAll(taskList);
-                    await Task.Delay(RoundDelay, CancelSource.Token);
+                    await Task.Delay(RoundDelay, FlagShooterCancelSource.Token);
                 }
                 catch (Exception e)
                 {
@@ -167,12 +167,24 @@ namespace FlagShooter
             Console.WriteLine($"File: {e.FullPath} {e.ChangeType}");
             if (e.Name.Contains("scoreboard.json")) ParseScoreboard(e.FullPath);
         }
-
+        private async static Task PollConfig(string path, CancellationToken token)
+        {
+            while (!token.IsCancellationRequested)
+            {
+                ParseScoreboard(Path.Combine(path + "scoreboard.json"));
+                await Task.Delay(1000);
+            }
+        }
         static void Main(int flagCount = 10000, int roundDelay = 1000, int teamStart = 1, int teamCount = 10, int teamConnections = 1)
         {
             try
             {
                 Console.WriteLine($"FlagShooter starting");
+                Console.CancelKeyPress += (s, e) => {
+                    Console.WriteLine("Shutting down FlagShooter");
+                    e.Cancel = true;
+                    FlagShooterCancelSource.Cancel();
+                };
                 JsonConfiguration configuration;
                 if (!File.Exists("ctf.json"))
                 {
@@ -195,18 +207,7 @@ namespace FlagShooter
                 path = Path.Combine(path, "data");
                 Console.WriteLine($"Path is: {path}");
                 ParseScoreboard(Path.Combine(path, "scoreboard.json"));
-                Watch = new FileSystemWatcher()
-                {
-                    Path = path,
-                    NotifyFilter =  NotifyFilters.LastWrite |
-                                    NotifyFilters.LastAccess |
-                                    NotifyFilters.FileName,
-                };
-                Watch.Filters.Add("scoreboard.json");
-                //Watch.Filters.Add("scoreboardInfo.json");
-                Watch.Changed += OnChanged;
-                Watch.Created += OnChanged;
-                Watch.Deleted += OnChanged;
+                Task.Run(async () => await PollConfig(path, FlagShooterCancelSource.Token));
 
                 new Program(flagCount, roundDelay, teamStart, teamCount, teamConnections, configuration).Start();
             }

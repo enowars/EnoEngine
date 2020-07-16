@@ -15,10 +15,9 @@ namespace EnoCore.Models.Json
         public double? EndTimeEpoch { get; set; }
         public EnoEngineScoreboardService[] Services { get; set; }
         public EnoEngineScoreboardEntry[] Teams { get; set; }
-        public EnoEngineScoreboard ()
-        {
-
-        }
+#pragma warning disable CS8618
+        public EnoEngineScoreboard() { }
+#pragma warning restore CS8618
         public EnoEngineScoreboard(Round round, List<Service> services, Dictionary<(long serviceid, long flagindex), EnoScoreboardFirstblood> firstBloods, List<Team> teams)
         {
             CurrentRound = round?.Id;
