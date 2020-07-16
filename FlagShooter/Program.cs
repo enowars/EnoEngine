@@ -39,6 +39,7 @@ namespace FlagShooter
 
         public Program(int flagCount, int roundDelay, int teamStart, int teamCount, int teamConnections, JsonConfiguration configuration)
         {
+            Console.WriteLine($"flagCount {flagCount}, roundDelay {roundDelay}, teamStart {teamStart}, teamCount {teamCount}, teamConnections {teamConnections}");
             FlagCount = flagCount;
             TeamStart = teamStart;
             RoundDelay = roundDelay;
@@ -171,7 +172,7 @@ namespace FlagShooter
         {
             while (!token.IsCancellationRequested)
             {
-                ParseScoreboard(Path.Combine(path + "scoreboard.json"));
+                ParseScoreboard(Path.Combine(path, "scoreboard.json"));
                 await Task.Delay(1000);
             }
         }
