@@ -20,6 +20,11 @@ using Microsoft.Extensions.Logging;
 
 namespace EnoCore.Utils
 {
+    public enum FlagEncoding
+    {
+        Legacy,
+        UTF8
+    }
     public static class Misc
     {
         public static readonly string dataDirectory = $"..{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}";

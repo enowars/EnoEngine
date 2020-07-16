@@ -51,7 +51,6 @@ namespace EnoDatabase
         Task InsertPutFlagsTasks(Round round, IEnumerable<Flag> currentFlags, JsonConfiguration config);
         Task InsertPutNoisesTasks(Round currentRound, IEnumerable<Noise> currentNoises, JsonConfiguration config);
         Task InsertHavocsTasks(Round currentRound, IEnumerable<Havoc> currentHavocs, JsonConfiguration config);
-        Task<Flag[]> RetrieveFlags(int maxAmount);
         Task InsertRetrieveCurrentFlagsTasks(Round round, List<Flag> currentFlags, JsonConfiguration config);
         Task InsertRetrieveOldFlagsTasks(Round currentRound, Team[] teams, Service[] services, JsonConfiguration config);
         Task<Team?> GetTeamIdByPrefix(string attackerPrefixString);
@@ -447,12 +446,6 @@ namespace EnoDatabase
                 }
             });
         }
-
-        public async Task<Flag[]> RetrieveFlags(int maxAmount)
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task<Round> GetLastRound()
         {
             var round = await _context.Rounds

@@ -1,8 +1,9 @@
-﻿using System;
+﻿using EnoCore.Models.Database;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace EnoCore.Models.Database
+namespace EnoCore.Models
 {
     public class Havoc
     {
