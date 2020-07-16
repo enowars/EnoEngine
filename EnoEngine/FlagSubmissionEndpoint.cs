@@ -29,6 +29,7 @@ namespace EnoEngine.FlagSubmission
             new Dictionary<long, Channel<(Flag, TaskCompletionSource<FlagSubmissionResult>)>>();
         private readonly Dictionary<long, TeamFlagSubmissionStatistic> SubmissionStatistics = new Dictionary<long, TeamFlagSubmissionStatistic>();
         private const int MaximumLineLength = 100;
+        private const int SUBMISSION_BATCH_SIZE = 500;
         private readonly TcpListener ProductionListener = new TcpListener(IPAddress.IPv6Any, 1337);
         private readonly TcpListener DebugListener = new TcpListener(IPAddress.IPv6Any, 1338);
         private readonly ILogger Logger;
@@ -336,6 +337,7 @@ namespace EnoEngine.FlagSubmission
             {
                 while (!token.IsCancellationRequested)
                 {
+                    bool empty = true;
                     List<(Flag flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult> result)> submissions = new List<(Flag flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult>)>();
                     foreach (var (teamid, channel) in Channels)
                     {
@@ -343,15 +345,37 @@ namespace EnoEngine.FlagSubmission
                         var reader = channel.Reader;
                         while (reader.TryRead(out var item) && SubmissionsPerTeam<100)
                         {
+                            empty = false;
                             SubmissionsPerTeam++;
                             submissions.Add((item.Flag, teamid, item.FeedbackSource));
+                            if (submissions.Count> SUBMISSION_BATCH_SIZE)
+                            {
+                                try
+                                {
+                                    await EnoDatabaseUtils.RetryDatabaseAction(async () =>
+                                    {
+                                        using var scope = ServiceProvider.CreateScope();
+                                        var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
+                                        await db.ProcessSubmissionsBatch(submissions, Configuration.FlagValidityInRounds, EnoStatistics);
+                                    });
+                                }
+                                catch (Exception e)
+                                {
+                                    Logger.LogError($"InsertSubmissionsLoop dropping batch because: {EnoDatabaseUtils.FormatException(e)}");
+                                    foreach (var (flag, attackerTeamId, tcs) in submissions)
+                                    {
+                                        tcs.SetResult(FlagSubmissionResult.UnknownError);
+                                    }
+                                }
+                                submissions.Clear();
+                            }
                         }
                     }
-                    if (submissions.Count == 0)
+                    if (empty)
                     {
                         await Task.Delay(10);
                     }
-                    else
+                    else if (submissions.Count!=0)
                     {
                         try
                         {
