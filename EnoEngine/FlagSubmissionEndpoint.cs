@@ -271,23 +271,29 @@ namespace EnoEngine.FlagSubmission
                     try
                     {
                         var client = await ProductionListener.AcceptTcpClientAsync();
-                        var attackerAddress = ((IPEndPoint)client.Client.RemoteEndPoint).Address.GetAddressBytes();
-                        var attackerPrefix = new byte[Configuration.TeamSubnetBytesLength];
-                        Array.Copy(attackerAddress, attackerPrefix, Configuration.TeamSubnetBytesLength);
-                        var attackerPrefixString = BitConverter.ToString(attackerPrefix);
-                        using var scope = ServiceProvider.CreateScope();
-                        var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                        var team = await db.GetTeamIdByPrefix(attackerPrefixString);
-                        if (team != null)
+                        var t = Task.Run(async () =>
                         {
-                            var t = Task.Run(async () => await ProcessLinesAsync(client.Client, team.Id, config, token));
-                        }
-                        else
-                        {
-                            var itemBytes = Encoding.ASCII.GetBytes(FormatSubmissionResult(FlagSubmissionResult.InvalidSenderError)); //TODO don't serialize every time
-                            await client.Client.SendAsync(itemBytes, SocketFlags.None, token);
-                            client.Close();
-                        }
+                            var attackerAddress = ((IPEndPoint)client.Client.RemoteEndPoint).Address.GetAddressBytes();
+                            var attackerPrefix = new byte[Configuration.TeamSubnetBytesLength];
+                            Array.Copy(attackerAddress, attackerPrefix, Configuration.TeamSubnetBytesLength);
+                            var attackerPrefixString = BitConverter.ToString(attackerPrefix);
+                            Team? team;
+                            using (var scope = ServiceProvider.CreateScope()) // limited scope to ensure the db context isn't held indefinitely during ProcessLinesAsync
+                            {
+                                var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
+                                team = await db.GetTeamIdByPrefix(attackerPrefixString);
+                            }
+                            if (team != null)
+                            {
+                                await ProcessLinesAsync(client.Client, team.Id, config, token);
+                            }
+                            else
+                            {
+                                var itemBytes = Encoding.ASCII.GetBytes(FormatSubmissionResult(FlagSubmissionResult.InvalidSenderError)); //TODO don't serialize every time
+                                await client.Client.SendAsync(itemBytes, SocketFlags.None, token);
+                                client.Close();
+                            }
+                        });
                     }
                     catch (TaskCanceledException)
                     {
@@ -295,7 +301,7 @@ namespace EnoEngine.FlagSubmission
                     }
                     catch (Exception e)
                     {
-                        Logger.LogWarning($"RunProductionEndpoint failed to handle connection: {EnoDatabaseUtils.FormatException(e)}");
+                        Logger.LogWarning($"RunProductionEndpoint failed to accept connection: {EnoDatabaseUtils.FormatException(e)}");
                     }
                 }
             }
