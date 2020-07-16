@@ -31,14 +31,22 @@ namespace EnoCore.Logging
             var message = new CheckerTaskLaunchMessage(task);
             Queue.Enqueue(PREFIX + JsonSerializer.Serialize(message) + "\n");
         }
+
         public void CheckerTaskAggregateMessage(long roundId, string message, long time)
         {
             var msg = new CheckerTaskAggregateMessage(roundId, message, time);
             Queue.Enqueue(PREFIX + JsonSerializer.Serialize(msg) + "\n");
         }
+
         public void CheckerTaskFinishedMessage(CheckerTask task)
         {
             var msg = new CheckerTaskFinishedMessage(task);
+            Queue.Enqueue(PREFIX + JsonSerializer.Serialize(msg) + "\n");
+        }
+
+        public void FlagSubmissionStatisticsMessage(long teamId, long okFlags, long duplicateFlags, long oldFlags, long invalidFlags, long ownFlags)
+        {
+            var msg = new TeamFlagSubmissionStatisticMessage(teamId, okFlags, duplicateFlags, oldFlags, invalidFlags, ownFlags);
             Queue.Enqueue(PREFIX + JsonSerializer.Serialize(msg) + "\n");
         }
     }
@@ -113,6 +121,40 @@ namespace EnoCore.Logging
             RoundId = roundId;
             Message = message;
             Time = time;
+        }
+    }
+
+    public class TeamFlagSubmissionStatisticMessage : EnoStatisticsMessage
+    {
+        public long TeamId { get; set; }
+        public long OkFlags { get; set; }
+        public long DuplicateFlags { get; set; }
+        public long OldFlags { get; set; }
+        public long InvalidFlags { get; set; }
+        public long OwnFlags { get; set; }
+
+        public TeamFlagSubmissionStatisticMessage(long teamId, long okFlags, long duplicateFlags, long oldFlags, long invalidFlags, long ownFlags)
+        {
+            TeamId = teamId;
+            OkFlags = okFlags;
+            DuplicateFlags = duplicateFlags;
+            OldFlags = oldFlags;
+            InvalidFlags = invalidFlags;
+            OwnFlags = ownFlags;
+        }
+    }
+
+    public class TeamFlagSubmissionStatistic
+    {
+        public long TeamId;
+        public long OkFlags;
+        public long DuplicateFlags;
+        public long OldFlags;
+        public long InvalidFlags;
+        public long OwnFlags;
+        public TeamFlagSubmissionStatistic(long teamId)
+        {
+            TeamId = teamId;
         }
     }
 }
