@@ -54,7 +54,17 @@ namespace FlagShooter
                     {
                         SingleWriter = true
                     });
-                    Task.Run(async () => await FlagSubmissionClient.Create(channel.Reader, i + teamStart));
+                    Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await FlagSubmissionClient.Create(channel.Reader, i + teamStart);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine($"Failed to create FlagSubmissionClient {j} for team {i + teamStart}: {e.Message} ({e.GetType()})");
+                        }
+                    });
                     FlagWriters.Add(channel.Writer);
                 }
             }
