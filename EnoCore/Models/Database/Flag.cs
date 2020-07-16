@@ -192,7 +192,7 @@ namespace EnoCore.Models.Database
             }
             catch (Exception e)
             {
-                logger.LogError(e.Message);
+                logger.LogError(e.ToFancyString());
                 return null;
             }
         }
