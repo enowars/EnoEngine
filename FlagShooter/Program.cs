@@ -83,7 +83,7 @@ namespace FlagShooter
 
         public void Start()
         {
-            FlagRunnerLoop().Wait();
+            FlagRunnerLoop().Wait(FlagShooterCancelSource.Token);
         }
         public List<List<Task>> BeginSubmitFlags(long FlagCount)
         {
@@ -209,7 +209,6 @@ namespace FlagShooter
                 Console.WriteLine($"Path is: {path}");
                 ParseScoreboard(Path.Combine(path, "scoreboard.json"));
                 Task.Run(async () => await PollConfig(path, FlagShooterCancelSource.Token));
-
                 new Program(flagCount, roundDelay, teamStart, teamCount, teamConnections, configuration).Start();
             }
             catch (Exception e)
