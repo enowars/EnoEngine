@@ -40,7 +40,7 @@ namespace FlagShooter
                     string? result = await reader.ReadLineAsync();
                     if (result == "")
                     {
-                        break;
+                        throw new Exception($"result empty (connected={Client.Client.Connected})");
                     }
                     if (!(result + "\n" == Misc.SubmissionResultOk ||
                         result + "\n" == Misc.SubmissionResultOld ||

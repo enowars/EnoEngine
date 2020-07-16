@@ -62,7 +62,7 @@ namespace FlagShooter
                         try
                         {
                             await FlagSubmissionClient.Create(channel.Reader, localI + TeamStart);
-                            Console.WriteLine($"FlagSubmissionClient {localJ} for team {localI}");
+                            Console.WriteLine($"FlagSubmissionClient {localJ} for team {localI} connected");
                         }
                         catch (Exception e)
                         {
