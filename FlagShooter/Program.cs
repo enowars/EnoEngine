@@ -180,11 +180,11 @@ namespace FlagShooter
             try
             {
                 Console.WriteLine($"FlagShooter starting");
-                Console.CancelKeyPress += (s, e) => {
-                    Console.WriteLine("Shutting down FlagShooter");
-                    e.Cancel = true;
-                    FlagShooterCancelSource.Cancel();
-                };
+                //Console.CancelKeyPress += (s, e) => {
+                //    Console.WriteLine("Shutting down FlagShooter");
+                //    e.Cancel = true;
+                //    FlagShooterCancelSource.Cancel();
+                //};
                 JsonConfiguration configuration;
                 if (!File.Exists("ctf.json"))
                 {

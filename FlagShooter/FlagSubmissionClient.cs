@@ -38,10 +38,10 @@ namespace FlagShooter
                 while (true)
                 {
                     string? result = await reader.ReadLineAsync();
-                    if (!(result == Misc.SubmissionResultOk ||
-                        result == Misc.SubmissionResultOld ||
-                        result == Misc.SubmissionResultDuplicate ||
-                        result == Misc.SubmissionResultOwn))
+                    if (result == null || !(result.StartsWith(Misc.SubmissionResultOk) ||
+                        result.StartsWith(Misc.SubmissionResultOld) ||
+                        result.StartsWith(Misc.SubmissionResultDuplicate) ||
+                        result.StartsWith(Misc.SubmissionResultOwn)))
                     {
                         Console.WriteLine($"received unexpected {result}");
                     }
