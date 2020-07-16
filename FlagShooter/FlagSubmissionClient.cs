@@ -1,6 +1,8 @@
 ﻿using EnoCore.Models.Database;
+using EnoCore.Utils;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Channels;
@@ -29,12 +31,20 @@ namespace FlagShooter
 
         private async Task Receive()
         {
+            StreamReader reader = new StreamReader(Client.GetStream(), Encoding.ASCII);
             try
             {
                 byte[] buf = new byte[2048];
                 while (true)
                 {
-                    var _ = await Client.Client.ReceiveAsync(buf, SocketFlags.None);
+                    string? result = await reader.ReadLineAsync();
+                    if (!(result == Misc.SubmissionResultOk ||
+                        result == Misc.SubmissionResultOld ||
+                        result == Misc.SubmissionResultDuplicate ||
+                        result == Misc.SubmissionResultOwn))
+                    {
+                        Console.WriteLine($"received unexpected {result}");
+                    }
                 }
             }
             catch (Exception e)

@@ -319,15 +319,15 @@ namespace EnoEngine.FlagSubmission
         {
             return result switch
             {
-                FlagSubmissionResult.Ok => "VALID: Flag accepted!\n",
-                FlagSubmissionResult.Invalid => "INVALID: You have submitted an invalid string!\n",
-                FlagSubmissionResult.Duplicate => "RESUBMIT: You have already sent this flag!\n",
-                FlagSubmissionResult.Own => "OWNFLAG: This flag belongs to you!\n",
-                FlagSubmissionResult.Old => "OLD: You have submitted an old flag!\n",
-                FlagSubmissionResult.UnknownError => "ERROR: An unexpected error occured :(\n",
-                FlagSubmissionResult.InvalidSenderError => "ILLEGAL: Your IP address does not belong to any team's subnet!\n",
-                FlagSubmissionResult.SpamError => "SPAM: You should send 1 flag per line!\n",
-                _ => "ERROR: An even more unexpected error occured :(\n",
+                FlagSubmissionResult.Ok => Misc.SubmissionResultOk,
+                FlagSubmissionResult.Invalid => Misc.SubmissionResultInvalid,
+                FlagSubmissionResult.Duplicate => Misc.SubmissionResultDuplicate,
+                FlagSubmissionResult.Own => Misc.SubmissionResultOwn,
+                FlagSubmissionResult.Old => Misc.SubmissionResultOld,
+                FlagSubmissionResult.UnknownError => Misc.SubmissionResultUnknownError,
+                FlagSubmissionResult.InvalidSenderError => Misc.SubmissionResultInvalidSenderError,
+                FlagSubmissionResult.SpamError => Misc.SubmissionResultSpamError,
+                _ => Misc.SubmissionResultReallyUnknownError,
             };
         }
 
