@@ -24,6 +24,7 @@ namespace EnoCore.Models
             {
                 "🏳️‍🌈"
             };
+        private static readonly string[] Pattern = new string[4] { "F", "L", "A", "G" };
 
 #pragma warning disable CS8618
         public long OwnerId { get; set; }
@@ -73,17 +74,18 @@ namespace EnoCore.Models
         private static void Bytes2Dia(ReadOnlySpan<byte> b, out string s, out int bytesWritten)
         {
             bytesWritten = 0;
-            var pattern = new string[4] { "W", "A", "R", "S" };
+
             //var dbgstr = "";
             //var lstr = new int[4] { 0, 0, 0, 0 };
+            var localpattern = (string[])Pattern.Clone();
             foreach (byte c in b)
             {
-                pattern[bytesWritten % 4] += ByteMap[c];
+                localpattern[bytesWritten % 4] += ByteMap[c];
                 bytesWritten++;
                 //dbgstr += $"({bytesWritten}, {c}, {ByteMap[c]}, {Encoding.UTF8.GetByteCount(ByteMap[c].ToString())})";
                 //lstr[bytesWritten % 4] += Encoding.UTF8.GetByteCount(ByteMap[c].ToString());
             }
-            s = pattern[0] + pattern[1] + pattern[2] + pattern[3];
+            s = localpattern[0] + localpattern[1] + localpattern[2] + localpattern[3];
             /*
             var l0 = pattern[0].Length;
             var l1 = pattern[1].Length;
@@ -107,8 +109,7 @@ namespace EnoCore.Models
         private static bool Dia2bytes(string s, Span<byte> b, out int bytesWritten)
         {
             bytesWritten = 0;
-            var pattern = new string[4] { "W", "A", "R", "S" };
-            var splitted = s.Split(pattern, StringSplitOptions.RemoveEmptyEntries);
+            var splitted = s.Split(Pattern, StringSplitOptions.RemoveEmptyEntries);
             /*
             var lg = s.Length;
             var l0 = splitted[0].Length;
