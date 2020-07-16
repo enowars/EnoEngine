@@ -614,7 +614,7 @@ namespace EnoDatabase
             var totalTasks = services.Sum(s => s.FlagsPerRound) * teams.Length;
             double timeDiff = (double)quarterRound / totalTasks;
             DateTime time = currentRound.Begin.AddSeconds(quarterRound);
-            for (long oldRoundId = currentRound.Id - 1; oldRoundId > (currentRound.Id - config.CheckedRoundsPerRound); oldRoundId--)
+            for (long oldRoundId = currentRound.Id - 1; oldRoundId > (currentRound.Id - config.CheckedRoundsPerRound) && oldRoundId > 0; oldRoundId--)
             {
                 foreach (var team in teams)
                 {
