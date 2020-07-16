@@ -44,9 +44,9 @@ namespace EnoCore.Logging
             Queue.Enqueue(PREFIX + JsonSerializer.Serialize(msg) + "\n");
         }
 
-        public void FlagSubmissionStatisticsMessage(long teamId, long okFlags, long duplicateFlags, long oldFlags, long invalidFlags, long ownFlags)
+        public void FlagSubmissionStatisticsMessage(string teamName, long teamId, long okFlags, long duplicateFlags, long oldFlags, long invalidFlags, long ownFlags)
         {
-            var msg = new TeamFlagSubmissionStatisticMessage(teamId, okFlags, duplicateFlags, oldFlags, invalidFlags, ownFlags);
+            var msg = new TeamFlagSubmissionStatisticMessage(teamName, teamId, okFlags, duplicateFlags, oldFlags, invalidFlags, ownFlags);
             Queue.Enqueue(PREFIX + JsonSerializer.Serialize(msg) + "\n");
         }
     }
@@ -126,6 +126,7 @@ namespace EnoCore.Logging
 
     public class TeamFlagSubmissionStatisticMessage : EnoStatisticsMessage
     {
+        public string TeamName { get; set; }
         public long TeamId { get; set; }
         public long OkFlags { get; set; }
         public long DuplicateFlags { get; set; }
@@ -133,8 +134,9 @@ namespace EnoCore.Logging
         public long InvalidFlags { get; set; }
         public long OwnFlags { get; set; }
 
-        public TeamFlagSubmissionStatisticMessage(long teamId, long okFlags, long duplicateFlags, long oldFlags, long invalidFlags, long ownFlags)
+        public TeamFlagSubmissionStatisticMessage(string teamName, long teamId, long okFlags, long duplicateFlags, long oldFlags, long invalidFlags, long ownFlags)
         {
+            TeamName = teamName;
             TeamId = teamId;
             OkFlags = okFlags;
             DuplicateFlags = duplicateFlags;

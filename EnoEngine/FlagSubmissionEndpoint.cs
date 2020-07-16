@@ -51,7 +51,7 @@ namespace EnoEngine.FlagSubmission
             }
         }
 
-        public async Task LogSubmissionStatistics(long teamId, CancellationToken token)
+        public async Task LogSubmissionStatistics(long teamId, string teamName, CancellationToken token)
         {
             var statistic = SubmissionStatistics[teamId];
             while (!token.IsCancellationRequested)
@@ -61,7 +61,7 @@ namespace EnoEngine.FlagSubmission
                 var ownFlags = Interlocked.Exchange(ref statistic.OwnFlags, 0);
                 var duplicateFlags = Interlocked.Exchange(ref statistic.DuplicateFlags, 0);
                 var invalidFlags = Interlocked.Exchange(ref statistic.InvalidFlags, 0);
-                EnoStatistics.FlagSubmissionStatisticsMessage(teamId, okFlags, duplicateFlags, oldFlags, invalidFlags, ownFlags);
+                EnoStatistics.FlagSubmissionStatisticsMessage(teamName, teamId, okFlags, duplicateFlags, oldFlags, invalidFlags, ownFlags);
                 await Task.Delay(5000);
             }
         }
@@ -72,7 +72,7 @@ namespace EnoEngine.FlagSubmission
             token.Register(() => DebugListener.Stop());
             foreach (var team in SubmissionStatistics)
             {
-                Task.Run(async () => await LogSubmissionStatistics(team.Key, token));
+                Task.Run(async () => await LogSubmissionStatistics(team.Key, config.Teams.Where(t => t.Id == team.Key).First().Name, token));
             }
             Task.Factory.StartNew(async () => await InsertSubmissionsLoop(token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
             Task.Factory.StartNew(async () => await RunProductionEndpoint(config, token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
