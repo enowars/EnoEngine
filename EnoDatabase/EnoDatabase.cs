@@ -630,7 +630,7 @@ namespace EnoDatabase
                                 Payload = new Flag() // ServiceId, RoundId, OwnerId, RoundOffset
                                 {
                                     ServiceId = service.Id,
-                                    RoundId = currentRound.Id,
+                                    RoundId = oldRoundId,
                                     OwnerId = team.Id,
                                     RoundOffset = i
                                 }.ToString(Encoding.ASCII.GetBytes(config.FlagSigningKey), config.Encoding),
