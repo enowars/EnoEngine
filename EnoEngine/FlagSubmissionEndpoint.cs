@@ -10,6 +10,7 @@ using System;
 using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using EnoCore.Utils;
 using System.IO;
 using System.IO.Pipelines;
 using System.Linq;
@@ -230,12 +231,26 @@ namespace EnoEngine.FlagSubmission
                         Array.Copy(attackerAddress, attackerPrefix, Configuration.TeamSubnetBytesLength);
                         var attackerPrefixString = BitConverter.ToString(attackerPrefix);
                         long teamId;
-                        using (var scope = ServiceProvider.CreateScope())
+                        try
                         {
-                            var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                            teamId = await db.GetTeamIdByPrefix(attackerPrefixString);
+                            using (var scope = ServiceProvider.CreateScope())
+                            {
+                                var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
+                                teamId = await db.GetTeamIdByPrefix(attackerPrefixString);
+                            }
+                            var _ = ProcessLinesAsync(client.Client, teamId, config, token);
                         }
-                        var _ = ProcessLinesAsync(client.Client, teamId, config, token);
+                        catch (Exception e)
+                        {
+                            Logger.LogError(e.ToFancyString());
+                            try
+                            {
+                                var itemBytes = Encoding.ASCII.GetBytes(FormatSubmissionResult(FlagSubmissionResult.InvalidSenderError)); //TODO don't serialize every time
+                                await client.Client.SendAsync(itemBytes, SocketFlags.None, token);
+                                client.Close();
+                            }
+                            catch { }
+                        }
                     }
                     catch (TaskCanceledException)
                     {
