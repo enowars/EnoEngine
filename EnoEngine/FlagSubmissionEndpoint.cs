@@ -28,7 +28,7 @@ namespace EnoEngine.FlagSubmission
         private readonly Dictionary<long, Channel<(Flag Flag, TaskCompletionSource<FlagSubmissionResult> FeedbackSource)>> Channels =
             new Dictionary<long, Channel<(Flag, TaskCompletionSource<FlagSubmissionResult>)>>();
         private readonly Dictionary<long, TeamFlagSubmissionStatistic> SubmissionStatistics = new Dictionary<long, TeamFlagSubmissionStatistic>();
-        private const int MaximumLineLength = 100;
+        private const int MaximumLineLength = 200;
         private const int SUBMISSION_BATCH_SIZE = 500;
         private readonly TcpListener ProductionListener = new TcpListener(IPAddress.IPv6Any, 1337);
         private readonly TcpListener DebugListener = new TcpListener(IPAddress.IPv6Any, 1338);
@@ -181,6 +181,8 @@ namespace EnoEngine.FlagSubmission
             }
             // Mark the PipeReader as complete.
             await reader.CompleteAsync();
+            // Mark the Channel as complete
+            feedbackWriter.Complete();
         }
 
         private async Task RespondAsync(Socket socket, long? teamId, ChannelReader<Task<FlagSubmissionResult>> feedbackReader, CancellationToken token)
@@ -218,6 +220,8 @@ namespace EnoEngine.FlagSubmission
                     await socket.SendAsync(itemBytes, SocketFlags.None, token);  //TODO enforce batching
                     if (item == FlagSubmissionResult.SpamError)
                     {
+                        // https://blog.netherlabs.nl/articles/2009/01/18/the-ultimate-so_linger-page-or-why-is-my-tcp-not-reliable
+                        await Task.Delay(1000);
                         socket.Close();
                         break;
                     }
@@ -343,7 +347,7 @@ namespace EnoEngine.FlagSubmission
                     {
                         int SubmissionsPerTeam = 0;
                         var reader = channel.Reader;
-                        while (reader.TryRead(out var item) && SubmissionsPerTeam<100)
+                        while (SubmissionsPerTeam < 100 && reader.TryRead(out var item))
                         {
                             empty = false;
                             SubmissionsPerTeam++;

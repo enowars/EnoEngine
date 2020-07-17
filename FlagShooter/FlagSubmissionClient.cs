@@ -47,7 +47,7 @@ namespace FlagShooter
                         result + "\n" == Misc.SubmissionResultDuplicate ||
                         result + "\n" == Misc.SubmissionResultOwn))
                     {
-                        Console.WriteLine($"received unexpected {result} ({result.Length}");
+                        Console.WriteLine($"received unexpected {result} ({result.Length} bytes)");
                     }
                 }
             }
