@@ -346,7 +346,7 @@ namespace EnoEngine.FlagSubmission
                     {
                         int SubmissionsPerTeam = 0;
                         var reader = channel.Reader;
-                        while (reader.TryRead(out var item) && SubmissionsPerTeam<100)
+                        while (SubmissionsPerTeam < 100 && reader.TryRead(out var item))
                         {
                             empty = false;
                             SubmissionsPerTeam++;
