@@ -289,19 +289,25 @@ namespace EnoDatabase
 
         public async Task<EnoEngineScoreboard> GetCurrentScoreboard(long roundId)
         {
+            var sw = new Stopwatch();
+            sw.Start();
+            Logger.LogInformation($"{nameof(GetCurrentScoreboard)}Started Scoreboard Generation");
             var teams = _context.Teams
                 .Include(t => t.ServiceStats)
                 .AsNoTracking()
                 .OrderByDescending(t => t.TotalPoints)
                 .ToList();
+            Logger.LogInformation($"{nameof(GetCurrentScoreboard)}Fetched teams after: {sw.ElapsedMilliseconds}ms");
             var round = _context.Rounds
                 .AsNoTracking()
                 .Where(r => r.Id == roundId)
                 .FirstOrDefault();
+            Logger.LogInformation($"{nameof(GetCurrentScoreboard)}Fetched round after: {sw.ElapsedMilliseconds}ms");
             var services = _context.Services
                 .AsNoTracking()
                 .OrderBy(s => s.Id)
                 .ToList();
+            Logger.LogInformation($"{nameof(GetCurrentScoreboard)}Fetched services after: {sw.ElapsedMilliseconds}ms");
             Dictionary<(long serviceid, long flagindex), EnoScoreboardFirstblood> firstbloods = new Dictionary<(long serviceid, long flagindex), EnoScoreboardFirstblood>();
             foreach (var service in services)
             {
@@ -318,7 +324,9 @@ namespace EnoDatabase
                     }
                 }
             }
+            Logger.LogInformation($"{nameof(GetCurrentScoreboard)}Iterated Firstblood after: {sw.ElapsedMilliseconds}ms");
             var scoreboard = new EnoEngineScoreboard(round, services, firstbloods, teams);
+            Logger.LogInformation($"{nameof(GetCurrentScoreboard)}Finished after: {sw.ElapsedMilliseconds}ms");
             return scoreboard;
         }
     }
