@@ -181,6 +181,8 @@ namespace EnoEngine.FlagSubmission
             }
             // Mark the PipeReader as complete.
             await reader.CompleteAsync();
+            // Mark the Channel as complete
+            feedbackWriter.Complete();
         }
 
         private async Task RespondAsync(Socket socket, long? teamId, ChannelReader<Task<FlagSubmissionResult>> feedbackReader, CancellationToken token)
