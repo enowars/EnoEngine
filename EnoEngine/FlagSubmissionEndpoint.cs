@@ -28,8 +28,9 @@ namespace EnoEngine.FlagSubmission
         private readonly Dictionary<long, Channel<(Flag Flag, TaskCompletionSource<FlagSubmissionResult> FeedbackSource)>> Channels =
             new Dictionary<long, Channel<(Flag, TaskCompletionSource<FlagSubmissionResult>)>>();
         private readonly Dictionary<long, TeamFlagSubmissionStatistic> SubmissionStatistics = new Dictionary<long, TeamFlagSubmissionStatistic>();
-        private const int MaximumLineLength = 200;
+        private const int MAX_LIME_LENGTH = 200;
         private const int SUBMISSION_BATCH_SIZE = 500;
+        private const int SUBMISSION_BATCH_PARALLELIZATION = 4;
         private readonly TcpListener ProductionListener = new TcpListener(IPAddress.IPv6Any, 1337);
         private readonly TcpListener DebugListener = new TcpListener(IPAddress.IPv6Any, 1338);
         private readonly ILogger Logger;
@@ -75,7 +76,7 @@ namespace EnoEngine.FlagSubmission
             {
                 Task.Run(async () => await LogSubmissionStatistics(team.Key, config.Teams.Where(t => t.Id == team.Key).First().Name, token));
             }
-            Task.Factory.StartNew(async () => await InsertSubmissionsLoop(token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
+            for (int i=0;i< SUBMISSION_BATCH_PARALLELIZATION; i++) Task.Factory.StartNew(async () => await InsertSubmissionsLoop(token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
             Task.Factory.StartNew(async () => await RunProductionEndpoint(config, token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
             Task.Factory.StartNew(async () => await RunDebugEndpoint(config, token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
         }
@@ -173,7 +174,7 @@ namespace EnoEngine.FlagSubmission
 
                 // TryReadLine has returned false, so the remaining buffer does not contain a \n.
                 // If the length is longer than a flag, somebody is sending bullshit!
-                if (buffer.Length > MaximumLineLength)
+                if (buffer.Length > MAX_LIME_LENGTH)
                 {
                     await feedbackWriter.WriteAsync(Task.FromResult(FlagSubmissionResult.SpamError));
                     break;
