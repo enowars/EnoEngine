@@ -218,6 +218,7 @@ namespace EnoEngine.FlagSubmission
                     await socket.SendAsync(itemBytes, SocketFlags.None, token);  //TODO enforce batching
                     if (item == FlagSubmissionResult.SpamError)
                     {
+                        await Task.Delay(1000);
                         socket.Close();
                         break;
                     }
