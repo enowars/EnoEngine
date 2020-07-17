@@ -7,7 +7,7 @@ namespace EnoCore.Models
 {
     public class EnoScoreboardFirstblood
     {
-        private readonly DateTime FirstTime;
+        public readonly DateTime FirstTime;
         public long TeamId { get; private set; }
         public string Timestamp { get => FirstTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"); }
         public double TimeEpoch { get => FirstTime.Subtract(DateTime.UnixEpoch).TotalSeconds; }

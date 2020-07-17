@@ -311,7 +311,7 @@ namespace EnoDatabase
             Dictionary<(long serviceid, long flagindex), EnoScoreboardFirstblood> firstbloods = new Dictionary<(long serviceid, long flagindex), EnoScoreboardFirstblood>();
             foreach (var service in services)
             {
-                for (int i = 0; i < service.FetchedFlagsPerRound; i++)
+                for (int i = 0; i < service.FlagsPerRound; i++)
                 {
                     var fb = await _context.SubmittedFlags
                         .Where(sf => sf.FlagServiceId == service.Id)
@@ -321,7 +321,16 @@ namespace EnoDatabase
                         .FirstOrDefaultAsync();
                     if (fb != null)
                     {
-                        firstbloods[(fb.FlagServiceId, fb.FlagRoundOffset % service.FetchedFlagsPerRound)] = new EnoScoreboardFirstblood(DateTime.UtcNow, fb.AttackerTeamId, fb.RoundId, "StoreDescription", fb.FlagRoundOffset % service.FetchedFlagsPerRound);
+                        var key = (fb.FlagServiceId, fb.FlagRoundOffset % service.FetchedFlagsPerRound);
+                        var n = new EnoScoreboardFirstblood(DateTime.UtcNow, fb.AttackerTeamId, fb.RoundId, "StoreDescription", fb.FlagRoundOffset % service.FetchedFlagsPerRound);
+                        if (!firstbloods.ContainsKey(key))
+                        {
+                            firstbloods[key] = n;
+                        }
+                        else if (firstbloods[key].FirstTime > n.FirstTime)
+                        {
+                            firstbloods[key] = n;
+                        }
                     }
                 }
             }
