@@ -28,7 +28,7 @@ namespace EnoEngine.FlagSubmission
         private readonly Dictionary<long, Channel<(Flag Flag, TaskCompletionSource<FlagSubmissionResult> FeedbackSource)>> Channels =
             new Dictionary<long, Channel<(Flag, TaskCompletionSource<FlagSubmissionResult>)>>();
         private readonly Dictionary<long, TeamFlagSubmissionStatistic> SubmissionStatistics = new Dictionary<long, TeamFlagSubmissionStatistic>();
-        private const int MaximumLineLength = 100;
+        private const int MaximumLineLength = 200;
         private const int SUBMISSION_BATCH_SIZE = 500;
         private readonly TcpListener ProductionListener = new TcpListener(IPAddress.IPv6Any, 1337);
         private readonly TcpListener DebugListener = new TcpListener(IPAddress.IPv6Any, 1338);
