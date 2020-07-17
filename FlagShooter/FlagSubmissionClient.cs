@@ -1,17 +1,26 @@
-﻿using EnoCore.Models.Database;
-using EnoCore.Utils;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using EnoCore.Utils;
 
 namespace FlagShooter
 {
-    class FlagSubmissionClient
+    internal class FlagSubmissionClient
     {
+        private readonly ChannelReader<byte[]> flagsReader;
+        private readonly TcpClient client;
+
+        private FlagSubmissionClient(ChannelReader<byte[]> flagsReader, TcpClient client)
+        {
+            this.flagsReader = flagsReader;
+            this.client = client;
+            Task.Run(this.Send);
+            Task.Run(this.Receive);
+        }
+
         public static async Task<FlagSubmissionClient> Create(ChannelReader<byte[]> flagsReader, long teamId, string address = "localhost")
         {
             var client = new TcpClient();
@@ -19,29 +28,21 @@ namespace FlagShooter
             await client.Client.SendAsync(Encoding.ASCII.GetBytes($"{teamId}\n"), SocketFlags.None);
             return new FlagSubmissionClient(flagsReader, client);
         }
-        private readonly ChannelReader<byte[]> FlagsReader;
-        private readonly TcpClient Client;
-        private FlagSubmissionClient(ChannelReader<byte[]> flagsReader, TcpClient client)
-        {
-            FlagsReader = flagsReader;
-            Client = client;
-            Task.Run(Send);
-            Task.Run(Receive);
-        }
 
         private async Task Receive()
         {
-            StreamReader reader = new StreamReader(Client.GetStream(), Encoding.ASCII);
+            StreamReader reader = new StreamReader(this.client.GetStream(), Encoding.ASCII);
             try
             {
                 byte[] buf = new byte[2048];
                 while (true)
                 {
                     string? result = await reader.ReadLineAsync();
-                    if (result == null || result == "")
+                    if (result == null || result == string.Empty)
                     {
-                        throw new Exception($"result empty (connected={Client.Client.Connected})");
+                        throw new Exception($"result empty (connected={this.client.Client.Connected})");
                     }
+
                     if (!(result + "\n" == Misc.SubmissionResultOk ||
                         result + "\n" == Misc.SubmissionResultOld ||
                         result + "\n" == Misc.SubmissionResultDuplicate ||
@@ -53,7 +54,7 @@ namespace FlagShooter
             }
             catch (Exception e)
             {
-                Console.WriteLine($"{nameof(Receive)} failed: {e.Message}");
+                Console.WriteLine($"{nameof(this.Receive)} failed: {e.Message}");
             }
         }
 
@@ -63,13 +64,13 @@ namespace FlagShooter
             {
                 while (true)
                 {
-                    var flag = await FlagsReader.ReadAsync();
-                    await Client.Client.SendAsync(flag, SocketFlags.None);
+                    var flag = await this.flagsReader.ReadAsync();
+                    await this.client.Client.SendAsync(flag, SocketFlags.None);
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine($"{nameof(Send)} failed: {e.Message}");
+                Console.WriteLine($"{nameof(this.Send)} failed: {e.Message}");
             }
         }
     }

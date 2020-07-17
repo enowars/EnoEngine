@@ -1,55 +1,53 @@
-﻿using EnoCore;
-using EnoCore.Models.Database;
-using EnoCore.Models.Json;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
-using System.Threading.Tasks;
-using EnoCore.Models;
-using System.Linq;
-using EnoDatabase;
-using EnoCore.Utils;
 using System.Threading.Channels;
+using System.Threading.Tasks;
+using EnoCore;
+using EnoCore.Models;
+using EnoCore.Models.Database;
+using EnoCore.Models.Json;
+using EnoCore.Utils;
+using EnoDatabase;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace FlagShooter
 {
-    class Program
+    internal class Program
     {
         private static readonly CancellationTokenSource FlagShooterCancelSource = new CancellationTokenSource();
-        private readonly int FlagCount;
-        private readonly int TeamStart;
-        private readonly int RoundDelay;
-        private readonly int TeamCount;
-        private readonly int SubmissionConnectionsPerTeam;
-        private readonly JsonConfiguration Configuration;
-        private readonly List<ChannelWriter<byte[]>> FlagWriters;
-
-        //private static FileSystemWatcher Watch;
         private static EnoEngineScoreboard? sb;
+        private readonly int flagCount;
+        private readonly int teamStart;
+        private readonly int roundDelay;
+        private readonly int teamCount;
+        private readonly int submissionConnectionsPerTeam;
+        private readonly JsonConfiguration configuration;
+        private readonly List<ChannelWriter<byte[]>> flagWriters;
 
         public Program(int flagCount, int roundDelay, int teamStart, int teamCount, int teamConnections, JsonConfiguration configuration)
         {
             Console.WriteLine($"flagCount {flagCount}, roundDelay {roundDelay}, teamStart {teamStart}, teamCount {teamCount}, teamConnections {teamConnections}");
-            FlagCount = flagCount;
-            TeamStart = teamStart;
-            RoundDelay = roundDelay;
-            TeamCount = teamCount;
-            SubmissionConnectionsPerTeam = teamConnections;
-            Configuration = configuration;
-            FlagWriters = new List<ChannelWriter<byte[]>>();
-            for (int i = 0; i < TeamCount; i++)
+            this.flagCount = flagCount;
+            this.teamStart = teamStart;
+            this.roundDelay = roundDelay;
+            this.teamCount = teamCount;
+            this.submissionConnectionsPerTeam = teamConnections;
+            this.configuration = configuration;
+            this.flagWriters = new List<ChannelWriter<byte[]>>();
+            for (int i = 0; i < this.teamCount; i++)
             {
-                for (int j = 0; j < SubmissionConnectionsPerTeam; j++)
+                for (int j = 0; j < this.submissionConnectionsPerTeam; j++)
                 {
                     var channel = Channel.CreateBounded<byte[]>(new BoundedChannelOptions(1000)
                     {
@@ -61,50 +59,86 @@ namespace FlagShooter
                     {
                         try
                         {
-                            await FlagSubmissionClient.Create(channel.Reader, localI + TeamStart);
-                            Console.WriteLine($"FlagSubmissionClient {localJ} for team {localI + TeamStart} connected");
+                            await FlagSubmissionClient.Create(channel.Reader, localI + this.teamStart);
+                            Console.WriteLine($"FlagSubmissionClient {localJ} for team {localI + this.teamStart} connected");
                         }
                         catch (Exception e)
                         {
-                            Console.WriteLine($"Failed to create FlagSubmissionClient {j} for team {localI + TeamStart}: {e.Message} ({e.GetType()})");
+                            Console.WriteLine($"Failed to create FlagSubmissionClient {j} for team {localI + this.teamStart}: {e.Message} ({e.GetType()})");
                         }
                     });
-                    FlagWriters.Add(channel.Writer);
+                    this.flagWriters.Add(channel.Writer);
                 }
             }
         }
 
-        private List<Task> SubmitFlag(Flag f)
+        public static void Main(int flagCount = 10000, int roundDelay = 1000, int teamStart = 1, int teamCount = 10, int teamConnections = 1)
         {
-            var tasks = new List<Task>();
-            foreach (var writer in FlagWriters)
+            try
             {
-                tasks.Add(Task.Run(async () => await writer.WriteAsync(Encoding.UTF8.GetBytes(f.ToString(Encoding.UTF8.GetBytes(Configuration.FlagSigningKey), Configuration.Encoding) + "\n"))));
+                Console.WriteLine($"FlagShooter starting");
+
+                // Console.CancelKeyPress += (s, e) => {
+                //     Console.WriteLine("Shutting down FlagShooter");
+                //     e.Cancel = true;
+                //    FlagShooterCancelSource.Cancel();
+                // };
+                JsonConfiguration configuration;
+                if (!File.Exists("ctf.json"))
+                {
+                    Console.WriteLine("Config (ctf.json) does not exist");
+                    return;
+                }
+
+                try
+                {
+                    var content = File.ReadAllText("ctf.json");
+                    configuration = JsonSerializer.Deserialize<JsonConfiguration>(content);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Failed to load ctf.json: {e.Message}");
+                    return;
+                }
+
+                var path = Directory.GetParent(Directory.GetCurrentDirectory()).FullName;
+                path = Path.Combine(path, "data");
+                ParseScoreboard(Path.Combine(path, "scoreboard.json"));
+                Task.Run(async () => await PollConfig(path, FlagShooterCancelSource.Token));
+                new Program(flagCount, roundDelay, teamStart, teamCount, teamConnections, configuration).Start();
             }
-            return tasks;
+            catch (Exception e)
+            {
+                Console.WriteLine($"FlagShooter failed: {EnoDatabaseUtils.FormatException(e)}");
+            }
         }
 
-        public void Start()
-        {
-            FlagRunnerLoop().Wait(FlagShooterCancelSource.Token);
-        }
-        public List<List<Task>> BeginSubmitFlags(long FlagCount)
+        public void Start() => this.FlagRunnerLoop().Wait(FlagShooterCancelSource.Token);
+
+        public List<List<Task>> BeginSubmitFlags(long flagCount)
         {
             var result = new List<List<Task>>();
             try
             {
                 long i = 0;
                 if (sb != null)
-                    if (sb.CurrentRound != null && sb.CurrentRound >0)
+                {
+                    if (sb.CurrentRound != null && sb.CurrentRound > 0)
                     {
-                        for (long r = sb.CurrentRound.Value; r > Math.Max(sb.CurrentRound.Value - Configuration.FlagValidityInRounds, 1); r--)
-                            for (int team = 0; team < Configuration.Teams.Count; team++)
+                        for (long r = sb.CurrentRound.Value; r > Math.Max(sb.CurrentRound.Value - this.configuration.FlagValidityInRounds, 1); r--)
+                        {
+                            for (int team = 0; team < this.configuration.Teams.Count; team++)
+                            {
                                 foreach (var s in sb.Services)
+                                {
                                     for (int store = 0; store < s.MaxStores; store++)
                                     {
-                                        if (i++ > FlagCount) return result;
+                                        if (i++ > flagCount)
+                                        {
+                                            return result;
+                                        }
 
-                                        result.Add(SubmitFlag(new Flag()
+                                        result.Add(this.SubmitFlag(new Flag()
                                         {
                                             RoundId = r,
                                             OwnerId = team,
@@ -112,10 +146,15 @@ namespace FlagShooter
                                             RoundOffset = store
                                         }));
                                     }
+                                }
+                            }
+                        }
 
-                        Console.WriteLine($"Not Enough Flags available, requested {FlagCount} and got {i}");
+                        Console.WriteLine($"Not Enough Flags available, requested {flagCount} and got {i}");
                         return result;
                     }
+                }
+
                 Console.WriteLine($"No Flags could be generated, Scoreboard data not Found");
                 return result;
             }
@@ -123,7 +162,6 @@ namespace FlagShooter
             {
                 Console.WriteLine($"Exception Generating flags: {e.ToFancyString()}");
                 return result;
-                //throw e;
             }
         }
 
@@ -135,10 +173,13 @@ namespace FlagShooter
                 try
                 {
                     Console.WriteLine($"Next batch of flags, current round {sb?.CurrentRound}");
-                    var taskLists = BeginSubmitFlags(FlagCount);
+                    var taskLists = this.BeginSubmitFlags(this.flagCount);
                     foreach (var taskList in taskLists)
+                    {
                         await Task.WhenAll(taskList);
-                    await Task.Delay(RoundDelay, FlagShooterCancelSource.Token);
+                    }
+
+                    await Task.Delay(this.roundDelay, FlagShooterCancelSource.Token);
                 }
                 catch (Exception e)
                 {
@@ -146,7 +187,7 @@ namespace FlagShooter
                 }
             }
         }
-        
+
         private static void ParseScoreboard(string fileName)
         {
             if (!File.Exists(fileName))
@@ -154,11 +195,11 @@ namespace FlagShooter
                 Console.WriteLine($"Config {fileName} does not exist");
                 return;
             }
+
             try
             {
                 var content = File.ReadAllText(fileName);
                 sb = JsonSerializer.Deserialize<EnoEngineScoreboard>(content);
-
             }
             catch (Exception e)
             {
@@ -166,12 +207,17 @@ namespace FlagShooter
                 return;
             }
         }
+
         private static void OnChanged(object source, FileSystemEventArgs e)
         {
             Console.WriteLine($"File: {e.FullPath} {e.ChangeType}");
-            if (e.Name.Contains("scoreboard.json")) ParseScoreboard(e.FullPath);
+            if (e.Name.Contains("scoreboard.json"))
+            {
+                ParseScoreboard(e.FullPath);
+            }
         }
-        private async static Task PollConfig(string path, CancellationToken token)
+
+        private static async Task PollConfig(string path, CancellationToken token)
         {
             while (!token.IsCancellationRequested)
             {
@@ -179,45 +225,16 @@ namespace FlagShooter
                 await Task.Delay(1000);
             }
         }
-        static void Main(int flagCount = 10000, int roundDelay = 1000, int teamStart = 1, int teamCount = 10, int teamConnections = 1)
+
+        private List<Task> SubmitFlag(Flag f)
         {
-            try
+            var tasks = new List<Task>();
+            foreach (var writer in this.flagWriters)
             {
-                Console.WriteLine($"FlagShooter starting");
-                //Console.CancelKeyPress += (s, e) => {
-                //    Console.WriteLine("Shutting down FlagShooter");
-                //    e.Cancel = true;
-                //    FlagShooterCancelSource.Cancel();
-                //};
-                JsonConfiguration configuration;
-                if (!File.Exists("ctf.json"))
-                {
-                    Console.WriteLine("Config (ctf.json) does not exist");
-                    return;
-                }
-                try
-                {
-                    var content = File.ReadAllText("ctf.json");
-                    configuration = JsonSerializer.Deserialize<JsonConfiguration>(content);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine($"Failed to load ctf.json: {e.Message}");
-                    return;
-                }
-                
-                var path = Directory.GetParent(Directory.GetCurrentDirectory()).FullName;
-                Console.WriteLine($"Path is: {path}");
-                path = Path.Combine(path, "data");
-                Console.WriteLine($"Path is: {path}");
-                ParseScoreboard(Path.Combine(path, "scoreboard.json"));
-                Task.Run(async () => await PollConfig(path, FlagShooterCancelSource.Token));
-                new Program(flagCount, roundDelay, teamStart, teamCount, teamConnections, configuration).Start();
+                tasks.Add(Task.Run(async () => await writer.WriteAsync(Encoding.UTF8.GetBytes(f.ToString(Encoding.UTF8.GetBytes(this.configuration.FlagSigningKey), this.configuration.Encoding) + "\n"))));
             }
-            catch (Exception e)
-            {
-                Console.WriteLine($"FlagShooter failed: {EnoDatabaseUtils.FormatException(e)}");
-            }
+
+            return tasks;
         }
     }
 }
