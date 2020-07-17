@@ -315,7 +315,8 @@ namespace EnoDatabase
                 {
                     var fb = await _context.SubmittedFlags
                         .Where(sf => sf.FlagServiceId == service.Id)
-                        .Where(sf => sf.FlagRoundOffset % service.FetchedFlagsPerRound == i)
+                        //.Where(sf => sf.FlagRoundOffset % service.FetchedFlagsPerRound == i)
+                        .Where(sf => sf.FlagRoundOffset == i)
                         .OrderBy(sf => sf.Timestamp)
                         .FirstOrDefaultAsync();
                     if (fb != null)
