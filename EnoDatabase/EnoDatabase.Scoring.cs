@@ -323,14 +323,8 @@ namespace EnoDatabase
                     {
                         var key = (fb.FlagServiceId, fb.FlagRoundOffset % service.FetchedFlagsPerRound);
                         var n = new EnoScoreboardFirstblood(DateTime.UtcNow, fb.AttackerTeamId, fb.RoundId, "StoreDescription", fb.FlagRoundOffset % service.FetchedFlagsPerRound);
-                        if (!firstbloods.ContainsKey(key))
-                        {
+                        if (!firstbloods.ContainsKey(key)||firstbloods[key].FirstTime > n.FirstTime)
                             firstbloods[key] = n;
-                        }
-                        else if (firstbloods[key].FirstTime > n.FirstTime)
-                        {
-                            firstbloods[key] = n;
-                        }
                     }
                 }
             }

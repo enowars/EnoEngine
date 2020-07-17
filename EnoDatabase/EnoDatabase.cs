@@ -353,6 +353,7 @@ namespace EnoDatabase
                             Service = service,
                             ServiceId = service.Id,
                             RoundOffset = i,
+                            Round = round,
                             RoundId = round.Id
                         };
                         newFlags.Add(flag);
@@ -379,7 +380,8 @@ namespace EnoDatabase
                             Service = service,
                             ServiceId = service.Id,
                             RoundOffset = i,
-                            GameRound = round
+                            GameRound = round,
+                            GameRoundId = round.Id
                         };
                         newNoises.Add(noise);
                     }
@@ -403,7 +405,8 @@ namespace EnoDatabase
                             OwnerId = team.Id,
                             Service = service,
                             ServiceId = service.Id,
-                            GameRound = round
+                            GameRound = round,
+                            GameRoundId = round.Id
                         };
                         newHavocs.Add(havoc);
                     }
@@ -549,7 +552,7 @@ namespace EnoDatabase
                     CheckerUrl = checkers[i % checkers.Length],
                     MaxRunningTime = (int)(quarterRound * 1000),
                     RelatedRoundId = havoc.GameRoundId,
-                    CurrentRoundId = currentRound.Id,
+                    CurrentRoundId = havoc.GameRoundId,
                     StartTime = begin,
                     TaskIndex = 0,
                     Method = CheckerTaskMethod.havoc,
