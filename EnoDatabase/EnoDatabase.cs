@@ -376,7 +376,7 @@ namespace EnoDatabase
                         {
                             Owner = team,
                             OwnerId = team.Id,
-                            StringRepresentation = EnoDatabaseUtils.GenerateNoise(),
+                            StringRepresentation = EnoDatabaseUtils.GenerateNoise(round.Id, service.Id, i),
                             Service = service,
                             ServiceId = service.Id,
                             RoundOffset = i,

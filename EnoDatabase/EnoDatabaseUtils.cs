@@ -183,11 +183,11 @@ namespace EnoDatabase
             File.WriteAllText($"{path}scoreboardInfo.json", json);
         }
 
-        internal static string GenerateNoise()
+        internal static string GenerateNoise(long roundId, long serviceId, long NoiseIndex)
         {
             var noiseContent = new byte[sizeof(int) * 3];
             ThreadSafeRandom.NextBytes(noiseContent);
-            return UrlSafify(Convert.ToBase64String(noiseContent));
+            return $"{roundId}{serviceId}{NoiseIndex}{UrlSafify(Convert.ToBase64String(noiseContent))}";
         }
 
         public static async Task DelayUntil(DateTime time, CancellationToken token)
