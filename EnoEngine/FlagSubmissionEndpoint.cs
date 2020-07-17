@@ -220,6 +220,7 @@ namespace EnoEngine.FlagSubmission
                     await socket.SendAsync(itemBytes, SocketFlags.None, token);  //TODO enforce batching
                     if (item == FlagSubmissionResult.SpamError)
                     {
+                        // https://blog.netherlabs.nl/articles/2009/01/18/the-ultimate-so_linger-page-or-why-is-my-tcp-not-reliable
                         await Task.Delay(1000);
                         socket.Close();
                         break;
