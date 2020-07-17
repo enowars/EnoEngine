@@ -217,6 +217,7 @@ namespace EnoEngine
             var scoreboard = await EnoDatabaseUtils.GetCurrentScoreboard(ServiceProvider, roundId);
             EnoDatabaseUtils.GenerateCurrentScoreboard(scoreboard, EnoCore.Utils.Misc.dataDirectory, roundId);
             jsonStopWatch.Stop();
+            Logger.LogInformation($"Scoreboard Generation Took {jsonStopWatch.ElapsedMilliseconds} ms");
             //TODO EnoLogger.LogStatistics(ScoreboardJsonGenerationFinishedMessage.Create(jsonStopWatch.ElapsedMilliseconds));
             return DateTime.UtcNow;
         }
@@ -237,6 +238,7 @@ namespace EnoEngine
             finally
             {
                 stopWatch.Stop();
+                Logger.LogInformation($"{nameof(CalculateTotalPoints)} Took {stopWatch.ElapsedMilliseconds} ms");
                 //TODO EnoLogger.LogStatistics(CalculateTotalPointsFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
             }
         }
@@ -268,6 +270,7 @@ namespace EnoEngine
             finally
             {
                 stopWatch.Stop();
+                Logger.LogInformation($"{nameof(CalculateServicePoints)} Took {stopWatch.ElapsedMilliseconds} ms");
                 //TODO EnoLogger.LogStatistics(CalculateServicePointsFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
             }
         }
