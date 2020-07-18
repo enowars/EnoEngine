@@ -655,6 +655,9 @@ namespace EnoDatabase
                     }
                 }
             }
+            var tasks_start_time = oldFlagsCheckerTasks.Select(x => x.StartTime).ToList();
+            tasks_start_time = EnoDatabaseUtils.Shuffle(tasks_start_time).ToList();
+            oldFlagsCheckerTasks = tasks_start_time.Zip(oldFlagsCheckerTasks, (a, b) => { b.StartTime = a; return b; }).ToList();
             await InsertCheckerTasks(oldFlagsCheckerTasks);
         }
 
