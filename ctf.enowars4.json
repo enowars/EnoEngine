@@ -1,0 +1,2078 @@
+{
+	"Title": "ENOWARS 4",
+	"FlagValidityInRounds": 5,
+	"CheckedRoundsPerRound": 3,
+	"RoundLengthInSeconds": 180,
+	"DnsSuffix": "eno.host",
+	"TeamSubnetBytesLength": 16,
+	"FlagSigningKey": "LKRKHCOKeO9enEepn1cn9VYlL5bhkJ2Ba1RXKIdR364ydDueZtaoUbMzyhK1t3Tg",
+	"NoiseSigningKey": "3MiSZC3MXOcce4aD6T8oaet7d4s6C8j6oSmKRzgq2Wngg9tRdlYwEHlgctXNumZHz",
+	"Encoding": "UTF8",
+	"Teams": [{
+		"Address": "10.0.0.1",
+		"Country": {
+			"Code": "de",
+			"FlagUrl": "https://enowars.com/flags/de.svg",
+			"Name": "Germany"
+		},
+		"FlagUrl": "https://enowars.com/flags/de.svg",
+		"Id": 1,
+		"LogoUrl": null,
+		"Name": "NOP",
+		"TeamSubnet": "::ffff:10.0.0.1",
+		"University": null
+	}, {
+		"Address": "10.0.0.2",
+		"Country": {
+			"Code": "at",
+			"FlagUrl": "https://enowars.com/flags/at.svg",
+			"Name": "Austria"
+		},
+		"FlagUrl": "https://enowars.com/flags/at.svg",
+		"Id": 2,
+		"LogoUrl": "https://enowars.com/logo?img=46qgPmieWu0hXF3KxBRAFqc4rVtMavJd1mQcTBBfhG0",
+		"Name": "HgbSec",
+		"TeamSubnet": "::ffff:10.0.0.2",
+		"University": "University of Applied Sciences Upper Austria"
+	}, {
+		"Address": "10.0.0.3",
+		"Country": {
+			"Code": "jp",
+			"FlagUrl": "https://enowars.com/flags/jp.svg",
+			"Name": "Japan"
+		},
+		"FlagUrl": "https://enowars.com/flags/jp.svg",
+		"Id": 3,
+		"LogoUrl": "https://enowars.com/logo?img=0kZnBiqo-tmlorSXdGJLyzwoFlzOC8Z9xBYhudhGJ9w",
+		"Name": "abenben",
+		"TeamSubnet": "::ffff:10.0.0.3",
+		"University": null
+	}, {
+		"Address": "10.0.0.4",
+		"Country": {
+			"Code": "ae",
+			"FlagUrl": "https://enowars.com/flags/ae.svg",
+			"Name": "United Arab Emirates"
+		},
+		"FlagUrl": "https://enowars.com/flags/ae.svg",
+		"Id": 4,
+		"LogoUrl": "https://enowars.com/logo?img=H_yg3ZPQFGHNsZ1yFFN4PMcjHQgol-PdUhF3XbIuWRw",
+		"Name": "Alt-Backdoor",
+		"TeamSubnet": "::ffff:10.0.0.4",
+		"University": "AUS/UOWD/RIT/ADU"
+	}, {
+		"Address": "10.0.0.5",
+		"Country": {
+			"Code": "it",
+			"FlagUrl": "https://enowars.com/flags/it.svg",
+			"Name": "Italy"
+		},
+		"FlagUrl": "https://enowars.com/flags/it.svg",
+		"Id": 5,
+		"LogoUrl": null,
+		"Name": "httpizza",
+		"TeamSubnet": "::ffff:10.0.0.5",
+		"University": null
+	}, {
+		"Address": "10.0.0.6",
+		"Country": {
+			"Code": "us",
+			"FlagUrl": "https://enowars.com/flags/us.svg",
+			"Name": "United States"
+		},
+		"FlagUrl": "https://enowars.com/flags/us.svg",
+		"Id": 6,
+		"LogoUrl": null,
+		"Name": "BosSea",
+		"TeamSubnet": "::ffff:10.0.0.6",
+		"University": null
+	}, {
+		"Address": "10.0.0.7",
+		"Country": {
+			"Code": "nl",
+			"FlagUrl": "https://enowars.com/flags/nl.svg",
+			"Name": "Netherlands"
+		},
+		"FlagUrl": "https://enowars.com/flags/nl.svg",
+		"Id": 7,
+		"LogoUrl": "https://enowars.com/logo?img=guW9WsZo7PoGL9lumPNmtvzHk8ySehGNiY3drEj4Ytk",
+		"Name": "HU-HC",
+		"TeamSubnet": "::ffff:10.0.0.7",
+		"University": "Hogeschool Utrecht"
+	}, {
+		"Address": "10.0.0.8",
+		"Country": {
+			"Code": "cn",
+			"FlagUrl": "https://enowars.com/flags/cn.svg",
+			"Name": "China"
+		},
+		"FlagUrl": "https://enowars.com/flags/cn.svg",
+		"Id": 8,
+		"LogoUrl": null,
+		"Name": "CUSI",
+		"TeamSubnet": "::ffff:10.0.0.8",
+		"University": null
+	}, {
+		"Address": "10.0.0.9",
+		"Country": {
+			"Code": "in",
+			"FlagUrl": "https://enowars.com/flags/in.svg",
+			"Name": "India"
+		},
+		"FlagUrl": "https://enowars.com/flags/in.svg",
+		"Id": 9,
+		"LogoUrl": "https://enowars.com/logo?img=BiLymaPp7SNoHh_vq5XEhck3UiAk5JYlfVerOYZKKUo",
+		"Name": "CSFNinjas",
+		"TeamSubnet": "::ffff:10.0.0.9",
+		"University": "University of petroleum and energy studies Dehradun India"
+	}, {
+		"Address": "10.0.0.10",
+		"Country": {
+			"Code": "de",
+			"FlagUrl": "https://enowars.com/flags/de.svg",
+			"Name": "Germany"
+		},
+		"FlagUrl": "https://enowars.com/flags/de.svg",
+		"Id": 10,
+		"LogoUrl": "https://enowars.com/logo?img=7eNXmhEm8W3x6-EOE1rPm_m9tvAEKNnbFrUyWkG8i24",
+		"Name": "FluxFingers",
+		"TeamSubnet": "::ffff:10.0.0.10",
+		"University": "Ruhr University Bochum"
+	}, {
+		"Address": "10.0.0.11",
+		"Country": {
+			"Code": "at",
+			"FlagUrl": "https://enowars.com/flags/at.svg",
+			"Name": "Austria"
+		},
+		"FlagUrl": "https://enowars.com/flags/at.svg",
+		"Id": 11,
+		"LogoUrl": "https://enowars.com/logo?img=XD9fTw3XSRAvoYOcCWLHmrXajH_9yFSS0cnUFuZgMtY",
+		"Name": "SIGFLAG",
+		"TeamSubnet": "::ffff:10.0.0.11",
+		"University": "Johannes Kepler University Linz"
+	}, {
+		"Address": "10.0.0.12",
+		"Country": {
+			"Code": "ma",
+			"FlagUrl": "https://enowars.com/flags/ma.svg",
+			"Name": "Morocco"
+		},
+		"FlagUrl": "https://enowars.com/flags/ma.svg",
+		"Id": 12,
+		"LogoUrl": null,
+		"Name": "CRISIS",
+		"TeamSubnet": "::ffff:10.0.0.12",
+		"University": null
+	}, {
+		"Address": "10.0.0.13",
+		"Country": {
+			"Code": "in",
+			"FlagUrl": "https://enowars.com/flags/in.svg",
+			"Name": "India"
+		},
+		"FlagUrl": "https://enowars.com/flags/in.svg",
+		"Id": 13,
+		"LogoUrl": "https://enowars.com/logo?img=VutWwKtBml0rXAmOfRYYmSTsaxjlUzcO9Nat6dcZM74",
+		"Name": "Devil",
+		"TeamSubnet": "::ffff:10.0.0.13",
+		"University": "ABES Engineering College"
+	}, {
+		"Address": "10.0.0.14",
+		"Country": {
+			"Code": "in",
+			"FlagUrl": "https://enowars.com/flags/in.svg",
+			"Name": "India"
+		},
+		"FlagUrl": "https://enowars.com/flags/in.svg",
+		"Id": 14,
+		"LogoUrl": null,
+		"Name": "Forge",
+		"TeamSubnet": "::ffff:10.0.0.14",
+		"University": null
+	}, {
+		"Address": "10.0.0.15",
+		"Country": {
+			"Code": "de",
+			"FlagUrl": "https://enowars.com/flags/de.svg",
+			"Name": "Germany"
+		},
+		"FlagUrl": "https://enowars.com/flags/de.svg",
+		"Id": 15,
+		"LogoUrl": "https://enowars.com/logo?img=sBwYUyfCKrcnhPpp4cdPCGpWJ1auHbV-jSucrrinrwY",
+		"Name": "saarsec",
+		"TeamSubnet": "::ffff:10.0.0.15",
+		"University": "CISPA / Saarland University"
+	}, {
+		"Address": "10.0.0.16",
+		"Country": {
+			"Code": "at",
+			"FlagUrl": "https://enowars.com/flags/at.svg",
+			"Name": "Austria"
+		},
+		"FlagUrl": "https://enowars.com/flags/at.svg",
+		"Id": 16,
+		"LogoUrl": "https://enowars.com/logo?img=_WhMmztS53ijmKyh3jDJQayajdQKn2KMM50Xx_a2iQQ",
+		"Name": "we_0wn_Y0u",
+		"TeamSubnet": "::ffff:10.0.0.16",
+		"University": "TU Wien"
+	}, {
+		"Address": "10.0.0.17",
+		"Country": {
+			"Code": "us",
+			"FlagUrl": "https://enowars.com/flags/us.svg",
+			"Name": "United States"
+		},
+		"FlagUrl": "https://enowars.com/flags/us.svg",
+		"Id": 17,
+		"LogoUrl": null,
+		"Name": "see58",
+		"TeamSubnet": "::ffff:10.0.0.17",
+		"University": "The University of Texas - San Antonio"
+	}, {
+		"Address": "10.0.0.18",
+		"Country": {
+			"Code": "cn",
+			"FlagUrl": "https://enowars.com/flags/cn.svg",
+			"Name": "China"
+		},
+		"FlagUrl": "https://enowars.com/flags/cn.svg",
+		"Id": 18,
+		"LogoUrl": null,
+		"Name": "m3w+",
+		"TeamSubnet": "::ffff:10.0.0.18",
+		"University": null
+	}, {
+		"Address": "10.0.0.19",
+		"Country": {
+			"Code": "tn",
+			"FlagUrl": "https://enowars.com/flags/tn.svg",
+			"Name": "Tunisia"
+		},
+		"FlagUrl": "https://enowars.com/flags/tn.svg",
+		"Id": 19,
+		"LogoUrl": "https://enowars.com/logo?img=oF2WQ3O5NL-r2mAM-FPq0CqoYv1QKUrYV_pcrFqi5dk",
+		"Name": "the3000",
+		"TeamSubnet": "::ffff:10.0.0.19",
+		"University": null
+	}, {
+		"Address": "10.0.0.20",
+		"Country": {
+			"Code": "ma",
+			"FlagUrl": "https://enowars.com/flags/ma.svg",
+			"Name": "Morocco"
+		},
+		"FlagUrl": "https://enowars.com/flags/ma.svg",
+		"Id": 20,
+		"LogoUrl": null,
+		"Name": "htprogras",
+		"TeamSubnet": "::ffff:10.0.0.20",
+		"University": "alqalam agadir"
+	}, {
+		"Address": "10.0.0.21",
+		"Country": {
+			"Code": "ru",
+			"FlagUrl": "https://enowars.com/flags/ru.svg",
+			"Name": "Russian Federation"
+		},
+		"FlagUrl": "https://enowars.com/flags/ru.svg",
+		"Id": 21,
+		"LogoUrl": null,
+		"Name": "playmaker",
+		"TeamSubnet": "::ffff:10.0.0.21",
+		"University": null
+	}, {
+		"Address": "10.0.0.22",
+		"Country": {
+			"Code": "sg",
+			"FlagUrl": "https://enowars.com/flags/sg.svg",
+			"Name": "Singapore"
+		},
+		"FlagUrl": "https://enowars.com/flags/sg.svg",
+		"Id": 22,
+		"LogoUrl": "https://enowars.com/logo?img=fQFjhBReIKr9fdsJScBXcBEF2J-uhjUuqHEw0RfiDMo",
+		"Name": "SleepyCats",
+		"TeamSubnet": "::ffff:10.0.0.22",
+		"University": null
+	}, {
+		"Address": "10.0.0.23",
+		"Country": {
+			"Code": "cn",
+			"FlagUrl": "https://enowars.com/flags/cn.svg",
+			"Name": "China"
+		},
+		"FlagUrl": "https://enowars.com/flags/cn.svg",
+		"Id": 23,
+		"LogoUrl": null,
+		"Name": "Wendell",
+		"TeamSubnet": "::ffff:10.0.0.23",
+		"University": null
+	}, {
+		"Address": "10.0.0.24",
+		"Country": {
+			"Code": "de",
+			"FlagUrl": "https://enowars.com/flags/de.svg",
+			"Name": "Germany"
+		},
+		"FlagUrl": "https://enowars.com/flags/de.svg",
+		"Id": 24,
+		"LogoUrl": null,
+		"Name": "Re1n3r!",
+		"TeamSubnet": "::ffff:10.0.0.24",
+		"University": null
+	}, {
+		"Address": "10.0.0.25",
+		"Country": {
+			"Code": "in",
+			"FlagUrl": "https://enowars.com/flags/in.svg",
+			"Name": "India"
+		},
+		"FlagUrl": "https://enowars.com/flags/in.svg",
+		"Id": 25,
+		"LogoUrl": "https://enowars.com/logo?img=kTjiF4s8cQEDZSbwceY81Oo3pfaMwbsvjjC6IYIuWUE",
+		"Name": "Nishkarsh",
+		"TeamSubnet": "::ffff:10.0.0.25",
+		"University": null
+	}, {
+		"Address": "10.0.0.26",
+		"Country": {
+			"Code": "in",
+			"FlagUrl": "https://enowars.com/flags/in.svg",
+			"Name": "India"
+		},
+		"FlagUrl": "https://enowars.com/flags/in.svg",
+		"Id": 26,
+		"LogoUrl": null,
+		"Name": "evileyes_629",
+		"TeamSubnet": "::ffff:10.0.0.26",
+		"University": null
+	}, {
+		"Address": "10.0.0.27",
+		"Country": {
+			"Code": "sg",
+			"FlagUrl": "https://enowars.com/flags/sg.svg",
+			"Name": "Singapore"
+		},
+		"FlagUrl": "https://enowars.com/flags/sg.svg",
+		"Id": 27,
+		"LogoUrl": null,
+		"Name": "h4ck3rb0b",
+		"TeamSubnet": "::ffff:10.0.0.27",
+		"University": "National University of Singapore"
+	}, {
+		"Address": "10.0.0.28",
+		"Country": {
+			"Code": "sg",
+			"FlagUrl": "https://enowars.com/flags/sg.svg",
+			"Name": "Singapore"
+		},
+		"FlagUrl": "https://enowars.com/flags/sg.svg",
+		"Id": 28,
+		"LogoUrl": null,
+		"Name": "Raison D'\u00eatre",
+		"TeamSubnet": "::ffff:10.0.0.28",
+		"University": "ITE College West | Cyber & Network Security"
+	}, {
+		"Address": "10.0.0.29",
+		"Country": {
+			"Code": "sg",
+			"FlagUrl": "https://enowars.com/flags/sg.svg",
+			"Name": "Singapore"
+		},
+		"FlagUrl": "https://enowars.com/flags/sg.svg",
+		"Id": 29,
+		"LogoUrl": null,
+		"Name": "SHlkcmE=",
+		"TeamSubnet": "::ffff:10.0.0.29",
+		"University": "Institute of Technical Education College West"
+	}, {
+		"Address": "10.0.0.30",
+		"Country": {
+			"Code": "pt",
+			"FlagUrl": "https://enowars.com/flags/pt.svg",
+			"Name": "Portugal"
+		},
+		"FlagUrl": "https://enowars.com/flags/pt.svg",
+		"Id": 30,
+		"LogoUrl": null,
+		"Name": "EntrePlicas",
+		"TeamSubnet": "::ffff:10.0.0.30",
+		"University": null
+	}, {
+		"Address": "10.0.0.31",
+		"Country": {
+			"Code": "de",
+			"FlagUrl": "https://enowars.com/flags/de.svg",
+			"Name": "Germany"
+		},
+		"FlagUrl": "https://enowars.com/flags/de.svg",
+		"Id": 31,
+		"LogoUrl": "https://enowars.com/logo?img=intJKqbSHHhFQzlG2NcPrMF_uhVoFGplHELhnozAS2U",
+		"Name": "FAUST",
+		"TeamSubnet": "::ffff:10.0.0.31",
+		"University": "Friedrich-Alexander University Erlangen-Nuernberg"
+	}, {
+		"Address": "10.0.0.32",
+		"Country": {
+			"Code": "de",
+			"FlagUrl": "https://enowars.com/flags/de.svg",
+			"Name": "Germany"
+		},
+		"FlagUrl": "https://enowars.com/flags/de.svg",
+		"Id": 32,
+		"LogoUrl": null,
+		"Name": "p4wnWAT",
+		"TeamSubnet": "::ffff:10.0.0.32",
+		"University": null
+	}, {
+		"Address": "10.0.0.33",
+		"Country": {
+			"Code": "ru",
+			"FlagUrl": "https://enowars.com/flags/ru.svg",
+			"Name": "Russian Federation"
+		},
+		"FlagUrl": "https://enowars.com/flags/ru.svg",
+		"Id": 33,
+		"LogoUrl": null,
+		"Name": "Mail.ru",
+		"TeamSubnet": "::ffff:10.0.0.33",
+		"University": null
+	}, {
+		"Address": "10.0.0.34",
+		"Country": {
+			"Code": "co",
+			"FlagUrl": "https://enowars.com/flags/co.svg",
+			"Name": "Colombia"
+		},
+		"FlagUrl": "https://enowars.com/flags/co.svg",
+		"Id": 34,
+		"LogoUrl": null,
+		"Name": "La esmeralda",
+		"TeamSubnet": "::ffff:10.0.0.34",
+		"University": null
+	}, {
+		"Address": "10.0.0.35",
+		"Country": {
+			"Code": "in",
+			"FlagUrl": "https://enowars.com/flags/in.svg",
+			"Name": "India"
+		},
+		"FlagUrl": "https://enowars.com/flags/in.svg",
+		"Id": 35,
+		"LogoUrl": null,
+		"Name": "TeamShakti",
+		"TeamSubnet": "::ffff:10.0.0.35",
+		"University": "Amrita School of Engineering"
+	}, {
+		"Address": "10.0.0.36",
+		"Country": {
+			"Code": "tw",
+			"FlagUrl": "https://enowars.com/flags/tw.svg",
+			"Name": "Taiwan"
+		},
+		"FlagUrl": "https://enowars.com/flags/tw.svg",
+		"Id": 36,
+		"LogoUrl": null,
+		"Name": "HITCONGIRLS",
+		"TeamSubnet": "::ffff:10.0.0.36",
+		"University": null
+	}, {
+		"Address": "10.0.0.37",
+		"Country": {
+			"Code": "sg",
+			"FlagUrl": "https://enowars.com/flags/sg.svg",
+			"Name": "Singapore"
+		},
+		"FlagUrl": "https://enowars.com/flags/sg.svg",
+		"Id": 37,
+		"LogoUrl": null,
+		"Name": "segfault",
+		"TeamSubnet": "::ffff:10.0.0.37",
+		"University": null
+	}, {
+		"Address": "10.0.0.38",
+		"Country": {
+			"Code": "de",
+			"FlagUrl": "https://enowars.com/flags/de.svg",
+			"Name": "Germany"
+		},
+		"FlagUrl": "https://enowars.com/flags/de.svg",
+		"Id": 38,
+		"LogoUrl": null,
+		"Name": "ALLES!",
+		"TeamSubnet": "::ffff:10.0.0.38",
+		"University": null
+	}, {
+		"Address": "10.0.0.39",
+		"Country": {
+			"Code": "ca",
+			"FlagUrl": "https://enowars.com/flags/ca.svg",
+			"Name": "Canada"
+		},
+		"FlagUrl": "https://enowars.com/flags/ca.svg",
+		"Id": 39,
+		"LogoUrl": null,
+		"Name": "Daemon Summoners",
+		"TeamSubnet": "::ffff:10.0.0.39",
+		"University": null
+	}, {
+		"Address": "10.0.0.40",
+		"Country": {
+			"Code": "ua",
+			"FlagUrl": "https://enowars.com/flags/ua.svg",
+			"Name": "Ukraine"
+		},
+		"FlagUrl": "https://enowars.com/flags/ua.svg",
+		"Id": 40,
+		"LogoUrl": null,
+		"Name": "Regular Fellows",
+		"TeamSubnet": "::ffff:10.0.0.40",
+		"University": null
+	}, {
+		"Address": "10.0.0.41",
+		"Country": {
+			"Code": "jp",
+			"FlagUrl": "https://enowars.com/flags/jp.svg",
+			"Name": "Japan"
+		},
+		"FlagUrl": "https://enowars.com/flags/jp.svg",
+		"Id": 41,
+		"LogoUrl": null,
+		"Name": "kanyewest",
+		"TeamSubnet": "::ffff:10.0.0.41",
+		"University": null
+	}, {
+		"Address": "10.0.0.42",
+		"Country": {
+			"Code": "cn",
+			"FlagUrl": "https://enowars.com/flags/cn.svg",
+			"Name": "China"
+		},
+		"FlagUrl": "https://enowars.com/flags/cn.svg",
+		"Id": 42,
+		"LogoUrl": null,
+		"Name": "ShinningStar",
+		"TeamSubnet": "::ffff:10.0.0.42",
+		"University": "Harbin Institute of Technologie (HIT)"
+	}, {
+		"Address": "10.0.0.43",
+		"Country": {
+			"Code": "it",
+			"FlagUrl": "https://enowars.com/flags/it.svg",
+			"Name": "Italy"
+		},
+		"FlagUrl": "https://enowars.com/flags/it.svg",
+		"Id": 43,
+		"LogoUrl": "https://enowars.com/logo?img=J5jAtfleV82N8R-O-Z0mrOZYz7NB9wgg_cjM7eXdiJY",
+		"Name": "FibonHack",
+		"TeamSubnet": "::ffff:10.0.0.43",
+		"University": "Universit\u00e0 di Pisa"
+	}, {
+		"Address": "10.0.0.44",
+		"Country": {
+			"Code": "cn",
+			"FlagUrl": "https://enowars.com/flags/cn.svg",
+			"Name": "China"
+		},
+		"FlagUrl": "https://enowars.com/flags/cn.svg",
+		"Id": 44,
+		"LogoUrl": null,
+		"Name": "tian",
+		"TeamSubnet": "::ffff:10.0.0.44",
+		"University": null
+	}, {
+		"Address": "10.0.0.45",
+		"Country": {
+			"Code": "au",
+			"FlagUrl": "https://enowars.com/flags/au.svg",
+			"Name": "Australia"
+		},
+		"FlagUrl": "https://enowars.com/flags/au.svg",
+		"Id": 45,
+		"LogoUrl": null,
+		"Name": "OverLoad",
+		"TeamSubnet": "::ffff:10.0.0.45",
+		"University": null
+	}, {
+		"Address": "10.0.0.46",
+		"Country": {
+			"Code": "us",
+			"FlagUrl": "https://enowars.com/flags/us.svg",
+			"Name": "United States"
+		},
+		"FlagUrl": "https://enowars.com/flags/us.svg",
+		"Id": 46,
+		"LogoUrl": "https://enowars.com/logo?img=wOnspUwx8q80OsKmVwCc8X0b2kjTD6cNevC30opiX7c",
+		"Name": "burner_herz0g",
+		"TeamSubnet": "::ffff:10.0.0.46",
+		"University": null
+	}, {
+		"Address": "10.0.0.47",
+		"Country": {
+			"Code": "us",
+			"FlagUrl": "https://enowars.com/flags/us.svg",
+			"Name": "United States"
+		},
+		"FlagUrl": "https://enowars.com/flags/us.svg",
+		"Id": 47,
+		"LogoUrl": "https://enowars.com/logo?img=zyUJ-fjmV3Hkmu6FWntP2BxRnWxRdZuw1sPR1XZsgy4",
+		"Name": "Orbital",
+		"TeamSubnet": "::ffff:10.0.0.47",
+		"University": null
+	}, {
+		"Address": "10.0.0.49",
+		"Country": {
+			"Code": "al",
+			"FlagUrl": "https://enowars.com/flags/al.svg",
+			"Name": "Albania"
+		},
+		"FlagUrl": "https://enowars.com/flags/al.svg",
+		"Id": 49,
+		"LogoUrl": null,
+		"Name": "X-N2O",
+		"TeamSubnet": "::ffff:10.0.0.49",
+		"University": null
+	}, {
+		"Address": "10.0.0.50",
+		"Country": {
+			"Code": "gr",
+			"FlagUrl": "https://enowars.com/flags/gr.svg",
+			"Name": "Greece"
+		},
+		"FlagUrl": "https://enowars.com/flags/gr.svg",
+		"Id": 50,
+		"LogoUrl": null,
+		"Name": "glaros",
+		"TeamSubnet": "::ffff:10.0.0.50",
+		"University": null
+	}, {
+		"Address": "10.0.0.51",
+		"Country": {
+			"Code": "ru",
+			"FlagUrl": "https://enowars.com/flags/ru.svg",
+			"Name": "Russian Federation"
+		},
+		"FlagUrl": "https://enowars.com/flags/ru.svg",
+		"Id": 51,
+		"LogoUrl": "https://enowars.com/logo?img=i0pKmcdPwVPmI6nJRBchfxxAwZxFaepjK3nkYLxd-h4",
+		"Name": "two lonely samurai",
+		"TeamSubnet": "::ffff:10.0.0.51",
+		"University": null
+	}, {
+		"Address": "10.0.0.52",
+		"Country": {
+			"Code": "no",
+			"FlagUrl": "https://enowars.com/flags/no.svg",
+			"Name": "Norway"
+		},
+		"FlagUrl": "https://enowars.com/flags/no.svg",
+		"Id": 52,
+		"LogoUrl": null,
+		"Name": "bootplug",
+		"TeamSubnet": "::ffff:10.0.0.52",
+		"University": null
+	}, {
+		"Address": "10.0.0.53",
+		"Country": {
+			"Code": "it",
+			"FlagUrl": "https://enowars.com/flags/it.svg",
+			"Name": "Italy"
+		},
+		"FlagUrl": "https://enowars.com/flags/it.svg",
+		"Id": 53,
+		"LogoUrl": "https://enowars.com/logo?img=HErpsK-AY5pXK3UkBa6JYNyTAdIoV8cuWkOmexXA4iU",
+		"Name": "CeSeNA_Ulisse",
+		"TeamSubnet": "::ffff:10.0.0.53",
+		"University": "University of Bologna Alma Mater Studiorum"
+	}, {
+		"Address": "10.0.0.54",
+		"Country": {
+			"Code": "de",
+			"FlagUrl": "https://enowars.com/flags/de.svg",
+			"Name": "Germany"
+		},
+		"FlagUrl": "https://enowars.com/flags/de.svg",
+		"Id": 54,
+		"LogoUrl": null,
+		"Name": "Los Krachos",
+		"TeamSubnet": "::ffff:10.0.0.54",
+		"University": null
+	}, {
+		"Address": "10.0.0.55",
+		"Country": {
+			"Code": "cn",
+			"FlagUrl": "https://enowars.com/flags/cn.svg",
+			"Name": "China"
+		},
+		"FlagUrl": "https://enowars.com/flags/cn.svg",
+		"Id": 55,
+		"LogoUrl": "https://enowars.com/logo?img=Wzg1DVXmP-lkGHGjwIuZYrqxEJ2ioYh1KdI4Il278Hg",
+		"Name": "YiXing",
+		"TeamSubnet": "::ffff:10.0.0.55",
+		"University": null
+	}, {
+		"Address": "10.0.0.56",
+		"Country": {
+			"Code": "in",
+			"FlagUrl": "https://enowars.com/flags/in.svg",
+			"Name": "India"
+		},
+		"FlagUrl": "https://enowars.com/flags/in.svg",
+		"Id": 56,
+		"LogoUrl": null,
+		"Name": "n00b_3lli0t",
+		"TeamSubnet": "::ffff:10.0.0.56",
+		"University": null
+	}, {
+		"Address": "10.0.0.57",
+		"Country": {
+			"Code": "mx",
+			"FlagUrl": "https://enowars.com/flags/mx.svg",
+			"Name": "Mexico"
+		},
+		"FlagUrl": "https://enowars.com/flags/mx.svg",
+		"Id": 57,
+		"LogoUrl": null,
+		"Name": "Hunters",
+		"TeamSubnet": "::ffff:10.0.0.57",
+		"University": null
+	}, {
+		"Address": "10.0.0.58",
+		"Country": {
+			"Code": "cn",
+			"FlagUrl": "https://enowars.com/flags/cn.svg",
+			"Name": "China"
+		},
+		"FlagUrl": "https://enowars.com/flags/cn.svg",
+		"Id": 58,
+		"LogoUrl": null,
+		"Name": "pkucc",
+		"TeamSubnet": "::ffff:10.0.0.58",
+		"University": "Peking University"
+	}, {
+		"Address": "10.0.0.60",
+		"Country": {
+			"Code": "de",
+			"FlagUrl": "https://enowars.com/flags/de.svg",
+			"Name": "Germany"
+		},
+		"FlagUrl": "https://enowars.com/flags/de.svg",
+		"Id": 60,
+		"LogoUrl": null,
+		"Name": "FormatC",
+		"TeamSubnet": "::ffff:10.0.0.60",
+		"University": null
+	}, {
+		"Address": "10.0.0.61",
+		"Country": {
+			"Code": "jp",
+			"FlagUrl": "https://enowars.com/flags/jp.svg",
+			"Name": "Japan"
+		},
+		"FlagUrl": "https://enowars.com/flags/jp.svg",
+		"Id": 61,
+		"LogoUrl": null,
+		"Name": "onotch",
+		"TeamSubnet": "::ffff:10.0.0.61",
+		"University": null
+	}, {
+		"Address": "10.0.0.62",
+		"Country": {
+			"Code": "cn",
+			"FlagUrl": "https://enowars.com/flags/cn.svg",
+			"Name": "China"
+		},
+		"FlagUrl": "https://enowars.com/flags/cn.svg",
+		"Id": 62,
+		"LogoUrl": null,
+		"Name": "Merak",
+		"TeamSubnet": "::ffff:10.0.0.62",
+		"University": "BUPT"
+	}, {
+		"Address": "10.0.0.63",
+		"Country": {
+			"Code": "in",
+			"FlagUrl": "https://enowars.com/flags/in.svg",
+			"Name": "India"
+		},
+		"FlagUrl": "https://enowars.com/flags/in.svg",
+		"Id": 63,
+		"LogoUrl": null,
+		"Name": "S32d0w",
+		"TeamSubnet": "::ffff:10.0.0.63",
+		"University": null
+	}, {
+		"Address": "10.0.0.64",
+		"Country": {
+			"Code": "in",
+			"FlagUrl": "https://enowars.com/flags/in.svg",
+			"Name": "India"
+		},
+		"FlagUrl": "https://enowars.com/flags/in.svg",
+		"Id": 64,
+		"LogoUrl": null,
+		"Name": "HexaCode",
+		"TeamSubnet": "::ffff:10.0.0.64",
+		"University": null
+	}, {
+		"Address": "10.0.0.65",
+		"Country": {
+			"Code": "cn",
+			"FlagUrl": "https://enowars.com/flags/cn.svg",
+			"Name": "China"
+		},
+		"FlagUrl": "https://enowars.com/flags/cn.svg",
+		"Id": 65,
+		"LogoUrl": "https://enowars.com/logo?img=OzjG_QBwXd7oGm8w-akK2v1GyAlqZE-FtLZAPwvWMXs",
+		"Name": "Nu1L",
+		"TeamSubnet": "::ffff:10.0.0.65",
+		"University": null
+	}, {
+		"Address": "10.0.0.66",
+		"Country": {
+			"Code": "in",
+			"FlagUrl": "https://enowars.com/flags/in.svg",
+			"Name": "India"
+		},
+		"FlagUrl": "https://enowars.com/flags/in.svg",
+		"Id": 66,
+		"LogoUrl": null,
+		"Name": "n0313s",
+		"TeamSubnet": "::ffff:10.0.0.66",
+		"University": null
+	}, {
+		"Address": "10.0.0.67",
+		"Country": {
+			"Code": "aq",
+			"FlagUrl": "https://enowars.com/flags/aq.svg",
+			"Name": "Antarctica"
+		},
+		"FlagUrl": "https://enowars.com/flags/aq.svg",
+		"Id": 67,
+		"LogoUrl": "https://enowars.com/logo?img=t65FoxDoV3p18TEQT40DpCXya-zP5azYldTyIxKjxiY",
+		"Name": "CatsGetRoot",
+		"TeamSubnet": "::ffff:10.0.0.67",
+		"University": null
+	}, {
+		"Address": "10.0.0.70",
+		"Country": {
+			"Code": "ca",
+			"FlagUrl": "https://enowars.com/flags/ca.svg",
+			"Name": "Canada"
+		},
+		"FlagUrl": "https://enowars.com/flags/ca.svg",
+		"Id": 70,
+		"LogoUrl": null,
+		"Name": "Polaris One",
+		"TeamSubnet": "::ffff:10.0.0.70",
+		"University": null
+	}, {
+		"Address": "10.0.0.71",
+		"Country": {
+			"Code": "us",
+			"FlagUrl": "https://enowars.com/flags/us.svg",
+			"Name": "United States"
+		},
+		"FlagUrl": "https://enowars.com/flags/us.svg",
+		"Id": 71,
+		"LogoUrl": null,
+		"Name": "Cryptic Slugs",
+		"TeamSubnet": "::ffff:10.0.0.71",
+		"University": null
+	}, {
+		"Address": "10.0.0.72",
+		"Country": {
+			"Code": "in",
+			"FlagUrl": "https://enowars.com/flags/in.svg",
+			"Name": "India"
+		},
+		"FlagUrl": "https://enowars.com/flags/in.svg",
+		"Id": 72,
+		"LogoUrl": "https://enowars.com/logo?img=Qtl7SjvgKzrbRcszae6uhvliSZRG0LIVGGuFQ9ab3gw",
+		"Name": "IITBreachers",
+		"TeamSubnet": "::ffff:10.0.0.72",
+		"University": "IIT Bombay"
+	}, {
+		"Address": "10.0.0.73",
+		"Country": {
+			"Code": "de",
+			"FlagUrl": "https://enowars.com/flags/de.svg",
+			"Name": "Germany"
+		},
+		"FlagUrl": "https://enowars.com/flags/de.svg",
+		"Id": 73,
+		"LogoUrl": null,
+		"Name": "lolcads",
+		"TeamSubnet": "::ffff:10.0.0.73",
+		"University": null
+	}, {
+		"Address": "10.0.0.74",
+		"Country": {
+			"Code": "vi",
+			"FlagUrl": "https://enowars.com/flags/vi.svg",
+			"Name": "Virgin Islands (U.S.)"
+		},
+		"FlagUrl": "https://enowars.com/flags/vi.svg",
+		"Id": 74,
+		"LogoUrl": null,
+		"Name": "Lolsec",
+		"TeamSubnet": "::ffff:10.0.0.74",
+		"University": null
+	}, {
+		"Address": "10.0.0.75",
+		"Country": {
+			"Code": "ru",
+			"FlagUrl": "https://enowars.com/flags/ru.svg",
+			"Name": "Russian Federation"
+		},
+		"FlagUrl": "https://enowars.com/flags/ru.svg",
+		"Id": 75,
+		"LogoUrl": "https://enowars.com/logo?img=lX9Yo8uOffVZQu2kQ_Qz5pOXHWuerdspTnCynHUGzq0",
+		"Name": "N0n4mesbl",
+		"TeamSubnet": "::ffff:10.0.0.75",
+		"University": null
+	}, {
+		"Address": "10.0.0.76",
+		"Country": {
+			"Code": "it",
+			"FlagUrl": "https://enowars.com/flags/it.svg",
+			"Name": "Italy"
+		},
+		"FlagUrl": "https://enowars.com/flags/it.svg",
+		"Id": 76,
+		"LogoUrl": null,
+		"Name": "mikejam",
+		"TeamSubnet": "::ffff:10.0.0.76",
+		"University": null
+	}, {
+		"Address": "10.0.0.77",
+		"Country": {
+			"Code": "pt",
+			"FlagUrl": "https://enowars.com/flags/pt.svg",
+			"Name": "Portugal"
+		},
+		"FlagUrl": "https://enowars.com/flags/pt.svg",
+		"Id": 77,
+		"LogoUrl": "https://enowars.com/logo?img=p4Na6CE2vw0bgmjinMFJZYEGnCKUHE516Uzmk5DQwos",
+		"Name": "STT",
+		"TeamSubnet": "::ffff:10.0.0.77",
+		"University": "Instituto Superior Tecnico - Universidade de Lisboa"
+	}, {
+		"Address": "10.0.0.78",
+		"Country": {
+			"Code": "us",
+			"FlagUrl": "https://enowars.com/flags/us.svg",
+			"Name": "United States"
+		},
+		"FlagUrl": "https://enowars.com/flags/us.svg",
+		"Id": 78,
+		"LogoUrl": null,
+		"Name": "Qu33nZ&K1NGz",
+		"TeamSubnet": "::ffff:10.0.0.78",
+		"University": null
+	}, {
+		"Address": "10.0.0.79",
+		"Country": {
+			"Code": "tw",
+			"FlagUrl": "https://enowars.com/flags/tw.svg",
+			"Name": "Taiwan"
+		},
+		"FlagUrl": "https://enowars.com/flags/tw.svg",
+		"Id": 79,
+		"LogoUrl": null,
+		"Name": "u310831124E0B5DF3311",
+		"TeamSubnet": "::ffff:10.0.0.79",
+		"University": null
+	}, {
+		"Address": "10.0.0.80",
+		"Country": {
+			"Code": "cn",
+			"FlagUrl": "https://enowars.com/flags/cn.svg",
+			"Name": "China"
+		},
+		"FlagUrl": "https://enowars.com/flags/cn.svg",
+		"Id": 80,
+		"LogoUrl": "https://enowars.com/logo?img=xyGNkMhgrBZPOWomZiN-PEe6jtzFFDrBDU_sR_KM7AU",
+		"Name": "cSee",
+		"TeamSubnet": "::ffff:10.0.0.80",
+		"University": null
+	}, {
+		"Address": "10.0.0.81",
+		"Country": {
+			"Code": "cn",
+			"FlagUrl": "https://enowars.com/flags/cn.svg",
+			"Name": "China"
+		},
+		"FlagUrl": "https://enowars.com/flags/cn.svg",
+		"Id": 81,
+		"LogoUrl": null,
+		"Name": "F03v3ryY0ung",
+		"TeamSubnet": "::ffff:10.0.0.81",
+		"University": null
+	}, {
+		"Address": "10.0.0.82",
+		"Country": {
+			"Code": "it",
+			"FlagUrl": "https://enowars.com/flags/it.svg",
+			"Name": "Italy"
+		},
+		"FlagUrl": "https://enowars.com/flags/it.svg",
+		"Id": 82,
+		"LogoUrl": null,
+		"Name": "InsHack@ti",
+		"TeamSubnet": "::ffff:10.0.0.82",
+		"University": "Universita Politecnica Delle Marche"
+	}, {
+		"Address": "10.0.0.84",
+		"Country": {
+			"Code": "fj",
+			"FlagUrl": "https://enowars.com/flags/fj.svg",
+			"Name": "Fiji"
+		},
+		"FlagUrl": "https://enowars.com/flags/fj.svg",
+		"Id": 84,
+		"LogoUrl": null,
+		"Name": "Th3ng4kol4",
+		"TeamSubnet": "::ffff:10.0.0.84",
+		"University": null
+	}, {
+		"Address": "10.0.0.85",
+		"Country": {
+			"Code": "bg",
+			"FlagUrl": "https://enowars.com/flags/bg.svg",
+			"Name": "Bulgaria"
+		},
+		"FlagUrl": "https://enowars.com/flags/bg.svg",
+		"Id": 85,
+		"LogoUrl": null,
+		"Name": "TellMeWhy",
+		"TeamSubnet": "::ffff:10.0.0.85",
+		"University": null
+	}, {
+		"Address": "10.0.0.86",
+		"Country": {
+			"Code": "cn",
+			"FlagUrl": "https://enowars.com/flags/cn.svg",
+			"Name": "China"
+		},
+		"FlagUrl": "https://enowars.com/flags/cn.svg",
+		"Id": 86,
+		"LogoUrl": null,
+		"Name": "\u5730\u72f1\u524d\u7ebf",
+		"TeamSubnet": "::ffff:10.0.0.86",
+		"University": null
+	}, {
+		"Address": "10.0.0.87",
+		"Country": {
+			"Code": "dz",
+			"FlagUrl": "https://enowars.com/flags/dz.svg",
+			"Name": "Algeria"
+		},
+		"FlagUrl": "https://enowars.com/flags/dz.svg",
+		"Id": 87,
+		"LogoUrl": null,
+		"Name": "HACK",
+		"TeamSubnet": "::ffff:10.0.0.87",
+		"University": null
+	}, {
+		"Address": "10.0.0.88",
+		"Country": {
+			"Code": "hr",
+			"FlagUrl": "https://enowars.com/flags/hr.svg",
+			"Name": "Croatia (Hrvatska)"
+		},
+		"FlagUrl": "https://enowars.com/flags/hr.svg",
+		"Id": 88,
+		"LogoUrl": null,
+		"Name": "stankc",
+		"TeamSubnet": "::ffff:10.0.0.88",
+		"University": null
+	}, {
+		"Address": "10.0.0.89",
+		"Country": {
+			"Code": "it",
+			"FlagUrl": "https://enowars.com/flags/it.svg",
+			"Name": "Italy"
+		},
+		"FlagUrl": "https://enowars.com/flags/it.svg",
+		"Id": 89,
+		"LogoUrl": "https://enowars.com/logo?img=ViiQ1tGw4JGroVL5dmpAM0Thv9jkEj--xJtru2MpCkU",
+		"Name": "r00tstici",
+		"TeamSubnet": "::ffff:10.0.0.89",
+		"University": "Universit\u00e0 del Salento"
+	}, {
+		"Address": "10.0.0.90",
+		"Country": {
+			"Code": "ru",
+			"FlagUrl": "https://enowars.com/flags/ru.svg",
+			"Name": "Russian Federation"
+		},
+		"FlagUrl": "https://enowars.com/flags/ru.svg",
+		"Id": 90,
+		"LogoUrl": "https://enowars.com/logo?img=TI3UiyDJU82SUQHtnP6ORrXkjQNSW1MJDG3prc6dD7g",
+		"Name": "Busi",
+		"TeamSubnet": "::ffff:10.0.0.90",
+		"University": "sutd.ru"
+	}, {
+		"Address": "10.0.0.94",
+		"Country": {
+			"Code": "be",
+			"FlagUrl": "https://enowars.com/flags/be.svg",
+			"Name": "Belgium"
+		},
+		"FlagUrl": "https://enowars.com/flags/be.svg",
+		"Id": 94,
+		"LogoUrl": "https://enowars.com/logo?img=dgqUXY4HcjnNb61BjKj7An5ARDeEnNPMVXUxgkHBqsk",
+		"Name": "DefineNormal",
+		"TeamSubnet": "::ffff:10.0.0.94",
+		"University": null
+	}, {
+		"Address": "10.0.0.95",
+		"Country": {
+			"Code": "in",
+			"FlagUrl": "https://enowars.com/flags/in.svg",
+			"Name": "India"
+		},
+		"FlagUrl": "https://enowars.com/flags/in.svg",
+		"Id": 95,
+		"LogoUrl": null,
+		"Name": "umapati",
+		"TeamSubnet": "::ffff:10.0.0.95",
+		"University": "Parul Institute Of Technology"
+	}, {
+		"Address": "10.0.0.96",
+		"Country": {
+			"Code": "us",
+			"FlagUrl": "https://enowars.com/flags/us.svg",
+			"Name": "United States"
+		},
+		"FlagUrl": "https://enowars.com/flags/us.svg",
+		"Id": 96,
+		"LogoUrl": "https://enowars.com/logo?img=Quf4UTdZ6nfZD7LvGduvQRX5pC--91sWpQWmklXHgE4",
+		"Name": "Astra",
+		"TeamSubnet": "::ffff:10.0.0.96",
+		"University": null
+	}, {
+		"Address": "10.0.0.98",
+		"Country": {
+			"Code": "us",
+			"FlagUrl": "https://enowars.com/flags/us.svg",
+			"Name": "United States"
+		},
+		"FlagUrl": "https://enowars.com/flags/us.svg",
+		"Id": 98,
+		"LogoUrl": null,
+		"Name": "choctaw",
+		"TeamSubnet": "::ffff:10.0.0.98",
+		"University": null
+	}, {
+		"Address": "10.0.0.102",
+		"Country": {
+			"Code": "kr",
+			"FlagUrl": "https://enowars.com/flags/kr.svg",
+			"Name": "Republic of Korea"
+		},
+		"FlagUrl": "https://enowars.com/flags/kr.svg",
+		"Id": 102,
+		"LogoUrl": null,
+		"Name": "WS_DS",
+		"TeamSubnet": "::ffff:10.0.0.102",
+		"University": null
+	}, {
+		"Address": "10.0.0.109",
+		"Country": {
+			"Code": "kr",
+			"FlagUrl": "https://enowars.com/flags/kr.svg",
+			"Name": "Republic of Korea"
+		},
+		"FlagUrl": "https://enowars.com/flags/kr.svg",
+		"Id": 109,
+		"LogoUrl": null,
+		"Name": "WS_SET",
+		"TeamSubnet": "::ffff:10.0.0.109",
+		"University": null
+	}, {
+		"Address": "10.0.0.110",
+		"Country": {
+			"Code": "my",
+			"FlagUrl": "https://enowars.com/flags/my.svg",
+			"Name": "Malaysia"
+		},
+		"FlagUrl": "https://enowars.com/flags/my.svg",
+		"Id": 110,
+		"LogoUrl": "https://enowars.com/logo?img=mnbrUgAs1M_JzQ3av4qo4xa2BaFbNfXp6-WYzXPtl7w",
+		"Name": "V0idUnity",
+		"TeamSubnet": "::ffff:10.0.0.110",
+		"University": null
+	}, {
+		"Address": "10.0.0.111",
+		"Country": {
+			"Code": "cn",
+			"FlagUrl": "https://enowars.com/flags/cn.svg",
+			"Name": "China"
+		},
+		"FlagUrl": "https://enowars.com/flags/cn.svg",
+		"Id": 111,
+		"LogoUrl": null,
+		"Name": "fzhshzh",
+		"TeamSubnet": "::ffff:10.0.0.111",
+		"University": null
+	}, {
+		"Address": "10.0.0.113",
+		"Country": {
+			"Code": "us",
+			"FlagUrl": "https://enowars.com/flags/us.svg",
+			"Name": "United States"
+		},
+		"FlagUrl": "https://enowars.com/flags/us.svg",
+		"Id": 113,
+		"LogoUrl": null,
+		"Name": "SomeVeryRealTeam2020",
+		"TeamSubnet": "::ffff:10.0.0.113",
+		"University": "optional"
+	}, {
+		"Address": "10.0.0.115",
+		"Country": {
+			"Code": "ru",
+			"FlagUrl": "https://enowars.com/flags/ru.svg",
+			"Name": "Russian Federation"
+		},
+		"FlagUrl": "https://enowars.com/flags/ru.svg",
+		"Id": 115,
+		"LogoUrl": "https://enowars.com/logo?img=YcjwbEEbfyGowIPClJiZhb6S8LH5r6A-NOf2Y6cGCHY",
+		"Name": "corruptedpwnis",
+		"TeamSubnet": "::ffff:10.0.0.115",
+		"University": null
+	}, {
+		"Address": "10.0.0.117",
+		"Country": {
+			"Code": "aq",
+			"FlagUrl": "https://enowars.com/flags/aq.svg",
+			"Name": "Antarctica"
+		},
+		"FlagUrl": "https://enowars.com/flags/aq.svg",
+		"Id": 117,
+		"LogoUrl": null,
+		"Name": "Pwnzorz",
+		"TeamSubnet": "::ffff:10.0.0.117",
+		"University": null
+	}, {
+		"Address": "10.0.0.118",
+		"Country": {
+			"Code": "il",
+			"FlagUrl": "https://enowars.com/flags/il.svg",
+			"Name": "Israel"
+		},
+		"FlagUrl": "https://enowars.com/flags/il.svg",
+		"Id": 118,
+		"LogoUrl": null,
+		"Name": "Hexion",
+		"TeamSubnet": "::ffff:10.0.0.118",
+		"University": null
+	}, {
+		"Address": "10.0.0.119",
+		"Country": {
+			"Code": "vn",
+			"FlagUrl": "https://enowars.com/flags/vn.svg",
+			"Name": "Vietnam"
+		},
+		"FlagUrl": "https://enowars.com/flags/vn.svg",
+		"Id": 119,
+		"LogoUrl": null,
+		"Name": "ZeroMemory",
+		"TeamSubnet": "::ffff:10.0.0.119",
+		"University": "Vietnam National University"
+	}, {
+		"Address": "10.0.0.120",
+		"Country": {
+			"Code": "it",
+			"FlagUrl": "https://enowars.com/flags/it.svg",
+			"Name": "Italy"
+		},
+		"FlagUrl": "https://enowars.com/flags/it.svg",
+		"Id": 120,
+		"LogoUrl": null,
+		"Name": "born2scan",
+		"TeamSubnet": "::ffff:10.0.0.120",
+		"University": null
+	}, {
+		"Address": "10.0.0.121",
+		"Country": {
+			"Code": "it",
+			"FlagUrl": "https://enowars.com/flags/it.svg",
+			"Name": "Italy"
+		},
+		"FlagUrl": "https://enowars.com/flags/it.svg",
+		"Id": 121,
+		"LogoUrl": "https://enowars.com/logo?img=z1sM32hG8zgnDOXOfpMPpxdg5TMo4RQ-ywBmMYv3N14",
+		"Name": "dixie_flatline",
+		"TeamSubnet": "::ffff:10.0.0.121",
+		"University": "Sense/Net"
+	}, {
+		"Address": "10.0.0.122",
+		"Country": {
+			"Code": "zw",
+			"FlagUrl": "https://enowars.com/flags/zw.svg",
+			"Name": "Zimbabwe"
+		},
+		"FlagUrl": "https://enowars.com/flags/zw.svg",
+		"Id": 122,
+		"LogoUrl": null,
+		"Name": "The Honkonauts",
+		"TeamSubnet": "::ffff:10.0.0.122",
+		"University": "None"
+	}, {
+		"Address": "10.0.0.123",
+		"Country": {
+			"Code": "se",
+			"FlagUrl": "https://enowars.com/flags/se.svg",
+			"Name": "Sweden"
+		},
+		"FlagUrl": "https://enowars.com/flags/se.svg",
+		"Id": 123,
+		"LogoUrl": "https://enowars.com/logo?img=hxeiQbVRF9goDUWcJQywB3dKiYbVR92EWJYZtNwTpGM",
+		"Name": "NorseCode",
+		"TeamSubnet": "::ffff:10.0.0.123",
+		"University": null
+	}, {
+		"Address": "10.0.0.124",
+		"Country": {
+			"Code": "us",
+			"FlagUrl": "https://enowars.com/flags/us.svg",
+			"Name": "United States"
+		},
+		"FlagUrl": "https://enowars.com/flags/us.svg",
+		"Id": 124,
+		"LogoUrl": null,
+		"Name": "PersianCats",
+		"TeamSubnet": "::ffff:10.0.0.124",
+		"University": null
+	}, {
+		"Address": "10.0.0.125",
+		"Country": {
+			"Code": "in",
+			"FlagUrl": "https://enowars.com/flags/in.svg",
+			"Name": "India"
+		},
+		"FlagUrl": "https://enowars.com/flags/in.svg",
+		"Id": 125,
+		"LogoUrl": null,
+		"Name": "r00tsh3ll",
+		"TeamSubnet": "::ffff:10.0.0.125",
+		"University": null
+	}, {
+		"Address": "10.0.0.126",
+		"Country": {
+			"Code": "us",
+			"FlagUrl": "https://enowars.com/flags/us.svg",
+			"Name": "United States"
+		},
+		"FlagUrl": "https://enowars.com/flags/us.svg",
+		"Id": 126,
+		"LogoUrl": "https://enowars.com/logo?img=y2FKeea-Vgs7cQXGuUygMcuqkONgy9PIbtO__jg4N0Y",
+		"Name": "solid-umbrella",
+		"TeamSubnet": "::ffff:10.0.0.126",
+		"University": "Bergen County Academies"
+	}, {
+		"Address": "10.0.0.127",
+		"Country": {
+			"Code": "ru",
+			"FlagUrl": "https://enowars.com/flags/ru.svg",
+			"Name": "Russian Federation"
+		},
+		"FlagUrl": "https://enowars.com/flags/ru.svg",
+		"Id": 127,
+		"LogoUrl": "https://enowars.com/logo?img=1OqI01C3hHYBobFGDSBFmBToJ9AMSB8eToIxtNjAouY",
+		"Name": "Sigmas",
+		"TeamSubnet": "::ffff:10.0.0.127",
+		"University": "Saint Petersburg State University of Aerospace Instrumentation"
+	}, {
+		"Address": "10.0.0.128",
+		"Country": {
+			"Code": "sg",
+			"FlagUrl": "https://enowars.com/flags/sg.svg",
+			"Name": "Singapore"
+		},
+		"FlagUrl": "https://enowars.com/flags/sg.svg",
+		"Id": 128,
+		"LogoUrl": null,
+		"Name": "yeeting_my_sadness",
+		"TeamSubnet": "::ffff:10.0.0.128",
+		"University": null
+	}, {
+		"Address": "10.0.0.130",
+		"Country": {
+			"Code": "sg",
+			"FlagUrl": "https://enowars.com/flags/sg.svg",
+			"Name": "Singapore"
+		},
+		"FlagUrl": "https://enowars.com/flags/sg.svg",
+		"Id": 130,
+		"LogoUrl": null,
+		"Name": "cookiez",
+		"TeamSubnet": "::ffff:10.0.0.130",
+		"University": "Ngee Ann Polytechnic"
+	}, {
+		"Address": "10.0.0.131",
+		"Country": {
+			"Code": "ua",
+			"FlagUrl": "https://enowars.com/flags/ua.svg",
+			"Name": "Ukraine"
+		},
+		"FlagUrl": "https://enowars.com/flags/ua.svg",
+		"Id": 131,
+		"LogoUrl": "https://enowars.com/logo?img=3SuqYrx1muMXMDkBnOqEZZHGUi6xQWU16Y_5cJFW3es",
+		"Name": "dcua",
+		"TeamSubnet": "::ffff:10.0.0.131",
+		"University": null
+	}, {
+		"Address": "10.0.0.132",
+		"Country": {
+			"Code": "it",
+			"FlagUrl": "https://enowars.com/flags/it.svg",
+			"Name": "Italy"
+		},
+		"FlagUrl": "https://enowars.com/flags/it.svg",
+		"Id": 132,
+		"LogoUrl": "https://enowars.com/logo?img=tKqRBA4EVV-T0aDg0HnDCox2MJj2O0n2wU3Fi0FZD1Q",
+		"Name": "PwnAlPesto",
+		"TeamSubnet": "::ffff:10.0.0.132",
+		"University": null
+	}, {
+		"Address": "10.0.0.133",
+		"Country": {
+			"Code": "cn",
+			"FlagUrl": "https://enowars.com/flags/cn.svg",
+			"Name": "China"
+		},
+		"FlagUrl": "https://enowars.com/flags/cn.svg",
+		"Id": 133,
+		"LogoUrl": null,
+		"Name": "eee",
+		"TeamSubnet": "::ffff:10.0.0.133",
+		"University": null
+	}, {
+		"Address": "10.0.0.134",
+		"Country": {
+			"Code": "jp",
+			"FlagUrl": "https://enowars.com/flags/jp.svg",
+			"Name": "Japan"
+		},
+		"FlagUrl": "https://enowars.com/flags/jp.svg",
+		"Id": 134,
+		"LogoUrl": null,
+		"Name": "PwnaSonic",
+		"TeamSubnet": "::ffff:10.0.0.134",
+		"University": null
+	}, {
+		"Address": "10.0.0.135",
+		"Country": {
+			"Code": "id",
+			"FlagUrl": "https://enowars.com/flags/id.svg",
+			"Name": "Indonesia"
+		},
+		"FlagUrl": "https://enowars.com/flags/id.svg",
+		"Id": 135,
+		"LogoUrl": null,
+		"Name": "Djavaa",
+		"TeamSubnet": "::ffff:10.0.0.135",
+		"University": null
+	}, {
+		"Address": "10.0.0.136",
+		"Country": {
+			"Code": "at",
+			"FlagUrl": "https://enowars.com/flags/at.svg",
+			"Name": "Austria"
+		},
+		"FlagUrl": "https://enowars.com/flags/at.svg",
+		"Id": 136,
+		"LogoUrl": "https://enowars.com/logo?img=7J5tbpfvv54_gvEQX_j1BErDbM1EGZIF68XaoyR1toM",
+		"Name": "WeAreScientists",
+		"TeamSubnet": "::ffff:10.0.0.136",
+		"University": null
+	}, {
+		"Address": "10.0.0.137",
+		"Country": {
+			"Code": "de",
+			"FlagUrl": "https://enowars.com/flags/de.svg",
+			"Name": "Germany"
+		},
+		"FlagUrl": "https://enowars.com/flags/de.svg",
+		"Id": 137,
+		"LogoUrl": null,
+		"Name": "poolparty",
+		"TeamSubnet": "::ffff:10.0.0.137",
+		"University": "-"
+	}, {
+		"Address": "10.0.0.138",
+		"Country": {
+			"Code": "de",
+			"FlagUrl": "https://enowars.com/flags/de.svg",
+			"Name": "Germany"
+		},
+		"FlagUrl": "https://enowars.com/flags/de.svg",
+		"Id": 138,
+		"LogoUrl": "https://enowars.com/logo?img=I0-hh9IIq_IakP06rFB_8jkyLfMGXbtmsahz56mNfYg",
+		"Name": "Squareroots",
+		"TeamSubnet": "::ffff:10.0.0.138",
+		"University": null
+	}, {
+		"Address": "10.0.0.139",
+		"Country": {
+			"Code": "ru",
+			"FlagUrl": "https://enowars.com/flags/ru.svg",
+			"Name": "Russian Federation"
+		},
+		"FlagUrl": "https://enowars.com/flags/ru.svg",
+		"Id": 139,
+		"LogoUrl": "https://enowars.com/logo?img=kjtFyJB-Hh0Tobb5uvCp2aVSLBcCW20eN3lChQuxanQ",
+		"Name": "PASECA",
+		"TeamSubnet": "::ffff:10.0.0.139",
+		"University": null
+	}, {
+		"Address": "10.0.0.140",
+		"Country": {
+			"Code": "in",
+			"FlagUrl": "https://enowars.com/flags/in.svg",
+			"Name": "India"
+		},
+		"FlagUrl": "https://enowars.com/flags/in.svg",
+		"Id": 140,
+		"LogoUrl": null,
+		"Name": "bi0s",
+		"TeamSubnet": "::ffff:10.0.0.140",
+		"University": null
+	}, {
+		"Address": "10.0.0.141",
+		"Country": {
+			"Code": "us",
+			"FlagUrl": "https://enowars.com/flags/us.svg",
+			"Name": "United States"
+		},
+		"FlagUrl": "https://enowars.com/flags/us.svg",
+		"Id": 141,
+		"LogoUrl": null,
+		"Name": "[sqrt(-1) + 1]",
+		"TeamSubnet": "::ffff:10.0.0.141",
+		"University": null
+	}, {
+		"Address": "10.0.0.142",
+		"Country": {
+			"Code": "it",
+			"FlagUrl": "https://enowars.com/flags/it.svg",
+			"Name": "Italy"
+		},
+		"FlagUrl": "https://enowars.com/flags/it.svg",
+		"Id": 142,
+		"LogoUrl": "https://enowars.com/logo?img=EdLuFJIfrpNyiWzLGS134e2DsMCGwUn-vmGBUfXBAfA",
+		"Name": "NoPwnIntended",
+		"TeamSubnet": "::ffff:10.0.0.142",
+		"University": "University of Padua"
+	}, {
+		"Address": "10.0.0.143",
+		"Country": {
+			"Code": "us",
+			"FlagUrl": "https://enowars.com/flags/us.svg",
+			"Name": "United States"
+		},
+		"FlagUrl": "https://enowars.com/flags/us.svg",
+		"Id": 143,
+		"LogoUrl": "https://enowars.com/logo?img=9CS2_EraLM4HpNef0_-ucKlWdj8u4dBBnvfYsh7pFxg",
+		"Name": "Literal Dips",
+		"TeamSubnet": "::ffff:10.0.0.143",
+		"University": null
+	}, {
+		"Address": "10.0.0.145",
+		"Country": {
+			"Code": "th",
+			"FlagUrl": "https://enowars.com/flags/th.svg",
+			"Name": "Thailand"
+		},
+		"FlagUrl": "https://enowars.com/flags/th.svg",
+		"Id": 145,
+		"LogoUrl": null,
+		"Name": "404! Team name does not exist",
+		"TeamSubnet": "::ffff:10.0.0.145",
+		"University": "RPCA"
+	}, {
+		"Address": "10.0.0.146",
+		"Country": {
+			"Code": "in",
+			"FlagUrl": "https://enowars.com/flags/in.svg",
+			"Name": "India"
+		},
+		"FlagUrl": "https://enowars.com/flags/in.svg",
+		"Id": 146,
+		"LogoUrl": null,
+		"Name": "N00B_4rMY",
+		"TeamSubnet": "::ffff:10.0.0.146",
+		"University": "LPU"
+	}, {
+		"Address": "10.0.0.147",
+		"Country": {
+			"Code": "cy",
+			"FlagUrl": "https://enowars.com/flags/cy.svg",
+			"Name": "Cyprus"
+		},
+		"FlagUrl": "https://enowars.com/flags/cy.svg",
+		"Id": 147,
+		"LogoUrl": null,
+		"Name": "CYberMouflons",
+		"TeamSubnet": "::ffff:10.0.0.147",
+		"University": null
+	}, {
+		"Address": "10.0.0.148",
+		"Country": {
+			"Code": "at",
+			"FlagUrl": "https://enowars.com/flags/at.svg",
+			"Name": "Austria"
+		},
+		"FlagUrl": "https://enowars.com/flags/at.svg",
+		"Id": 148,
+		"LogoUrl": null,
+		"Name": "owner",
+		"TeamSubnet": "::ffff:10.0.0.148",
+		"University": null
+	}, {
+		"Address": "10.0.0.149",
+		"Country": {
+			"Code": "th",
+			"FlagUrl": "https://enowars.com/flags/th.svg",
+			"Name": "Thailand"
+		},
+		"FlagUrl": "https://enowars.com/flags/th.svg",
+		"Id": 149,
+		"LogoUrl": null,
+		"Name": "Pwn Leak",
+		"TeamSubnet": "::ffff:10.0.0.149",
+		"University": "Mahalai Wauichon"
+	}, {
+		"Address": "10.0.0.150",
+		"Country": {
+			"Code": "it",
+			"FlagUrl": "https://enowars.com/flags/it.svg",
+			"Name": "Italy"
+		},
+		"FlagUrl": "https://enowars.com/flags/it.svg",
+		"Id": 150,
+		"LogoUrl": null,
+		"Name": "iCarramba",
+		"TeamSubnet": "::ffff:10.0.0.150",
+		"University": "Universit\u00e0 \"La Sapienza\" di Roma"
+	}, {
+		"Address": "10.0.0.151",
+		"Country": {
+			"Code": "ru",
+			"FlagUrl": "https://enowars.com/flags/ru.svg",
+			"Name": "Russian Federation"
+		},
+		"FlagUrl": "https://enowars.com/flags/ru.svg",
+		"Id": 151,
+		"LogoUrl": null,
+		"Name": "MoreBushSmokedWhackers",
+		"TeamSubnet": "::ffff:10.0.0.151",
+		"University": null
+	}, {
+		"Address": "10.0.0.153",
+		"Country": {
+			"Code": "jp",
+			"FlagUrl": "https://enowars.com/flags/jp.svg",
+			"Name": "Japan"
+		},
+		"FlagUrl": "https://enowars.com/flags/jp.svg",
+		"Id": 153,
+		"LogoUrl": null,
+		"Name": "noraneco",
+		"TeamSubnet": "::ffff:10.0.0.153",
+		"University": null
+	}, {
+		"Address": "10.0.0.154",
+		"Country": {
+			"Code": "pk",
+			"FlagUrl": "https://enowars.com/flags/pk.svg",
+			"Name": "Pakistan"
+		},
+		"FlagUrl": "https://enowars.com/flags/pk.svg",
+		"Id": 154,
+		"LogoUrl": null,
+		"Name": "Hacker&Jacker",
+		"TeamSubnet": "::ffff:10.0.0.154",
+		"University": null
+	}, {
+		"Address": "10.0.0.155",
+		"Country": {
+			"Code": "in",
+			"FlagUrl": "https://enowars.com/flags/in.svg",
+			"Name": "India"
+		},
+		"FlagUrl": "https://enowars.com/flags/in.svg",
+		"Id": 155,
+		"LogoUrl": null,
+		"Name": "TICTACTOE",
+		"TeamSubnet": "::ffff:10.0.0.155",
+		"University": null
+	}, {
+		"Address": "10.0.0.157",
+		"Country": {
+			"Code": "tw",
+			"FlagUrl": "https://enowars.com/flags/tw.svg",
+			"Name": "Taiwan"
+		},
+		"FlagUrl": "https://enowars.com/flags/tw.svg",
+		"Id": 157,
+		"LogoUrl": null,
+		"Name": "ord('v')",
+		"TeamSubnet": "::ffff:10.0.0.157",
+		"University": null
+	}, {
+		"Address": "10.0.0.158",
+		"Country": {
+			"Code": "de",
+			"FlagUrl": "https://enowars.com/flags/de.svg",
+			"Name": "Germany"
+		},
+		"FlagUrl": "https://enowars.com/flags/de.svg",
+		"Id": 158,
+		"LogoUrl": null,
+		"Name": "C3H2",
+		"TeamSubnet": "::ffff:10.0.0.158",
+		"University": null
+	}, {
+		"Address": "10.0.0.159",
+		"Country": {
+			"Code": "dz",
+			"FlagUrl": "https://enowars.com/flags/dz.svg",
+			"Name": "Algeria"
+		},
+		"FlagUrl": "https://enowars.com/flags/dz.svg",
+		"Id": 159,
+		"LogoUrl": "https://enowars.com/logo?img=Pm0gtF72hjSU2gmfcLe5RZhgTlk_vLFkg4P_crqxGYY",
+		"Name": "Sudo_Root",
+		"TeamSubnet": "::ffff:10.0.0.159",
+		"University": null
+	}, {
+		"Address": "10.0.0.160",
+		"Country": {
+			"Code": "in",
+			"FlagUrl": "https://enowars.com/flags/in.svg",
+			"Name": "India"
+		},
+		"FlagUrl": "https://enowars.com/flags/in.svg",
+		"Id": 160,
+		"LogoUrl": null,
+		"Name": "dark",
+		"TeamSubnet": "::ffff:10.0.0.160",
+		"University": "ksv University"
+	}, {
+		"Address": "10.0.0.162",
+		"Country": {
+			"Code": "fr",
+			"FlagUrl": "https://enowars.com/flags/fr.svg",
+			"Name": "France"
+		},
+		"FlagUrl": "https://enowars.com/flags/fr.svg",
+		"Id": 162,
+		"LogoUrl": "https://enowars.com/logo?img=sv761HMwKLoFKdqbSRIeRIWv0tqmZc3TAecKlef5Fp8",
+		"Name": "franceisbacon",
+		"TeamSubnet": "::ffff:10.0.0.162",
+		"University": null
+	}, {
+		"Address": "10.0.0.163",
+		"Country": {
+			"Code": "va",
+			"FlagUrl": "https://enowars.com/flags/va.svg",
+			"Name": "Vatican City State"
+		},
+		"FlagUrl": "https://enowars.com/flags/va.svg",
+		"Id": 163,
+		"LogoUrl": null,
+		"Name": "Franci",
+		"TeamSubnet": "::ffff:10.0.0.163",
+		"University": "UniVa"
+	}, {
+		"Address": "10.0.0.164",
+		"Country": {
+			"Code": "it",
+			"FlagUrl": "https://enowars.com/flags/it.svg",
+			"Name": "Italy"
+		},
+		"FlagUrl": "https://enowars.com/flags/it.svg",
+		"Id": 164,
+		"LogoUrl": null,
+		"Name": "Slab Allocator",
+		"TeamSubnet": "::ffff:10.0.0.164",
+		"University": null
+	}, {
+		"Address": "10.0.0.165",
+		"Country": {
+			"Code": "jp",
+			"FlagUrl": "https://enowars.com/flags/jp.svg",
+			"Name": "Japan"
+		},
+		"FlagUrl": "https://enowars.com/flags/jp.svg",
+		"Id": 165,
+		"LogoUrl": null,
+		"Name": "dodododo",
+		"TeamSubnet": "::ffff:10.0.0.165",
+		"University": null
+	}, {
+		"Address": "10.0.0.166",
+		"Country": {
+			"Code": "it",
+			"FlagUrl": "https://enowars.com/flags/it.svg",
+			"Name": "Italy"
+		},
+		"FlagUrl": "https://enowars.com/flags/it.svg",
+		"Id": 166,
+		"LogoUrl": null,
+		"Name": "srdnlen",
+		"TeamSubnet": "::ffff:10.0.0.166",
+		"University": "Universit\u00e0 Degli Studi Di Cagliari"
+	}, {
+		"Address": "10.0.0.168",
+		"Country": {
+			"Code": "tr",
+			"FlagUrl": "https://enowars.com/flags/tr.svg",
+			"Name": "Turkey"
+		},
+		"FlagUrl": "https://enowars.com/flags/tr.svg",
+		"Id": 168,
+		"LogoUrl": "https://enowars.com/logo?img=UMMNJFyGA7KNMdAOT5N6gCjFi1E6pSSlLIC1gHGFDBE",
+		"Name": "___IYI___",
+		"TeamSubnet": "::ffff:10.0.0.168",
+		"University": null
+	}, {
+		"Address": "10.0.0.169",
+		"Country": {
+			"Code": "in",
+			"FlagUrl": "https://enowars.com/flags/in.svg",
+			"Name": "India"
+		},
+		"FlagUrl": "https://enowars.com/flags/in.svg",
+		"Id": 169,
+		"LogoUrl": null,
+		"Name": "zer.0.day",
+		"TeamSubnet": "::ffff:10.0.0.169",
+		"University": null
+	}, {
+		"Address": "10.0.0.170",
+		"Country": {
+			"Code": "in",
+			"FlagUrl": "https://enowars.com/flags/in.svg",
+			"Name": "India"
+		},
+		"FlagUrl": "https://enowars.com/flags/in.svg",
+		"Id": 170,
+		"LogoUrl": "https://enowars.com/logo?img=kpumM3drG5_wzuZhsA3djsa2Xa4ch8ZfSBgAfyVd_64",
+		"Name": "Greyfang",
+		"TeamSubnet": "::ffff:10.0.0.170",
+		"University": null
+	}, {
+		"Address": "10.0.0.171",
+		"Country": {
+			"Code": "in",
+			"FlagUrl": "https://enowars.com/flags/in.svg",
+			"Name": "India"
+		},
+		"FlagUrl": "https://enowars.com/flags/in.svg",
+		"Id": 171,
+		"LogoUrl": null,
+		"Name": "RedDagger",
+		"TeamSubnet": "::ffff:10.0.0.171",
+		"University": null
+	}, {
+		"Address": "10.0.0.174",
+		"Country": {
+			"Code": "in",
+			"FlagUrl": "https://enowars.com/flags/in.svg",
+			"Name": "India"
+		},
+		"FlagUrl": "https://enowars.com/flags/in.svg",
+		"Id": 174,
+		"LogoUrl": "https://enowars.com/logo?img=7i9dbUg5-l7eb2e_rbAdRF_fWLrxCWE8QhPYiaOHcvo",
+		"Name": "Cyb3rpunk_Squ4d",
+		"TeamSubnet": "::ffff:10.0.0.174",
+		"University": "PES UNIVERSITY"
+	}, {
+		"Address": "10.0.0.182",
+		"Country": {
+			"Code": "de",
+			"FlagUrl": "https://enowars.com/flags/de.svg",
+			"Name": "Germany"
+		},
+		"FlagUrl": "https://enowars.com/flags/de.svg",
+		"Id": 182,
+		"LogoUrl": null,
+		"Name": "F1R3574R",
+		"TeamSubnet": "::ffff:10.0.0.182",
+		"University": null
+	}, {
+		"Address": "10.0.0.184",
+		"Country": {
+			"Code": "gg",
+			"FlagUrl": "https://enowars.com/flags/gg.svg",
+			"Name": "Guernsey"
+		},
+		"FlagUrl": "https://enowars.com/flags/gg.svg",
+		"Id": 184,
+		"LogoUrl": null,
+		"Name": "4b943ac7c7f9dda29290",
+		"TeamSubnet": "::ffff:10.0.0.184",
+		"University": null
+	}, {
+		"Address": "10.0.0.186",
+		"Country": {
+			"Code": "nl",
+			"FlagUrl": "https://enowars.com/flags/nl.svg",
+			"Name": "Netherlands"
+		},
+		"FlagUrl": "https://enowars.com/flags/nl.svg",
+		"Id": 186,
+		"LogoUrl": null,
+		"Name": "hack0rs",
+		"TeamSubnet": "::ffff:10.0.0.186",
+		"University": null
+	}, {
+		"Address": "10.0.0.187",
+		"Country": {
+			"Code": "in",
+			"FlagUrl": "https://enowars.com/flags/in.svg",
+			"Name": "India"
+		},
+		"FlagUrl": "https://enowars.com/flags/in.svg",
+		"Id": 187,
+		"LogoUrl": null,
+		"Name": "hackhash",
+		"TeamSubnet": "::ffff:10.0.0.187",
+		"University": null
+	}, {
+		"Address": "10.0.0.192",
+		"Country": {
+			"Code": "ru",
+			"FlagUrl": "https://enowars.com/flags/ru.svg",
+			"Name": "Russian Federation"
+		},
+		"FlagUrl": "https://enowars.com/flags/ru.svg",
+		"Id": 192,
+		"LogoUrl": "https://enowars.com/logo?img=8vLP9AWGq3u4QtpSy_ZH19cgQYYdGZvQHJuCTMbPG6Q",
+		"Name": "Red Cadets",
+		"TeamSubnet": "::ffff:10.0.0.192",
+		"University": null
+	}, {
+		"Address": "10.0.0.193",
+		"Country": {
+			"Code": "ch",
+			"FlagUrl": "https://enowars.com/flags/ch.svg",
+			"Name": "Switzerland"
+		},
+		"FlagUrl": "https://enowars.com/flags/ch.svg",
+		"Id": 193,
+		"LogoUrl": "https://enowars.com/logo?img=2l0uOtCs8VeBfT2KpXrlY1oT5n2FjMwseAZkwqAhTBs",
+		"Name": "Codename Sandstorm",
+		"TeamSubnet": "::ffff:10.0.0.193",
+		"University": null
+	}, {
+		"Address": "10.0.0.194",
+		"Country": {
+			"Code": "gb",
+			"FlagUrl": "https://enowars.com/flags/gb.svg",
+			"Name": "United Kingdom"
+		},
+		"FlagUrl": "https://enowars.com/flags/gb.svg",
+		"Id": 194,
+		"LogoUrl": null,
+		"Name": "petrichor!",
+		"TeamSubnet": "::ffff:10.0.0.194",
+		"University": null
+	}, {
+		"Address": "10.0.0.195",
+		"Country": {
+			"Code": "us",
+			"FlagUrl": "https://enowars.com/flags/us.svg",
+			"Name": "United States"
+		},
+		"FlagUrl": "https://enowars.com/flags/us.svg",
+		"Id": 195,
+		"LogoUrl": null,
+		"Name": "Code[&Pwn]",
+		"TeamSubnet": "::ffff:10.0.0.195",
+		"University": null
+	}, {
+		"Address": "10.0.0.196",
+		"Country": {
+			"Code": "in",
+			"FlagUrl": "https://enowars.com/flags/in.svg",
+			"Name": "India"
+		},
+		"FlagUrl": "https://enowars.com/flags/in.svg",
+		"Id": 196,
+		"LogoUrl": null,
+		"Name": "ByteForc3",
+		"TeamSubnet": "::ffff:10.0.0.196",
+		"University": null
+	}],
+	"Services": [{
+			"Id": 1,
+			"Name": "Buggy",
+			"FlagsPerRound": 1,
+			"NoisesPerRound": 1,
+			"HavocsPerRound": 1,
+			"WeightFactor": 1,
+			"Checkers": ["http://192.168.1.1:7891"]
+		},
+		{
+			"Id": 2,
+			"Name": "Table-Reservation",
+			"FlagsPerRound": 1,
+			"NoisesPerRound": 1,
+			"HavocsPerRound": 1,
+			"WeightFactor": 1,
+			"Checkers": ["http://192.168.1.2:3031"]
+		},
+		{
+			"Id": 3,
+			"Name": "2gather",
+			"FlagsPerRound": 1,
+			"NoisesPerRound": 1,
+			"HavocsPerRound": 1,
+			"WeightFactor": 1,
+			"Checkers": ["http://192.168.1.3:7788"]
+		},
+		{
+			"Id": 4,
+			"Name": "ringring",
+			"FlagsPerRound": 1,
+			"NoisesPerRound": 1,
+			"HavocsPerRound": 1,
+			"WeightFactor": 1,
+			"Checkers": ["http://192.168.1.4:7355"]
+		},
+		{
+			"Id": 5,
+			"Name": "Gamemaster",
+			"FlagsPerRound": 1,
+			"NoisesPerRound": 1,
+			"HavocsPerRound": 1,
+			"WeightFactor": 1,
+			"Checkers": ["http://192.168.1.5:8000"]
+		},
+		{
+			"Id": 6,
+			"Name": "flug",
+			"FlagsPerRound": 1,
+			"NoisesPerRound": 1,
+			"HavocsPerRound": 1,
+			"WeightFactor": 1,
+			"Checkers": ["http://192.168.1.6:7474"]
+		},
+		{
+			"Id": 7,
+			"Name": "poolcide",
+			"FlagsPerRound": 1,
+			"NoisesPerRound": 1,
+			"HavocsPerRound": 1,
+			"WeightFactor": 1,
+			"Checkers": ["http://192.168.1.7:9002"]
+		}
+	]
+}
