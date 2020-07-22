@@ -18,7 +18,9 @@ namespace GamemasterChecker.Controllers
     {
         [HttpPost]
         [Route("/")]
+#pragma warning disable IDE0060
         public IActionResult Flag([FromBody] CheckerTaskMessage content)
+#pragma warning restore IDE0060
         {
             return Ok("{ \"result\": \"OK\" }");
         }
