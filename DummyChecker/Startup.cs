@@ -27,11 +27,6 @@ namespace DummyChecker
                     loggingBuilder.ClearProviders();
                     loggingBuilder.AddProvider(new EnoLogMessageConsoleLoggerProvider("GamemasterChecker", CancellationToken.None));
                 }
-                else
-                {
-                    loggingBuilder.AddConsole();
-                    loggingBuilder.SetMinimumLevel(LogLevel.Warning);
-                }
             });
         }
 
