@@ -121,40 +121,26 @@ namespace FlagShooter
             try
             {
                 long i = 0;
-                if (sb != null)
+                if (sb != null && sb.CurrentRound != null && sb.CurrentRound > 0)
                 {
-                    if (sb.CurrentRound != null && sb.CurrentRound > 0)
-                    {
-                        for (long r = sb.CurrentRound.Value; r > Math.Max(sb.CurrentRound.Value - this.configuration.FlagValidityInRounds, 1); r--)
-                        {
-                            for (int team = 0; team < this.configuration.Teams.Count; team++)
-                            {
-                                foreach (var s in sb.Services)
+                    for (long r = sb.CurrentRound.Value; r > Math.Max(sb.CurrentRound.Value - this.configuration.FlagValidityInRounds, 0); r--)
+                        for (int team = 0; team < this.configuration.Teams.Count; team++)
+                            foreach (var s in sb.Services)
+                                for (int store = 0; store < s.MaxStores; store++)
                                 {
-                                    for (int store = 0; store < s.MaxStores; store++)
+                                    if (i++ > flagCount)
+                                        return result;
+                                    result.Add(this.SubmitFlag(new Flag
                                     {
-                                        if (i++ > flagCount)
-                                        {
-                                            return result;
-                                        }
-
-                                        result.Add(this.SubmitFlag(new Flag()
-                                        {
-                                            RoundId = r,
-                                            OwnerId = team,
-                                            ServiceId = s.ServiceId,
-                                            RoundOffset = store
-                                        }));
-                                    }
+                                        RoundId = r,
+                                        OwnerId = team,
+                                        ServiceId = s.ServiceId,
+                                        RoundOffset = store
+                                    }));
                                 }
-                            }
-                        }
-
-                        Console.WriteLine($"Not Enough Flags available, requested {flagCount} and got {i}");
-                        return result;
-                    }
+                    Console.WriteLine($"Not Enough Flags available, requested {flagCount} and got {i}");
+                    return result;
                 }
-
                 Console.WriteLine($"No Flags could be generated, Scoreboard data not Found");
                 return result;
             }
