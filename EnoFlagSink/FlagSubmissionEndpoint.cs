@@ -77,9 +77,9 @@ namespace EnoEngine.FlagSubmission
                 Task.Run(async () => await LogSubmissionStatistics(team.Key, config.Teams.Where(t => t.Id == team.Key).First().Name, token));
             }
             var tasks = new List<Task>();
-            for (int i=0;i< SUBMISSION_BATCH_PARALLELIZATION; i++) tasks.Add(Task.Factory.StartNew(async () => await InsertSubmissionsLoop(token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default));
-            tasks.Add(Task.Factory.StartNew(async () => await RunProductionEndpoint(config, token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default));
-            tasks.Add(Task.Factory.StartNew(async () => await RunDebugEndpoint(config, token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default));
+            for (int i=0;i< SUBMISSION_BATCH_PARALLELIZATION; i++) tasks.Add(await Task.Factory.StartNew(async () => await InsertSubmissionsLoop(i, token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default));
+            tasks.Add(await Task.Factory.StartNew(async () => await RunProductionEndpoint(config, token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default));
+            tasks.Add(await Task.Factory.StartNew(async () => await RunDebugEndpoint(config, token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default));
             await Task.WhenAny(tasks);
         }
 
@@ -251,6 +251,7 @@ namespace EnoEngine.FlagSubmission
 
         public async Task RunDebugEndpoint(JsonConfiguration config, CancellationToken token)
         {
+            Logger.LogInformation($"{nameof(RunDebugEndpoint)} started");
             try
             {
                 DebugListener.Start();
@@ -271,6 +272,7 @@ namespace EnoEngine.FlagSubmission
 
         public async Task RunProductionEndpoint(JsonConfiguration config, CancellationToken token)
         {
+            Logger.LogInformation($"{nameof(RunProductionEndpoint)} started");
             try
             {
                 ProductionListener.Start();
@@ -338,8 +340,9 @@ namespace EnoEngine.FlagSubmission
             };
         }
 
-        async Task InsertSubmissionsLoop(CancellationToken token)
+        async Task InsertSubmissionsLoop(int number, CancellationToken token)
         {
+            Logger.LogInformation($"{nameof(InsertSubmissionsLoop)} {number} started");
             try
             {
                 while (!token.IsCancellationRequested)

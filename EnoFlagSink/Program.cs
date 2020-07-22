@@ -57,7 +57,7 @@ namespace EnoFlagSink
             var SubmissionEndpoint = serviceProvider.GetRequiredService<FlagSubmissionEndpoint>();
             await SubmissionEndpoint.Start(CancelSource.Token, configuration);
         }
-        public static async void Main(string? argument = null)
+        public static async Task Main(string? argument = null)
         {
             const string mutexId = @"Global\EnoFlagSink";
             using var mutex = new Mutex(false, mutexId, out bool _);
