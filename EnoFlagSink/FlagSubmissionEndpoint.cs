@@ -80,7 +80,7 @@ namespace EnoEngine.FlagSubmission
             for (int i=0;i< SUBMISSION_BATCH_PARALLELIZATION; i++) tasks.Add(Task.Factory.StartNew(async () => await InsertSubmissionsLoop(token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default));
             tasks.Add(Task.Factory.StartNew(async () => await RunProductionEndpoint(config, token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default));
             tasks.Add(Task.Factory.StartNew(async () => await RunDebugEndpoint(config, token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default));
-            return Task.WhenAny(tasks);
+            await Task.WhenAny(tasks);
         }
 
         async Task ProcessLinesAsync(Socket socket, long? teamId, JsonConfiguration config, CancellationToken token)

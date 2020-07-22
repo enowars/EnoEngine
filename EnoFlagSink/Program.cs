@@ -2,6 +2,7 @@
 using System.IO;
 using System.Text.Json;
 using System.Threading;
+using System.Threading.Tasks;
 using EnoCore.Logging;
 using EnoCore.Models.Json;
 using EnoDatabase;
@@ -15,7 +16,7 @@ namespace EnoFlagSink
     class Program
     {
         private static readonly CancellationTokenSource CancelSource = new CancellationTokenSource();
-        public static async void Run(string? argument = null)
+        public static async Task Run(string? argument = null)
         {
             JsonConfiguration configuration;
             if (!File.Exists("ctf.json"))
