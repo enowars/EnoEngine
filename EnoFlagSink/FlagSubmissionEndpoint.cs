@@ -74,7 +74,7 @@ namespace EnoEngine.FlagSubmission
             token.Register(() => DebugListener.Stop());
             foreach (var team in SubmissionStatistics)
             {
-                Task.Run(async () => await LogSubmissionStatistics(team.Key, config.Teams.Where(t => t.Id == team.Key).First().Name, token));
+                var _ = Task.Run(async () => await LogSubmissionStatistics(team.Key, config.Teams.Where(t => t.Id == team.Key).First().Name, token));
             }
             var tasks = new List<Task>();
             for (int i=0;i< SUBMISSION_BATCH_PARALLELIZATION; i++) tasks.Add(await Task.Factory.StartNew(async () => await InsertSubmissionsLoop(i, token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default));
