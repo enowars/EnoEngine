@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace DummyChecker
 {
-    public class Program
+    internal class Program
     {
         public static void Main(string[] args)
         {
