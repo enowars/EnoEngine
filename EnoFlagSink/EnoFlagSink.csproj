@@ -13,8 +13,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\EnoCore\EnoCore.csproj" />
-    <ProjectReference Include="..\..\EnoDatabase\EnoDatabase.csproj" />
+    <ProjectReference Include="..\EnoCore\EnoCore.csproj" />
+    <ProjectReference Include="..\EnoDatabase\EnoDatabase.csproj" />
   </ItemGroup>
 
 </Project>
