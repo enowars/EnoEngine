@@ -1,29 +1,20 @@
-﻿using EnoCore;
-using EnoCore.Logging;
-using EnoCore.Models.Database;
-using EnoCore.Models.Json;
-using EnoCore.Utils;
-using EnoDatabase;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System;
 using System.IO;
-using System.Text;
 using System.Text.Json;
 using System.Threading;
+using EnoCore.Logging;
+using EnoCore.Models.Json;
+using EnoDatabase;
+using EnoEngine.FlagSubmission;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
-namespace EnoEngine
+namespace EnoFlagSink
 {
     class Program
     {
-        private static readonly string MODE_RECALCULATE = "recalculate";
         private static readonly CancellationTokenSource CancelSource = new CancellationTokenSource();
-
-
         public static void Run(string? argument = null)
         {
             JsonConfiguration configuration;
@@ -42,21 +33,12 @@ namespace EnoEngine
                 Console.WriteLine($"Failed to load ctf.json: {e.Message}");
                 return;
             }
-            try
-            {
-                var scoreboard = new EnoEngineScoreboardInfo(configuration);
-                EnoDatabaseUtils.GenerateScoreboardInfo(scoreboard, EnoCore.Utils.Misc.dataDirectory);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine($"Failed to generate scoreboardInfo.json: {e.Message}");
-            }
             var serviceProvider = new ServiceCollection()
                 .AddLogging()
                 .AddSingleton(configuration)
+                .AddSingleton<FlagSubmissionEndpoint>()
                 .AddSingleton(new EnoStatistics(nameof(EnoEngine)))
                 .AddScoped<IEnoDatabase, EnoDatabase.EnoDatabase>()
-                .AddSingleton<EnoEngine>()
                 .AddDbContextPool<EnoDatabaseContext>(options =>
                 {
                     options.UseNpgsql(
@@ -68,23 +50,15 @@ namespace EnoEngine
                     loggingBuilder.SetMinimumLevel(LogLevel.Debug);
                     loggingBuilder.AddFilter(DbLoggerCategory.Name, LogLevel.Warning);
                     loggingBuilder.AddConsole();
-                    loggingBuilder.AddProvider(new EnoLogMessageFileLoggerProvider("EnoEngine", CancelSource.Token));
+                    loggingBuilder.AddProvider(new EnoLogMessageFileLoggerProvider("EnoFlagSink", CancelSource.Token));
                 })
                 .BuildServiceProvider(validateScopes: true);
-
-            var engine = serviceProvider.GetRequiredService<EnoEngine>();
-            if (argument == MODE_RECALCULATE)
-            {
-                engine.RunRecalculation().Wait();
-            }
-            else
-            {
-                engine.RunContest().Wait();
-            }
+            var SubmissionEndpoint = serviceProvider.GetRequiredService<FlagSubmissionEndpoint>();
+            SubmissionEndpoint.Start(CancelSource.Token, configuration);
         }
         public static void Main(string? argument = null)
         {
-            const string mutexId = @"Global\EnoEngine";
+            const string mutexId = @"Global\EnoFlagSink";
             using var mutex = new Mutex(false, mutexId, out bool _);
             try
             {
