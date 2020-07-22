@@ -14,7 +14,7 @@ namespace GamemasterChecker.Controllers
     [ApiController]
     [Route("/")]
     [Route("/service")]
-    public class CheckerController : Controller
+    internal class CheckerController : Controller
     {
         [HttpPost]
         [Route("/")]
