@@ -26,7 +26,7 @@ namespace EnoCore.Models.Json
 
         protected EnoEngineScoreboardEntryServiceDetails()
         {
-
+            ServiceStats = default!;
         }
     }
 }

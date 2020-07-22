@@ -25,7 +25,8 @@ namespace EnoCore.Models.Json
         }
         protected EnoEngineScoreboardEntry()
         {
-
+            Team = default!;
+            ServiceDetails = default!;
         }
     }
 }
