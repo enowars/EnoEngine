@@ -14,13 +14,11 @@ namespace GamemasterChecker.Controllers
     [ApiController]
     [Route("/")]
     [Route("/service")]
-    internal class CheckerController : Controller
+    public class CheckerController : Controller
     {
         [HttpPost]
         [Route("/")]
-#pragma warning disable IDE0060
-        public IActionResult Flag([FromBody] CheckerTaskMessage content)
-#pragma warning restore IDE0060
+        public IActionResult Flag([FromBody] CheckerTaskMessage _)
         {
             return Ok("{ \"result\": \"OK\" }");
         }
