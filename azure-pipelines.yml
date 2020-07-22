@@ -21,5 +21,11 @@ variables:
   buildConfiguration: 'Release'
 
 steps:
-- script: dotnet build --configuration $(buildConfiguration) /warnaserror
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'restore'
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'build'
+    arguments: '--configuration $(buildConfiguration) /warnaserror'
   displayName: 'dotnet build $(buildConfiguration)'
