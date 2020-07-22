@@ -15,7 +15,7 @@ namespace EnoFlagSink
     class Program
     {
         private static readonly CancellationTokenSource CancelSource = new CancellationTokenSource();
-        public static void Run(string? argument = null)
+        public static async void Run(string? argument = null)
         {
             JsonConfiguration configuration;
             if (!File.Exists("ctf.json"))
@@ -54,9 +54,9 @@ namespace EnoFlagSink
                 })
                 .BuildServiceProvider(validateScopes: true);
             var SubmissionEndpoint = serviceProvider.GetRequiredService<FlagSubmissionEndpoint>();
-            SubmissionEndpoint.Start(CancelSource.Token, configuration);
+            await SubmissionEndpoint.Start(CancelSource.Token, configuration);
         }
-        public static void Main(string? argument = null)
+        public static async void Main(string? argument = null)
         {
             const string mutexId = @"Global\EnoFlagSink";
             using var mutex = new Mutex(false, mutexId, out bool _);
@@ -64,7 +64,7 @@ namespace EnoFlagSink
             {
                 if (mutex.WaitOne(10, false))
                 {
-                    Run(argument);
+                    await Run(argument);
                 }
                 else
                 {
