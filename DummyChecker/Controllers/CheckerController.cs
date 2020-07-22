@@ -22,5 +22,21 @@ namespace GamemasterChecker.Controllers
         {
             return Ok("{ \"result\": \"OK\" }");
         }
+        [HttpGet]
+        [Route("/service")]
+        public IActionResult Service()
+        {
+            return Ok(JsonSerializer.Serialize(new CheckerInfoMessage
+            {
+                ServiceName = "DummyChecker",
+                FlagCount = 1,
+                NoiseCount = 1,
+                HavocCount = 1
+            }, new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            }
+            ));
+        }
     }
 }
