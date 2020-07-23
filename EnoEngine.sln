@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DummyChecker", "DummyChecke
 		{029F1DC6-3647-4088-8093-5737154CD457} = {029F1DC6-3647-4088-8093-5737154CD457}
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnoFlagSink", "EnoFlagSink\EnoFlagSink.csproj", "{A7AFE887-82F7-4318-BBB6-1C91FBC02126}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{49443A00-B303-4CD6-9C1A-5028544CC778}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{49443A00-B303-4CD6-9C1A-5028544CC778}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{49443A00-B303-4CD6-9C1A-5028544CC778}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A7AFE887-82F7-4318-BBB6-1C91FBC02126}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7AFE887-82F7-4318-BBB6-1C91FBC02126}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7AFE887-82F7-4318-BBB6-1C91FBC02126}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7AFE887-82F7-4318-BBB6-1C91FBC02126}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

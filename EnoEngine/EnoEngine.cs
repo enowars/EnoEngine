@@ -1,5 +1,4 @@
-﻿using EnoEngine.FlagSubmission;
-using EnoCore.Models;
+﻿using EnoCore.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -31,15 +30,13 @@ namespace EnoEngine
         private readonly JsonConfiguration Configuration;
         private readonly IServiceProvider ServiceProvider;
         private readonly EnoStatistics Statistics;
-        private readonly FlagSubmissionEndpoint SubmissionEndpoint;
 
-        public EnoEngine(ILogger<EnoEngine> logger, JsonConfiguration configuration, IServiceProvider serviceProvider, EnoStatistics enoStatistics, FlagSubmissionEndpoint submissionEndpoint)
+        public EnoEngine(ILogger<EnoEngine> logger, JsonConfiguration configuration, IServiceProvider serviceProvider, EnoStatistics enoStatistics)
         {
             Logger = logger;
             Configuration = configuration;
             ServiceProvider = serviceProvider;
             Statistics = enoStatistics;
-            SubmissionEndpoint = submissionEndpoint;
         }
 
         public async Task RunContest()
@@ -52,8 +49,7 @@ namespace EnoEngine
             };
             await FetchAndApplyCheckersInfo(Configuration);
             var db = ServiceProvider.CreateScope().ServiceProvider.GetRequiredService<IEnoDatabase>();
-            var result = db.ApplyConfig(Configuration);
-            SubmissionEndpoint.Start(EngineCancelSource.Token, Configuration);
+            var result = db.ApplyConfig(Configuration);  
             Configuration.BuildCheckersDict();
             if (result.Success)
             {

@@ -14,13 +14,29 @@ namespace GamemasterChecker.Controllers
     [ApiController]
     [Route("/")]
     [Route("/service")]
-    public class CheckerController : Controller
+    internal class CheckerController : Controller
     {
         [HttpPost]
         [Route("/")]
-        public IActionResult Flag([FromBody] CheckerTaskMessage content)
+        public IActionResult Flag([FromBody] CheckerTaskMessage _)
         {
             return Ok("{ \"result\": \"OK\" }");
+        }
+        [HttpGet]
+        [Route("/service")]
+        public IActionResult Service()
+        {
+            return Ok(JsonSerializer.Serialize(new CheckerInfoMessage
+            {
+                ServiceName = "DummyChecker",
+                FlagCount = 1,
+                NoiseCount = 1,
+                HavocCount = 1
+            }, new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            }
+            ));
         }
     }
 }
