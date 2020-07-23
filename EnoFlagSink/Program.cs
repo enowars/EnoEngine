@@ -13,9 +13,10 @@ using Microsoft.Extensions.Logging;
 
 namespace EnoFlagSink
 {
-    class Program
+    internal class Program
     {
         private static readonly CancellationTokenSource CancelSource = new CancellationTokenSource();
+
         public static async Task Run(string? argument = null)
         {
             JsonConfiguration configuration;
@@ -24,6 +25,7 @@ namespace EnoFlagSink
                 Console.WriteLine("Config (ctf.json) does not exist");
                 return;
             }
+
             try
             {
                 var content = File.ReadAllText("ctf.json");
@@ -34,18 +36,20 @@ namespace EnoFlagSink
                 Console.WriteLine($"Failed to load ctf.json: {e.Message}");
                 return;
             }
+
             var serviceProvider = new ServiceCollection()
                 .AddLogging()
                 .AddSingleton(configuration)
                 .AddSingleton<FlagSubmissionEndpoint>()
                 .AddSingleton(new EnoStatistics(nameof(EnoEngine)))
                 .AddScoped<IEnoDatabase, EnoDatabase.EnoDatabase>()
-                .AddDbContextPool<EnoDatabaseContext>(options =>
-                {
-                    options.UseNpgsql(
-                        EnoDatabaseUtils.PostgresConnectionString,
-                        pgoptions => pgoptions.EnableRetryOnFailure());
-                }, 90)
+                .AddDbContextPool<EnoDatabaseContext>(
+                    options =>
+                    {
+                        options.UseNpgsql(
+                            EnoDatabaseUtils.PostgresConnectionString,
+                            pgoptions => pgoptions.EnableRetryOnFailure());
+                    }, 90)
                 .AddLogging(loggingBuilder =>
                 {
                     loggingBuilder.SetMinimumLevel(LogLevel.Debug);
@@ -54,9 +58,10 @@ namespace EnoFlagSink
                     loggingBuilder.AddProvider(new EnoLogMessageFileLoggerProvider("EnoFlagSink", CancelSource.Token));
                 })
                 .BuildServiceProvider(validateScopes: true);
-            var SubmissionEndpoint = serviceProvider.GetRequiredService<FlagSubmissionEndpoint>();
-            await SubmissionEndpoint.Start(CancelSource.Token, configuration);
+            var submissionEndpoint = serviceProvider.GetRequiredService<FlagSubmissionEndpoint>();
+            await submissionEndpoint.Start(configuration, CancelSource.Token);
         }
+
         public static async Task Main(string? argument = null)
         {
             const string mutexId = @"Global\EnoFlagSink";
