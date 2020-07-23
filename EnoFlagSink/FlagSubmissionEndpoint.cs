@@ -73,7 +73,10 @@ namespace EnoEngine.FlagSubmission
             // Start a log submission statistics task for every team
             foreach (var team in this.submissionStatistics)
             {
-                var t = Task.Run(async () => await this.LogSubmissionStatistics(team.Key, config.Teams.Where(t => t.Id == team.Key).First().Name, token));
+                var t = Task.Run(async () => await this.LogSubmissionStatistics(
+                    team.Key,
+                    config.Teams.Where(t => t.Id == team.Key).First().Name,
+                    token));
             }
 
             // Start n insert tasks
@@ -123,7 +126,6 @@ namespace EnoEngine.FlagSubmission
                     this.logger.LogDebug($"FillPipeAsync failed: {ex.Message}\n{ex.StackTrace}");
                     break;
                 }
-
                 // Make the data available to the PipeReader.
                 FlushResult result = await writer.FlushAsync(token);
 
@@ -143,7 +145,6 @@ namespace EnoEngine.FlagSubmission
             {
                 ReadResult result = await reader.ReadAsync(token);
                 ReadOnlySequence<byte> buffer = result.Buffer;
-
                 while (this.TryReadLine(ref buffer, out ReadOnlySequence<byte> line))
                 {
                     // Process the line.
@@ -272,15 +273,10 @@ namespace EnoEngine.FlagSubmission
                     var task = this.ProcessLinesAsync(client.Client, null, config, token);
                 }
             }
-            catch (ObjectDisposedException)
-            {
-            }
-            catch (TaskCanceledException)
-            {
-            }
             catch (Exception e)
             {
-                this.logger.LogCritical($"RunDebugEndpoint failed: {EnoDatabaseUtils.FormatException(e)}");
+                if (!(e is ObjectDisposedException || e is TaskCanceledException))
+                    this.logger.LogCritical($"RunDebugEndpoint failed: {EnoDatabaseUtils.FormatException(e)}");
             }
 
             this.logger.LogInformation("RunDebugEndpoint finished");
@@ -316,25 +312,19 @@ namespace EnoEngine.FlagSubmission
                             }
                         });
                     }
-                    catch (TaskCanceledException)
-                    {
-                        throw;
-                    }
                     catch (Exception e)
                     {
+                        if (e is TaskCanceledException) throw;
                         this.logger.LogWarning($"RunProductionEndpoint failed to accept connection: {EnoDatabaseUtils.FormatException(e)}");
                     }
                 }
             }
-            catch (ObjectDisposedException)
-            {
-            }
-            catch (TaskCanceledException)
-            {
-            }
             catch (Exception e)
             {
-                this.logger.LogCritical($"RunProductionEndpoint failed: {EnoDatabaseUtils.FormatException(e)}");
+                if (!(e is ObjectDisposedException || e is TaskCanceledException))
+                {
+                    this.logger.LogCritical($"RunProductionEndpoint failed: {EnoDatabaseUtils.FormatException(e)}");
+                }
             }
 
             this.logger.LogInformation("RunProductionEndpoint finished");
@@ -370,7 +360,7 @@ namespace EnoEngine.FlagSubmission
             {
                 while (!token.IsCancellationRequested)
                 {
-                    bool empty = true;
+                    bool isEmpty = true;
                     List<(Flag flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult> result)> submissions = new List<(Flag flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult>)>();
                     foreach (var (teamid, channel) in this.channels)
                     {
@@ -378,7 +368,7 @@ namespace EnoEngine.FlagSubmission
                         var reader = channel.Reader;
                         while (submissionsPerTeam < 100 && reader.TryRead(out var item))
                         {
-                            empty = false;
+                            isEmpty = false;
                             submissionsPerTeam++;
                             submissions.Add((item.Flag, teamid, item.FeedbackSource));
                             if (submissions.Count > SubmissionBatchSize)
@@ -408,7 +398,7 @@ namespace EnoEngine.FlagSubmission
                         }
                     }
 
-                    if (empty)
+                    if (isEmpty)
                     {
                         await Task.Delay(10);
                     }
