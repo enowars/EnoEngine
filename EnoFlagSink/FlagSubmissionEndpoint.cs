@@ -1,17 +1,6 @@
-﻿using EnoCore;
-using EnoCore.Logging;
-using EnoCore.Models;
-using EnoCore.Models.Database;
-using EnoCore.Models.Json;
-using EnoDatabase;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Buffers;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using EnoCore.Utils;
-using System.IO;
 using System.IO.Pipelines;
 using System.Linq;
 using System.Net;
@@ -20,42 +9,49 @@ using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using EnoCore.Logging;
+using EnoCore.Models;
+using EnoCore.Models.Database;
+using EnoCore.Models.Json;
+using EnoCore.Utils;
+using EnoDatabase;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace EnoEngine.FlagSubmission
 {
-    class FlagSubmissionEndpoint
+    internal class FlagSubmissionEndpoint
     {
-        private readonly Dictionary<long, Channel<(Flag Flag, TaskCompletionSource<FlagSubmissionResult> FeedbackSource)>> Channels =
-            new Dictionary<long, Channel<(Flag, TaskCompletionSource<FlagSubmissionResult>)>>();
-        private readonly Dictionary<long, TeamFlagSubmissionStatistic> SubmissionStatistics = new Dictionary<long, TeamFlagSubmissionStatistic>();
-        private const int MAX_LIME_LENGTH = 200;
-        private const int SUBMISSION_BATCH_SIZE = 500;
-        private const int SUBMISSION_BATCH_PARALLELIZATION = 4;
-        private readonly TcpListener ProductionListener = new TcpListener(IPAddress.IPv6Any, 1337);
-        private readonly TcpListener DebugListener = new TcpListener(IPAddress.IPv6Any, 1338);
-        private readonly ILogger Logger;
-        private readonly JsonConfiguration Configuration;
-        private readonly IServiceProvider ServiceProvider;
-        private readonly EnoStatistics EnoStatistics;
+        private const int MaxLineLength = 200;
+        private const int SubmissionBatchSize = 500;
+        private const int SubmissionTasks = 4;
+        private readonly Dictionary<long, Channel<(Flag Flag, TaskCompletionSource<FlagSubmissionResult> FeedbackSource)>> channels = new Dictionary<long, Channel<(Flag, TaskCompletionSource<FlagSubmissionResult>)>>();
+        private readonly Dictionary<long, TeamFlagSubmissionStatistic> submissionStatistics = new Dictionary<long, TeamFlagSubmissionStatistic>();
+        private readonly TcpListener productionListener = new TcpListener(IPAddress.IPv6Any, 1337);
+        private readonly TcpListener debugListener = new TcpListener(IPAddress.IPv6Any, 1338);
+        private readonly ILogger logger;
+        private readonly JsonConfiguration configuration;
+        private readonly IServiceProvider serviceProvider;
+        private readonly EnoStatistics enoStatistics;
 
-        public FlagSubmissionEndpoint(IServiceProvider serviceProvider, ILogger<FlagSubmissionEndpoint> logger, JsonConfiguration configuration, EnoStatistics statistics)
+        public FlagSubmissionEndpoint(IServiceProvider serviceProvider, ILogger<FlagSubmissionEndpoint> logger, JsonConfiguration configuration, EnoStatistics enoStatistics)
         {
-            Logger = logger;
-            Configuration = configuration;
-            EnoStatistics = statistics;
-            ProductionListener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
-            DebugListener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
-            ServiceProvider = serviceProvider;
+            this.logger = logger;
+            this.configuration = configuration;
+            this.enoStatistics = enoStatistics;
+            this.productionListener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
+            this.debugListener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
+            this.serviceProvider = serviceProvider;
             foreach (var team in configuration.Teams)
             {
-                Channels[team.Id] = Channel.CreateBounded<(Flag, TaskCompletionSource<FlagSubmissionResult>)>(new BoundedChannelOptions(100) { SingleReader = false, SingleWriter = false });
-                SubmissionStatistics[team.Id] = new TeamFlagSubmissionStatistic(team.Id);
+                this.channels[team.Id] = Channel.CreateBounded<(Flag, TaskCompletionSource<FlagSubmissionResult>)>(new BoundedChannelOptions(100) { SingleReader = false, SingleWriter = false });
+                this.submissionStatistics[team.Id] = new TeamFlagSubmissionStatistic(team.Id);
             }
         }
 
         public async Task LogSubmissionStatistics(long teamId, string teamName, CancellationToken token)
         {
-            var statistic = SubmissionStatistics[teamId];
+            var statistic = this.submissionStatistics[teamId];
             while (!token.IsCancellationRequested)
             {
                 var okFlags = Interlocked.Exchange(ref statistic.OkFlags, 0);
@@ -63,38 +59,48 @@ namespace EnoEngine.FlagSubmission
                 var ownFlags = Interlocked.Exchange(ref statistic.OwnFlags, 0);
                 var duplicateFlags = Interlocked.Exchange(ref statistic.DuplicateFlags, 0);
                 var invalidFlags = Interlocked.Exchange(ref statistic.InvalidFlags, 0);
-                EnoStatistics.FlagSubmissionStatisticsMessage(teamName, teamId, okFlags, duplicateFlags, oldFlags, invalidFlags, ownFlags);
+                this.enoStatistics.FlagSubmissionStatisticsMessage(teamName, teamId, okFlags, duplicateFlags, oldFlags, invalidFlags, ownFlags);
                 await Task.Delay(5000);
             }
         }
 
-        public async Task Start(CancellationToken token, JsonConfiguration config)
+        public async Task Start(JsonConfiguration config, CancellationToken token)
         {
-            token.Register(() => ProductionListener.Stop());
-            token.Register(() => DebugListener.Stop());
-            foreach (var team in SubmissionStatistics)
+            // Close the listening sockets if the token is cancelled
+            token.Register(() => this.productionListener.Stop());
+            token.Register(() => this.debugListener.Stop());
+
+            // Start a log submission statistics task for every team
+            foreach (var team in this.submissionStatistics)
             {
-                var _ = Task.Run(async () => await LogSubmissionStatistics(team.Key, config.Teams.Where(t => t.Id == team.Key).First().Name, token));
+                var t = Task.Run(async () => await this.LogSubmissionStatistics(team.Key, config.Teams.Where(t => t.Id == team.Key).First().Name, token));
             }
+
+            // Start n insert tasks
             var tasks = new List<Task>();
-            for (int i=0;i< SUBMISSION_BATCH_PARALLELIZATION; i++) tasks.Add(await Task.Factory.StartNew(async () => await InsertSubmissionsLoop(i, token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default));
-            tasks.Add(await Task.Factory.StartNew(async () => await RunProductionEndpoint(config, token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default));
-            tasks.Add(await Task.Factory.StartNew(async () => await RunDebugEndpoint(config, token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default));
+            for (int i = 0; i < SubmissionTasks; i++)
+            {
+                tasks.Add(await Task.Factory.StartNew(async () => await this.InsertSubmissionsLoop(i, token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default));
+            }
+
+            // Start production and debug listeners
+            tasks.Add(await Task.Factory.StartNew(async () => await this.RunProductionEndpoint(config, token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default));
+            tasks.Add(await Task.Factory.StartNew(async () => await this.RunDebugEndpoint(config, token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default));
             await Task.WhenAny(tasks);
         }
 
-        async Task ProcessLinesAsync(Socket socket, long? teamId, JsonConfiguration config, CancellationToken token)
+        private async Task ProcessLinesAsync(Socket socket, long? teamId, JsonConfiguration config, CancellationToken token)
         {
             var pipe = new Pipe();
             Channel<Task<FlagSubmissionResult>> feedbackChannel = Channel.CreateUnbounded<Task<FlagSubmissionResult>>(new UnboundedChannelOptions() { SingleReader = true, SingleWriter = false });
-            Task writing = FillPipeAsync(socket, pipe.Writer, token);
-            Task reading = ReadPipeAsync(pipe.Reader, feedbackChannel.Writer, teamId, config, token);
-            Task responding = RespondAsync(socket, teamId, feedbackChannel.Reader, token);
+            Task writing = this.FillPipeAsync(socket, pipe.Writer, token);
+            Task reading = this.ReadPipeAsync(pipe.Reader, feedbackChannel.Writer, teamId, config, token);
+            Task responding = this.RespondAsync(socket, teamId, feedbackChannel.Reader, token);
             await Task.WhenAll(reading, writing, responding);
             socket.Close();
         }
 
-        async Task FillPipeAsync(Socket socket, PipeWriter writer, CancellationToken token)
+        private async Task FillPipeAsync(Socket socket, PipeWriter writer, CancellationToken token)
         {
             const int minimumBufferSize = 512;
             while (true)
@@ -108,12 +114,13 @@ namespace EnoEngine.FlagSubmission
                     {
                         break;
                     }
+
                     // Tell the PipeWriter how much was read from the Socket.
                     writer.Advance(bytesRead);
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogDebug($"FillPipeAsync failed: {ex.Message}\n{ex.StackTrace}");
+                    this.logger.LogDebug($"FillPipeAsync failed: {ex.Message}\n{ex.StackTrace}");
                     break;
                 }
 
@@ -130,31 +137,31 @@ namespace EnoEngine.FlagSubmission
             await writer.CompleteAsync();
         }
 
-        async Task ReadPipeAsync(PipeReader reader, ChannelWriter<Task<FlagSubmissionResult>> feedbackWriter, long? teamId, JsonConfiguration config, CancellationToken token)
+        private async Task ReadPipeAsync(PipeReader reader, ChannelWriter<Task<FlagSubmissionResult>> feedbackWriter, long? teamId, JsonConfiguration config, CancellationToken token)
         {
             while (true)
             {
                 ReadResult result = await reader.ReadAsync(token);
                 ReadOnlySequence<byte> buffer = result.Buffer;
 
-                while (TryReadLine(ref buffer, out ReadOnlySequence<byte> line))
+                while (this.TryReadLine(ref buffer, out ReadOnlySequence<byte> line))
                 {
                     // Process the line.
-                    if (teamId is long _teamId)
+                    if (teamId != null)
                     {
-                        var flag = Flag.Parse(line, Encoding.ASCII.GetBytes(config.FlagSigningKey), config.Encoding, Logger);
+                        var flag = Flag.Parse(line, Encoding.ASCII.GetBytes(config.FlagSigningKey), config.Encoding, this.logger);
                         var tcs = new TaskCompletionSource<FlagSubmissionResult>();
                         if (flag == null)
                         {
                             await feedbackWriter.WriteAsync(Task.FromResult(FlagSubmissionResult.Invalid));
                         }
-                        else if (flag.OwnerId == _teamId)
+                        else if (flag.OwnerId == teamId.Value)
                         {
                             await feedbackWriter.WriteAsync(Task.FromResult(FlagSubmissionResult.Own));
                         }
                         else
                         {
-                            var channel = Channels[_teamId];
+                            var channel = this.channels[teamId.Value];
                             await channel.Writer.WriteAsync((flag, tcs));
                             await feedbackWriter.WriteAsync(tcs.Task);
                         }
@@ -176,15 +183,15 @@ namespace EnoEngine.FlagSubmission
 
                 // TryReadLine has returned false, so the remaining buffer does not contain a \n.
                 // If the length is longer than a flag, somebody is sending bullshit!
-                if (buffer.Length > MAX_LIME_LENGTH)
+                if (buffer.Length > MaxLineLength)
                 {
                     await feedbackWriter.WriteAsync(Task.FromResult(FlagSubmissionResult.SpamError));
                     break;
                 }
             }
-            // Mark the PipeReader as complete.
+
+            // Mark the PipeReader and channel as complete.
             await reader.CompleteAsync();
-            // Mark the Channel as complete
             feedbackWriter.Complete();
         }
 
@@ -192,7 +199,10 @@ namespace EnoEngine.FlagSubmission
         {
             TeamFlagSubmissionStatistic? statistic = null;
             if (teamId != null)
-                statistic = SubmissionStatistics[teamId.Value];
+            {
+                statistic = this.submissionStatistics[teamId.Value];
+            }
+
             while (await feedbackReader.WaitToReadAsync(token))
             {
                 while (feedbackReader.TryRead(out var itemTask))
@@ -219,8 +229,9 @@ namespace EnoEngine.FlagSubmission
                                 break;
                         }
                     }
-                    var itemBytes = Encoding.ASCII.GetBytes(FormatSubmissionResult(item)); //TODO don't serialize every time
-                    await socket.SendAsync(itemBytes, SocketFlags.None, token);  //TODO enforce batching
+
+                    var itemBytes = Encoding.ASCII.GetBytes(this.FormatSubmissionResult(item)); // TODO don't serialize every time
+                    await socket.SendAsync(itemBytes, SocketFlags.None, token);                 // TODO enforce batching
                     if (item == FlagSubmissionResult.SpamError)
                     {
                         // https://blog.netherlabs.nl/articles/2009/01/18/the-ultimate-so_linger-page-or-why-is-my-tcp-not-reliable
@@ -232,7 +243,7 @@ namespace EnoEngine.FlagSubmission
             }
         }
 
-        bool TryReadLine(ref ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> line)
+        private bool TryReadLine(ref ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> line)
         {
             // Look for a EOL in the buffer.
             SequencePosition? position = buffer.PositionOf((byte)'\n');
@@ -249,57 +260,57 @@ namespace EnoEngine.FlagSubmission
             return true;
         }
 
-        public async Task RunDebugEndpoint(JsonConfiguration config, CancellationToken token)
+        private async Task RunDebugEndpoint(JsonConfiguration config, CancellationToken token)
         {
-            Logger.LogInformation($"{nameof(RunDebugEndpoint)} started");
+            this.logger.LogInformation($"{nameof(this.RunDebugEndpoint)} started");
             try
             {
-                DebugListener.Start();
+                this.debugListener.Start();
                 while (!token.IsCancellationRequested)
                 {
-                    var client = await DebugListener.AcceptTcpClientAsync();
-                    var _ = ProcessLinesAsync(client.Client, null, config, token);
+                    var client = await this.debugListener.AcceptTcpClientAsync();
+                    var task = this.ProcessLinesAsync(client.Client, null, config, token);
                 }
             }
-            catch (ObjectDisposedException) { }
-            catch (TaskCanceledException) { }
+            catch (ObjectDisposedException)
+            {
+            }
+            catch (TaskCanceledException)
+            {
+            }
             catch (Exception e)
             {
-                Logger.LogCritical($"RunDebugEndpoint failed: {EnoDatabaseUtils.FormatException(e)}");
+                this.logger.LogCritical($"RunDebugEndpoint failed: {EnoDatabaseUtils.FormatException(e)}");
             }
-            Logger.LogInformation("RunDebugEndpoint finished");
+
+            this.logger.LogInformation("RunDebugEndpoint finished");
         }
 
-        public async Task RunProductionEndpoint(JsonConfiguration config, CancellationToken token)
+        private async Task RunProductionEndpoint(JsonConfiguration config, CancellationToken token)
         {
-            Logger.LogInformation($"{nameof(RunProductionEndpoint)} started");
+            this.logger.LogInformation($"{nameof(this.RunProductionEndpoint)} started");
             try
             {
-                ProductionListener.Start();
+                this.productionListener.Start();
                 while (!token.IsCancellationRequested)
                 {
                     try
                     {
-                        var client = await ProductionListener.AcceptTcpClientAsync();
+                        var client = await this.productionListener.AcceptTcpClientAsync();
                         var t = Task.Run(async () =>
                         {
                             var attackerAddress = ((IPEndPoint)client.Client.RemoteEndPoint).Address.GetAddressBytes();
-                            var attackerPrefix = new byte[Configuration.TeamSubnetBytesLength];
-                            Array.Copy(attackerAddress, attackerPrefix, Configuration.TeamSubnetBytesLength);
+                            var attackerPrefix = new byte[this.configuration.TeamSubnetBytesLength];
+                            Array.Copy(attackerAddress, attackerPrefix, this.configuration.TeamSubnetBytesLength);
                             var attackerPrefixString = BitConverter.ToString(attackerPrefix);
-                            Team? team;
-                            using (var scope = ServiceProvider.CreateScope()) // limited scope to ensure the db context isn't held indefinitely during ProcessLinesAsync
-                            {
-                                var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                                team = await db.GetTeamIdByPrefix(attackerPrefixString);
-                            }
+                            Team? team = await this.FindTeamBySubnet(attackerPrefixString);
                             if (team != null)
                             {
-                                await ProcessLinesAsync(client.Client, team.Id, config, token);
+                                await this.ProcessLinesAsync(client.Client, team.Id, config, token);
                             }
                             else
                             {
-                                var itemBytes = Encoding.ASCII.GetBytes(FormatSubmissionResult(FlagSubmissionResult.InvalidSenderError)); //TODO don't serialize every time
+                                var itemBytes = Encoding.ASCII.GetBytes(this.FormatSubmissionResult(FlagSubmissionResult.InvalidSenderError)); // TODO don't serialize every time
                                 await client.Client.SendAsync(itemBytes, SocketFlags.None, token);
                                 client.Close();
                             }
@@ -311,20 +322,32 @@ namespace EnoEngine.FlagSubmission
                     }
                     catch (Exception e)
                     {
-                        Logger.LogWarning($"RunProductionEndpoint failed to accept connection: {EnoDatabaseUtils.FormatException(e)}");
+                        this.logger.LogWarning($"RunProductionEndpoint failed to accept connection: {EnoDatabaseUtils.FormatException(e)}");
                     }
                 }
             }
-            catch (ObjectDisposedException) { }
-            catch (TaskCanceledException) { }
+            catch (ObjectDisposedException)
+            {
+            }
+            catch (TaskCanceledException)
+            {
+            }
             catch (Exception e)
             {
-                Logger.LogCritical($"RunProductionEndpoint failed: {EnoDatabaseUtils.FormatException(e)}");
+                this.logger.LogCritical($"RunProductionEndpoint failed: {EnoDatabaseUtils.FormatException(e)}");
             }
-            Logger.LogInformation("RunProductionEndpoint finished");
+
+            this.logger.LogInformation("RunProductionEndpoint finished");
         }
 
-        private static string FormatSubmissionResult(FlagSubmissionResult result)
+        private async Task<Team?> FindTeamBySubnet(string attackerPrefixString)
+        {
+            using var scope = this.serviceProvider.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
+            return await db.GetTeamIdByPrefix(attackerPrefixString);
+        }
+
+        private string FormatSubmissionResult(FlagSubmissionResult result)
         {
             return result switch
             {
@@ -340,65 +363,69 @@ namespace EnoEngine.FlagSubmission
             };
         }
 
-        async Task InsertSubmissionsLoop(int number, CancellationToken token)
+        private async Task InsertSubmissionsLoop(int number, CancellationToken token)
         {
-            Logger.LogInformation($"{nameof(InsertSubmissionsLoop)} {number} started");
+            this.logger.LogInformation($"{nameof(this.InsertSubmissionsLoop)} {number} started");
             try
             {
                 while (!token.IsCancellationRequested)
                 {
                     bool empty = true;
                     List<(Flag flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult> result)> submissions = new List<(Flag flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult>)>();
-                    foreach (var (teamid, channel) in Channels)
+                    foreach (var (teamid, channel) in this.channels)
                     {
-                        int SubmissionsPerTeam = 0;
+                        int submissionsPerTeam = 0;
                         var reader = channel.Reader;
-                        while (SubmissionsPerTeam < 100 && reader.TryRead(out var item))
+                        while (submissionsPerTeam < 100 && reader.TryRead(out var item))
                         {
                             empty = false;
-                            SubmissionsPerTeam++;
+                            submissionsPerTeam++;
                             submissions.Add((item.Flag, teamid, item.FeedbackSource));
-                            if (submissions.Count> SUBMISSION_BATCH_SIZE)
+                            if (submissions.Count > SubmissionBatchSize)
                             {
                                 try
                                 {
                                     await EnoDatabaseUtils.RetryDatabaseAction(async () =>
                                     {
-                                        using var scope = ServiceProvider.CreateScope();
+                                        using var scope = this.serviceProvider.CreateScope();
                                         var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                                        await db.ProcessSubmissionsBatch(submissions, Configuration.FlagValidityInRounds, EnoStatistics);
+                                        await db.ProcessSubmissionsBatch(submissions, this.configuration.FlagValidityInRounds, this.enoStatistics);
                                     });
                                 }
                                 catch (Exception e)
                                 {
-                                    Logger.LogError($"InsertSubmissionsLoop dropping batch because: {EnoDatabaseUtils.FormatException(e)}");
+                                    this.logger.LogError($"InsertSubmissionsLoop dropping batch because: {EnoDatabaseUtils.FormatException(e)}");
                                     foreach (var (flag, attackerTeamId, tcs) in submissions)
                                     {
                                         tcs.SetResult(FlagSubmissionResult.UnknownError);
                                     }
                                 }
-                                submissions.Clear();
+                                finally
+                                {
+                                    submissions.Clear();
+                                }
                             }
                         }
                     }
+
                     if (empty)
                     {
                         await Task.Delay(10);
                     }
-                    else if (submissions.Count!=0)
+                    else if (submissions.Count != 0)
                     {
                         try
                         {
                             await EnoDatabaseUtils.RetryDatabaseAction(async () =>
                             {
-                                using var scope = ServiceProvider.CreateScope();
+                                using var scope = this.serviceProvider.CreateScope();
                                 var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                                await db.ProcessSubmissionsBatch(submissions, Configuration.FlagValidityInRounds, EnoStatistics);
+                                await db.ProcessSubmissionsBatch(submissions, this.configuration.FlagValidityInRounds, this.enoStatistics);
                             });
                         }
                         catch (Exception e)
                         {
-                            Logger.LogError($"InsertSubmissionsLoop dropping batch because: {EnoDatabaseUtils.FormatException(e)}");
+                            this.logger.LogError($"InsertSubmissionsLoop dropping batch because: {EnoDatabaseUtils.FormatException(e)}");
                             foreach (var (flag, attackerTeamId, tcs) in submissions)
                             {
                                 tcs.SetResult(FlagSubmissionResult.UnknownError);
@@ -407,10 +434,13 @@ namespace EnoEngine.FlagSubmission
                     }
                 }
             }
-            catch (TaskCanceledException) { }
+            catch (TaskCanceledException)
+            {
+                this.logger.LogCritical($"InsertSubmissionsLoop stopped (TaskCanceledException)");
+            }
             catch (Exception e)
             {
-                Logger.LogCritical($"InsertSubmissionsLoop failed: {EnoDatabaseUtils.FormatException(e)}");
+                this.logger.LogCritical($"InsertSubmissionsLoop failed: {EnoDatabaseUtils.FormatException(e)}");
             }
         }
     }
