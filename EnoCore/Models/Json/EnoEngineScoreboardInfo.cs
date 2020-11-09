@@ -8,10 +8,10 @@ namespace EnoCore.Models.Json
 {
     public class EnoEngineScoreboardInfo
     {
-        private readonly JsonConfiguration Config;
+        private readonly Configuration Config;
         public string Title { get => Config.Title; }
         public List<EnoEngineScoreboardTeam> Teams { get => Config.Teams.Select(t => new EnoEngineScoreboardTeam(t)).ToList(); }
-        public EnoEngineScoreboardInfo(JsonConfiguration config)
+        public EnoEngineScoreboardInfo(Configuration config)
         {
             Config = config;
         }
@@ -20,10 +20,10 @@ namespace EnoCore.Models.Json
     {
         public long Id { get; set; }
         public string Name { get; set; }
-        public string LogoUrl { get; set; }
-        public string FlagUrl { get; set; }
+        public string? LogoUrl { get; set; }
+        public string? FlagUrl { get; set; }
         public bool Active { get; set; }
-        public EnoEngineScoreboardTeam(JsonConfigurationTeam t)
+        public EnoEngineScoreboardTeam(ConfigurationTeam t)
         {
             Id = t.Id;
             Name = t.Name;

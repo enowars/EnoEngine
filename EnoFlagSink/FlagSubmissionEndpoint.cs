@@ -30,11 +30,11 @@ namespace EnoEngine.FlagSubmission
         private readonly TcpListener productionListener = new TcpListener(IPAddress.IPv6Any, 1337);
         private readonly TcpListener debugListener = new TcpListener(IPAddress.IPv6Any, 1338);
         private readonly ILogger logger;
-        private readonly JsonConfiguration configuration;
+        private readonly Configuration configuration;
         private readonly IServiceProvider serviceProvider;
         private readonly EnoStatistics enoStatistics;
 
-        public FlagSubmissionEndpoint(IServiceProvider serviceProvider, ILogger<FlagSubmissionEndpoint> logger, JsonConfiguration configuration, EnoStatistics enoStatistics)
+        public FlagSubmissionEndpoint(IServiceProvider serviceProvider, ILogger<FlagSubmissionEndpoint> logger, Configuration configuration, EnoStatistics enoStatistics)
         {
             this.logger = logger;
             this.configuration = configuration;
@@ -64,7 +64,7 @@ namespace EnoEngine.FlagSubmission
             }
         }
 
-        public async Task Start(JsonConfiguration config, CancellationToken token)
+        public async Task Start(Configuration config, CancellationToken token)
         {
             // Close the listening sockets if the token is cancelled
             token.Register(() => this.productionListener.Stop());
@@ -92,7 +92,7 @@ namespace EnoEngine.FlagSubmission
             await Task.WhenAny(tasks);
         }
 
-        private async Task ProcessLinesAsync(Socket socket, long? teamId, JsonConfiguration config, CancellationToken token)
+        private async Task ProcessLinesAsync(Socket socket, long? teamId, Configuration config, CancellationToken token)
         {
             var pipe = new Pipe();
             Channel<Task<FlagSubmissionResult>> feedbackChannel = Channel.CreateUnbounded<Task<FlagSubmissionResult>>(new UnboundedChannelOptions() { SingleReader = true, SingleWriter = false });
@@ -139,7 +139,7 @@ namespace EnoEngine.FlagSubmission
             await writer.CompleteAsync();
         }
 
-        private async Task ReadPipeAsync(PipeReader reader, ChannelWriter<Task<FlagSubmissionResult>> feedbackWriter, long? teamId, JsonConfiguration config, CancellationToken token)
+        private async Task ReadPipeAsync(PipeReader reader, ChannelWriter<Task<FlagSubmissionResult>> feedbackWriter, long? teamId, Configuration config, CancellationToken token)
         {
             while (true)
             {
@@ -261,7 +261,7 @@ namespace EnoEngine.FlagSubmission
             return true;
         }
 
-        private async Task RunDebugEndpoint(JsonConfiguration config, CancellationToken token)
+        private async Task RunDebugEndpoint(Configuration config, CancellationToken token)
         {
             this.logger.LogInformation($"{nameof(this.RunDebugEndpoint)} started");
             try
@@ -282,7 +282,7 @@ namespace EnoEngine.FlagSubmission
             this.logger.LogInformation("RunDebugEndpoint finished");
         }
 
-        private async Task RunProductionEndpoint(JsonConfiguration config, CancellationToken token)
+        private async Task RunProductionEndpoint(Configuration config, CancellationToken token)
         {
             this.logger.LogInformation($"{nameof(this.RunProductionEndpoint)} started");
             try

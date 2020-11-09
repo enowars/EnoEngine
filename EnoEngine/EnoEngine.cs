@@ -27,11 +27,11 @@ namespace EnoEngine
         private static readonly CancellationTokenSource EngineCancelSource = new CancellationTokenSource();
 
         private readonly ILogger Logger;
-        private readonly JsonConfiguration Configuration;
+        private readonly Configuration Configuration;
         private readonly IServiceProvider ServiceProvider;
         private readonly EnoStatistics Statistics;
 
-        public EnoEngine(ILogger<EnoEngine> logger, JsonConfiguration configuration, IServiceProvider serviceProvider, EnoStatistics enoStatistics)
+        public EnoEngine(ILogger<EnoEngine> logger, Configuration configuration, IServiceProvider serviceProvider, EnoStatistics enoStatistics)
         {
             Logger = logger;
             Configuration = configuration;
@@ -47,10 +47,8 @@ namespace EnoEngine
                 e.Cancel = true;
                 EngineCancelSource.Cancel();
             };
-            await FetchAndApplyCheckersInfo(Configuration);
             var db = ServiceProvider.CreateScope().ServiceProvider.GetRequiredService<IEnoDatabase>();
-            var result = db.ApplyConfig(Configuration);  
-            Configuration.BuildCheckersDict();
+            var result = db.ApplyConfig(Configuration);
             if (result.Success)
             {
                 await GameLoop();
@@ -59,50 +57,6 @@ namespace EnoEngine
             {
                 Logger.LogCritical($"Invalid configuration, exiting ({result.ErrorMessage})");
             }
-        }
-
-        private async Task GetCheckerInfo(JsonConfigurationService s)
-        {
-            var Client = new HttpClient();
-            try
-            {
-                var cancelSource = new CancellationTokenSource();
-                cancelSource.CancelAfter(10 * 1000);
-                var response = await Client.GetAsync($"{s.Checkers[0]}/service", cancelSource.Token);
-                if (response.StatusCode == HttpStatusCode.OK)
-                {
-                    var responseString = (await response.Content.ReadAsStringAsync()).TrimEnd(Environment.NewLine.ToCharArray());
-                    Logger.LogDebug($"GetCheckerInfo for Service {s.Name} received: \"{responseString}\"");
-                    var resultMessage = JsonSerializer.Deserialize<CheckerInfoMessage>(responseString);
-                    s.FetchedFlagsPerRound = resultMessage.FlagCount;
-                    s.FetchedNoisesPerRound = resultMessage.NoiseCount;
-                    s.FetchedHavocsPerRound = resultMessage.HavocCount;
-                    if (s.FlagsPerRound == 0 && s.NoisesPerRound == 0 && s.HavocsPerRound == 0)
-                    {
-                        Logger.LogDebug($"GetCheckerInfo for Service {s.Name} setting inactive");
-                        s.Active = false;
-                    }
-                }
-                else
-                    Logger.LogError($"GetCheckerInfo: Service {s.Name} returned Status Code {response.StatusCode}");
-            }
-            catch (Exception e)
-            {
-                Logger.LogError($"GetCheckerInfo Failed for Service {s.Name}");
-                Logger.LogError(e.ToFancyString());
-                s.Active = false;
-                return;
-            }
-        }
-        private async Task FetchAndApplyCheckersInfo(JsonConfiguration config)
-        {
-            List<Task> AllTasks = new List<Task>();
-            foreach (var s in config.Services)
-            {
-                Logger.LogDebug($"GetCheckerInfo: Fetching Information for {s.Name}");
-                AllTasks.Add(GetCheckerInfo(s));
-            }
-            await Task.WhenAll(AllTasks);
         }
 
         private async Task GameLoop()

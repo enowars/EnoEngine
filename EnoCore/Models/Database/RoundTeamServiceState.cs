@@ -14,18 +14,14 @@ namespace EnoCore.Models.Database
         INACTIVE
     }
 
-    public class RoundTeamServiceState
+    public record RoundTeamServiceState(ServiceStatus Status,
+        string? ErrorMessage,
+        long TeamId,
+        long ServiceId,
+        long GameRoundId)
     {
-#pragma warning disable CS8618
-        public ServiceStatus Status { get; set; }
-        public string? ErrorMessage { get; set; }
-        public long TeamId { get; set; }
-
-        public Team Team { get; set; }
-        public long ServiceId { get; set; }
-        public Service Service { get; set; }
-        public long GameRoundId { get; set; }
-        public Round GameRound { get; set; }
-#pragma warning restore CS8618
+        public virtual Team? Team { get; set; }
+        public virtual Service? Service { get; set; }
+        public virtual Round? GameRound { get; set; }
     }
 }

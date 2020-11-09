@@ -16,27 +16,22 @@ namespace EnoCore.Models
     /// <summary>
     /// PK: ServiceId, RoundId, OwnerId, RoundOffset
     /// </summary>
-    public class Flag
+    public record Flag(long OwnerId,
+        long ServiceId,
+        int RoundOffset,
+        long RoundId,
+        long Captures)
     {
         private static readonly char[] ByteMap = new char[] { '̀', '́', '̂', '̃', '̄', '̅', '̆', '̇', '̈', '̉', '̊', '̋', '̌', '̍', '̎', '̏', '̐', '̑', '̒', '̓', '̔', '̕', '̖', '̗', '̘', '̙', '̚', '̛', '̜', '̝', '̞', '̟', '̠', '̡', '̢', '̣', '̤', '̥', '̦', '̧', '̨', '̩', '̪', '̫', '̬', '̭', '̮', '̯', '̰', '̱', '̲', '̳', '̴', '̵', '̶', '̷', '̸', '̹', '̺', '̻', '̼', '̽', '̾', '̿', '̀', '́', '͂', '̓', '̈́', 'ͅ', '͆', '͇', '͈', '͉', '͊', '͋', '͌', '͍', '͎', '͏', '͐', '͑', '͒', '͓', '͔', '͕', '͖', '͗', '͘', '͙', '͚', '͛', '͜', '͝', '͞', '͟', '͠', '͡', '͢', 'ͣ', 'ͤ', 'ͥ', 'ͦ', 'ͧ', 'ͨ', 'ͩ', 'ͪ', 'ͫ', 'ͬ', 'ͭ', 'ͮ', 'ͯ', '᪰', '᪱', '᪲', '᪳', '᪴', '᪵', '᪶', '᪷', '᪸', '᪹', '᪺', '᪻', '᪼', '᪽', '᪾', '᷀', '᷁', '᷂', '᷃', '᷄', '᷅', '᷆', '᷇', '᷈', '᷉', '᷊', '᷋', '᷌', '᷍', '᷎', '᷏', '᷐', '᷑', '᷒', 'ᷓ', 'ᷔ', 'ᷕ', 'ᷖ', 'ᷗ', 'ᷘ', 'ᷙ', 'ᷚ', 'ᷛ', 'ᷜ', 'ᷝ', 'ᷞ', 'ᷟ', 'ᷠ', 'ᷡ', 'ᷢ', 'ᷣ', 'ᷤ', 'ᷥ', 'ᷦ', 'ᷧ', 'ᷨ', 'ᷩ', 'ᷪ', 'ᷫ', 'ᷬ', 'ᷭ', 'ᷮ', 'ᷯ', 'ᷰ', 'ᷱ', 'ᷲ', 'ᷳ', 'ᷴ', '᷵', '᷻', '᷼', '᷽', '᷾', '᷿', '⃐', '⃑', '⃒', '⃓', '⃔', '⃕', '⃖', '⃗', '⃘', '⃙', '⃚', '⃛', '⃜', '⃝', '⃞', '⃟', '⃠', '⃡', '⃢', '⃣', '⃤', '⃥', '⃦', '⃧', '⃨', '⃩', '⃪', '⃫', '⃬', '⃭', '⃮', '⃯', '⃰', '︠', '︡', '︢', '︣', '︤', '︥', '︦', '︧', '︨', '︩', '︪', '︫', '︬', '︭', '︮', '︯', '゙', '゚', '⳯', '⳰', '⳱', '꣠', '꣡', '꣢', '꣣', '꣤', '꣥', '꣦', '꣧', '꣨', '꣩', '꣪', '꣫', '꣬', '꣭', '꣮', '꣯' };
-
         private static readonly string[] Flagprefix = new string[]
             {
                 "🏳️‍🌈"
             };
         private static readonly string[] Pattern = new string[4] { "F", "L", "A", "G" };
 
-#pragma warning disable CS8618
-        public long OwnerId { get; set; }
-        public Team Owner { get; set; }
-        public long ServiceId { get; set; }
-        public Service Service { get; set; }
-        public int RoundOffset { get; set; }
-        public long RoundId { get; set; }
-        public Round Round { get; set; }
-        public long Captures { get; set; }
-        public virtual List<SubmittedFlag> FlagSubmissions { get; set; }
-#pragma warning restore CS8618
+        public virtual Team? Owner { get; set; }
+        public virtual Service? Service { get; set; }
+        public virtual Round? Round { get; set; }
 
         private string ToNormalString(byte[] signingKey)
         {
@@ -54,6 +49,7 @@ namespace EnoCore.Models
             flagSignature.CopyTo(flagBytes.Slice(flagContent.Length));
             return "ENO" + Convert.ToBase64String(flagBytes);
         }
+
         private string ToUtfString(byte[] signingKey)
         {
             Span<byte> flagContent = stackalloc byte[sizeof(int) * 4];
@@ -71,6 +67,7 @@ namespace EnoCore.Models
             Bytes2Dia(flagBytes, out var flagString, out var bytesWritten);
             return Flagprefix[0] + flagString;
         }
+
         private static void Bytes2Dia(ReadOnlySpan<byte> b, out string s, out int bytesWritten)
         {
             bytesWritten = 0;
@@ -95,6 +92,7 @@ namespace EnoCore.Models
             Console.WriteLine(dbgstr);
             Console.WriteLine(dbg);  */
         }
+
         private static bool Getsinglebyte(char s, out byte b)
         {
             for (int i = 0; i < 256; i++)
@@ -106,6 +104,7 @@ namespace EnoCore.Models
             b = 0;
             return false;
         }
+
         private static bool Dia2bytes(string s, Span<byte> b, out int bytesWritten)
         {
             bytesWritten = 0;
@@ -128,6 +127,7 @@ namespace EnoCore.Models
                 bytesWritten++;
             }
         }
+
         public string ToString(byte[] signingKey, FlagEncoding encoding)
         {
             return encoding switch
@@ -137,6 +137,7 @@ namespace EnoCore.Models
                 _ => throw new NotImplementedException("FlagEncoding not implemented"),
             };
         }
+
         public static Flag? Parse(ReadOnlySequence<byte> line, byte[] signingKey, FlagEncoding encoding, ILogger logger)
         {
             return encoding switch
@@ -146,6 +147,7 @@ namespace EnoCore.Models
                 _ => throw new NotImplementedException("FlagEncoding not implemented"),
             };
         }
+
         private static Flag? ParseUtf(ReadOnlySequence<byte> line, byte[] signingKey, ILogger logger)
         {
             try
@@ -177,13 +179,7 @@ namespace EnoCore.Models
                 }
                 else
                 {
-                    return new Flag()
-                    {
-                        ServiceId = serviceId,
-                        OwnerId = ownerId,
-                        RoundId = roundId,
-                        RoundOffset = roundOffset
-                    };
+                    return new Flag(ownerId, serviceId, roundOffset, roundId, 0);
                 }
             }
             catch (Exception e)
@@ -222,13 +218,7 @@ namespace EnoCore.Models
                 }
                 else
                 {
-                    return new Flag()
-                    {
-                        ServiceId = serviceId,
-                        OwnerId = ownerId,
-                        RoundId = roundId,
-                        RoundOffset = roundOffset
-                    };
+                    return new Flag(ownerId, serviceId, roundOffset, roundId, 0);
                 }
             }
             catch (Exception)

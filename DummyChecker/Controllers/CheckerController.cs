@@ -11,31 +11,50 @@ using EnoCore.Models.Json;
 
 namespace GamemasterChecker.Controllers
 {
+    /// <summary>
+    /// Dummy checker for EnoEngine tests.
+    /// </summary>
     [ApiController]
     [Route("/")]
     [Route("/service")]
-    internal class CheckerController : Controller
+    public class CheckerController : Controller
     {
+        private readonly ILogger Logger;
+
+        /// <summary>
+        /// Create a CheckerController with an appropriate ILogger
+        /// </summary>
+        /// <param name="logger"></param>
+        public CheckerController(ILogger<CheckerController> logger)
+        {
+            Logger = logger;
+        }
+
+        /// <summary>
+        /// Flag endpoint
+        /// </summary>
+        /// <param name="ctm">CheckerTaskMessage for the task</param>
+        /// <returns></returns>
         [HttpPost]
         [Route("/")]
-        public IActionResult Flag([FromBody] CheckerTaskMessage _)
+        public IActionResult Flag([FromBody] CheckerTaskMessage ctm)
         {
+            Logger.LogDebug(ctm.ToString());
             return Ok("{ \"result\": \"OK\" }");
         }
+
+        /// <summary>
+        /// Service endpoint
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         [Route("/service")]
         public IActionResult Service()
         {
-            return Ok(JsonSerializer.Serialize(new CheckerInfoMessage
-            {
-                ServiceName = "DummyChecker",
-                FlagCount = 1,
-                NoiseCount = 1,
-                HavocCount = 1
-            }, new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            }
+            return Ok(JsonSerializer.Serialize(new CheckerInfoMessage("DummyChecker",
+                1,
+                1,
+                1), new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }
             ));
         }
     }
