@@ -6,7 +6,7 @@ using System.Threading;
 
 namespace EnoCore.Logging
 {
-    public class EnoLogMessageFileLoggerProvider : ILoggerProvider, ISupportExternalScope, IEnoLogMessageProvider
+    public sealed class EnoLogMessageFileLoggerProvider : ILoggerProvider, ISupportExternalScope, IEnoLogMessageProvider
     {
         public IExternalScopeProvider? ScopeProvider { get; internal set; }
         public string Tool { get; }

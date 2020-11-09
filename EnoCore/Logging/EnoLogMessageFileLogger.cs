@@ -64,7 +64,7 @@ namespace EnoCore.Logging
             }
         }
 
-        private string Severity(LogLevel logLevel)
+        private static string Severity(LogLevel logLevel)
         {
             return logLevel switch
             {
@@ -79,7 +79,7 @@ namespace EnoCore.Logging
             };
         }
 
-        private long SeverityLevel(LogLevel logLevel)
+        private static long SeverityLevel(LogLevel logLevel)
         {
             return logLevel switch
             {

@@ -19,7 +19,7 @@ namespace EnoCore.Logging
         {
             Writer = new StreamWriter(filename);
             CancelToken = cancelToken;
-            Task.Run(WriterTask);
+            Task.Run(WriterTask, cancelToken);
         }
 
         public void Enqueue(string data)
