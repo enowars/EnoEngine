@@ -32,5 +32,7 @@ jobs:
   format:
     runs-on: ubuntu-latest
     steps:
+      - name: install dotnet format
+        run: dotnet tool install -g dotnet-format
       - name: dotnet format
         run: dotnet format
