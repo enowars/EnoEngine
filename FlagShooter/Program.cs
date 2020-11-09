@@ -130,13 +130,7 @@ namespace FlagShooter
                                 {
                                     if (i++ > flagCount)
                                         return result;
-                                    result.Add(this.SubmitFlag(new Flag
-                                    {
-                                        RoundId = r,
-                                        OwnerId = team,
-                                        ServiceId = s.ServiceId,
-                                        RoundOffset = store
-                                    }));
+                                    result.Add(this.SubmitFlag(new Flag(team, s.ServiceId, store, r, 0)));
                                 }
                     Console.WriteLine($"Not Enough Flags available, requested {flagCount} and got {i}");
                     return result;

@@ -18,7 +18,7 @@ namespace EnoCore.Models.Json
 #pragma warning disable CS8618
         public EnoEngineScoreboard() { }
 #pragma warning restore CS8618
-        public EnoEngineScoreboard(Round round, List<Service> services, Dictionary<(long serviceid, long flagindex), EnoScoreboardFirstblood> firstBloods, List<Team> teams)
+        public EnoEngineScoreboard(Round? round, List<Service> services, Dictionary<(long serviceid, long flagindex), EnoScoreboardFirstblood> firstBloods, List<Team> teams)
         {
             CurrentRound = round?.Id;
             StartTimestamp = round?.Begin.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");

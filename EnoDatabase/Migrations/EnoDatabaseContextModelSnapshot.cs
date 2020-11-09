@@ -155,13 +155,7 @@ namespace EnoDatabase.Migrations
                     b.Property<bool>("Active")
                         .HasColumnType("boolean");
 
-                    b.Property<long>("FetchedFlagsPerRound")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("FetchedHavocsPerRound")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("FetchedNoisesPerRound")
+                    b.Property<long>("FlagStores")
                         .HasColumnType("bigint");
 
                     b.Property<long>("FlagsPerRound")
@@ -175,9 +169,6 @@ namespace EnoDatabase.Migrations
                         .HasColumnType("text");
 
                     b.Property<long>("NoisesPerRound")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("ServiceStatsId")
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
@@ -362,7 +353,7 @@ namespace EnoDatabase.Migrations
             modelBuilder.Entity("EnoCore.Models.Database.ServiceStats", b =>
                 {
                     b.HasOne("EnoCore.Models.Database.Service", "Service")
-                        .WithMany("ServiceStats")
+                        .WithMany()
                         .HasForeignKey("ServiceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

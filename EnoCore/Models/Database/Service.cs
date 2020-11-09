@@ -6,18 +6,29 @@ namespace EnoCore.Models.Database
 {
     public class Service
     {
-#pragma warning disable CS8618
-        public long Id { get; set; }
-        public string Name { get; set; }
-        public long FetchedFlagsPerRound { get; set; } = 1;
-        public long FetchedNoisesPerRound { get; set; } = 1;
-        public long FetchedHavocsPerRound { get; set; } = 1;
-        public long FlagsPerRound { get; set; }
-        public long NoisesPerRound { get; set; }
-        public long HavocsPerRound { get; set; }
-        public long ServiceStatsId { get; set; }
-        public List<ServiceStats> ServiceStats { get; set; }
+        public long Id { get; set;}
+        public string Name { get; set;}
+        public long FlagsPerRound { get; set;}
+        public long NoisesPerRound { get; set;}
+        public long HavocsPerRound { get; set;}
+        public long FlagStores { get; set;}
         public bool Active { get; set; }
-#pragma warning restore CS8618
+
+        public Service(long id,
+            string name,
+            long flagsPerRound,
+            long noisesPerRound,
+            long havocsPerRound,
+            long flagStores,
+            bool active)
+        {
+            Id = id;
+            Name = name;
+            FlagsPerRound = flagsPerRound;
+            NoisesPerRound = noisesPerRound;
+            HavocsPerRound = havocsPerRound;
+            FlagStores = flagStores;
+            Active = active;
+        }
     }
 }

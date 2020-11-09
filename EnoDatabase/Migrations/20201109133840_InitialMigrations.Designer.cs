@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EnoDatabase.Migrations
 {
     [DbContext(typeof(EnoDatabaseContext))]
-    [Migration("20200713213344_InitialMigrations")]
+    [Migration("20201109133840_InitialMigrations")]
     partial class InitialMigrations
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -157,13 +157,7 @@ namespace EnoDatabase.Migrations
                     b.Property<bool>("Active")
                         .HasColumnType("boolean");
 
-                    b.Property<long>("FetchedFlagsPerRound")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("FetchedHavocsPerRound")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("FetchedNoisesPerRound")
+                    b.Property<long>("FlagStores")
                         .HasColumnType("bigint");
 
                     b.Property<long>("FlagsPerRound")
@@ -177,9 +171,6 @@ namespace EnoDatabase.Migrations
                         .HasColumnType("text");
 
                     b.Property<long>("NoisesPerRound")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("ServiceStatsId")
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
@@ -364,7 +355,7 @@ namespace EnoDatabase.Migrations
             modelBuilder.Entity("EnoCore.Models.Database.ServiceStats", b =>
                 {
                     b.HasOne("EnoCore.Models.Database.Service", "Service")
-                        .WithMany("ServiceStats")
+                        .WithMany()
                         .HasForeignKey("ServiceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

@@ -14,7 +14,7 @@ namespace EnoDatabase
 {
     public partial class EnoDatabase : IEnoDatabase
     {
-        public async Task<(long newLatestSnapshotRoundId, long oldSnapshotRoundId, Service[] services, Team[] teams)> GetPointCalculationFrame(long roundId, JsonConfiguration config)
+        public async Task<(long newLatestSnapshotRoundId, long oldSnapshotRoundId, Service[] services, Team[] teams)> GetPointCalculationFrame(long roundId, Configuration config)
         {
             var newLatestSnapshotRoundId = await _context.Rounds
                 .Where(r => r.Id <= roundId)
@@ -298,10 +298,10 @@ namespace EnoDatabase
                 .OrderByDescending(t => t.TotalPoints)
                 .ToList();
             Logger.LogInformation($"{nameof(GetCurrentScoreboard)}Fetched teams after: {sw.ElapsedMilliseconds}ms");
-            var round = _context.Rounds
+            var round = await _context.Rounds
                 .AsNoTracking()
                 .Where(r => r.Id == roundId)
-                .FirstOrDefault();
+                .FirstOrDefaultAsync();
             Logger.LogInformation($"{nameof(GetCurrentScoreboard)}Fetched round after: {sw.ElapsedMilliseconds}ms");
             var services = _context.Services
                 .AsNoTracking()
@@ -321,8 +321,8 @@ namespace EnoDatabase
                         .FirstOrDefaultAsync();
                     if (fb != null)
                     {
-                        var key = (fb.FlagServiceId, fb.FlagRoundOffset % service.FetchedFlagsPerRound);
-                        var n = new EnoScoreboardFirstblood(DateTime.UtcNow, fb.AttackerTeamId, fb.RoundId, "StoreDescription", fb.FlagRoundOffset % service.FetchedFlagsPerRound);
+                        var key = (fb.FlagServiceId, fb.FlagRoundOffset % service.FlagStores);
+                        var n = new EnoScoreboardFirstblood(DateTime.UtcNow, fb.AttackerTeamId, fb.RoundId, "StoreDescription", fb.FlagRoundOffset % service.FlagStores);
                         if (!firstbloods.ContainsKey(key)||firstbloods[key].FirstTime > n.FirstTime)
                             firstbloods[key] = n;
                     }
