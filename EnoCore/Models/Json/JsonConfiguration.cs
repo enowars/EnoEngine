@@ -3,6 +3,7 @@ using EnoCore.Utils;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
@@ -66,6 +67,18 @@ namespace EnoCore.Models.Json
                 teams,
                 services,
                 checkers);
+        }
+
+        private static readonly JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            ReadCommentHandling = JsonCommentHandling.Skip,
+            AllowTrailingCommas = true
+        };
+
+        public static JsonConfiguration? Deserialize(string json)
+        {
+            return JsonSerializer.Deserialize<JsonConfiguration>(json, JsonSerializerOptions);
         }
     }
 }

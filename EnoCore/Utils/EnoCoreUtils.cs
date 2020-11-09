@@ -28,15 +28,15 @@ namespace EnoCore.Utils
     public static class Misc
     {
         public static readonly string dataDirectory = $"..{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}";
-        public static string SubmissionResultOk = "VALID: Flag accepted!\n";
-        public static string SubmissionResultInvalid = "INVALID: You have submitted an invalid string!\n";
-        public static string SubmissionResultDuplicate = "RESUBMIT: You have already sent this flag!\n";
-        public static string SubmissionResultOwn = "OWNFLAG: This flag belongs to you!\n";
-        public static string SubmissionResultOld = "OLD: You have submitted an old flag!\n";
-        public static string SubmissionResultUnknownError = "ERROR: An unexpected error occured :(\n";
-        public static string SubmissionResultInvalidSenderError = "ILLEGAL: Your IP address does not belong to any team's subnet!\n";
-        public static string SubmissionResultSpamError = "SPAM: You should send 1 flag per line!\n";
-        public static string SubmissionResultReallyUnknownError = "ERROR: An even more unexpected error occured :(\n";
+        public const string SubmissionResultOk = "VALID: Flag accepted!\n";
+        public const string SubmissionResultInvalid = "INVALID: You have submitted an invalid string!\n";
+        public const string SubmissionResultDuplicate = "RESUBMIT: You have already sent this flag!\n";
+        public const string SubmissionResultOwn = "OWNFLAG: This flag belongs to you!\n";
+        public const string SubmissionResultOld = "OLD: You have submitted an old flag!\n";
+        public const string SubmissionResultUnknownError = "ERROR: An unexpected error occured :(\n";
+        public const string SubmissionResultInvalidSenderError = "ILLEGAL: Your IP address does not belong to any team's subnet!\n";
+        public const string SubmissionResultSpamError = "SPAM: You should send 1 flag per line!\n";
+        public const string SubmissionResultReallyUnknownError = "ERROR: An even more unexpected error occured :(\n";
     }
     ///
     /// code used from https://devblogs.microsoft.com/pfxteam/getting-random-numbers-in-a-thread-safe-way/

@@ -13,61 +13,73 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 const string mutexId = @"Global\EnoFlagSink";
-CancellationTokenSource CancelSource = new CancellationTokenSource();
+
+CancellationTokenSource cancelSource = new CancellationTokenSource();
+
 using var mutex = new Mutex(false, mutexId, out bool _);
+
 try
 {
-    if (mutex.WaitOne(10, false))
+    // Check if another EnoFlagSink is already running
+    if (!mutex.WaitOne(10, false))
     {
-        Configuration configuration;
-        if (!File.Exists("ctf.json"))
+        Console.WriteLine("Another Instance is already running.");
+        return;
+    }
+
+    // Check if config exists
+    if (!File.Exists("ctf.json"))
+    {
+        Console.WriteLine("Config (ctf.json) does not exist");
+        return;
+    }
+
+    // Check if config is valid
+    Configuration configuration;
+    try
+    {
+        var content = File.ReadAllText("ctf.json");
+        var jsonConfiguration = JsonConfiguration.Deserialize(content);
+        if (jsonConfiguration is null)
         {
-            Console.WriteLine("Config (ctf.json) does not exist");
+            Console.WriteLine("Deserialization of config failed.");
             return;
         }
 
-        try
-        {
-            var content = File.ReadAllText("ctf.json");
-            var jsonConfiguration = JsonSerializer.Deserialize<JsonConfiguration>(content);
-            if (jsonConfiguration is null)
-                throw new Exception("Could not deserialize config.");
-            configuration = await jsonConfiguration.ValidateAsync();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine($"Failed to load ctf.json: {e.Message}");
-            return;
-        }
+        configuration = await jsonConfiguration.ValidateAsync();
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine($"Failed to load and parse ctf.json: {e.Message}");
+        return;
+    }
 
-        var serviceProvider = new ServiceCollection()
-            .AddLogging()
-            .AddSingleton(configuration)
-            .AddSingleton<FlagSubmissionEndpoint>()
-            .AddSingleton(new EnoStatistics(nameof(EnoEngine)))
-            .AddScoped<IEnoDatabase, EnoDatabase.EnoDatabase>()
-            .AddDbContextPool<EnoDatabaseContext>(
-                options =>
-                {
-                    options.UseNpgsql(
-                        EnoDatabaseUtils.PostgresConnectionString,
-                        pgoptions => pgoptions.EnableRetryOnFailure());
-                }, 90)
-            .AddLogging(loggingBuilder =>
+    // Set up dependency injection tree
+    var serviceProvider = new ServiceCollection()
+        .AddLogging()
+        .AddSingleton(configuration)
+        .AddSingleton<FlagSubmissionEndpoint>()
+        .AddSingleton(new EnoStatistics("EnoFlagSink"))
+        .AddScoped<IEnoDatabase, EnoDatabase.EnoDatabase>()
+        .AddDbContextPool<EnoDatabaseContext>(
+            options =>
             {
-                loggingBuilder.SetMinimumLevel(LogLevel.Debug);
-                loggingBuilder.AddFilter(DbLoggerCategory.Name, LogLevel.Warning);
-                loggingBuilder.AddConsole();
-                loggingBuilder.AddProvider(new EnoLogMessageFileLoggerProvider("EnoFlagSink", CancelSource.Token));
-            })
-            .BuildServiceProvider(validateScopes: true);
-        var submissionEndpoint = serviceProvider.GetRequiredService<FlagSubmissionEndpoint>();
-        await submissionEndpoint.Start(configuration, CancelSource.Token);
-    }
-    else
-    {
-        Console.WriteLine("Another Instance is already running");
-    }
+                options.UseNpgsql(
+                    EnoDatabaseUtils.PostgresConnectionString,
+                    pgoptions => pgoptions.EnableRetryOnFailure());
+            }, 90)
+        .AddLogging(loggingBuilder =>
+        {
+            loggingBuilder.SetMinimumLevel(LogLevel.Debug);
+            loggingBuilder.AddFilter(DbLoggerCategory.Name, LogLevel.Warning);
+            loggingBuilder.AddConsole();
+            loggingBuilder.AddProvider(new EnoLogMessageFileLoggerProvider("EnoFlagSink", cancelSource.Token));
+        })
+        .BuildServiceProvider(validateScopes: true);
+
+    // Go!
+    var submissionEndpoint = serviceProvider.GetRequiredService<FlagSubmissionEndpoint>();
+    await submissionEndpoint.Start(configuration, cancelSource.Token);
 }
 finally
 {

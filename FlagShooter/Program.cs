@@ -32,10 +32,10 @@ namespace FlagShooter
         private readonly int roundDelay;
         private readonly int teamCount;
         private readonly int submissionConnectionsPerTeam;
-        private readonly JsonConfiguration configuration;
+        private readonly Configuration configuration;
         private readonly List<ChannelWriter<byte[]>> flagWriters;
 
-        public Program(int flagCount, int roundDelay, int teamStart, int teamCount, int teamConnections, JsonConfiguration configuration)
+        public Program(int flagCount, int roundDelay, int teamStart, int teamCount, int teamConnections, Configuration configuration)
         {
             Console.WriteLine($"flagCount {flagCount}, roundDelay {roundDelay}, teamStart {teamStart}, teamCount {teamCount}, teamConnections {teamConnections}");
             this.flagCount = flagCount;
@@ -78,33 +78,34 @@ namespace FlagShooter
             {
                 Console.WriteLine($"FlagShooter starting");
 
-                // Console.CancelKeyPress += (s, e) => {
-                //     Console.WriteLine("Shutting down FlagShooter");
-                //     e.Cancel = true;
-                //    FlagShooterCancelSource.Cancel();
-                // };
-                JsonConfiguration configuration;
                 if (!File.Exists("ctf.json"))
                 {
                     Console.WriteLine("Config (ctf.json) does not exist");
                     return;
                 }
 
+                // Check if config is valid
+                Configuration configuration;
                 try
                 {
                     var content = File.ReadAllText("ctf.json");
-                    configuration = JsonSerializer.Deserialize<JsonConfiguration>(content);
+                    var jsonConfiguration = JsonConfiguration.Deserialize(content);
+                    if (jsonConfiguration is null)
+                    {
+                        Console.WriteLine("Deserialization of config failed.");
+                        return;
+                    }
+
+                    configuration = Task.Run(() => jsonConfiguration.ValidateAsync()).Result;
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"Failed to load ctf.json: {e.Message}");
+                    Console.WriteLine($"Failed to load and parse ctf.json: {e.Message}");
                     return;
                 }
 
-                var path = Directory.GetParent(Directory.GetCurrentDirectory()).FullName;
-                path = Path.Combine(path, "data");
-                ParseScoreboard(Path.Combine(path, "scoreboard.json"));
-                Task.Run(async () => await PollConfig(path, FlagShooterCancelSource.Token));
+                ParseScoreboard(Path.Combine(Misc.dataDirectory, "scoreboard.json"));
+                Task.Run(async () => await PollConfig(Misc.dataDirectory, FlagShooterCancelSource.Token));
                 new Program(flagCount, roundDelay, teamStart, teamCount, teamConnections, configuration).Start();
             }
             catch (Exception e)
@@ -188,21 +189,12 @@ namespace FlagShooter
             }
         }
 
-        private static void OnChanged(object source, FileSystemEventArgs e)
-        {
-            Console.WriteLine($"File: {e.FullPath} {e.ChangeType}");
-            if (e.Name.Contains("scoreboard.json"))
-            {
-                ParseScoreboard(e.FullPath);
-            }
-        }
-
         private static async Task PollConfig(string path, CancellationToken token)
         {
             while (!token.IsCancellationRequested)
             {
                 ParseScoreboard(Path.Combine(path, "scoreboard.json"));
-                await Task.Delay(1000);
+                await Task.Delay(1000, token);
             }
         }
 

@@ -21,7 +21,7 @@ using EnoCore.Models;
 const string MODE_RECALCULATE = "recalculate";
 const string mutexId = @"Global\EnoEngine";
 
-CancellationTokenSource CancelSource = new();
+CancellationTokenSource cancelSource = new();
 using var mutex = new Mutex(false, mutexId, out bool _);
 
 try
@@ -45,13 +45,8 @@ try
     try
     {
         string content = File.ReadAllText("ctf.json");
-        var jsonSerializerOptions = new JsonSerializerOptions {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            ReadCommentHandling = JsonCommentHandling.Skip,
-            AllowTrailingCommas = true
-        };
-        var jsonConfiguration = JsonSerializer.Deserialize<JsonConfiguration>(content, jsonSerializerOptions);
-        if (jsonConfiguration == null)
+        var jsonConfiguration = JsonConfiguration.Deserialize(content);
+        if (jsonConfiguration is null)
         {
             Console.WriteLine("Deserialization of config failed.");
             return;
@@ -93,7 +88,7 @@ try
             loggingBuilder.SetMinimumLevel(LogLevel.Debug);
             loggingBuilder.AddFilter(DbLoggerCategory.Name, LogLevel.Warning);
             loggingBuilder.AddConsole();
-            loggingBuilder.AddProvider(new EnoLogMessageFileLoggerProvider("EnoEngine", CancelSource.Token));
+            loggingBuilder.AddProvider(new EnoLogMessageFileLoggerProvider("EnoEngine", cancelSource.Token));
         })
         .BuildServiceProvider(validateScopes: true);
 
