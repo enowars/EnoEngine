@@ -5,21 +5,32 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+  schedule:
+    - cron: "0 0 * * *"
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        sdk: [5.0.100-rc.2.20479.15]
+    runs-on: ${{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v2
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: '5.0.100-rc.2.20479.15'
+        dotnet-version: ${{ sdk }}
     - name: Install dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build --configuration Release --no-restore -warnaserror
     - name: Test
       run: dotnet test --no-restore --verbosity normal
+
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: dotnet format
+        run: dotnet format
