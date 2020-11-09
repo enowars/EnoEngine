@@ -37,16 +37,16 @@ namespace EnoCore.Models
         {
             Span<byte> flagContent = stackalloc byte[sizeof(int) * 4];
             BitConverter.TryWriteBytes(flagContent, (int)ServiceId);
-            BitConverter.TryWriteBytes(flagContent.Slice(sizeof(int)), RoundOffset);
-            BitConverter.TryWriteBytes(flagContent.Slice(sizeof(int) * 2), (int)OwnerId);
-            BitConverter.TryWriteBytes(flagContent.Slice(sizeof(int) * 3), (int)RoundId);
+            BitConverter.TryWriteBytes(flagContent[sizeof(int)..], RoundOffset);
+            BitConverter.TryWriteBytes(flagContent[(sizeof(int) * 2)..], (int)OwnerId);
+            BitConverter.TryWriteBytes(flagContent[(sizeof(int) * 3)..], (int)RoundId);
 
             using HMACSHA1 hmacsha1 = new HMACSHA1(signingKey);
             Span<byte> flagSignature = stackalloc byte[hmacsha1.HashSize / 8];
             hmacsha1.TryComputeHash(flagContent, flagSignature, out var _);
             Span<byte> flagBytes = stackalloc byte[flagContent.Length + flagSignature.Length];
             flagContent.CopyTo(flagBytes);
-            flagSignature.CopyTo(flagBytes.Slice(flagContent.Length));
+            flagSignature.CopyTo(flagBytes[flagContent.Length..]);
             return "ENO" + Convert.ToBase64String(flagBytes);
         }
 
@@ -54,16 +54,16 @@ namespace EnoCore.Models
         {
             Span<byte> flagContent = stackalloc byte[sizeof(int) * 4];
             BitConverter.TryWriteBytes(flagContent, (int)ServiceId);
-            BitConverter.TryWriteBytes(flagContent.Slice(sizeof(int)), RoundOffset);
-            BitConverter.TryWriteBytes(flagContent.Slice(sizeof(int) * 2), (int)OwnerId);
-            BitConverter.TryWriteBytes(flagContent.Slice(sizeof(int) * 3), (int)RoundId);
+            BitConverter.TryWriteBytes(flagContent[sizeof(int)..], RoundOffset);
+            BitConverter.TryWriteBytes(flagContent[(sizeof(int) * 2)..], (int)OwnerId);
+            BitConverter.TryWriteBytes(flagContent[(sizeof(int) * 3)..], (int)RoundId);
 
             using HMACSHA1 hmacsha1 = new HMACSHA1(signingKey);
             Span<byte> flagSignature = stackalloc byte[hmacsha1.HashSize / 8];
             hmacsha1.TryComputeHash(flagContent, flagSignature, out var _);
             Span<byte> flagBytes = stackalloc byte[flagContent.Length + flagSignature.Length];
             flagContent.CopyTo(flagBytes);
-            flagSignature.CopyTo(flagBytes.Slice(flagContent.Length));
+            flagSignature.CopyTo(flagBytes[flagContent.Length..]);
             Bytes2Dia(flagBytes, out var flagString, out var bytesWritten);
             return Flagprefix[0] + flagString;
         }

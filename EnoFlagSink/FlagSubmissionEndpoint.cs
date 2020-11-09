@@ -60,7 +60,7 @@ namespace EnoEngine.FlagSubmission
                 var duplicateFlags = Interlocked.Exchange(ref statistic.DuplicateFlags, 0);
                 var invalidFlags = Interlocked.Exchange(ref statistic.InvalidFlags, 0);
                 this.enoStatistics.FlagSubmissionStatisticsMessage(teamName, teamId, okFlags, duplicateFlags, oldFlags, invalidFlags, ownFlags);
-                await Task.Delay(5000);
+                await Task.Delay(5000, token);
             }
         }
 
@@ -73,10 +73,17 @@ namespace EnoEngine.FlagSubmission
             // Start a log submission statistics task for every team
             foreach (var team in this.submissionStatistics)
             {
-                var t = Task.Run(async () => await this.LogSubmissionStatistics(
-                    team.Key,
-                    config.Teams.Where(t => t.Id == team.Key).First().Name,
-                    token));
+                var name = config.Teams
+                        .Where(t => t.Id == team.Key)
+                        .First()
+                        .Name;
+                var t = Task.Run(
+                    async () =>
+                    await this.LogSubmissionStatistics(
+                        team.Key,
+                        name,
+                        token),
+                    token);
             }
 
             // Start n insert tasks
@@ -90,6 +97,39 @@ namespace EnoEngine.FlagSubmission
             tasks.Add(await Task.Factory.StartNew(async () => await this.RunProductionEndpoint(config, token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default));
             tasks.Add(await Task.Factory.StartNew(async () => await this.RunDebugEndpoint(config, token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default));
             await Task.WhenAny(tasks);
+        }
+
+        private static bool TryReadLine(ref ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> line)
+        {
+            // Look for a EOL in the buffer.
+            SequencePosition? position = buffer.PositionOf((byte)'\n');
+
+            if (position == null)
+            {
+                line = default;
+                return false;
+            }
+
+            // Skip the line + the \n.
+            line = buffer.Slice(0, position.Value);
+            buffer = buffer.Slice(buffer.GetPosition(1, position.Value));
+            return true;
+        }
+
+        private static string FormatSubmissionResult(FlagSubmissionResult result)
+        {
+            return result switch
+            {
+                FlagSubmissionResult.Ok => Misc.SubmissionResultOk,
+                FlagSubmissionResult.Invalid => Misc.SubmissionResultInvalid,
+                FlagSubmissionResult.Duplicate => Misc.SubmissionResultDuplicate,
+                FlagSubmissionResult.Own => Misc.SubmissionResultOwn,
+                FlagSubmissionResult.Old => Misc.SubmissionResultOld,
+                FlagSubmissionResult.UnknownError => Misc.SubmissionResultUnknownError,
+                FlagSubmissionResult.InvalidSenderError => Misc.SubmissionResultInvalidSenderError,
+                FlagSubmissionResult.SpamError => Misc.SubmissionResultSpamError,
+                _ => Misc.SubmissionResultReallyUnknownError,
+            };
         }
 
         private async Task ProcessLinesAsync(Socket socket, long? teamId, Configuration config, CancellationToken token)
@@ -145,7 +185,7 @@ namespace EnoEngine.FlagSubmission
             {
                 ReadResult result = await reader.ReadAsync(token);
                 ReadOnlySequence<byte> buffer = result.Buffer;
-                while (this.TryReadLine(ref buffer, out ReadOnlySequence<byte> line))
+                while (TryReadLine(ref buffer, out ReadOnlySequence<byte> line))
                 {
                     // Process the line.
                     if (teamId != null)
@@ -154,17 +194,17 @@ namespace EnoEngine.FlagSubmission
                         var tcs = new TaskCompletionSource<FlagSubmissionResult>();
                         if (flag == null)
                         {
-                            await feedbackWriter.WriteAsync(Task.FromResult(FlagSubmissionResult.Invalid));
+                            await feedbackWriter.WriteAsync(Task.FromResult(FlagSubmissionResult.Invalid), token);
                         }
                         else if (flag.OwnerId == teamId.Value)
                         {
-                            await feedbackWriter.WriteAsync(Task.FromResult(FlagSubmissionResult.Own));
+                            await feedbackWriter.WriteAsync(Task.FromResult(FlagSubmissionResult.Own), token);
                         }
                         else
                         {
                             var channel = this.channels[teamId.Value];
-                            await channel.Writer.WriteAsync((flag, tcs));
-                            await feedbackWriter.WriteAsync(tcs.Task);
+                            await channel.Writer.WriteAsync((flag, tcs), token);
+                            await feedbackWriter.WriteAsync(tcs.Task, token);
                         }
                     }
                     else
@@ -186,7 +226,7 @@ namespace EnoEngine.FlagSubmission
                 // If the length is longer than a flag, somebody is sending bullshit!
                 if (buffer.Length > MaxLineLength)
                 {
-                    await feedbackWriter.WriteAsync(Task.FromResult(FlagSubmissionResult.SpamError));
+                    await feedbackWriter.WriteAsync(Task.FromResult(FlagSubmissionResult.SpamError), token);
                     break;
                 }
             }
@@ -231,34 +271,17 @@ namespace EnoEngine.FlagSubmission
                         }
                     }
 
-                    var itemBytes = Encoding.ASCII.GetBytes(this.FormatSubmissionResult(item)); // TODO don't serialize every time
+                    var itemBytes = Encoding.ASCII.GetBytes(FormatSubmissionResult(item)); // TODO don't serialize every time
                     await socket.SendAsync(itemBytes, SocketFlags.None, token);                 // TODO enforce batching
                     if (item == FlagSubmissionResult.SpamError)
                     {
                         // https://blog.netherlabs.nl/articles/2009/01/18/the-ultimate-so_linger-page-or-why-is-my-tcp-not-reliable
-                        await Task.Delay(1000);
+                        await Task.Delay(1000, token);
                         socket.Close();
                         break;
                     }
                 }
             }
-        }
-
-        private bool TryReadLine(ref ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> line)
-        {
-            // Look for a EOL in the buffer.
-            SequencePosition? position = buffer.PositionOf((byte)'\n');
-
-            if (position == null)
-            {
-                line = default;
-                return false;
-            }
-
-            // Skip the line + the \n.
-            line = buffer.Slice(0, position.Value);
-            buffer = buffer.Slice(buffer.GetPosition(1, position.Value));
-            return true;
         }
 
         private async Task RunDebugEndpoint(Configuration config, CancellationToken token)
@@ -293,24 +316,27 @@ namespace EnoEngine.FlagSubmission
                     try
                     {
                         var client = await this.productionListener.AcceptTcpClientAsync();
-                        var t = Task.Run(async () =>
-                        {
-                            var attackerAddress = ((IPEndPoint)client.Client.RemoteEndPoint).Address.GetAddressBytes();
-                            var attackerPrefix = new byte[this.configuration.TeamSubnetBytesLength];
-                            Array.Copy(attackerAddress, attackerPrefix, this.configuration.TeamSubnetBytesLength);
-                            var attackerPrefixString = BitConverter.ToString(attackerPrefix);
-                            Team? team = await this.FindTeamBySubnet(attackerPrefixString);
-                            if (team != null)
+                        if (client is null)
+                            continue;
+                        var t = Task.Run(
+                            async () =>
                             {
-                                await this.ProcessLinesAsync(client.Client, team.Id, config, token);
-                            }
-                            else
-                            {
-                                var itemBytes = Encoding.ASCII.GetBytes(this.FormatSubmissionResult(FlagSubmissionResult.InvalidSenderError)); // TODO don't serialize every time
-                                await client.Client.SendAsync(itemBytes, SocketFlags.None, token);
-                                client.Close();
-                            }
-                        });
+                                var attackerAddress = ((IPEndPoint)client.Client.RemoteEndPoint!).Address.GetAddressBytes();
+                                var attackerPrefix = new byte[this.configuration.TeamSubnetBytesLength];
+                                Array.Copy(attackerAddress, attackerPrefix, this.configuration.TeamSubnetBytesLength);
+                                var attackerPrefixString = BitConverter.ToString(attackerPrefix);
+                                Team? team = await this.FindTeamBySubnet(attackerPrefixString);
+                                if (team != null)
+                                {
+                                    await this.ProcessLinesAsync(client.Client, team.Id, config, token);
+                                }
+                                else
+                                {
+                                    var itemBytes = Encoding.ASCII.GetBytes(FormatSubmissionResult(FlagSubmissionResult.InvalidSenderError)); // TODO don't serialize every time
+                                    await client.Client.SendAsync(itemBytes, SocketFlags.None, token);
+                                    client.Close();
+                                }
+                            }, token);
                     }
                     catch (Exception e)
                     {
@@ -335,22 +361,6 @@ namespace EnoEngine.FlagSubmission
             using var scope = this.serviceProvider.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
             return await db.GetTeamIdByPrefix(attackerPrefixString);
-        }
-
-        private string FormatSubmissionResult(FlagSubmissionResult result)
-        {
-            return result switch
-            {
-                FlagSubmissionResult.Ok => Misc.SubmissionResultOk,
-                FlagSubmissionResult.Invalid => Misc.SubmissionResultInvalid,
-                FlagSubmissionResult.Duplicate => Misc.SubmissionResultDuplicate,
-                FlagSubmissionResult.Own => Misc.SubmissionResultOwn,
-                FlagSubmissionResult.Old => Misc.SubmissionResultOld,
-                FlagSubmissionResult.UnknownError => Misc.SubmissionResultUnknownError,
-                FlagSubmissionResult.InvalidSenderError => Misc.SubmissionResultInvalidSenderError,
-                FlagSubmissionResult.SpamError => Misc.SubmissionResultSpamError,
-                _ => Misc.SubmissionResultReallyUnknownError,
-            };
         }
 
         private async Task InsertSubmissionsLoop(int number, CancellationToken token)
@@ -400,7 +410,7 @@ namespace EnoEngine.FlagSubmission
 
                     if (isEmpty)
                     {
-                        await Task.Delay(10);
+                        await Task.Delay(10, token);
                     }
                     else if (submissions.Count != 0)
                     {
