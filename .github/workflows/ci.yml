@@ -21,7 +21,7 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: ${{ sdk }}
+        dotnet-version: ${{ matrix.sdk }}
     - name: Install dependencies
       run: dotnet restore
     - name: Build
