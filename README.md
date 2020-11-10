@@ -31,37 +31,36 @@ dotnet ef migrations add InitialMigrations --startup-project ../EnoEngine
 ## ctf.json Format
 ```ts
 interface ctfjson {
-    Title: string;
-    FlagValidityInRounds: number;
-    CheckedRoundsPerRound: number;
-    RoundLengthInSeconds: number;
-    DnsSuffix: string;
-    TeamSubnetBytesLength: number;
-    FlagSigningKey: string;
-    NoiseSigningKey: string;
-    Encoding: string | null;
-    Services: Service[];
-    Teams: Team[];
+    title: string;
+    flagValidityInRounds: number;
+    checkedRoundsPerRound: number;
+    roundLengthInSeconds: number;
+    dnsSuffix: string;
+    teamSubnetBytesLength: number;
+    flagSigningKey: string;
+    encoding: string | null;
+    services: Service[];
+    teams: Team[];
 }
 interface Service {
-    Id: number;
-    Name: string;
-    FlagsPerRound: number;
-    NoisesPerRound: number;
-    HavocsPerRound: number;
-    WeightFactor: number;
-    Active: string | null;
-    Checkers: string[];
+    id: number;
+    name: string;
+    flagsPerRoundMultiplier: number;
+    noisesPerRoundMultiplier: number;
+    havocsPerRoundMultiplier: number;
+    weightFactor: number;
+    active: string | null;
+    checkers: string[];
 }
 
 interface Team {
-    Id: number;
-    Name: string;
-    Address: string | null;
-    TeamSubnet: string;
-    LogoUrl: string | null;
-    FlagUrl: string | null;
-    Active: string | null;
+    id: number;
+    name: string;
+    address: string | null;
+    teamSubnet: string;
+    logoUrl: string | null;
+    flagUrl: string | null;
+    active: string | null;
 }
 ```
 
