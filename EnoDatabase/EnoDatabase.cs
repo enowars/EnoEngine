@@ -42,7 +42,7 @@ namespace EnoDatabase
 
     public interface IEnoDatabase
     {
-        DBInitializationResult ApplyConfig(Configuration configuration);
+        void ApplyConfig(Configuration configuration);
         Task ProcessSubmissionsBatch(List<(Flag flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult> result)> submissions, long flagValidityInRounds, EnoStatistics statistics);
         Task<Team[]> RetrieveTeams();
         Task<Service[]> RetrieveServices();
@@ -77,64 +77,33 @@ namespace EnoDatabase
             Logger = logger;
         }
 
-        public DBInitializationResult ApplyConfig(Configuration config)
+        public void ApplyConfig(Configuration config)
         {
             Logger.LogDebug("Applying configuration to database");
-            if (config.RoundLengthInSeconds <= 0)
-                return new DBInitializationResult
-                {
-                    Success = false,
-                    ErrorMessage = $"RoundLengthInSeconds must be a positive integer, found {config.RoundLengthInSeconds}"
-                };
 
-            if (config.CheckedRoundsPerRound <= 0)
-                return new DBInitializationResult
-                {
-                    Success = false,
-                    ErrorMessage = $"CheckedRoundsPerRound must be a positive integer, found {config.CheckedRoundsPerRound}"
-                };
-
-            if (config.FlagValidityInRounds <= 0)
-                return new DBInitializationResult
-                {
-                    Success = false,
-                    ErrorMessage = $"CheckedRoundsPerRound must be a positive integer, found {config.FlagValidityInRounds}"
-                };
-
+            // Migrate if needed
             Migrate();
-            return FillDatabase(config);
-        }
 
-        public void Migrate()
-        {
-            var pendingMigrations = _context.Database.GetPendingMigrations().Count();
-            if (pendingMigrations > 0)
-            {
-                Logger.LogInformation($"Applying {pendingMigrations} migration(s)");
-                _context.Database.Migrate();
-                _context.SaveChanges();
-                Logger.LogDebug($"Database migration complete");
-            }
-            else
-            {
-                Logger.LogDebug($"No pending migrations");
-            }
-        }
+            // Get all teams from db
+            var dbTeams = _context
+                .Teams
+                .ToList()
+                .ToDictionary(t => t.Id);
 
-        private DBInitializationResult FillDatabase(Configuration config)
-        {
-            var staleDbTeamIds = _context.Teams.Select(t => t.Id).ToList();
-
-            // insert teams
+            // Insert or update teams from config
             foreach (var team in config.Teams)
             {
                 string teamSubnet = EnoDatabaseUtils.ExtractSubnet(team.TeamSubnet, config.TeamSubnetBytesLength);
-
-                // check if team is already present
-                var dbTeam = _context.Teams
-                    .Where(t => t.Id == team.Id)
-                    .SingleOrDefault();
-                if (dbTeam == null)
+                if (dbTeams.TryGetValue(team.Id, out var dbTeam))
+                {
+                    dbTeam.TeamSubnet = teamSubnet;
+                    dbTeam.Name = team.Name;
+                    dbTeam.Id = team.Id;
+                    dbTeam.Active = team.Active;
+                    dbTeam.Address = team.Address;
+                    dbTeams.Remove(team.Id);
+                }
+                else
                 {
                     Logger.LogInformation($"Adding team {team.Name}({team.Id})");
                     _context.Teams.Add(new Team()
@@ -146,30 +115,32 @@ namespace EnoDatabase
                         Address = team.Address
                     });
                 }
-                else
-                {
-                    dbTeam.TeamSubnet = teamSubnet;
-                    dbTeam.Name = team.Name;
-                    dbTeam.Id = team.Id;
-                    dbTeam.Active = team.Active;
-                    dbTeam.Address = team.Address;
-                    staleDbTeamIds.Remove(team.Id);
-                }
             }
-            if (staleDbTeamIds.Count > 0)
-                return new DBInitializationResult
-                {
-                    Success = false,
-                    ErrorMessage = $"Stale team in database: {staleDbTeamIds[0]}"
-                };
-            //insert (valid!) services
-            var staleDbServiceIds = _context.Services.Select(t => t.Id).ToList();
+            foreach (var (teamId, team) in dbTeams)
+            {
+                Logger.LogWarning($"Deactivating stale team in db ({teamId})");
+                team.Active = false;
+            }
+
+            // Get all services from db
+            var dbServices = _context
+                .Services
+                .ToList()
+                .ToDictionary(s => s.Id);
+
+            // Insert or update services from config
             foreach (var service in config.Services)
             {
-                var dbService = _context.Services
-                    .Where(s => s.Id == service.Id)
-                    .SingleOrDefault();
-                if (dbService == null)
+                if (dbServices.TryGetValue(service.Id, out var dbService))
+                {
+                    dbService.Name = service.Name;
+                    dbService.FlagsPerRound = service.FlagsPerRound;
+                    dbService.NoisesPerRound = service.NoisesPerRound;
+                    dbService.HavocsPerRound = service.HavocsPerRound;
+                    dbService.Active = service.Active;
+                    dbServices.Remove(dbService.Id);
+                }
+                else
                 {
                     Logger.LogInformation($"Adding service {service.Name}");
                     _context.Services.Add(new Service(service.Id,
@@ -180,23 +151,11 @@ namespace EnoDatabase
                         service.FlagStores,
                         service.Active));
                 }
-                else
-                {
-                    dbService.Name = service.Name;
-                    dbService.FlagsPerRound = service.FlagsPerRound;
-                    dbService.NoisesPerRound = service.NoisesPerRound;
-                    dbService.HavocsPerRound = service.HavocsPerRound;
-                    dbService.Active = service.Active;
-                    staleDbServiceIds.Remove(dbService.Id);
-                }
             }
-            if (staleDbServiceIds.Count > 0)
+            foreach (var (serviceId, service) in dbServices)
             {
-                return new DBInitializationResult
-                {
-                    Success = false,
-                    ErrorMessage = $"Stale service in database: {staleDbServiceIds[0]}"
-                };
+                Logger.LogWarning($"Deactivating stale service in db ({serviceId})");
+                service.Active = false;
             }
 
             _context.SaveChanges(); // Save so that the services and teams receive proper IDs
@@ -223,10 +182,22 @@ namespace EnoDatabase
                 }
             }
             _context.SaveChanges();
-            return new DBInitializationResult
+        }
+
+        public void Migrate()
+        {
+            var pendingMigrations = _context.Database.GetPendingMigrations().Count();
+            if (pendingMigrations > 0)
             {
-                Success = true
-            };
+                Logger.LogInformation($"Applying {pendingMigrations} migration(s)");
+                _context.Database.Migrate();
+                _context.SaveChanges();
+                Logger.LogDebug($"Database migration complete");
+            }
+            else
+            {
+                Logger.LogDebug($"No pending migrations");
+            }
         }
 
         public async Task<Team[]> RetrieveTeams()
