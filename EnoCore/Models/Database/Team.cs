@@ -13,7 +13,7 @@ namespace EnoCore.Models.Database
         public string TeamSubnet { get; set; }
         public double TotalPoints { get; set; }
         public double AttackPoints { get; set; }
-        public double LostDefensePoints { get; set; }
+        public double DefensePoints { get; set; }
         public double ServiceLevelAgreementPoints { get; set; }
         public string? Address { get; set; }
         public long ServiceStatsId { get; set; }

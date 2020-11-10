@@ -55,6 +55,21 @@ namespace EnoDatabase.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "RoundTeamServiceStatus",
+                columns: table => new
+                {
+                    TeamId = table.Column<long>(nullable: false),
+                    ServiceId = table.Column<long>(nullable: false),
+                    GameRoundId = table.Column<long>(nullable: false),
+                    Status = table.Column<int>(nullable: false),
+                    ErrorMessage = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RoundTeamServiceStatus", x => new { x.ServiceId, x.TeamId, x.GameRoundId });
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Services",
                 columns: table => new
                 {
@@ -100,7 +115,7 @@ namespace EnoDatabase.Migrations
                     TeamSubnet = table.Column<string>(nullable: false),
                     TotalPoints = table.Column<double>(nullable: false),
                     AttackPoints = table.Column<double>(nullable: false),
-                    LostDefensePoints = table.Column<double>(nullable: false),
+                    DefensePoints = table.Column<double>(nullable: false),
                     ServiceLevelAgreementPoints = table.Column<double>(nullable: false),
                     Address = table.Column<string>(nullable: true),
                     ServiceStatsId = table.Column<long>(nullable: false),
@@ -128,46 +143,13 @@ namespace EnoDatabase.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "RoundTeamServiceStatus",
-                columns: table => new
-                {
-                    TeamId = table.Column<long>(nullable: false),
-                    ServiceId = table.Column<long>(nullable: false),
-                    GameRoundId = table.Column<long>(nullable: false),
-                    Status = table.Column<int>(nullable: false),
-                    ErrorMessage = table.Column<string>(nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_RoundTeamServiceStatus", x => new { x.ServiceId, x.TeamId, x.GameRoundId });
-                    table.ForeignKey(
-                        name: "FK_RoundTeamServiceStatus_Rounds_GameRoundId",
-                        column: x => x.GameRoundId,
-                        principalTable: "Rounds",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_RoundTeamServiceStatus_Services_ServiceId",
-                        column: x => x.ServiceId,
-                        principalTable: "Services",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_RoundTeamServiceStatus_Teams_TeamId",
-                        column: x => x.TeamId,
-                        principalTable: "Teams",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "TeamServicePoints",
                 columns: table => new
                 {
                     TeamId = table.Column<long>(nullable: false),
                     ServiceId = table.Column<long>(nullable: false),
                     AttackPoints = table.Column<double>(nullable: false),
-                    LostDefensePoints = table.Column<double>(nullable: false),
+                    DefensePoints = table.Column<double>(nullable: false),
                     ServiceLevelAgreementPoints = table.Column<double>(nullable: false),
                     Status = table.Column<int>(nullable: false),
                     ErrorMessage = table.Column<string>(nullable: true)
@@ -194,16 +176,6 @@ namespace EnoDatabase.Migrations
                 columns: new[] { "CurrentRoundId", "RelatedRoundId", "CheckerResult" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_RoundTeamServiceStatus_GameRoundId",
-                table: "RoundTeamServiceStatus",
-                column: "GameRoundId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_RoundTeamServiceStatus_TeamId",
-                table: "RoundTeamServiceStatus",
-                column: "TeamId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_SubmittedFlags_FlagServiceId_FlagRoundOffset_Timestamp",
                 table: "SubmittedFlags",
                 columns: new[] { "FlagServiceId", "FlagRoundOffset", "Timestamp" });
@@ -215,7 +187,13 @@ namespace EnoDatabase.Migrations
                 name: "CheckerTasks");
 
             migrationBuilder.DropTable(
+                name: "Rounds");
+
+            migrationBuilder.DropTable(
                 name: "RoundTeamServiceStatus");
+
+            migrationBuilder.DropTable(
+                name: "Services");
 
             migrationBuilder.DropTable(
                 name: "SubmittedFlags");
@@ -225,12 +203,6 @@ namespace EnoDatabase.Migrations
 
             migrationBuilder.DropTable(
                 name: "TeamServicePointsSnapshot");
-
-            migrationBuilder.DropTable(
-                name: "Rounds");
-
-            migrationBuilder.DropTable(
-                name: "Services");
 
             migrationBuilder.DropTable(
                 name: "Teams");

@@ -49,7 +49,7 @@ namespace EnoDatabase
                 {
                     g.Key,
                     AttackPointsSum = g.Sum(s => s.AttackPoints),
-                    DefensePointsSum = g.Sum(s => s.LostDefensePoints),
+                    DefensePointsSum = g.Sum(s => s.DefensePoints),
                     SLAPointsSum = g.Sum(s => s.ServiceLevelAgreementPoints)
                 })
                 .AsNoTracking()
@@ -61,7 +61,7 @@ namespace EnoDatabase
                 var team = dbTeams[sums.Key];
                 var sum = sums.Value.AttackPointsSum + sums.Value.DefensePointsSum + sums.Value.SLAPointsSum;
                 team.AttackPoints = sums.Value.AttackPointsSum;
-                team.LostDefensePoints = sums.Value.DefensePointsSum;
+                team.DefensePoints = sums.Value.DefensePointsSum;
                 team.ServiceLevelAgreementPoints = sums.Value.SLAPointsSum;
                 team.TotalPoints = sum;
             }

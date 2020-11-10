@@ -11,7 +11,7 @@ namespace EnoCore.Models.Database
     public sealed record TeamServicePoints(long TeamId,
         long ServiceId,
         double AttackPoints,
-        double LostDefensePoints,
+        double DefensePoints,
         double ServiceLevelAgreementPoints,
         ServiceStatus Status,
         string? ErrorMessage);
