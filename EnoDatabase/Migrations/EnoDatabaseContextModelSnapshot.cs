@@ -136,10 +136,6 @@ namespace EnoDatabase.Migrations
 
                     b.HasKey("ServiceId", "TeamId", "GameRoundId");
 
-                    b.HasIndex("GameRoundId");
-
-                    b.HasIndex("TeamId");
-
                     b.ToTable("RoundTeamServiceStatus");
                 });
 
@@ -223,7 +219,7 @@ namespace EnoDatabase.Migrations
                     b.Property<double>("AttackPoints")
                         .HasColumnType("double precision");
 
-                    b.Property<double>("LostDefensePoints")
+                    b.Property<double>("DefensePoints")
                         .HasColumnType("double precision");
 
                     b.Property<string>("Name")
@@ -259,11 +255,11 @@ namespace EnoDatabase.Migrations
                     b.Property<double>("AttackPoints")
                         .HasColumnType("double precision");
 
+                    b.Property<double>("DefensePoints")
+                        .HasColumnType("double precision");
+
                     b.Property<string>("ErrorMessage")
                         .HasColumnType("text");
-
-                    b.Property<double>("LostDefensePoints")
-                        .HasColumnType("double precision");
 
                     b.Property<double>("ServiceLevelAgreementPoints")
                         .HasColumnType("double precision");
@@ -299,27 +295,6 @@ namespace EnoDatabase.Migrations
                     b.HasKey("ServiceId", "RoundId", "TeamId");
 
                     b.ToTable("TeamServicePointsSnapshot");
-                });
-
-            modelBuilder.Entity("EnoCore.Models.Database.RoundTeamServiceStatus", b =>
-                {
-                    b.HasOne("EnoCore.Models.Database.Round", "GameRound")
-                        .WithMany()
-                        .HasForeignKey("GameRoundId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("EnoCore.Models.Database.Service", "Service")
-                        .WithMany()
-                        .HasForeignKey("ServiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("EnoCore.Models.Database.Team", "Team")
-                        .WithMany()
-                        .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("EnoCore.Models.Database.TeamServicePoints", b =>

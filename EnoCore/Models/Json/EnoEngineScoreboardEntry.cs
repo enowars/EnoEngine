@@ -14,7 +14,7 @@ namespace EnoCore.Models.Json
         public long TeamId { get => Team.Id; }
         public double TotalPoints { get => Team.TotalPoints; }
         public double AttackPoints { get => Team.AttackPoints; }
-        public double LostDefensePoints { get => Team.LostDefensePoints; }
+        public double LostDefensePoints { get => Team.DefensePoints; }
         public double ServiceLevelAgreementPoints { get => Team.ServiceLevelAgreementPoints; }
         public EnoEngineScoreboardEntryServiceDetails[] ServiceDetails { get; set; }
 

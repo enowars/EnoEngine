@@ -12,7 +12,7 @@ namespace EnoCore.Models.Json
 
         public long ServiceId { get => ServiceStats.ServiceId; }
         public double AttackPoints { get => ServiceStats.AttackPoints; }
-        public double LostDefensePoints { get => ServiceStats.LostDefensePoints; }
+        public double LostDefensePoints { get => ServiceStats.DefensePoints; }
         public double ServiceLevelAgreementPoints { get => ServiceStats.ServiceLevelAgreementPoints; }
         [JsonPropertyName("ServiceStatus")]
         [JsonConverter(typeof(JsonStringEnumConverter))]
