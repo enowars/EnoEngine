@@ -14,14 +14,12 @@ namespace EnoCore.Models.Database
         INACTIVE
     }
 
-    public record RoundTeamServiceState(ServiceStatus Status,
+    /// <summary>
+    /// The ServiceStatus for one particular service, team, and round.
+    /// </summary>
+    public sealed record RoundTeamServiceStatus(ServiceStatus Status,
         string? ErrorMessage,
         long TeamId,
         long ServiceId,
-        long GameRoundId)
-    {
-        public virtual Team? Team { get; set; }
-        public virtual Service? Service { get; set; }
-        public virtual Round? GameRound { get; set; }
-    }
+        long GameRoundId);
 }

@@ -3,10 +3,10 @@ using System.Text.Json.Serialization;
 
 namespace EnoCore.Models.Json
 {
-    public record CheckerResultMessage(CheckerResult Result,
+    public sealed record CheckerResultMessage(CheckerResult Result,
         string? Message);
 
-    public record CheckerInfoMessage(string ServiceName,
+    public sealed record CheckerInfoMessage(string ServiceName,
         int FlagCount,
         int NoiseCount,
         int HavocCount);

@@ -13,21 +13,6 @@ For performance reasons, it's written in C#.
 5. Run EnoFlagSink (`dotnet run -c Release -p EnoFlagSink`)
 6. Once you want to start the CTF (i.e. distribute flags): run EnoEngine (`dotnet run -c Release -p EnoEngine`)
 
-## Development
-
-Develop either in Visual Studio, or, for the FOSS people, in Visual Studio Code:
-
-- install dotnet core (on Windows, `choco install dotnetcore-sdk`)
-- run `dotnet restore`
-- open folder in VS Code
-
-## Database
-For creating a migration after changes, run this:
-```
-cd /EnoDatabase
-rm -r Migrations
-dotnet ef migrations add InitialMigrations --startup-project ../EnoEngine
-```
 ## ctf.json Format
 ```ts
 interface ctfjson {
@@ -64,8 +49,20 @@ interface Team {
 }
 ```
 
-## Checker API
+## Development
+- Install the dotnet sdk
+- Use any IDE you like
+- If your IDE doesn't do it automatically, run `dotnet restore`
 
+## Database
+For creating a migration after changes, run this:
+```
+cd ./EnoDatabase
+rm -r Migrations
+dotnet ef migrations add InitialMigrations --startup-project ../EnoEngine
+```
+
+## Checker API
 Checkers are expected to respond to these requests, providing a HTTP Status Code 200:
 
 ### `GET /service`

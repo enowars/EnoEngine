@@ -43,7 +43,7 @@ namespace EnoDatabase
 
         public async Task CalculateTotalPoints()
         {
-            var stats = await _context.ServiceStats
+            var stats = await _context.TeamServicePoints
                 .GroupBy(ss => ss.TeamId)
                 .Select(g => new
                 {
@@ -68,24 +68,24 @@ namespace EnoDatabase
             await _context.SaveChangesAsync();
         }
 
-        public async Task CalculateServiceStats(Team[] teams, long roundId,
+        public async Task CalculateTeamServicePoints(Team[] teams, long roundId,
             Service service, long oldSnapshotsRoundId, long newLatestSnapshotRoundId)
         {
-            Dictionary<long, ServiceStatsSnapshot>? snapshot = null;
+            Dictionary<long, TeamServicePointsSnapshot>? snapshot = null;
             if (newLatestSnapshotRoundId > 0)
             {
                 snapshot = await CreateServiceSnapshot(teams, newLatestSnapshotRoundId, service.Id);
-                _context.ServiceStatsSnapshots.AddRange(snapshot.Values);
+                _context.TeamServicePointsSnapshot.AddRange(snapshot.Values);
             }
 
-            var latestServiceStates = await _context.RoundTeamServiceStates
+            var latestRoundTeamServiceStatus = await _context.RoundTeamServiceStatus
                 .TagWith("CalculateServiceStats:latestServiceStates")
                 .Where(rtts => rtts.ServiceId == service.Id)
                 .Where(rtts => rtts.GameRoundId == roundId)
                 .AsNoTracking()
                 .ToDictionaryAsync(rtss => rtss.TeamId);
 
-            var serviceStates = await _context.RoundTeamServiceStates
+            var roundTeamServiceStatus = await _context.RoundTeamServiceStatus
                 .TagWith("CalculateServiceStats:volatileServiceStates")
                 .Where(rtts => rtts.ServiceId == service.Id)
                 .Where(rtts => rtts.GameRoundId > newLatestSnapshotRoundId)
@@ -128,10 +128,6 @@ namespace EnoDatabase
                 .Select(g => new { g.Key, Amount = g.Count() })
                 .ToDictionaryAsync(g => g.Key);
 
-            var serviceStats = await _context.ServiceStats
-                .Where(ss => ss.ServiceId == service.Id)
-                .ToDictionaryAsync(ss => ss.TeamId);
-
             foreach (var team in teams)
             {
                 double slaPoints = 0;
@@ -144,11 +140,11 @@ namespace EnoDatabase
                     defPoints = snapshot[team.Id].LostDefensePoints;
                 }
 
-                if (serviceStates.TryGetValue(new { TeamId = team.Id, Status = ServiceStatus.OK }, out var oks))
+                if (roundTeamServiceStatus.TryGetValue(new { TeamId = team.Id, Status = ServiceStatus.OK }, out var oks))
                 {
                     slaPoints += oks.Amount * Math.Sqrt(teams.Length);
                 }
-                if (serviceStates.TryGetValue(new { TeamId = team.Id, Status = ServiceStatus.RECOVERING }, out var recoverings))
+                if (roundTeamServiceStatus.TryGetValue(new { TeamId = team.Id, Status = ServiceStatus.RECOVERING }, out var recoverings))
                 {
                     slaPoints += recoverings.Amount * Math.Sqrt(teams.Length) / 2.0;
                 }
@@ -170,17 +166,19 @@ namespace EnoDatabase
                     }
                 }
 
-                serviceStats[team.Id].ServiceLevelAgreementPoints = slaPoints;
-                serviceStats[team.Id].AttackPoints = attackPoints;
-                serviceStats[team.Id].LostDefensePoints = defPoints;
-                latestServiceStates.TryGetValue(team.Id, out var status_rtss);
-                serviceStats[team.Id].Status = status_rtss?.Status ?? ServiceStatus.INTERNAL_ERROR;
-                serviceStats[team.Id].ErrorMessage = status_rtss?.ErrorMessage;
+                latestRoundTeamServiceStatus.TryGetValue(team.Id, out var status_rtss);
+                _context.TeamServicePoints.Update(new(team.Id,
+                    service.Id,
+                    attackPoints,
+                    defPoints,
+                    slaPoints,
+                    status_rtss?.Status ?? ServiceStatus.INTERNAL_ERROR,
+                    status_rtss?.ErrorMessage));
             }
             await _context.SaveChangesAsync();
         }
 
-        private async Task<Dictionary<long, ServiceStatsSnapshot>> CreateServiceSnapshot(Team[] teams, long newLatestSnapshotRoundId, long serviceId)
+        private async Task<Dictionary<long, TeamServicePointsSnapshot>> CreateServiceSnapshot(Team[] teams, long newLatestSnapshotRoundId, long serviceId)
         {
             //TODO delete existing snapshot?
             var oldSnapshot = await GetSnapshot(teams, newLatestSnapshotRoundId - 1, serviceId);
@@ -204,7 +202,7 @@ namespace EnoDatabase
                 .GroupBy(sf => sf.AttackerTeamId)                           // This is not a SQL GROUP BY
                 .ToDictionary(sf => sf.Key, sf => sf.AsEnumerable());
 
-            var serviceStates = await _context.RoundTeamServiceStates
+            var roundTeamServiceStatus = await _context.RoundTeamServiceStatus
                 .TagWith("CreateSnapshot:serviceStates")
                 .Where(rtts => rtts.ServiceId == serviceId)
                 .Where(rtts => rtts.GameRoundId == newLatestSnapshotRoundId)
@@ -220,7 +218,7 @@ namespace EnoDatabase
                 .Select(g => new { g.Key, Amount = g.Count() })
                 .ToDictionaryAsync(g => g.Key);
 
-            Dictionary<long, ServiceStatsSnapshot> newServiceSnapshots = new();
+            Dictionary<long, TeamServicePointsSnapshot> newServiceSnapshots = new();
             foreach (var team in teams)
             {
                 double slaPoints = 0;
@@ -233,7 +231,7 @@ namespace EnoDatabase
                     defPoints = oldSnapshot[team.Id].LostDefensePoints;
                 }
 
-                if (serviceStates.TryGetValue(team.Id, out var state))
+                if (roundTeamServiceStatus.TryGetValue(team.Id, out var state))
                 {
                     if (state.Status == ServiceStatus.OK)
                         slaPoints += 1.0 * Math.Sqrt(teams.Length);
@@ -267,9 +265,9 @@ namespace EnoDatabase
             return newServiceSnapshots;
         }
 
-        private async Task<Dictionary<long, ServiceStatsSnapshot>> GetSnapshot(Team[] teams, long snapshotRoundId, long serviceId)
+        private async Task<Dictionary<long, TeamServicePointsSnapshot>> GetSnapshot(Team[] teams, long snapshotRoundId, long serviceId)
         {
-            var oldSnapshots = await _context.ServiceStatsSnapshots
+            var oldSnapshots = await _context.TeamServicePointsSnapshot
                 .TagWith("CalculateServiceScores:oldSnapshots")
                 .Where(sss => sss.ServiceId == serviceId)
                 .Where(sss => sss.RoundId == snapshotRoundId)

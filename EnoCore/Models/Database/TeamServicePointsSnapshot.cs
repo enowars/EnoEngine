@@ -4,7 +4,10 @@ using System.Text;
 
 namespace EnoCore.Models.Database
 {
-    public sealed record ServiceStatsSnapshot(long TeamId,
+    /// <summary>
+    /// The fixed points of a particular team in a particular service
+    /// </summary>
+    public sealed record TeamServicePointsSnapshot(long TeamId,
         long ServiceId,
         double AttackPoints,
         double LostDefensePoints,

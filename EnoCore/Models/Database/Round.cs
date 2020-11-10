@@ -4,7 +4,7 @@ using System.Text;
 
 namespace EnoCore.Models.Database
 {
-    public record Round(long Id,
+    public sealed record Round(long Id,
         DateTime Begin,
         DateTime Quarter2,
         DateTime Quarter3,

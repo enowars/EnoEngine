@@ -16,7 +16,7 @@ namespace EnoCore.Models
     /// <summary>
     /// PK: ServiceId, RoundId, OwnerId, RoundOffset
     /// </summary>
-    public record Flag(long OwnerId,
+    public sealed record Flag(long OwnerId,
         long ServiceId,
         int RoundOffset,
         long RoundId,
@@ -28,10 +28,6 @@ namespace EnoCore.Models
                 "🏳️‍🌈"
             };
         private static readonly string[] Pattern = new string[4] { "F", "L", "A", "G" };
-
-        public virtual Team? Owner { get; set; }
-        public virtual Service? Service { get; set; }
-        public virtual Round? Round { get; set; }
 
         private string ToNormalString(byte[] signingKey)
         {
