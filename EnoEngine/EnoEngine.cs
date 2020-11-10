@@ -48,15 +48,8 @@ namespace EnoEngine
                 EngineCancelSource.Cancel();
             };
             var db = ServiceProvider.CreateScope().ServiceProvider.GetRequiredService<IEnoDatabase>();
-            var result = db.ApplyConfig(Configuration);
-            if (result.Success)
-            {
-                await GameLoop();
-            }
-            else
-            {
-                Logger.LogCritical($"Invalid configuration, exiting ({result.ErrorMessage})");
-            }
+            db.ApplyConfig(Configuration);
+            await GameLoop();
         }
 
         private async Task GameLoop()

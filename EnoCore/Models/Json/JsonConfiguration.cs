@@ -41,6 +41,15 @@ namespace EnoCore.Models.Json
             if (FlagSigningKey is null)
                 throw new JsonConfigurationValidationException("flagSigningKey is null.");
 
+            if (RoundLengthInSeconds <= 0)
+                throw new JsonConfigurationValidationException("roundLengthInSeconds is <= 0.");
+
+            if (CheckedRoundsPerRound <= 0)
+                throw new JsonConfigurationValidationException("checkedRoundsPerRound is <= 0.");
+
+            if (FlagValidityInRounds <= 0)
+                throw new JsonConfigurationValidationException("flagValidityInRounds is <= 0.");
+
             List<ConfigurationTeam> teams = new();
             List<ConfigurationService> services = new();
             Dictionary<long, string[]> checkers = new();
