@@ -1,1099 +1,1098 @@
 {
-    "FlagValidityInRounds": 2,
-    "CheckedRoundsPerRound": 3,
-    "RoundLengthInSeconds": 60,
-    "DnsSuffix": "eno.host",
-    "TeamSubnetBytesLength": 6,
-    "FlagSigningKey": "ir7PRm0SzqzA0lmFyBfUv68E6Yb7cjbJDp6dummqwr0Od70Sar7P27HVY6oc8PuW",
-    "NoiseSigningKey": "cGSiyYn6VjTUxS7PZInBaCYW83KTaFJPq6zaWji0NGzJ6wpZMUDJKbgo8tkfT35w",
-    "Teams": [{
-        "Id": 1,
-        "Name": "teamname1",
-        "TeamSubnet": "fd00:1337:1::"
-    },{
-        "Id": 2,
-        "Name": "teamname2",
-        "TeamSubnet": "fd00:1337:2::"
-    },{
-        "Id": 3,
-        "Name": "teamname3",
-        "TeamSubnet": "fd00:1337:3::"
-    },{
-        "Id": 4,
-        "Name": "teamname4",
-        "TeamSubnet": "fd00:1337:4::"
-    },{
-        "Id": 5,
-        "Name": "teamname5",
-        "TeamSubnet": "fd00:1337:5::"
-    },{
-        "Id": 6,
-        "Name": "teamname6",
-        "TeamSubnet": "fd00:1337:6::"
-    },{
-        "Id": 7,
-        "Name": "teamname7",
-        "TeamSubnet": "fd00:1337:7::"
-    },{
-        "Id": 8,
-        "Name": "teamname8",
-        "TeamSubnet": "fd00:1337:8::"
-    },{
-        "Id": 9,
-        "Name": "teamname9",
-        "TeamSubnet": "fd00:1337:9::"
-    },{
-        "Id": 10,
-        "Name": "teamname10",
-        "TeamSubnet": "fd00:1337:10::"
-    },{
-        "Id": 11,
-        "Name": "teamname11",
-        "TeamSubnet": "fd00:1337:11::"
-    },{
-        "Id": 12,
-        "Name": "teamname12",
-        "TeamSubnet": "fd00:1337:12::"
-    },{
-        "Id": 13,
-        "Name": "teamname13",
-        "TeamSubnet": "fd00:1337:13::"
-    },{
-        "Id": 14,
-        "Name": "teamname14",
-        "TeamSubnet": "fd00:1337:14::"
-    },{
-        "Id": 15,
-        "Name": "teamname15",
-        "TeamSubnet": "fd00:1337:15::"
-    },{
-        "Id": 16,
-        "Name": "teamname16",
-        "TeamSubnet": "fd00:1337:16::"
-    },{
-        "Id": 17,
-        "Name": "teamname17",
-        "TeamSubnet": "fd00:1337:17::"
-    },{
-        "Id": 18,
-        "Name": "teamname18",
-        "TeamSubnet": "fd00:1337:18::"
-    },{
-        "Id": 19,
-        "Name": "teamname19",
-        "TeamSubnet": "fd00:1337:19::"
-    },{
-        "Id": 20,
-        "Name": "teamname20",
-        "TeamSubnet": "fd00:1337:20::"
-    },{
-        "Id": 21,
-        "Name": "teamname21",
-        "TeamSubnet": "fd00:1337:21::"
-    },{
-        "Id": 22,
-        "Name": "teamname22",
-        "TeamSubnet": "fd00:1337:22::"
-    },{
-        "Id": 23,
-        "Name": "teamname23",
-        "TeamSubnet": "fd00:1337:23::"
-    },{
-        "Id": 24,
-        "Name": "teamname24",
-        "TeamSubnet": "fd00:1337:24::"
-    },{
-        "Id": 25,
-        "Name": "teamname25",
-        "TeamSubnet": "fd00:1337:25::"
-    },{
-        "Id": 26,
-        "Name": "teamname26",
-        "TeamSubnet": "fd00:1337:26::"
-    },{
-        "Id": 27,
-        "Name": "teamname27",
-        "TeamSubnet": "fd00:1337:27::"
-    },{
-        "Id": 28,
-        "Name": "teamname28",
-        "TeamSubnet": "fd00:1337:28::"
-    },{
-        "Id": 29,
-        "Name": "teamname29",
-        "TeamSubnet": "fd00:1337:29::"
-    },{
-        "Id": 30,
-        "Name": "teamname30",
-        "TeamSubnet": "fd00:1337:30::"
-    },{
-        "Id": 31,
-        "Name": "teamname31",
-        "TeamSubnet": "fd00:1337:31::"
-    },{
-        "Id": 32,
-        "Name": "teamname32",
-        "TeamSubnet": "fd00:1337:32::"
-    },{
-        "Id": 33,
-        "Name": "teamname33",
-        "TeamSubnet": "fd00:1337:33::"
-    },{
-        "Id": 34,
-        "Name": "teamname34",
-        "TeamSubnet": "fd00:1337:34::"
-    },{
-        "Id": 35,
-        "Name": "teamname35",
-        "TeamSubnet": "fd00:1337:35::"
-    },{
-        "Id": 36,
-        "Name": "teamname36",
-        "TeamSubnet": "fd00:1337:36::"
-    },{
-        "Id": 37,
-        "Name": "teamname37",
-        "TeamSubnet": "fd00:1337:37::"
-    },{
-        "Id": 38,
-        "Name": "teamname38",
-        "TeamSubnet": "fd00:1337:38::"
-    },{
-        "Id": 39,
-        "Name": "teamname39",
-        "TeamSubnet": "fd00:1337:39::"
-    },{
-        "Id": 40,
-        "Name": "teamname40",
-        "TeamSubnet": "fd00:1337:40::"
-    },{
-        "Id": 41,
-        "Name": "teamname41",
-        "TeamSubnet": "fd00:1337:41::"
-    },{
-        "Id": 42,
-        "Name": "teamname42",
-        "TeamSubnet": "fd00:1337:42::"
-    },{
-        "Id": 43,
-        "Name": "teamname43",
-        "TeamSubnet": "fd00:1337:43::"
-    },{
-        "Id": 44,
-        "Name": "teamname44",
-        "TeamSubnet": "fd00:1337:44::"
-    },{
-        "Id": 45,
-        "Name": "teamname45",
-        "TeamSubnet": "fd00:1337:45::"
-    },{
-        "Id": 46,
-        "Name": "teamname46",
-        "TeamSubnet": "fd00:1337:46::"
-    },{
-        "Id": 47,
-        "Name": "teamname47",
-        "TeamSubnet": "fd00:1337:47::"
-    },{
-        "Id": 48,
-        "Name": "teamname48",
-        "TeamSubnet": "fd00:1337:48::"
-    },{
-        "Id": 49,
-        "Name": "teamname49",
-        "TeamSubnet": "fd00:1337:49::"
-    },{
-        "Id": 50,
-        "Name": "teamname50",
-        "TeamSubnet": "fd00:1337:50::"
-    },{
-        "Id": 51,
-        "Name": "teamname51",
-        "TeamSubnet": "fd00:1337:51::"
-    },{
-        "Id": 52,
-        "Name": "teamname52",
-        "TeamSubnet": "fd00:1337:52::"
-    },{
-        "Id": 53,
-        "Name": "teamname53",
-        "TeamSubnet": "fd00:1337:53::"
-    },{
-        "Id": 54,
-        "Name": "teamname54",
-        "TeamSubnet": "fd00:1337:54::"
-    },{
-        "Id": 55,
-        "Name": "teamname55",
-        "TeamSubnet": "fd00:1337:55::"
-    },{
-        "Id": 56,
-        "Name": "teamname56",
-        "TeamSubnet": "fd00:1337:56::"
-    },{
-        "Id": 57,
-        "Name": "teamname57",
-        "TeamSubnet": "fd00:1337:57::"
-    },{
-        "Id": 58,
-        "Name": "teamname58",
-        "TeamSubnet": "fd00:1337:58::"
-    },{
-        "Id": 59,
-        "Name": "teamname59",
-        "TeamSubnet": "fd00:1337:59::"
-    },{
-        "Id": 60,
-        "Name": "teamname60",
-        "TeamSubnet": "fd00:1337:60::"
-    },{
-        "Id": 61,
-        "Name": "teamname61",
-        "TeamSubnet": "fd00:1337:61::"
-    },{
-        "Id": 62,
-        "Name": "teamname62",
-        "TeamSubnet": "fd00:1337:62::"
-    },{
-        "Id": 63,
-        "Name": "teamname63",
-        "TeamSubnet": "fd00:1337:63::"
-    },{
-        "Id": 64,
-        "Name": "teamname64",
-        "TeamSubnet": "fd00:1337:64::"
-    },{
-        "Id": 65,
-        "Name": "teamname65",
-        "TeamSubnet": "fd00:1337:65::"
-    },{
-        "Id": 66,
-        "Name": "teamname66",
-        "TeamSubnet": "fd00:1337:66::"
-    },{
-        "Id": 67,
-        "Name": "teamname67",
-        "TeamSubnet": "fd00:1337:67::"
-    },{
-        "Id": 68,
-        "Name": "teamname68",
-        "TeamSubnet": "fd00:1337:68::"
-    },{
-        "Id": 69,
-        "Name": "teamname69",
-        "TeamSubnet": "fd00:1337:69::"
-    },{
-        "Id": 70,
-        "Name": "teamname70",
-        "TeamSubnet": "fd00:1337:70::"
-    },{
-        "Id": 71,
-        "Name": "teamname71",
-        "TeamSubnet": "fd00:1337:71::"
-    },{
-        "Id": 72,
-        "Name": "teamname72",
-        "TeamSubnet": "fd00:1337:72::"
-    },{
-        "Id": 73,
-        "Name": "teamname73",
-        "TeamSubnet": "fd00:1337:73::"
-    },{
-        "Id": 74,
-        "Name": "teamname74",
-        "TeamSubnet": "fd00:1337:74::"
-    },{
-        "Id": 75,
-        "Name": "teamname75",
-        "TeamSubnet": "fd00:1337:75::"
-    },{
-        "Id": 76,
-        "Name": "teamname76",
-        "TeamSubnet": "fd00:1337:76::"
-    },{
-        "Id": 77,
-        "Name": "teamname77",
-        "TeamSubnet": "fd00:1337:77::"
-    },{
-        "Id": 78,
-        "Name": "teamname78",
-        "TeamSubnet": "fd00:1337:78::"
-    },{
-        "Id": 79,
-        "Name": "teamname79",
-        "TeamSubnet": "fd00:1337:79::"
-    },{
-        "Id": 80,
-        "Name": "teamname80",
-        "TeamSubnet": "fd00:1337:80::"
-    },{
-        "Id": 81,
-        "Name": "teamname81",
-        "TeamSubnet": "fd00:1337:81::"
-    },{
-        "Id": 82,
-        "Name": "teamname82",
-        "TeamSubnet": "fd00:1337:82::"
-    },{
-        "Id": 83,
-        "Name": "teamname83",
-        "TeamSubnet": "fd00:1337:83::"
-    },{
-        "Id": 84,
-        "Name": "teamname84",
-        "TeamSubnet": "fd00:1337:84::"
-    },{
-        "Id": 85,
-        "Name": "teamname85",
-        "TeamSubnet": "fd00:1337:85::"
-    },{
-        "Id": 86,
-        "Name": "teamname86",
-        "TeamSubnet": "fd00:1337:86::"
-    },{
-        "Id": 87,
-        "Name": "teamname87",
-        "TeamSubnet": "fd00:1337:87::"
-    },{
-        "Id": 88,
-        "Name": "teamname88",
-        "TeamSubnet": "fd00:1337:88::"
-    },{
-        "Id": 89,
-        "Name": "teamname89",
-        "TeamSubnet": "fd00:1337:89::"
-    },{
-        "Id": 90,
-        "Name": "teamname90",
-        "TeamSubnet": "fd00:1337:90::"
-    },{
-        "Id": 91,
-        "Name": "teamname91",
-        "TeamSubnet": "fd00:1337:91::"
-    },{
-        "Id": 92,
-        "Name": "teamname92",
-        "TeamSubnet": "fd00:1337:92::"
-    },{
-        "Id": 93,
-        "Name": "teamname93",
-        "TeamSubnet": "fd00:1337:93::"
-    },{
-        "Id": 94,
-        "Name": "teamname94",
-        "TeamSubnet": "fd00:1337:94::"
-    },{
-        "Id": 95,
-        "Name": "teamname95",
-        "TeamSubnet": "fd00:1337:95::"
-    },{
-        "Id": 96,
-        "Name": "teamname96",
-        "TeamSubnet": "fd00:1337:96::"
-    },{
-        "Id": 97,
-        "Name": "teamname97",
-        "TeamSubnet": "fd00:1337:97::"
-    },{
-        "Id": 98,
-        "Name": "teamname98",
-        "TeamSubnet": "fd00:1337:98::"
-    },{
-        "Id": 99,
-        "Name": "teamname99",
-        "TeamSubnet": "fd00:1337:99::"
-    },{
-        "Id": 100,
-        "Name": "teamname100",
-        "TeamSubnet": "fd00:1337:100::"
-    },{
-        "Id": 101,
-        "Name": "teamname101",
-        "TeamSubnet": "fd00:1337:101::"
-    },{
-        "Id": 102,
-        "Name": "teamname102",
-        "TeamSubnet": "fd00:1337:102::"
-    },{
-        "Id": 103,
-        "Name": "teamname103",
-        "TeamSubnet": "fd00:1337:103::"
-    },{
-        "Id": 104,
-        "Name": "teamname104",
-        "TeamSubnet": "fd00:1337:104::"
-    },{
-        "Id": 105,
-        "Name": "teamname105",
-        "TeamSubnet": "fd00:1337:105::"
-    },{
-        "Id": 106,
-        "Name": "teamname106",
-        "TeamSubnet": "fd00:1337:106::"
-    },{
-        "Id": 107,
-        "Name": "teamname107",
-        "TeamSubnet": "fd00:1337:107::"
-    },{
-        "Id": 108,
-        "Name": "teamname108",
-        "TeamSubnet": "fd00:1337:108::"
-    },{
-        "Id": 109,
-        "Name": "teamname109",
-        "TeamSubnet": "fd00:1337:109::"
-    },{
-        "Id": 110,
-        "Name": "teamname110",
-        "TeamSubnet": "fd00:1337:110::"
-    },{
-        "Id": 111,
-        "Name": "teamname111",
-        "TeamSubnet": "fd00:1337:111::"
-    },{
-        "Id": 112,
-        "Name": "teamname112",
-        "TeamSubnet": "fd00:1337:112::"
-    },{
-        "Id": 113,
-        "Name": "teamname113",
-        "TeamSubnet": "fd00:1337:113::"
-    },{
-        "Id": 114,
-        "Name": "teamname114",
-        "TeamSubnet": "fd00:1337:114::"
-    },{
-        "Id": 115,
-        "Name": "teamname115",
-        "TeamSubnet": "fd00:1337:115::"
-    },{
-        "Id": 116,
-        "Name": "teamname116",
-        "TeamSubnet": "fd00:1337:116::"
-    },{
-        "Id": 117,
-        "Name": "teamname117",
-        "TeamSubnet": "fd00:1337:117::"
-    },{
-        "Id": 118,
-        "Name": "teamname118",
-        "TeamSubnet": "fd00:1337:118::"
-    },{
-        "Id": 119,
-        "Name": "teamname119",
-        "TeamSubnet": "fd00:1337:119::"
-    },{
-        "Id": 120,
-        "Name": "teamname120",
-        "TeamSubnet": "fd00:1337:120::"
-    },{
-        "Id": 121,
-        "Name": "teamname121",
-        "TeamSubnet": "fd00:1337:121::"
-    },{
-        "Id": 122,
-        "Name": "teamname122",
-        "TeamSubnet": "fd00:1337:122::"
-    },{
-        "Id": 123,
-        "Name": "teamname123",
-        "TeamSubnet": "fd00:1337:123::"
-    },{
-        "Id": 124,
-        "Name": "teamname124",
-        "TeamSubnet": "fd00:1337:124::"
-    },{
-        "Id": 125,
-        "Name": "teamname125",
-        "TeamSubnet": "fd00:1337:125::"
-    },{
-        "Id": 126,
-        "Name": "teamname126",
-        "TeamSubnet": "fd00:1337:126::"
-    },{
-        "Id": 127,
-        "Name": "teamname127",
-        "TeamSubnet": "fd00:1337:127::"
-    },{
-        "Id": 128,
-        "Name": "teamname128",
-        "TeamSubnet": "fd00:1337:128::"
-    },{
-        "Id": 129,
-        "Name": "teamname129",
-        "TeamSubnet": "fd00:1337:129::"
-    },{
-        "Id": 130,
-        "Name": "teamname130",
-        "TeamSubnet": "fd00:1337:130::"
-    },{
-        "Id": 131,
-        "Name": "teamname131",
-        "TeamSubnet": "fd00:1337:131::"
-    },{
-        "Id": 132,
-        "Name": "teamname132",
-        "TeamSubnet": "fd00:1337:132::"
-    },{
-        "Id": 133,
-        "Name": "teamname133",
-        "TeamSubnet": "fd00:1337:133::"
-    },{
-        "Id": 134,
-        "Name": "teamname134",
-        "TeamSubnet": "fd00:1337:134::"
-    },{
-        "Id": 135,
-        "Name": "teamname135",
-        "TeamSubnet": "fd00:1337:135::"
-    },{
-        "Id": 136,
-        "Name": "teamname136",
-        "TeamSubnet": "fd00:1337:136::"
-    },{
-        "Id": 137,
-        "Name": "teamname137",
-        "TeamSubnet": "fd00:1337:137::"
-    },{
-        "Id": 138,
-        "Name": "teamname138",
-        "TeamSubnet": "fd00:1337:138::"
-    },{
-        "Id": 139,
-        "Name": "teamname139",
-        "TeamSubnet": "fd00:1337:139::"
-    },{
-        "Id": 140,
-        "Name": "teamname140",
-        "TeamSubnet": "fd00:1337:140::"
-    },{
-        "Id": 141,
-        "Name": "teamname141",
-        "TeamSubnet": "fd00:1337:141::"
-    },{
-        "Id": 142,
-        "Name": "teamname142",
-        "TeamSubnet": "fd00:1337:142::"
-    },{
-        "Id": 143,
-        "Name": "teamname143",
-        "TeamSubnet": "fd00:1337:143::"
-    },{
-        "Id": 144,
-        "Name": "teamname144",
-        "TeamSubnet": "fd00:1337:144::"
-    },{
-        "Id": 145,
-        "Name": "teamname145",
-        "TeamSubnet": "fd00:1337:145::"
-    },{
-        "Id": 146,
-        "Name": "teamname146",
-        "TeamSubnet": "fd00:1337:146::"
-    },{
-        "Id": 147,
-        "Name": "teamname147",
-        "TeamSubnet": "fd00:1337:147::"
-    },{
-        "Id": 148,
-        "Name": "teamname148",
-        "TeamSubnet": "fd00:1337:148::"
-    },{
-        "Id": 149,
-        "Name": "teamname149",
-        "TeamSubnet": "fd00:1337:149::"
-    },{
-        "Id": 150,
-        "Name": "teamname150",
-        "TeamSubnet": "fd00:1337:150::"
-    },{
-        "Id": 151,
-        "Name": "teamname151",
-        "TeamSubnet": "fd00:1337:151::"
-    },{
-        "Id": 152,
-        "Name": "teamname152",
-        "TeamSubnet": "fd00:1337:152::"
-    },{
-        "Id": 153,
-        "Name": "teamname153",
-        "TeamSubnet": "fd00:1337:153::"
-    },{
-        "Id": 154,
-        "Name": "teamname154",
-        "TeamSubnet": "fd00:1337:154::"
-    },{
-        "Id": 155,
-        "Name": "teamname155",
-        "TeamSubnet": "fd00:1337:155::"
-    },{
-        "Id": 156,
-        "Name": "teamname156",
-        "TeamSubnet": "fd00:1337:156::"
-    },{
-        "Id": 157,
-        "Name": "teamname157",
-        "TeamSubnet": "fd00:1337:157::"
-    },{
-        "Id": 158,
-        "Name": "teamname158",
-        "TeamSubnet": "fd00:1337:158::"
-    },{
-        "Id": 159,
-        "Name": "teamname159",
-        "TeamSubnet": "fd00:1337:159::"
-    },{
-        "Id": 160,
-        "Name": "teamname160",
-        "TeamSubnet": "fd00:1337:160::"
-    },{
-        "Id": 161,
-        "Name": "teamname161",
-        "TeamSubnet": "fd00:1337:161::"
-    },{
-        "Id": 162,
-        "Name": "teamname162",
-        "TeamSubnet": "fd00:1337:162::"
-    },{
-        "Id": 163,
-        "Name": "teamname163",
-        "TeamSubnet": "fd00:1337:163::"
-    },{
-        "Id": 164,
-        "Name": "teamname164",
-        "TeamSubnet": "fd00:1337:164::"
-    },{
-        "Id": 165,
-        "Name": "teamname165",
-        "TeamSubnet": "fd00:1337:165::"
-    },{
-        "Id": 166,
-        "Name": "teamname166",
-        "TeamSubnet": "fd00:1337:166::"
-    },{
-        "Id": 167,
-        "Name": "teamname167",
-        "TeamSubnet": "fd00:1337:167::"
-    },{
-        "Id": 168,
-        "Name": "teamname168",
-        "TeamSubnet": "fd00:1337:168::"
-    },{
-        "Id": 169,
-        "Name": "teamname169",
-        "TeamSubnet": "fd00:1337:169::"
-    },{
-        "Id": 170,
-        "Name": "teamname170",
-        "TeamSubnet": "fd00:1337:170::"
-    },{
-        "Id": 171,
-        "Name": "teamname171",
-        "TeamSubnet": "fd00:1337:171::"
-    },{
-        "Id": 172,
-        "Name": "teamname172",
-        "TeamSubnet": "fd00:1337:172::"
-    },{
-        "Id": 173,
-        "Name": "teamname173",
-        "TeamSubnet": "fd00:1337:173::"
-    },{
-        "Id": 174,
-        "Name": "teamname174",
-        "TeamSubnet": "fd00:1337:174::"
-    },{
-        "Id": 175,
-        "Name": "teamname175",
-        "TeamSubnet": "fd00:1337:175::"
-    },{
-        "Id": 176,
-        "Name": "teamname176",
-        "TeamSubnet": "fd00:1337:176::"
-    },{
-        "Id": 177,
-        "Name": "teamname177",
-        "TeamSubnet": "fd00:1337:177::"
-    },{
-        "Id": 178,
-        "Name": "teamname178",
-        "TeamSubnet": "fd00:1337:178::"
-    },{
-        "Id": 179,
-        "Name": "teamname179",
-        "TeamSubnet": "fd00:1337:179::"
-    },{
-        "Id": 180,
-        "Name": "teamname180",
-        "TeamSubnet": "fd00:1337:180::"
-    },{
-        "Id": 181,
-        "Name": "teamname181",
-        "TeamSubnet": "fd00:1337:181::"
-    },{
-        "Id": 182,
-        "Name": "teamname182",
-        "TeamSubnet": "fd00:1337:182::"
-    },{
-        "Id": 183,
-        "Name": "teamname183",
-        "TeamSubnet": "fd00:1337:183::"
-    },{
-        "Id": 184,
-        "Name": "teamname184",
-        "TeamSubnet": "fd00:1337:184::"
-    },{
-        "Id": 185,
-        "Name": "teamname185",
-        "TeamSubnet": "fd00:1337:185::"
-    },{
-        "Id": 186,
-        "Name": "teamname186",
-        "TeamSubnet": "fd00:1337:186::"
-    },{
-        "Id": 187,
-        "Name": "teamname187",
-        "TeamSubnet": "fd00:1337:187::"
-    },{
-        "Id": 188,
-        "Name": "teamname188",
-        "TeamSubnet": "fd00:1337:188::"
-    },{
-        "Id": 189,
-        "Name": "teamname189",
-        "TeamSubnet": "fd00:1337:189::"
-    },{
-        "Id": 190,
-        "Name": "teamname190",
-        "TeamSubnet": "fd00:1337:190::"
-    },{
-        "Id": 191,
-        "Name": "teamname191",
-        "TeamSubnet": "fd00:1337:191::"
-    },{
-        "Id": 192,
-        "Name": "teamname192",
-        "TeamSubnet": "fd00:1337:192::"
-    },{
-        "Id": 193,
-        "Name": "teamname193",
-        "TeamSubnet": "fd00:1337:193::"
-    },{
-        "Id": 194,
-        "Name": "teamname194",
-        "TeamSubnet": "fd00:1337:194::"
-    },{
-        "Id": 195,
-        "Name": "teamname195",
-        "TeamSubnet": "fd00:1337:195::"
-    },{
-        "Id": 196,
-        "Name": "teamname196",
-        "TeamSubnet": "fd00:1337:196::"
-    },{
-        "Id": 197,
-        "Name": "teamname197",
-        "TeamSubnet": "fd00:1337:197::"
-    },{
-        "Id": 198,
-        "Name": "teamname198",
-        "TeamSubnet": "fd00:1337:198::"
-    },{
-        "Id": 199,
-        "Name": "teamname199",
-        "TeamSubnet": "fd00:1337:199::"
-    },{
-        "Id": 200,
-        "Name": "teamname200",
-        "TeamSubnet": "fd00:1337:200::"
-    },{
-        "Id": 201,
-        "Name": "teamname201",
-        "TeamSubnet": "fd00:1337:201::"
-    },{
-        "Id": 202,
-        "Name": "teamname202",
-        "TeamSubnet": "fd00:1337:202::"
-    },{
-        "Id": 203,
-        "Name": "teamname203",
-        "TeamSubnet": "fd00:1337:203::"
-    },{
-        "Id": 204,
-        "Name": "teamname204",
-        "TeamSubnet": "fd00:1337:204::"
-    },{
-        "Id": 205,
-        "Name": "teamname205",
-        "TeamSubnet": "fd00:1337:205::"
-    },{
-        "Id": 206,
-        "Name": "teamname206",
-        "TeamSubnet": "fd00:1337:206::"
-    },{
-        "Id": 207,
-        "Name": "teamname207",
-        "TeamSubnet": "fd00:1337:207::"
-    },{
-        "Id": 208,
-        "Name": "teamname208",
-        "TeamSubnet": "fd00:1337:208::"
-    },{
-        "Id": 209,
-        "Name": "teamname209",
-        "TeamSubnet": "fd00:1337:209::"
-    },{
-        "Id": 210,
-        "Name": "teamname210",
-        "TeamSubnet": "fd00:1337:210::"
-    },{
-        "Id": 211,
-        "Name": "teamname211",
-        "TeamSubnet": "fd00:1337:211::"
-    },{
-        "Id": 212,
-        "Name": "teamname212",
-        "TeamSubnet": "fd00:1337:212::"
-    },{
-        "Id": 213,
-        "Name": "teamname213",
-        "TeamSubnet": "fd00:1337:213::"
-    },{
-        "Id": 214,
-        "Name": "teamname214",
-        "TeamSubnet": "fd00:1337:214::"
-    },{
-        "Id": 215,
-        "Name": "teamname215",
-        "TeamSubnet": "fd00:1337:215::"
-    },{
-        "Id": 216,
-        "Name": "teamname216",
-        "TeamSubnet": "fd00:1337:216::"
-    },{
-        "Id": 217,
-        "Name": "teamname217",
-        "TeamSubnet": "fd00:1337:217::"
-    },{
-        "Id": 218,
-        "Name": "teamname218",
-        "TeamSubnet": "fd00:1337:218::"
-    },{
-        "Id": 219,
-        "Name": "teamname219",
-        "TeamSubnet": "fd00:1337:219::"
-    },{
-        "Id": 220,
-        "Name": "teamname220",
-        "TeamSubnet": "fd00:1337:220::"
-    },{
-        "Id": 221,
-        "Name": "teamname221",
-        "TeamSubnet": "fd00:1337:221::"
-    },{
-        "Id": 222,
-        "Name": "teamname222",
-        "TeamSubnet": "fd00:1337:222::"
-    },{
-        "Id": 223,
-        "Name": "teamname223",
-        "TeamSubnet": "fd00:1337:223::"
-    },{
-        "Id": 224,
-        "Name": "teamname224",
-        "TeamSubnet": "fd00:1337:224::"
-    },{
-        "Id": 225,
-        "Name": "teamname225",
-        "TeamSubnet": "fd00:1337:225::"
-    },{
-        "Id": 226,
-        "Name": "teamname226",
-        "TeamSubnet": "fd00:1337:226::"
-    },{
-        "Id": 227,
-        "Name": "teamname227",
-        "TeamSubnet": "fd00:1337:227::"
-    },{
-        "Id": 228,
-        "Name": "teamname228",
-        "TeamSubnet": "fd00:1337:228::"
-    },{
-        "Id": 229,
-        "Name": "teamname229",
-        "TeamSubnet": "fd00:1337:229::"
-    },{
-        "Id": 230,
-        "Name": "teamname230",
-        "TeamSubnet": "fd00:1337:230::"
-    },{
-        "Id": 231,
-        "Name": "teamname231",
-        "TeamSubnet": "fd00:1337:231::"
-    },{
-        "Id": 232,
-        "Name": "teamname232",
-        "TeamSubnet": "fd00:1337:232::"
-    },{
-        "Id": 233,
-        "Name": "teamname233",
-        "TeamSubnet": "fd00:1337:233::"
-    },{
-        "Id": 234,
-        "Name": "teamname234",
-        "TeamSubnet": "fd00:1337:234::"
-    },{
-        "Id": 235,
-        "Name": "teamname235",
-        "TeamSubnet": "fd00:1337:235::"
-    },{
-        "Id": 236,
-        "Name": "teamname236",
-        "TeamSubnet": "fd00:1337:236::"
-    },{
-        "Id": 237,
-        "Name": "teamname237",
-        "TeamSubnet": "fd00:1337:237::"
-    },{
-        "Id": 238,
-        "Name": "teamname238",
-        "TeamSubnet": "fd00:1337:238::"
-    },{
-        "Id": 239,
-        "Name": "teamname239",
-        "TeamSubnet": "fd00:1337:239::"
-    },{
-        "Id": 240,
-        "Name": "teamname240",
-        "TeamSubnet": "fd00:1337:240::"
-    },{
-        "Id": 241,
-        "Name": "teamname241",
-        "TeamSubnet": "fd00:1337:241::"
-    },{
-        "Id": 242,
-        "Name": "teamname242",
-        "TeamSubnet": "fd00:1337:242::"
-    },{
-        "Id": 243,
-        "Name": "teamname243",
-        "TeamSubnet": "fd00:1337:243::"
-    },{
-        "Id": 244,
-        "Name": "teamname244",
-        "TeamSubnet": "fd00:1337:244::"
-    },{
-        "Id": 245,
-        "Name": "teamname245",
-        "TeamSubnet": "fd00:1337:245::"
-    },{
-        "Id": 246,
-        "Name": "teamname246",
-        "TeamSubnet": "fd00:1337:246::"
-    },{
-        "Id": 247,
-        "Name": "teamname247",
-        "TeamSubnet": "fd00:1337:247::"
-    },{
-        "Id": 248,
-        "Name": "teamname248",
-        "TeamSubnet": "fd00:1337:248::"
-    },{
-        "Id": 249,
-        "Name": "teamname249",
-        "TeamSubnet": "fd00:1337:249::"
-    },{
-        "Id": 250,
-        "Name": "teamname250",
-        "TeamSubnet": "fd00:1337:250::"
-    },{
-        "Id": 251,
-        "Name": "teamname251",
-        "TeamSubnet": "fd00:1337:251::"
-    },{
-        "Id": 252,
-        "Name": "teamname252",
-        "TeamSubnet": "fd00:1337:252::"
-    },{
-        "Id": 253,
-        "Name": "teamname253",
-        "TeamSubnet": "fd00:1337:253::"
-    },{
-        "Id": 254,
-        "Name": "teamname254",
-        "TeamSubnet": "fd00:1337:254::"
-    },{
-        "Id": 255,
-        "Name": "teamname255",
-        "TeamSubnet": "fd00:1337:255::"
-    },{
-        "Id": 256,
-        "Name": "teamname256",
-        "TeamSubnet": "fd00:1337:256::"
+    "flagValidityInRounds": 2,
+    "checkedRoundsPerRound": 3,
+    "roundLengthInSeconds": 60,
+    "dnsSuffix": "eno.host",
+    "teamSubnetBytesLength": 6,
+    "flagSigningKey": "ir7PRm0SzqzA0lmFyBfUv68E6Yb7cjbJDp6dummqwr0Od70Sar7P27HVY6oc8PuW",
+    "teams": [{
+        "id": 1,
+        "name": "teamname1",
+        "teamSubnet": "fd00:1337:1::"
+    },{
+        "id": 2,
+        "name": "teamname2",
+        "teamSubnet": "fd00:1337:2::"
+    },{
+        "id": 3,
+        "name": "teamname3",
+        "teamSubnet": "fd00:1337:3::"
+    },{
+        "id": 4,
+        "name": "teamname4",
+        "teamSubnet": "fd00:1337:4::"
+    },{
+        "id": 5,
+        "name": "teamname5",
+        "teamSubnet": "fd00:1337:5::"
+    },{
+        "id": 6,
+        "name": "teamname6",
+        "teamSubnet": "fd00:1337:6::"
+    },{
+        "id": 7,
+        "name": "teamname7",
+        "teamSubnet": "fd00:1337:7::"
+    },{
+        "id": 8,
+        "name": "teamname8",
+        "teamSubnet": "fd00:1337:8::"
+    },{
+        "id": 9,
+        "name": "teamname9",
+        "teamSubnet": "fd00:1337:9::"
+    },{
+        "id": 10,
+        "name": "teamname10",
+        "teamSubnet": "fd00:1337:10::"
+    },{
+        "id": 11,
+        "name": "teamname11",
+        "teamSubnet": "fd00:1337:11::"
+    },{
+        "id": 12,
+        "name": "teamname12",
+        "teamSubnet": "fd00:1337:12::"
+    },{
+        "id": 13,
+        "name": "teamname13",
+        "teamSubnet": "fd00:1337:13::"
+    },{
+        "id": 14,
+        "name": "teamname14",
+        "teamSubnet": "fd00:1337:14::"
+    },{
+        "id": 15,
+        "name": "teamname15",
+        "teamSubnet": "fd00:1337:15::"
+    },{
+        "id": 16,
+        "name": "teamname16",
+        "teamSubnet": "fd00:1337:16::"
+    },{
+        "id": 17,
+        "name": "teamname17",
+        "teamSubnet": "fd00:1337:17::"
+    },{
+        "id": 18,
+        "name": "teamname18",
+        "teamSubnet": "fd00:1337:18::"
+    },{
+        "id": 19,
+        "name": "teamname19",
+        "teamSubnet": "fd00:1337:19::"
+    },{
+        "id": 20,
+        "name": "teamname20",
+        "teamSubnet": "fd00:1337:20::"
+    },{
+        "id": 21,
+        "name": "teamname21",
+        "teamSubnet": "fd00:1337:21::"
+    },{
+        "id": 22,
+        "name": "teamname22",
+        "teamSubnet": "fd00:1337:22::"
+    },{
+        "id": 23,
+        "name": "teamname23",
+        "teamSubnet": "fd00:1337:23::"
+    },{
+        "id": 24,
+        "name": "teamname24",
+        "teamSubnet": "fd00:1337:24::"
+    },{
+        "id": 25,
+        "name": "teamname25",
+        "teamSubnet": "fd00:1337:25::"
+    },{
+        "id": 26,
+        "name": "teamname26",
+        "teamSubnet": "fd00:1337:26::"
+    },{
+        "id": 27,
+        "name": "teamname27",
+        "teamSubnet": "fd00:1337:27::"
+    },{
+        "id": 28,
+        "name": "teamname28",
+        "teamSubnet": "fd00:1337:28::"
+    },{
+        "id": 29,
+        "name": "teamname29",
+        "teamSubnet": "fd00:1337:29::"
+    },{
+        "id": 30,
+        "name": "teamname30",
+        "teamSubnet": "fd00:1337:30::"
+    },{
+        "id": 31,
+        "name": "teamname31",
+        "teamSubnet": "fd00:1337:31::"
+    },{
+        "id": 32,
+        "name": "teamname32",
+        "teamSubnet": "fd00:1337:32::"
+    },{
+        "id": 33,
+        "name": "teamname33",
+        "teamSubnet": "fd00:1337:33::"
+    },{
+        "id": 34,
+        "name": "teamname34",
+        "teamSubnet": "fd00:1337:34::"
+    },{
+        "id": 35,
+        "name": "teamname35",
+        "teamSubnet": "fd00:1337:35::"
+    },{
+        "id": 36,
+        "name": "teamname36",
+        "teamSubnet": "fd00:1337:36::"
+    },{
+        "id": 37,
+        "name": "teamname37",
+        "teamSubnet": "fd00:1337:37::"
+    },{
+        "id": 38,
+        "name": "teamname38",
+        "teamSubnet": "fd00:1337:38::"
+    },{
+        "id": 39,
+        "name": "teamname39",
+        "teamSubnet": "fd00:1337:39::"
+    },{
+        "id": 40,
+        "name": "teamname40",
+        "teamSubnet": "fd00:1337:40::"
+    },{
+        "id": 41,
+        "name": "teamname41",
+        "teamSubnet": "fd00:1337:41::"
+    },{
+        "id": 42,
+        "name": "teamname42",
+        "teamSubnet": "fd00:1337:42::"
+    },{
+        "id": 43,
+        "name": "teamname43",
+        "teamSubnet": "fd00:1337:43::"
+    },{
+        "id": 44,
+        "name": "teamname44",
+        "teamSubnet": "fd00:1337:44::"
+    },{
+        "id": 45,
+        "name": "teamname45",
+        "teamSubnet": "fd00:1337:45::"
+    },{
+        "id": 46,
+        "name": "teamname46",
+        "teamSubnet": "fd00:1337:46::"
+    },{
+        "id": 47,
+        "name": "teamname47",
+        "teamSubnet": "fd00:1337:47::"
+    },{
+        "id": 48,
+        "name": "teamname48",
+        "teamSubnet": "fd00:1337:48::"
+    },{
+        "id": 49,
+        "name": "teamname49",
+        "teamSubnet": "fd00:1337:49::"
+    },{
+        "id": 50,
+        "name": "teamname50",
+        "teamSubnet": "fd00:1337:50::"
+    },{
+        "id": 51,
+        "name": "teamname51",
+        "teamSubnet": "fd00:1337:51::"
+    },{
+        "id": 52,
+        "name": "teamname52",
+        "teamSubnet": "fd00:1337:52::"
+    },{
+        "id": 53,
+        "name": "teamname53",
+        "teamSubnet": "fd00:1337:53::"
+    },{
+        "id": 54,
+        "name": "teamname54",
+        "teamSubnet": "fd00:1337:54::"
+    },{
+        "id": 55,
+        "name": "teamname55",
+        "teamSubnet": "fd00:1337:55::"
+    },{
+        "id": 56,
+        "name": "teamname56",
+        "teamSubnet": "fd00:1337:56::"
+    },{
+        "id": 57,
+        "name": "teamname57",
+        "teamSubnet": "fd00:1337:57::"
+    },{
+        "id": 58,
+        "name": "teamname58",
+        "teamSubnet": "fd00:1337:58::"
+    },{
+        "id": 59,
+        "name": "teamname59",
+        "teamSubnet": "fd00:1337:59::"
+    },{
+        "id": 60,
+        "name": "teamname60",
+        "teamSubnet": "fd00:1337:60::"
+    },{
+        "id": 61,
+        "name": "teamname61",
+        "teamSubnet": "fd00:1337:61::"
+    },{
+        "id": 62,
+        "name": "teamname62",
+        "teamSubnet": "fd00:1337:62::"
+    },{
+        "id": 63,
+        "name": "teamname63",
+        "teamSubnet": "fd00:1337:63::"
+    },{
+        "id": 64,
+        "name": "teamname64",
+        "teamSubnet": "fd00:1337:64::"
+    },{
+        "id": 65,
+        "name": "teamname65",
+        "teamSubnet": "fd00:1337:65::"
+    },{
+        "id": 66,
+        "name": "teamname66",
+        "teamSubnet": "fd00:1337:66::"
+    },{
+        "id": 67,
+        "name": "teamname67",
+        "teamSubnet": "fd00:1337:67::"
+    },{
+        "id": 68,
+        "name": "teamname68",
+        "teamSubnet": "fd00:1337:68::"
+    },{
+        "id": 69,
+        "name": "teamname69",
+        "teamSubnet": "fd00:1337:69::"
+    },{
+        "id": 70,
+        "name": "teamname70",
+        "teamSubnet": "fd00:1337:70::"
+    },{
+        "id": 71,
+        "name": "teamname71",
+        "teamSubnet": "fd00:1337:71::"
+    },{
+        "id": 72,
+        "name": "teamname72",
+        "teamSubnet": "fd00:1337:72::"
+    },{
+        "id": 73,
+        "name": "teamname73",
+        "teamSubnet": "fd00:1337:73::"
+    },{
+        "id": 74,
+        "name": "teamname74",
+        "teamSubnet": "fd00:1337:74::"
+    },{
+        "id": 75,
+        "name": "teamname75",
+        "teamSubnet": "fd00:1337:75::"
+    },{
+        "id": 76,
+        "name": "teamname76",
+        "teamSubnet": "fd00:1337:76::"
+    },{
+        "id": 77,
+        "name": "teamname77",
+        "teamSubnet": "fd00:1337:77::"
+    },{
+        "id": 78,
+        "name": "teamname78",
+        "teamSubnet": "fd00:1337:78::"
+    },{
+        "id": 79,
+        "name": "teamname79",
+        "teamSubnet": "fd00:1337:79::"
+    },{
+        "id": 80,
+        "name": "teamname80",
+        "teamSubnet": "fd00:1337:80::"
+    },{
+        "id": 81,
+        "name": "teamname81",
+        "teamSubnet": "fd00:1337:81::"
+    },{
+        "id": 82,
+        "name": "teamname82",
+        "teamSubnet": "fd00:1337:82::"
+    },{
+        "id": 83,
+        "name": "teamname83",
+        "teamSubnet": "fd00:1337:83::"
+    },{
+        "id": 84,
+        "name": "teamname84",
+        "teamSubnet": "fd00:1337:84::"
+    },{
+        "id": 85,
+        "name": "teamname85",
+        "teamSubnet": "fd00:1337:85::"
+    },{
+        "id": 86,
+        "name": "teamname86",
+        "teamSubnet": "fd00:1337:86::"
+    },{
+        "id": 87,
+        "name": "teamname87",
+        "teamSubnet": "fd00:1337:87::"
+    },{
+        "id": 88,
+        "name": "teamname88",
+        "teamSubnet": "fd00:1337:88::"
+    },{
+        "id": 89,
+        "name": "teamname89",
+        "teamSubnet": "fd00:1337:89::"
+    },{
+        "id": 90,
+        "name": "teamname90",
+        "teamSubnet": "fd00:1337:90::"
+    },{
+        "id": 91,
+        "name": "teamname91",
+        "teamSubnet": "fd00:1337:91::"
+    },{
+        "id": 92,
+        "name": "teamname92",
+        "teamSubnet": "fd00:1337:92::"
+    },{
+        "id": 93,
+        "name": "teamname93",
+        "teamSubnet": "fd00:1337:93::"
+    },{
+        "id": 94,
+        "name": "teamname94",
+        "teamSubnet": "fd00:1337:94::"
+    },{
+        "id": 95,
+        "name": "teamname95",
+        "teamSubnet": "fd00:1337:95::"
+    },{
+        "id": 96,
+        "name": "teamname96",
+        "teamSubnet": "fd00:1337:96::"
+    },{
+        "id": 97,
+        "name": "teamname97",
+        "teamSubnet": "fd00:1337:97::"
+    },{
+        "id": 98,
+        "name": "teamname98",
+        "teamSubnet": "fd00:1337:98::"
+    },{
+        "id": 99,
+        "name": "teamname99",
+        "teamSubnet": "fd00:1337:99::"
+    },{
+        "id": 100,
+        "name": "teamname100",
+        "teamSubnet": "fd00:1337:100::"
+    },{
+        "id": 101,
+        "name": "teamname101",
+        "teamSubnet": "fd00:1337:101::"
+    },{
+        "id": 102,
+        "name": "teamname102",
+        "teamSubnet": "fd00:1337:102::"
+    },{
+        "id": 103,
+        "name": "teamname103",
+        "teamSubnet": "fd00:1337:103::"
+    },{
+        "id": 104,
+        "name": "teamname104",
+        "teamSubnet": "fd00:1337:104::"
+    },{
+        "id": 105,
+        "name": "teamname105",
+        "teamSubnet": "fd00:1337:105::"
+    },{
+        "id": 106,
+        "name": "teamname106",
+        "teamSubnet": "fd00:1337:106::"
+    },{
+        "id": 107,
+        "name": "teamname107",
+        "teamSubnet": "fd00:1337:107::"
+    },{
+        "id": 108,
+        "name": "teamname108",
+        "teamSubnet": "fd00:1337:108::"
+    },{
+        "id": 109,
+        "name": "teamname109",
+        "teamSubnet": "fd00:1337:109::"
+    },{
+        "id": 110,
+        "name": "teamname110",
+        "teamSubnet": "fd00:1337:110::"
+    },{
+        "id": 111,
+        "name": "teamname111",
+        "teamSubnet": "fd00:1337:111::"
+    },{
+        "id": 112,
+        "name": "teamname112",
+        "teamSubnet": "fd00:1337:112::"
+    },{
+        "id": 113,
+        "name": "teamname113",
+        "teamSubnet": "fd00:1337:113::"
+    },{
+        "id": 114,
+        "name": "teamname114",
+        "teamSubnet": "fd00:1337:114::"
+    },{
+        "id": 115,
+        "name": "teamname115",
+        "teamSubnet": "fd00:1337:115::"
+    },{
+        "id": 116,
+        "name": "teamname116",
+        "teamSubnet": "fd00:1337:116::"
+    },{
+        "id": 117,
+        "name": "teamname117",
+        "teamSubnet": "fd00:1337:117::"
+    },{
+        "id": 118,
+        "name": "teamname118",
+        "teamSubnet": "fd00:1337:118::"
+    },{
+        "id": 119,
+        "name": "teamname119",
+        "teamSubnet": "fd00:1337:119::"
+    },{
+        "id": 120,
+        "name": "teamname120",
+        "teamSubnet": "fd00:1337:120::"
+    },{
+        "id": 121,
+        "name": "teamname121",
+        "teamSubnet": "fd00:1337:121::"
+    },{
+        "id": 122,
+        "name": "teamname122",
+        "teamSubnet": "fd00:1337:122::"
+    },{
+        "id": 123,
+        "name": "teamname123",
+        "teamSubnet": "fd00:1337:123::"
+    },{
+        "id": 124,
+        "name": "teamname124",
+        "teamSubnet": "fd00:1337:124::"
+    },{
+        "id": 125,
+        "name": "teamname125",
+        "teamSubnet": "fd00:1337:125::"
+    },{
+        "id": 126,
+        "name": "teamname126",
+        "teamSubnet": "fd00:1337:126::"
+    },{
+        "id": 127,
+        "name": "teamname127",
+        "teamSubnet": "fd00:1337:127::"
+    },{
+        "id": 128,
+        "name": "teamname128",
+        "teamSubnet": "fd00:1337:128::"
+    },{
+        "id": 129,
+        "name": "teamname129",
+        "teamSubnet": "fd00:1337:129::"
+    },{
+        "id": 130,
+        "name": "teamname130",
+        "teamSubnet": "fd00:1337:130::"
+    },{
+        "id": 131,
+        "name": "teamname131",
+        "teamSubnet": "fd00:1337:131::"
+    },{
+        "id": 132,
+        "name": "teamname132",
+        "teamSubnet": "fd00:1337:132::"
+    },{
+        "id": 133,
+        "name": "teamname133",
+        "teamSubnet": "fd00:1337:133::"
+    },{
+        "id": 134,
+        "name": "teamname134",
+        "teamSubnet": "fd00:1337:134::"
+    },{
+        "id": 135,
+        "name": "teamname135",
+        "teamSubnet": "fd00:1337:135::"
+    },{
+        "id": 136,
+        "name": "teamname136",
+        "teamSubnet": "fd00:1337:136::"
+    },{
+        "id": 137,
+        "name": "teamname137",
+        "teamSubnet": "fd00:1337:137::"
+    },{
+        "id": 138,
+        "name": "teamname138",
+        "teamSubnet": "fd00:1337:138::"
+    },{
+        "id": 139,
+        "name": "teamname139",
+        "teamSubnet": "fd00:1337:139::"
+    },{
+        "id": 140,
+        "name": "teamname140",
+        "teamSubnet": "fd00:1337:140::"
+    },{
+        "id": 141,
+        "name": "teamname141",
+        "teamSubnet": "fd00:1337:141::"
+    },{
+        "id": 142,
+        "name": "teamname142",
+        "teamSubnet": "fd00:1337:142::"
+    },{
+        "id": 143,
+        "name": "teamname143",
+        "teamSubnet": "fd00:1337:143::"
+    },{
+        "id": 144,
+        "name": "teamname144",
+        "teamSubnet": "fd00:1337:144::"
+    },{
+        "id": 145,
+        "name": "teamname145",
+        "teamSubnet": "fd00:1337:145::"
+    },{
+        "id": 146,
+        "name": "teamname146",
+        "teamSubnet": "fd00:1337:146::"
+    },{
+        "id": 147,
+        "name": "teamname147",
+        "teamSubnet": "fd00:1337:147::"
+    },{
+        "id": 148,
+        "name": "teamname148",
+        "teamSubnet": "fd00:1337:148::"
+    },{
+        "id": 149,
+        "name": "teamname149",
+        "teamSubnet": "fd00:1337:149::"
+    },{
+        "id": 150,
+        "name": "teamname150",
+        "teamSubnet": "fd00:1337:150::"
+    },{
+        "id": 151,
+        "name": "teamname151",
+        "teamSubnet": "fd00:1337:151::"
+    },{
+        "id": 152,
+        "name": "teamname152",
+        "teamSubnet": "fd00:1337:152::"
+    },{
+        "id": 153,
+        "name": "teamname153",
+        "teamSubnet": "fd00:1337:153::"
+    },{
+        "id": 154,
+        "name": "teamname154",
+        "teamSubnet": "fd00:1337:154::"
+    },{
+        "id": 155,
+        "name": "teamname155",
+        "teamSubnet": "fd00:1337:155::"
+    },{
+        "id": 156,
+        "name": "teamname156",
+        "teamSubnet": "fd00:1337:156::"
+    },{
+        "id": 157,
+        "name": "teamname157",
+        "teamSubnet": "fd00:1337:157::"
+    },{
+        "id": 158,
+        "name": "teamname158",
+        "teamSubnet": "fd00:1337:158::"
+    },{
+        "id": 159,
+        "name": "teamname159",
+        "teamSubnet": "fd00:1337:159::"
+    },{
+        "id": 160,
+        "name": "teamname160",
+        "teamSubnet": "fd00:1337:160::"
+    },{
+        "id": 161,
+        "name": "teamname161",
+        "teamSubnet": "fd00:1337:161::"
+    },{
+        "id": 162,
+        "name": "teamname162",
+        "teamSubnet": "fd00:1337:162::"
+    },{
+        "id": 163,
+        "name": "teamname163",
+        "teamSubnet": "fd00:1337:163::"
+    },{
+        "id": 164,
+        "name": "teamname164",
+        "teamSubnet": "fd00:1337:164::"
+    },{
+        "id": 165,
+        "name": "teamname165",
+        "teamSubnet": "fd00:1337:165::"
+    },{
+        "id": 166,
+        "name": "teamname166",
+        "teamSubnet": "fd00:1337:166::"
+    },{
+        "id": 167,
+        "name": "teamname167",
+        "teamSubnet": "fd00:1337:167::"
+    },{
+        "id": 168,
+        "name": "teamname168",
+        "teamSubnet": "fd00:1337:168::"
+    },{
+        "id": 169,
+        "name": "teamname169",
+        "teamSubnet": "fd00:1337:169::"
+    },{
+        "id": 170,
+        "name": "teamname170",
+        "teamSubnet": "fd00:1337:170::"
+    },{
+        "id": 171,
+        "name": "teamname171",
+        "teamSubnet": "fd00:1337:171::"
+    },{
+        "id": 172,
+        "name": "teamname172",
+        "teamSubnet": "fd00:1337:172::"
+    },{
+        "id": 173,
+        "name": "teamname173",
+        "teamSubnet": "fd00:1337:173::"
+    },{
+        "id": 174,
+        "name": "teamname174",
+        "teamSubnet": "fd00:1337:174::"
+    },{
+        "id": 175,
+        "name": "teamname175",
+        "teamSubnet": "fd00:1337:175::"
+    },{
+        "id": 176,
+        "name": "teamname176",
+        "teamSubnet": "fd00:1337:176::"
+    },{
+        "id": 177,
+        "name": "teamname177",
+        "teamSubnet": "fd00:1337:177::"
+    },{
+        "id": 178,
+        "name": "teamname178",
+        "teamSubnet": "fd00:1337:178::"
+    },{
+        "id": 179,
+        "name": "teamname179",
+        "teamSubnet": "fd00:1337:179::"
+    },{
+        "id": 180,
+        "name": "teamname180",
+        "teamSubnet": "fd00:1337:180::"
+    },{
+        "id": 181,
+        "name": "teamname181",
+        "teamSubnet": "fd00:1337:181::"
+    },{
+        "id": 182,
+        "name": "teamname182",
+        "teamSubnet": "fd00:1337:182::"
+    },{
+        "id": 183,
+        "name": "teamname183",
+        "teamSubnet": "fd00:1337:183::"
+    },{
+        "id": 184,
+        "name": "teamname184",
+        "teamSubnet": "fd00:1337:184::"
+    },{
+        "id": 185,
+        "name": "teamname185",
+        "teamSubnet": "fd00:1337:185::"
+    },{
+        "id": 186,
+        "name": "teamname186",
+        "teamSubnet": "fd00:1337:186::"
+    },{
+        "id": 187,
+        "name": "teamname187",
+        "teamSubnet": "fd00:1337:187::"
+    },{
+        "id": 188,
+        "name": "teamname188",
+        "teamSubnet": "fd00:1337:188::"
+    },{
+        "id": 189,
+        "name": "teamname189",
+        "teamSubnet": "fd00:1337:189::"
+    },{
+        "id": 190,
+        "name": "teamname190",
+        "teamSubnet": "fd00:1337:190::"
+    },{
+        "id": 191,
+        "name": "teamname191",
+        "teamSubnet": "fd00:1337:191::"
+    },{
+        "id": 192,
+        "name": "teamname192",
+        "teamSubnet": "fd00:1337:192::"
+    },{
+        "id": 193,
+        "name": "teamname193",
+        "teamSubnet": "fd00:1337:193::"
+    },{
+        "id": 194,
+        "name": "teamname194",
+        "teamSubnet": "fd00:1337:194::"
+    },{
+        "id": 195,
+        "name": "teamname195",
+        "teamSubnet": "fd00:1337:195::"
+    },{
+        "id": 196,
+        "name": "teamname196",
+        "teamSubnet": "fd00:1337:196::"
+    },{
+        "id": 197,
+        "name": "teamname197",
+        "teamSubnet": "fd00:1337:197::"
+    },{
+        "id": 198,
+        "name": "teamname198",
+        "teamSubnet": "fd00:1337:198::"
+    },{
+        "id": 199,
+        "name": "teamname199",
+        "teamSubnet": "fd00:1337:199::"
+    },{
+        "id": 200,
+        "name": "teamname200",
+        "teamSubnet": "fd00:1337:200::"
+    },{
+        "id": 201,
+        "name": "teamname201",
+        "teamSubnet": "fd00:1337:201::"
+    },{
+        "id": 202,
+        "name": "teamname202",
+        "teamSubnet": "fd00:1337:202::"
+    },{
+        "id": 203,
+        "name": "teamname203",
+        "teamSubnet": "fd00:1337:203::"
+    },{
+        "id": 204,
+        "name": "teamname204",
+        "teamSubnet": "fd00:1337:204::"
+    },{
+        "id": 205,
+        "name": "teamname205",
+        "teamSubnet": "fd00:1337:205::"
+    },{
+        "id": 206,
+        "name": "teamname206",
+        "teamSubnet": "fd00:1337:206::"
+    },{
+        "id": 207,
+        "name": "teamname207",
+        "teamSubnet": "fd00:1337:207::"
+    },{
+        "id": 208,
+        "name": "teamname208",
+        "teamSubnet": "fd00:1337:208::"
+    },{
+        "id": 209,
+        "name": "teamname209",
+        "teamSubnet": "fd00:1337:209::"
+    },{
+        "id": 210,
+        "name": "teamname210",
+        "teamSubnet": "fd00:1337:210::"
+    },{
+        "id": 211,
+        "name": "teamname211",
+        "teamSubnet": "fd00:1337:211::"
+    },{
+        "id": 212,
+        "name": "teamname212",
+        "teamSubnet": "fd00:1337:212::"
+    },{
+        "id": 213,
+        "name": "teamname213",
+        "teamSubnet": "fd00:1337:213::"
+    },{
+        "id": 214,
+        "name": "teamname214",
+        "teamSubnet": "fd00:1337:214::"
+    },{
+        "id": 215,
+        "name": "teamname215",
+        "teamSubnet": "fd00:1337:215::"
+    },{
+        "id": 216,
+        "name": "teamname216",
+        "teamSubnet": "fd00:1337:216::"
+    },{
+        "id": 217,
+        "name": "teamname217",
+        "teamSubnet": "fd00:1337:217::"
+    },{
+        "id": 218,
+        "name": "teamname218",
+        "teamSubnet": "fd00:1337:218::"
+    },{
+        "id": 219,
+        "name": "teamname219",
+        "teamSubnet": "fd00:1337:219::"
+    },{
+        "id": 220,
+        "name": "teamname220",
+        "teamSubnet": "fd00:1337:220::"
+    },{
+        "id": 221,
+        "name": "teamname221",
+        "teamSubnet": "fd00:1337:221::"
+    },{
+        "id": 222,
+        "name": "teamname222",
+        "teamSubnet": "fd00:1337:222::"
+    },{
+        "id": 223,
+        "name": "teamname223",
+        "teamSubnet": "fd00:1337:223::"
+    },{
+        "id": 224,
+        "name": "teamname224",
+        "teamSubnet": "fd00:1337:224::"
+    },{
+        "id": 225,
+        "name": "teamname225",
+        "teamSubnet": "fd00:1337:225::"
+    },{
+        "id": 226,
+        "name": "teamname226",
+        "teamSubnet": "fd00:1337:226::"
+    },{
+        "id": 227,
+        "name": "teamname227",
+        "teamSubnet": "fd00:1337:227::"
+    },{
+        "id": 228,
+        "name": "teamname228",
+        "teamSubnet": "fd00:1337:228::"
+    },{
+        "id": 229,
+        "name": "teamname229",
+        "teamSubnet": "fd00:1337:229::"
+    },{
+        "id": 230,
+        "name": "teamname230",
+        "teamSubnet": "fd00:1337:230::"
+    },{
+        "id": 231,
+        "name": "teamname231",
+        "teamSubnet": "fd00:1337:231::"
+    },{
+        "id": 232,
+        "name": "teamname232",
+        "teamSubnet": "fd00:1337:232::"
+    },{
+        "id": 233,
+        "name": "teamname233",
+        "teamSubnet": "fd00:1337:233::"
+    },{
+        "id": 234,
+        "name": "teamname234",
+        "teamSubnet": "fd00:1337:234::"
+    },{
+        "id": 235,
+        "name": "teamname235",
+        "teamSubnet": "fd00:1337:235::"
+    },{
+        "id": 236,
+        "name": "teamname236",
+        "teamSubnet": "fd00:1337:236::"
+    },{
+        "id": 237,
+        "name": "teamname237",
+        "teamSubnet": "fd00:1337:237::"
+    },{
+        "id": 238,
+        "name": "teamname238",
+        "teamSubnet": "fd00:1337:238::"
+    },{
+        "id": 239,
+        "name": "teamname239",
+        "teamSubnet": "fd00:1337:239::"
+    },{
+        "id": 240,
+        "name": "teamname240",
+        "teamSubnet": "fd00:1337:240::"
+    },{
+        "id": 241,
+        "name": "teamname241",
+        "teamSubnet": "fd00:1337:241::"
+    },{
+        "id": 242,
+        "name": "teamname242",
+        "teamSubnet": "fd00:1337:242::"
+    },{
+        "id": 243,
+        "name": "teamname243",
+        "teamSubnet": "fd00:1337:243::"
+    },{
+        "id": 244,
+        "name": "teamname244",
+        "teamSubnet": "fd00:1337:244::"
+    },{
+        "id": 245,
+        "name": "teamname245",
+        "teamSubnet": "fd00:1337:245::"
+    },{
+        "id": 246,
+        "name": "teamname246",
+        "teamSubnet": "fd00:1337:246::"
+    },{
+        "id": 247,
+        "name": "teamname247",
+        "teamSubnet": "fd00:1337:247::"
+    },{
+        "id": 248,
+        "name": "teamname248",
+        "teamSubnet": "fd00:1337:248::"
+    },{
+        "id": 249,
+        "name": "teamname249",
+        "teamSubnet": "fd00:1337:249::"
+    },{
+        "id": 250,
+        "name": "teamname250",
+        "teamSubnet": "fd00:1337:250::"
+    },{
+        "id": 251,
+        "name": "teamname251",
+        "teamSubnet": "fd00:1337:251::"
+    },{
+        "id": 252,
+        "name": "teamname252",
+        "teamSubnet": "fd00:1337:252::"
+    },{
+        "id": 253,
+        "name": "teamname253",
+        "teamSubnet": "fd00:1337:253::"
+    },{
+        "id": 254,
+        "name": "teamname254",
+        "teamSubnet": "fd00:1337:254::"
+    },{
+        "id": 255,
+        "name": "teamname255",
+        "teamSubnet": "fd00:1337:255::"
+    },{
+        "id": 256,
+        "name": "teamname256",
+        "teamSubnet": "fd00:1337:256::"
     }],
     "Services": [{
-        "Id": 1,
-        "Name": "WASP",
-        "FlagsPerRound": 2,
-        "NoisesPerRound": 0,
-        "HavocsPerRound": 0,
-        "WeightFactor": 1,
-        "Checkers": ["http://[::1]:3031"]
+        "id": 1,
+        "name": "WASP",
+        "flagsPerRoundMultiplier": 2,
+        "noisesPerRoundMultiplier": 0,
+        "havocsPerRoundMultiplier": 0,
+        "weightFactor": 1,
+        "checkers": ["http://[::1]:3031"]
     },{
-        "Id": 2,
-        "Name": "teapot",
-        "FlagsPerRound": 1,
-        "NoisesPerRound": 0,
-        "HavocsPerRound": 0,
-        "WeightFactor": 1,
-        "Checkers": ["http://[::1]:3031"]
+        "id": 2,
+        "name": "teapot",
+        "flagsPerRoundMultiplier": 1,
+        "noisesPerRoundMultiplier": 0,
+        "havocsPerRoundMultiplier": 0,
+        "weightFactor": 1,
+        "checkers": ["http://[::1]:3031"]
     },{
-        "Id": 3,
-        "Name": "secretstore",
-        "FlagsPerRound": 1,
-        "NoisesPerRound": 0,
-        "HavocsPerRound": 0,
-        "WeightFactor": 1,
-        "Checkers": ["http://[::1]:3031"]
+        "id": 3,
+        "name": "secretstore",
+        "flagsPerRoundMultiplier": 1,
+        "noisesPerRoundMultiplier": 0,
+        "havocsPerRoundMultiplier": 0,
+        "weightFactor": 1,
+        "checkers": ["http://[::1]:3031"]
     },{
-        "Id": 4,
-        "Name": "socks",
-        "FlagsPerRound": 1,
-        "NoisesPerRound": 0,
-        "HavocsPerRound": 0,
-        "WeightFactor": 1,
-        "Checkers": ["http://[::1]:3031"]
+        "id": 4,
+        "name": "socks",
+        "flagsPerRoundMultiplier": 1,
+        "noisesPerRoundMultiplier": 0,
+        "havocsPerRoundMultiplier": 0,
+        "weightFactor": 1,
+        "checkers": ["http://[::1]:3031"]
     },{
-        "Id": 5,
-        "Name": "faustnotes",
-        "FlagsPerRound": 1,
-        "NoisesPerRound": 1,
-        "HavocsPerRound": 0,
-        "WeightFactor": 1,
-        "Checkers": ["http://[::1]:3031"]
+        "id": 5,
+        "name": "faustnotes",
+        "flagsPerRoundMultiplier": 1,
+        "noisesPerRoundMultiplier": 1,
+        "havocsPerRoundMultiplier": 0,
+        "weightFactor": 1,
+        "checkers": ["http://[::1]:3031"]
     },{
-        "Id": 6,
-        "Name": "pie",
-        "FlagsPerRound": 1,
-        "NoisesPerRound": 1,
-        "HavocsPerRound": 0,
-        "WeightFactor": 1,
-        "Checkers": ["http://[::1]:3031"]
+        "id": 6,
+        "name": "pie",
+        "flagsPerRoundMultiplier": 1,
+        "noisesPerRoundMultiplier": 1,
+        "havocsPerRoundMultiplier": 0,
+        "weightFactor": 1,
+        "checkers": ["http://[::1]:3031"]
     },{
-        "Id": 7,
-        "Name": "taskk33per",
-        "FlagsPerRound": 1,
-        "NoisesPerRound": 1,
-        "HavocsPerRound": 0,
-        "WeightFactor": 1,
-        "Checkers": ["http://[::1]:3031"]
+        "id": 7,
+        "name": "taskk33per",
+        "flagsPerRoundMultiplier": 1,
+        "noisesPerRoundMultiplier": 1,
+        "havocsPerRoundMultiplier": 0,
+        "weightFactor": 1,
+        "checkers": ["http://[::1]:3031"]
     },{
-        "Id": 8,
-        "Name": "broadcast",
-        "FlagsPerRound": 2,
-        "NoisesPerRound": 1,
-        "HavocsPerRound": 0,
-        "WeightFactor": 1,
-        "Checkers": ["http://[::1]:3031"]
+        "id": 8,
+        "name": "broadcast",
+        "flagsPerRoundMultiplier": 2,
+        "noisesPerRoundMultiplier": 1,
+        "havocsPerRoundMultiplier": 0,
+        "weightFactor": 1,
+        "checkers": ["http://[::1]:3031"]
     }]
 }
