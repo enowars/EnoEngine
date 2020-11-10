@@ -220,13 +220,7 @@ namespace EnoDatabase
                 .Select(g => new { g.Key, Amount = g.Count() })
                 .ToDictionaryAsync(g => g.Key);
 
-            var newServiceSnapshot = teams.ToDictionary(t => t.Id, t => new ServiceStatsSnapshot()
-            {
-                TeamId = t.Id,
-                RoundId = newLatestSnapshotRoundId,
-                ServiceId = serviceId
-            });
-
+            Dictionary<long, ServiceStatsSnapshot> newServiceSnapshots = new();
             foreach (var team in teams)
             {
                 double slaPoints = 0;
@@ -263,12 +257,14 @@ namespace EnoDatabase
                         attackPoints += 1.0 / allCapturesOfFlags[new { capture.FlagRoundId, capture.FlagOwnerId, capture.FlagRoundOffset }].Amount;
                     }
                 }
-                var teamSnapshot = newServiceSnapshot[team.Id];
-                teamSnapshot.ServiceLevelAgreementPoints = slaPoints;
-                teamSnapshot.AttackPoints = attackPoints;
-                teamSnapshot.LostDefensePoints = defPoints;
+                newServiceSnapshots[team.Id] = new(team.Id,
+                    serviceId,
+                    attackPoints,
+                    defPoints,
+                    slaPoints,
+                    newLatestSnapshotRoundId);
             }
-            return newServiceSnapshot;
+            return newServiceSnapshots;
         }
 
         private async Task<Dictionary<long, ServiceStatsSnapshot>> GetSnapshot(Team[] teams, long snapshotRoundId, long serviceId)

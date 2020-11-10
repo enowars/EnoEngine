@@ -8,7 +8,7 @@ namespace EnoCore.Models.Database
     /// PK: FlagServiceId, sf.FlagRoundId, sf.FlagOwnerId, sf.FlagRoundOffset, sf.AttackerTeamId
     /// Flag FK: FlagServiceId, FlagRoundId, FlagOwnerId, FlagRoundOffset
     /// </summary>
-    public class SubmittedFlag
+    public record SubmittedFlag
     {
 #pragma warning disable CS8618
         public long FlagServiceId { get; set; }

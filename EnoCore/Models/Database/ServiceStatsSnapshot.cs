@@ -4,18 +4,10 @@ using System.Text;
 
 namespace EnoCore.Models.Database
 {
-    public class ServiceStatsSnapshot
-    {
-#pragma warning disable CS8618
-        public long TeamId { get; set; }
-        public Team Team { get; set; }
-        public long ServiceId { get; set; }
-        public Service Service { get; set; }
-        public double AttackPoints { get; set; }
-        public double LostDefensePoints { get; set; }
-        public double ServiceLevelAgreementPoints { get; set; }
-        public long RoundId { get; set; }
-        public Round Round { get; set; }
-#pragma warning restore CS8618
-    }
+    public sealed record ServiceStatsSnapshot(long TeamId,
+        long ServiceId,
+        double AttackPoints,
+        double LostDefensePoints,
+        double ServiceLevelAgreementPoints,
+        long RoundId);
 }

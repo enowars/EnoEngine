@@ -6,12 +6,5 @@ using System.Text.Json.Serialization;
 
 namespace EnoCore.Models.Json
 {
-    public enum CheckerTaskMethod
-    {
-        putflag,
-        getflag,
-        putnoise,
-        getnoise,
-        havoc
-    }
+
 }

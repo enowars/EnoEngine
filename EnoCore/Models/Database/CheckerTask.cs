@@ -5,11 +5,13 @@ using System.Text;
 
 namespace EnoCore.Models.Database
 {
-    public enum CheckerTaskLaunchStatus
+    public enum CheckerTaskMethod
     {
-        New,
-        Launched,
-        Done
+        putflag,
+        getflag,
+        putnoise,
+        getnoise,
+        havoc
     }
 
     public enum CheckerResult
@@ -18,6 +20,13 @@ namespace EnoCore.Models.Database
         OFFLINE,
         MUMBLE,
         OK
+    }
+
+    public enum CheckerTaskLaunchStatus
+    {
+        New,
+        Launched,
+        Done
     }
 
     public record CheckerTask(long Id,
