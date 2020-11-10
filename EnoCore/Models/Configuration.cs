@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EnoCore.Models
 {
-    public record Configuration(string Title,
+    public sealed record Configuration(string Title,
         long FlagValidityInRounds,
         int CheckedRoundsPerRound,
         int RoundLengthInSeconds,
@@ -19,7 +19,7 @@ namespace EnoCore.Models
         List<ConfigurationService> Services,
         Dictionary<long, string[]> Checkers);
 
-    public record ConfigurationTeam(long Id,
+    public sealed record ConfigurationTeam(long Id,
         string Name,
         string? Address,
         string TeamSubnet,
@@ -27,7 +27,7 @@ namespace EnoCore.Models
         string? FlagUrl,
         bool Active);
 
-    public record ConfigurationService(long Id,
+    public sealed record ConfigurationService(long Id,
         string Name,
         int FlagsPerRound,
         int NoisesPerRound,

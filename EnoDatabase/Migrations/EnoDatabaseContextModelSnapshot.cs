@@ -83,8 +83,6 @@ namespace EnoDatabase.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TeamId");
-
                     b.HasIndex("CheckerTaskLaunchStatus", "StartTime");
 
                     b.HasIndex("CurrentRoundId", "RelatedRoundId", "CheckerResult");
@@ -119,7 +117,7 @@ namespace EnoDatabase.Migrations
                     b.ToTable("Rounds");
                 });
 
-            modelBuilder.Entity("EnoCore.Models.Database.RoundTeamServiceState", b =>
+            modelBuilder.Entity("EnoCore.Models.Database.RoundTeamServiceStatus", b =>
                 {
                     b.Property<long>("ServiceId")
                         .HasColumnType("bigint");
@@ -142,7 +140,7 @@ namespace EnoDatabase.Migrations
 
                     b.HasIndex("TeamId");
 
-                    b.ToTable("RoundTeamServiceStates");
+                    b.ToTable("RoundTeamServiceStatus");
                 });
 
             modelBuilder.Entity("EnoCore.Models.Database.Service", b =>
@@ -176,72 +174,6 @@ namespace EnoDatabase.Migrations
                     b.ToTable("Services");
                 });
 
-            modelBuilder.Entity("EnoCore.Models.Database.ServiceStats", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
-
-                    b.Property<double>("AttackPoints")
-                        .HasColumnType("double precision");
-
-                    b.Property<string>("ErrorMessage")
-                        .HasColumnType("text");
-
-                    b.Property<double>("LostDefensePoints")
-                        .HasColumnType("double precision");
-
-                    b.Property<long>("ServiceId")
-                        .HasColumnType("bigint");
-
-                    b.Property<double>("ServiceLevelAgreementPoints")
-                        .HasColumnType("double precision");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
-                    b.Property<long>("TeamId")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ServiceId");
-
-                    b.HasIndex("TeamId");
-
-                    b.ToTable("ServiceStats");
-                });
-
-            modelBuilder.Entity("EnoCore.Models.Database.ServiceStatsSnapshot", b =>
-                {
-                    b.Property<long>("ServiceId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("RoundId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("TeamId")
-                        .HasColumnType("bigint");
-
-                    b.Property<double>("AttackPoints")
-                        .HasColumnType("double precision");
-
-                    b.Property<double>("LostDefensePoints")
-                        .HasColumnType("double precision");
-
-                    b.Property<double>("ServiceLevelAgreementPoints")
-                        .HasColumnType("double precision");
-
-                    b.HasKey("ServiceId", "RoundId", "TeamId");
-
-                    b.HasIndex("RoundId");
-
-                    b.HasIndex("TeamId");
-
-                    b.ToTable("ServiceStatsSnapshots");
-                });
-
             modelBuilder.Entity("EnoCore.Models.Database.SubmittedFlag", b =>
                 {
                     b.Property<long>("FlagServiceId")
@@ -269,10 +201,6 @@ namespace EnoDatabase.Migrations
                         .HasColumnType("timestamp without time zone");
 
                     b.HasKey("FlagServiceId", "FlagRoundId", "FlagOwnerId", "FlagRoundOffset", "AttackerTeamId");
-
-                    b.HasIndex("AttackerTeamId");
-
-                    b.HasIndex("RoundId");
 
                     b.HasIndex("FlagServiceId", "FlagRoundOffset", "Timestamp");
 
@@ -320,16 +248,60 @@ namespace EnoDatabase.Migrations
                     b.ToTable("Teams");
                 });
 
-            modelBuilder.Entity("EnoCore.Models.Database.CheckerTask", b =>
+            modelBuilder.Entity("EnoCore.Models.Database.TeamServicePoints", b =>
                 {
-                    b.HasOne("EnoCore.Models.Database.Team", null)
-                        .WithMany("CheckerTasks")
-                        .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Property<long>("TeamId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("ServiceId")
+                        .HasColumnType("bigint");
+
+                    b.Property<double>("AttackPoints")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("text");
+
+                    b.Property<double>("LostDefensePoints")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("ServiceLevelAgreementPoints")
+                        .HasColumnType("double precision");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.HasKey("TeamId", "ServiceId");
+
+                    b.ToTable("TeamServicePoints");
                 });
 
-            modelBuilder.Entity("EnoCore.Models.Database.RoundTeamServiceState", b =>
+            modelBuilder.Entity("EnoCore.Models.Database.TeamServicePointsSnapshot", b =>
+                {
+                    b.Property<long>("ServiceId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("RoundId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("TeamId")
+                        .HasColumnType("bigint");
+
+                    b.Property<double>("AttackPoints")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("LostDefensePoints")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("ServiceLevelAgreementPoints")
+                        .HasColumnType("double precision");
+
+                    b.HasKey("ServiceId", "RoundId", "TeamId");
+
+                    b.ToTable("TeamServicePointsSnapshot");
+                });
+
+            modelBuilder.Entity("EnoCore.Models.Database.RoundTeamServiceStatus", b =>
                 {
                     b.HasOne("EnoCore.Models.Database.Round", "GameRound")
                         .WithMany()
@@ -344,59 +316,17 @@ namespace EnoDatabase.Migrations
                         .IsRequired();
 
                     b.HasOne("EnoCore.Models.Database.Team", "Team")
-                        .WithMany("ServiceDetails")
+                        .WithMany()
                         .HasForeignKey("TeamId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("EnoCore.Models.Database.ServiceStats", b =>
+            modelBuilder.Entity("EnoCore.Models.Database.TeamServicePoints", b =>
                 {
-                    b.HasOne("EnoCore.Models.Database.Service", "Service")
-                        .WithMany()
-                        .HasForeignKey("ServiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("EnoCore.Models.Database.Team", "Team")
+                    b.HasOne("EnoCore.Models.Database.Team", null)
                         .WithMany("ServiceStats")
                         .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("EnoCore.Models.Database.ServiceStatsSnapshot", b =>
-                {
-                    b.HasOne("EnoCore.Models.Database.Round", "Round")
-                        .WithMany()
-                        .HasForeignKey("RoundId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("EnoCore.Models.Database.Service", "Service")
-                        .WithMany()
-                        .HasForeignKey("ServiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("EnoCore.Models.Database.Team", "Team")
-                        .WithMany()
-                        .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("EnoCore.Models.Database.SubmittedFlag", b =>
-                {
-                    b.HasOne("EnoCore.Models.Database.Team", "AttackerTeam")
-                        .WithMany()
-                        .HasForeignKey("AttackerTeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("EnoCore.Models.Database.Round", "Round")
-                        .WithMany()
-                        .HasForeignKey("RoundId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

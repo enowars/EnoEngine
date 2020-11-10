@@ -128,7 +128,7 @@ namespace EnoEngine
                     servicePointsTasks.Add(Task.Run(async () =>
                     {
                         await EnoDatabaseUtils.RetryScopedDatabaseAction(ServiceProvider,
-                            async (IEnoDatabase db) => await db.CalculateServiceStats(teams, roundId, service, oldSnapshotRoundId, newLatestSnapshotRoundId));
+                            async (IEnoDatabase db) => await db.CalculateTeamServicePoints(teams, roundId, service, oldSnapshotRoundId, newLatestSnapshotRoundId));
                     }));
                 }
                 await Task.WhenAll(servicePointsTasks);

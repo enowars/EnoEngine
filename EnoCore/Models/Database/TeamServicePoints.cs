@@ -1,0 +1,18 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace EnoCore.Models.Database
+{
+    /// <summary>
+    /// The points of a particular team in a particular service.
+    /// PK: TeamId, ServiceId
+    /// </summary>
+    public sealed record TeamServicePoints(long TeamId,
+        long ServiceId,
+        double AttackPoints,
+        double LostDefensePoints,
+        double ServiceLevelAgreementPoints,
+        ServiceStatus Status,
+        string? ErrorMessage);
+}

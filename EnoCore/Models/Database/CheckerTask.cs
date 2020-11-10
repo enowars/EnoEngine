@@ -29,7 +29,7 @@ namespace EnoCore.Models.Database
         Done
     }
 
-    public record CheckerTask(long Id,
+    public sealed record CheckerTask(long Id,
         string CheckerUrl,
         CheckerTaskMethod Method,
         string Address,

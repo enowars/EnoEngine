@@ -8,7 +8,7 @@ namespace EnoCore.Models.Json
 {
     public class EnoEngineScoreboardEntryServiceDetails
     {
-        private readonly ServiceStats ServiceStats;
+        private readonly TeamServicePoints ServiceStats;
 
         public long ServiceId { get => ServiceStats.ServiceId; }
         public double AttackPoints { get => ServiceStats.AttackPoints; }
@@ -19,7 +19,7 @@ namespace EnoCore.Models.Json
         public ServiceStatus ServiceStatus { get => ServiceStats.Status;  }
         public string? Message { get => ServiceStats.ErrorMessage; }
 
-        public EnoEngineScoreboardEntryServiceDetails(ServiceStats serviceStats)
+        public EnoEngineScoreboardEntryServiceDetails(TeamServicePoints serviceStats)
         {
             ServiceStats = serviceStats;
         }

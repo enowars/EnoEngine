@@ -62,7 +62,7 @@ namespace EnoDatabase
         void Migrate();
         Task UpdateTaskCheckerTaskResults(Memory<CheckerTask> tasks);
         Task<(long newLatestSnapshotRoundId, long oldSnapshotRoundId, Service[] services, Team[] teams)> GetPointCalculationFrame(long roundId, Configuration configuration);
-        Task CalculateServiceStats(Team[] teams, long roundId, Service service, long oldSnapshotRoundId, long newLatestSnapshotRoundId);
+        Task CalculateTeamServicePoints(Team[] teams, long roundId, Service service, long oldSnapshotRoundId, long newLatestSnapshotRoundId);
         Task<Round> PrepareRecalculation();
     }
 
@@ -163,21 +163,19 @@ namespace EnoDatabase
             {
                 foreach (var team in _context.Teams.ToArray())
                 {
-                    var stats = _context.ServiceStats
+                    var stats = _context.TeamServicePoints
                         .Where(ss => ss.TeamId == team.Id)
                         .Where(ss => ss.ServiceId == service.Id)
                         .SingleOrDefault();
                     if (stats == null)
                     {
-                        _context.ServiceStats.Add(new ServiceStats()
-                        {
-                            AttackPoints = 0,
-                            LostDefensePoints = 0,
-                            ServiceLevelAgreementPoints = 0,
-                            Team = team,
-                            Service = service,
-                            Status = ServiceStatus.OFFLINE
-                        });
+                        _context.TeamServicePoints.Add(new(team.Id,
+                            service.Id,
+                            0,
+                            0,
+                            0,
+                            ServiceStatus.OFFLINE,
+                            null));
                     }
                 }
             }
@@ -639,7 +637,7 @@ namespace EnoDatabase
                 .AsNoTracking()
                 .ToDictionaryAsync(g => g.Key, g => g.WorstResult);
 
-            var states = new Dictionary<(long ServiceId, long TeamId), RoundTeamServiceState>();
+            var newRoundTeamServiceStatus = new Dictionary<(long ServiceId, long TeamId), RoundTeamServiceStatus>();
             foreach (var team in teams)
             {
                 foreach (var service in services)
@@ -668,14 +666,14 @@ namespace EnoDatabase
                             status = ServiceStatus.RECOVERING;
                         }
                     }
-                    states[(key.ServiceId, key.TeamId)] = new RoundTeamServiceState(status,
+                    newRoundTeamServiceStatus[(key.ServiceId, key.TeamId)] = new RoundTeamServiceStatus(status,
                         message,
                         key.TeamId,
                         key.ServiceId,
                         roundId);
                 }
             }
-            _context.RoundTeamServiceStates.AddRange(states.Values);
+            _context.RoundTeamServiceStatus.AddRange(newRoundTeamServiceStatus.Values);
             await _context.SaveChangesAsync();
         }
 
@@ -695,7 +693,7 @@ namespace EnoDatabase
 
         public async Task<Round> PrepareRecalculation()
         {
-            await _context.Database.ExecuteSqlRawAsync($"delete from \"{nameof(_context.ServiceStatsSnapshots)}\";");
+            await _context.Database.ExecuteSqlRawAsync($"delete from \"{nameof(_context.TeamServicePointsSnapshot)}\";");
             return await _context.Rounds
                 .OrderByDescending(r => r.Id)
                 .Skip(1)

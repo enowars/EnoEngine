@@ -28,26 +28,29 @@ namespace EnoDatabase
         public DbSet<Service> Services { get; set; }
         public DbSet<Team> Teams { get; set; }
         public DbSet<Round> Rounds { get; set; }
-        public DbSet<RoundTeamServiceState> RoundTeamServiceStates { get; set; }
+        public DbSet<RoundTeamServiceStatus> RoundTeamServiceStatus { get; set; }
         public DbSet<SubmittedFlag> SubmittedFlags { get; set; }
-        public DbSet<ServiceStats> ServiceStats { get; set; }
-        public DbSet<ServiceStatsSnapshot> ServiceStatsSnapshots { get; set; }
+        public DbSet<TeamServicePoints> TeamServicePoints { get; set; }
+        public DbSet<TeamServicePointsSnapshot> TeamServicePointsSnapshot { get; set; }
 
         public EnoDatabaseContext(DbContextOptions<EnoDatabaseContext> options) : base(options) { }
 #pragma warning restore CS8618
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<SubmittedFlag>() // Primary Key
+            modelBuilder.Entity<SubmittedFlag>()
                 .HasKey(sf => new { sf.FlagServiceId, sf.FlagRoundId, sf.FlagOwnerId, sf.FlagRoundOffset, sf.AttackerTeamId });
 
             modelBuilder.Entity<SubmittedFlag>()
                 .HasIndex(sf => new { sf.FlagServiceId, sf.FlagRoundOffset, sf.Timestamp });
 
-            modelBuilder.Entity<RoundTeamServiceState>()
+            modelBuilder.Entity<TeamServicePoints>()
+                .HasKey(tsp => new { tsp.TeamId, tsp.ServiceId });
+
+            modelBuilder.Entity<RoundTeamServiceStatus>()
                 .HasKey(rtss => new { rtss.ServiceId, rtss.TeamId, rtss.GameRoundId });
 
-            modelBuilder.Entity<ServiceStatsSnapshot>()
+            modelBuilder.Entity<TeamServicePointsSnapshot>()
                 .HasKey(sss => new { sss.ServiceId, sss.RoundId, sss.TeamId });
 
             modelBuilder.Entity<CheckerTask>()

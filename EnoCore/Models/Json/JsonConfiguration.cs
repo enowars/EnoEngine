@@ -14,7 +14,7 @@ namespace EnoCore.Models.Json
         public JsonConfigurationValidationException(string message) : base(message) { }
     }
 
-    public record JsonConfiguration
+    public sealed record JsonConfiguration
     {
         public string? Title { get; set; }
         public long FlagValidityInRounds { get; set; }
