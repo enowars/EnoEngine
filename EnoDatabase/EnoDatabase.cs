@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using EnoCore;
 using System;
 using System.Collections;
@@ -307,7 +307,7 @@ namespace EnoDatabase
                         var checkerTask = new CheckerTask(0,
                             checkers[i % checkers.Length],
                             CheckerTaskMethod.putflag,
-                            team.Address?? $"team{team.Id}.{config.DnsSuffix}",
+                            team.Address ?? $"team{team.Id}.{config.DnsSuffix}",
                             service.Id,
                             service.Name,
                             team.Id,
@@ -397,7 +397,7 @@ namespace EnoDatabase
             }
             if (tasksCount == 0)
                 return;
-            double timeDiff = (double) (maxRunningTime * 3) - 2 / tasksCount;
+            double timeDiff = (double)(maxRunningTime * 3) - 2 / tasksCount;
             var tasks = new CheckerTask[tasksCount];
             int i = 0;
 
@@ -495,11 +495,11 @@ namespace EnoDatabase
             double maxRunningTime = config.RoundLengthInSeconds / 4;
             var taskStart = round.Quarter2;
             int tasksCount = 0;
-            int oldRoundsCount = (int) Math.Min(config.CheckedRoundsPerRound, round.Id) - 1;
+            int oldRoundsCount = (int)Math.Min(config.CheckedRoundsPerRound, round.Id) - 1;
             foreach (var service in config.Services)
             {
                 tasksCount += service.FlagsPerRound
-                    * config.Teams.Count 
+                    * config.Teams.Count
                     * oldRoundsCount;
             }
             if (tasksCount == 0)

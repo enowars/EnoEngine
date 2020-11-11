@@ -42,7 +42,8 @@ namespace EnoEngine
         public async Task RunContest()
         {
             // Gracefully shutdown when CTRL+C is invoked
-            Console.CancelKeyPress += (s, e) => {
+            Console.CancelKeyPress += (s, e) =>
+            {
                 Logger.LogInformation("Shutting down EnoEngine");
                 e.Cancel = true;
                 EngineCancelSource.Cancel();

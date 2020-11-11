@@ -14,7 +14,7 @@ namespace EnoCore.Logging
     {
         private readonly JsonSerializerOptions JsonOptions;
         public IEnoLogMessageProvider Provider { get; }
-        public string CategoryName { get;  }
+        public string CategoryName { get; }
 
         public EnoLogMessageConsoleLogger(IEnoLogMessageProvider provider, string categoryName)
         {

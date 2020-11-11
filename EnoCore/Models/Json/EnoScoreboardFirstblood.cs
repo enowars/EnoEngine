@@ -14,7 +14,7 @@ namespace EnoCore.Models
         public long RoundId { get; private set; }
         public string? StoreDescription { get; private set; }
         public long StoreIndex { get; private set; }
-        public EnoScoreboardFirstblood (DateTime time, long teamId, long roundId, string? storeDescription, long storeIndex)
+        public EnoScoreboardFirstblood(DateTime time, long teamId, long roundId, string? storeDescription, long storeIndex)
         {
             FirstTime = time;
             TeamId = teamId;

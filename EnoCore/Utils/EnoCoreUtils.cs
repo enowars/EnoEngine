@@ -72,7 +72,8 @@ namespace EnoCore.Utils
             return inst.Next();
         }
 
-        public static int Next(int n) {
+        public static int Next(int n)
+        {
             return Next() % n;
         }
     }
