@@ -20,7 +20,7 @@ namespace EnoCore.Models.Json
         public string? TeamSubnet { get; set; }
         public string? LogoUrl { get; set; }
         public string? FlagUrl { get; set; }
-        public bool Active { get; set; }
+        public bool Active { get; set; } = true;
 
         internal ConfigurationTeam Validate(int subnetBytesLength)
         {

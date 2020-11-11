@@ -15,7 +15,9 @@ namespace EnoCore.Models
         string FlagSigningKey,
         FlagEncoding Encoding,
         List<ConfigurationTeam> Teams,
+        List<ConfigurationTeam> ActiveTeams,
         List<ConfigurationService> Services,
+        List<ConfigurationService> ActiveServices,
         Dictionary<long, string[]> Checkers);
 
     public sealed record ConfigurationTeam(long Id,
