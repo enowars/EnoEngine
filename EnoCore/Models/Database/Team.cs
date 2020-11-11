@@ -10,7 +10,7 @@ namespace EnoCore.Models.Database
 #pragma warning disable CS8618
         public long Id { get; set; }
         public string Name { get; set; }
-        public string TeamSubnet { get; set; }
+        public byte[] TeamSubnet { get; set; }
         public double TotalPoints { get; set; }
         public double AttackPoints { get; set; }
         public double DefensePoints { get; set; }

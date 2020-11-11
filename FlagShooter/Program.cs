@@ -109,7 +109,7 @@ namespace FlagShooter
             }
             catch (Exception e)
             {
-                Console.WriteLine($"FlagShooter failed: {EnoDatabaseUtils.FormatException(e)}");
+                Console.WriteLine($"FlagShooter failed: {e.ToFancyString()}");
             }
         }
 
@@ -163,7 +163,7 @@ namespace FlagShooter
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"FlagRunnerLoop retrying because: {EnoDatabaseUtils.FormatException(e)}");
+                    Console.WriteLine($"FlagRunnerLoop retrying because: {e.ToFancyString()}");
                 }
             }
         }

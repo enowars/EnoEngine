@@ -283,7 +283,7 @@ namespace EnoEngine.FlagSubmission
             catch (Exception e)
             {
                 if (!(e is ObjectDisposedException || e is TaskCanceledException))
-                    this.logger.LogCritical($"RunDebugEndpoint failed: {EnoDatabaseUtils.FormatException(e)}");
+                    this.logger.LogCritical($"RunDebugEndpoint failed: {e.ToFancyString()}");
             }
 
             this.logger.LogInformation("RunDebugEndpoint finished");
@@ -308,8 +308,9 @@ namespace EnoEngine.FlagSubmission
                                 var attackerAddress = ((IPEndPoint)client.Client.RemoteEndPoint!).Address.GetAddressBytes();
                                 var attackerPrefix = new byte[this.configuration.TeamSubnetBytesLength];
                                 Array.Copy(attackerAddress, attackerPrefix, this.configuration.TeamSubnetBytesLength);
-                                var attackerPrefixString = BitConverter.ToString(attackerPrefix);
-                                Team? team = await this.FindTeamBySubnet(attackerPrefixString);
+                                var team = await EnoDatabaseUtil.RetryScopedDatabaseAction(
+                                    this.serviceProvider,
+                                    db => db.GetTeamIdByPrefix(attackerPrefix));
                                 if (team != null)
                                 {
                                     await this.ProcessLinesAsync(client.Client, team.Id, config, token);
@@ -325,7 +326,7 @@ namespace EnoEngine.FlagSubmission
                     catch (Exception e)
                     {
                         if (e is TaskCanceledException) throw;
-                        this.logger.LogWarning($"RunProductionEndpoint failed to accept connection: {EnoDatabaseUtils.FormatException(e)}");
+                        this.logger.LogWarning($"RunProductionEndpoint failed to accept connection: {e.ToFancyString()}");
                     }
                 }
             }
@@ -333,18 +334,11 @@ namespace EnoEngine.FlagSubmission
             {
                 if (!(e is ObjectDisposedException || e is TaskCanceledException))
                 {
-                    this.logger.LogCritical($"RunProductionEndpoint failed: {EnoDatabaseUtils.FormatException(e)}");
+                    this.logger.LogCritical($"RunProductionEndpoint failed: {e.ToFancyString()}");
                 }
             }
 
             this.logger.LogInformation("RunProductionEndpoint finished");
-        }
-
-        private async Task<Team?> FindTeamBySubnet(string attackerPrefixString)
-        {
-            using var scope = this.serviceProvider.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-            return await db.GetTeamIdByPrefix(attackerPrefixString);
         }
 
         private async Task InsertSubmissionsLoop(int number, CancellationToken token)
@@ -369,16 +363,13 @@ namespace EnoEngine.FlagSubmission
                             {
                                 try
                                 {
-                                    await EnoDatabaseUtils.RetryDatabaseAction(async () =>
-                                    {
-                                        using var scope = this.serviceProvider.CreateScope();
-                                        var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                                        await db.ProcessSubmissionsBatch(submissions, this.configuration.FlagValidityInRounds, this.enoStatistics);
-                                    });
+                                    await EnoDatabaseUtil.RetryScopedDatabaseAction(
+                                        this.serviceProvider,
+                                        db => db.ProcessSubmissionsBatch(submissions, this.configuration.FlagValidityInRounds, this.enoStatistics));
                                 }
                                 catch (Exception e)
                                 {
-                                    this.logger.LogError($"InsertSubmissionsLoop dropping batch because: {EnoDatabaseUtils.FormatException(e)}");
+                                    this.logger.LogError($"InsertSubmissionsLoop dropping batch because: {e.ToFancyString()}");
                                     foreach (var (flag, attackerTeamId, tcs) in submissions)
                                     {
                                         tcs.SetResult(FlagSubmissionResult.UnknownError);
@@ -400,16 +391,13 @@ namespace EnoEngine.FlagSubmission
                     {
                         try
                         {
-                            await EnoDatabaseUtils.RetryDatabaseAction(async () =>
-                            {
-                                using var scope = this.serviceProvider.CreateScope();
-                                var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                                await db.ProcessSubmissionsBatch(submissions, this.configuration.FlagValidityInRounds, this.enoStatistics);
-                            });
+                            await EnoDatabaseUtil.RetryScopedDatabaseAction(
+                                this.serviceProvider,
+                                db => db.ProcessSubmissionsBatch(submissions, this.configuration.FlagValidityInRounds, this.enoStatistics));
                         }
                         catch (Exception e)
                         {
-                            this.logger.LogError($"InsertSubmissionsLoop dropping batch because: {EnoDatabaseUtils.FormatException(e)}");
+                            this.logger.LogError($"InsertSubmissionsLoop dropping batch because: {e.ToFancyString()}");
                             foreach (var (flag, attackerTeamId, tcs) in submissions)
                             {
                                 tcs.SetResult(FlagSubmissionResult.UnknownError);
@@ -424,7 +412,7 @@ namespace EnoEngine.FlagSubmission
             }
             catch (Exception e)
             {
-                this.logger.LogCritical($"InsertSubmissionsLoop failed: {EnoDatabaseUtils.FormatException(e)}");
+                this.logger.LogCritical($"InsertSubmissionsLoop failed: {e.ToFancyString()}");
             }
         }
     }

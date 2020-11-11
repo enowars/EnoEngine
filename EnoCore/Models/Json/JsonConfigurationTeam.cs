@@ -1,6 +1,7 @@
 ﻿using EnoCore.Models.Database;
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
 
 namespace EnoCore.Models.Json
@@ -8,6 +9,7 @@ namespace EnoCore.Models.Json
     public class JsonConfigurationTeamValidationException : Exception
     {
         public JsonConfigurationTeamValidationException(string message) : base(message) { }
+        public JsonConfigurationTeamValidationException(string message, Exception inner) : base(message, inner) { }
     }
 
     public class JsonConfigurationTeam
@@ -20,7 +22,7 @@ namespace EnoCore.Models.Json
         public string? FlagUrl { get; set; }
         public bool Active { get; set; }
 
-        internal ConfigurationTeam Validate()
+        internal ConfigurationTeam Validate(int subnetBytesLength)
         {
             if (Id == 0)
                 throw new JsonConfigurationTeamValidationException("Team id must not be 0.");
@@ -31,10 +33,23 @@ namespace EnoCore.Models.Json
             if (TeamSubnet is null)
                 throw new JsonConfigurationTeamValidationException($"Team subnet must not be null (team {Id}).");
 
+            IPAddress ip;
+            try
+            {
+                ip = IPAddress.Parse(TeamSubnet);
+            }
+            catch (Exception e)
+            {
+                throw new JsonConfigurationTeamValidationException($"Team subnet was no valid IP address (team {Id}).", e);
+            }
+            
+            byte[] teamSubnet = new byte[subnetBytesLength];
+            Array.Copy(ip.GetAddressBytes(), teamSubnet, subnetBytesLength);
+
             return new(Id,
                 Name,
                 Address,
-                TeamSubnet,
+                teamSubnet,
                 LogoUrl,
                 FlagUrl,
                 Active);

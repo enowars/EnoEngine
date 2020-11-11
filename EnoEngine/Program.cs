@@ -61,8 +61,8 @@ try
     // Generate round 0 scoreboard.json
     try
     {
-        var scoreboard = new EnoEngineScoreboardInfo(configuration);
-        EnoDatabaseUtils.GenerateScoreboardInfo(scoreboard, EnoDataDirectory.Directory);
+        var json = JsonSerializer.Serialize(new EnoEngineScoreboardInfo(configuration));
+        File.WriteAllText($"{EnoDataDirectory.Directory}scoreboardInfo.json", json);
     }
     catch (Exception e)
     {
@@ -79,7 +79,7 @@ try
         .AddDbContextPool<EnoDatabaseContext>(options =>
         {
             options.UseNpgsql(
-                EnoDatabaseUtils.PostgresConnectionString,
+                EnoDatabaseContext.PostgresConnectionString,
                 pgoptions => pgoptions.EnableRetryOnFailure());
         }, 90)
         .AddLogging(loggingBuilder =>

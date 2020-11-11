@@ -16,13 +16,17 @@ namespace EnoDatabase
         public EnoDatabaseContext CreateDbContext(string[] args)
         {
             var optionsBuilder = new DbContextOptionsBuilder<EnoDatabaseContext>();
-            optionsBuilder.UseNpgsql(EnoDatabaseUtils.PostgresConnectionString, pgoptions => pgoptions.EnableRetryOnFailure());
+            optionsBuilder.UseNpgsql(EnoDatabaseContext.PostgresConnectionString, pgoptions => pgoptions.EnableRetryOnFailure());
             return new EnoDatabaseContext(optionsBuilder.Options);
         }
     }
 
     public class EnoDatabaseContext : DbContext
     {
+        public const int DATABASE_RETRIES = 500;
+        public static string PostgresDomain => Environment.GetEnvironmentVariable("DATABASE_DOMAIN") ?? "localhost";
+        public static string PostgresConnectionString => $@"Server={PostgresDomain};Port=5432;Database=EnoDatabase;User Id=docker;Password=docker;Timeout=15;SslMode=Disable;";
+
 #pragma warning disable CS8618
         public DbSet<CheckerTask> CheckerTasks { get; set; }
         public DbSet<Service> Services { get; set; }
