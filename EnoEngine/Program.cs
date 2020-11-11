@@ -2,7 +2,6 @@
 using EnoCore.Logging;
 using EnoCore.Models.Database;
 using EnoCore.Models.Json;
-using EnoCore.Utils;
 using EnoDatabase;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -63,7 +62,7 @@ try
     try
     {
         var scoreboard = new EnoEngineScoreboardInfo(configuration);
-        EnoDatabaseUtils.GenerateScoreboardInfo(scoreboard, EnoCore.Utils.Misc.dataDirectory);
+        EnoDatabaseUtils.GenerateScoreboardInfo(scoreboard, EnoDataDirectory.Directory);
     }
     catch (Exception e)
     {

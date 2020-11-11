@@ -1,9 +1,13 @@
-﻿using System;
+﻿using EnoCore.Models.Database;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading.Tasks;
 
-namespace EnoCore.Utils
+namespace EnoCore
 {
     public static class ExceptionExtensions
     {
@@ -24,6 +28,26 @@ namespace EnoCore.Utils
                 fancy += $"\nInnerException:\n{e.InnerException.ToFancyString(full)}";
             }
             return fancy;
+        }
+    }
+
+    public static class LoggerExtensions
+    {
+        public static IDisposable BeginEnoScope(this ILogger logger, CheckerTask checkerTask)
+        {
+            return logger.BeginScope(new Dictionary<string, object>
+            {
+                [nameof(CheckerTask)] = checkerTask
+            });
+        }
+
+        public static IDisposable BeginEnoScope(this ILogger logger, long roundId)
+        {
+            return logger.BeginScope(new Dictionary<string, object> {
+                {
+                    "round", roundId
+                }
+            });
         }
     }
 }

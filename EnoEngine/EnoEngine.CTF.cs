@@ -2,7 +2,6 @@
 using EnoCore.Models;
 using EnoCore.Models.Database;
 using EnoCore.Models.Json;
-using EnoCore.Utils;
 using EnoDatabase;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -85,7 +84,7 @@ namespace EnoEngine
             var jsonStopWatch = new Stopwatch();
             jsonStopWatch.Start();
             var scoreboard = await EnoDatabaseUtils.GetCurrentScoreboard(ServiceProvider, roundId);
-            EnoDatabaseUtils.GenerateCurrentScoreboard(scoreboard, EnoCore.Utils.Misc.dataDirectory, roundId);
+            EnoDatabaseUtils.GenerateCurrentScoreboard(scoreboard, EnoDataDirectory.Directory, roundId);
             jsonStopWatch.Stop();
             Logger.LogInformation($"Scoreboard Generation Took {jsonStopWatch.ElapsedMilliseconds} ms");
             //TODO EnoLogger.LogStatistics(ScoreboardJsonGenerationFinishedMessage.Create(jsonStopWatch.ElapsedMilliseconds));

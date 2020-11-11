@@ -18,28 +18,9 @@ using System.Net.Sockets;
 using System.Data;
 using EnoCore.Logging;
 using EnoCore.Models;
-using EnoCore.Utils;
 
 namespace EnoDatabase
 {
-    public enum FlagSubmissionResult
-    {
-        Ok,
-        Invalid,
-        Duplicate,
-        Own,
-        Old,
-        UnknownError,
-        InvalidSenderError,
-        SpamError
-    }
-
-    public struct DBInitializationResult
-    {
-        public bool Success;
-        public string ErrorMessage;
-    }
-
     public interface IEnoDatabase
     {
         void ApplyConfig(Configuration configuration);

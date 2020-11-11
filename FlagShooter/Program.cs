@@ -15,7 +15,6 @@ using EnoCore;
 using EnoCore.Models;
 using EnoCore.Models.Database;
 using EnoCore.Models.Json;
-using EnoCore.Utils;
 using EnoDatabase;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -104,8 +103,8 @@ namespace FlagShooter
                     return;
                 }
 
-                ParseScoreboard(Path.Combine(Misc.dataDirectory, "scoreboard.json"));
-                Task.Run(async () => await PollConfig(Misc.dataDirectory, FlagShooterCancelSource.Token));
+                ParseScoreboard(Path.Combine(EnoDataDirectory.Directory, "scoreboard.json"));
+                Task.Run(async () => await PollConfig(EnoDataDirectory.Directory, FlagShooterCancelSource.Token));
                 new Program(flagCount, roundDelay, teamStart, teamCount, teamConnections, configuration).Start();
             }
             catch (Exception e)

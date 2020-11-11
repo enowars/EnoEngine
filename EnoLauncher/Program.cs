@@ -2,7 +2,6 @@
 using EnoCore.Logging;
 using EnoCore.Models.Database;
 using EnoCore.Models.Json;
-using EnoCore.Utils.LoggerExtensions;
 using EnoDatabase;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

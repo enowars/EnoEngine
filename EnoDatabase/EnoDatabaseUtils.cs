@@ -16,7 +16,6 @@ using System.Threading.Tasks;
 using EnoCore.Models;
 using EnoCore.Models.Database;
 using EnoCore.Models.Json;
-using EnoCore.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -183,13 +182,6 @@ namespace EnoDatabase
             File.WriteAllText($"{path}scoreboardInfo.json", json);
         }
 
-        internal static string GenerateNoise(long roundId, long serviceId, long NoiseIndex)
-        {
-            var noiseContent = new byte[sizeof(int) * 3];
-            ThreadSafeRandom.NextBytes(noiseContent);
-            return $"{roundId}{serviceId}{NoiseIndex}{UrlSafify(Convert.ToBase64String(noiseContent))}";
-        }
-
         public static async Task DelayUntil(DateTime time, CancellationToken token)
         {
             var now = DateTime.UtcNow;
@@ -207,22 +199,6 @@ namespace EnoDatabase
             byte[] teamSubnet = new byte[subnetBytesLength];
             Array.Copy(ip.GetAddressBytes(), teamSubnet, subnetBytesLength);
             return BitConverter.ToString(teamSubnet);
-        }
-
-        ///
-        /// code taken from https://stackoverflow.com/questions/1287567/is-using-random-and-orderby-a-good-shuffle-algorithm/1287572#1287572
-        public static IEnumerable<T> Shuffle<T>(IEnumerable<T> source)
-        {
-            T[] elements = source.ToArray();
-            for (int i = elements.Length - 1; i >= 0; i--)
-            {
-                // Swap element "i" with a random earlier element it (or itself)
-                // ... except we don't really need to swap it fully, as we can
-                // return it immediately, and afterwards it's irrelevant.
-                int swapIndex = ThreadSafeRandom.Next(i + 1);
-                yield return elements[swapIndex];
-                elements[swapIndex] = elements[i];
-            }
         }
 
         public static string UrlSafify(string input)
