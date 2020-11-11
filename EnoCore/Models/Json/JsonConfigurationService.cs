@@ -24,7 +24,7 @@ namespace EnoCore.Models.Json
         public int NoisesPerRoundMultiplier { get; set; }
         public int HavocsPerRoundMultiplier { get; set; }
         public long WeightFactor { get; set; }
-        public bool Active { get; set; }
+        public bool Active { get; set; } = true;
         public string[]? Checkers { get; set; }
 
         public async Task<ConfigurationService> Validate()

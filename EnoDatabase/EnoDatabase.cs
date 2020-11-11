@@ -267,9 +267,9 @@ namespace EnoDatabase
             double maxRunningTime = config.RoundLengthInSeconds / 4;
             var taskStart = round.Begin;
             int tasksCount = 0;
-            foreach (var service in config.Services)
+            foreach (var service in config.ActiveServices)
             {
-                tasksCount += service.FlagsPerRound * config.Teams.Count;
+                tasksCount += service.FlagsPerRound * config.ActiveTeams.Count;
             }
             if (tasksCount == 0)
                 return;
@@ -277,10 +277,10 @@ namespace EnoDatabase
             var tasks = new CheckerTask[tasksCount];
             int i = 0;
 
-            foreach (var service in config.Services)
+            foreach (var service in config.ActiveServices)
             {
                 var checkers = config.Checkers[service.Id];
-                foreach (var team in config.Teams)
+                foreach (var team in config.ActiveTeams)
                 {
                     for (int taskIndex = 0; taskIndex < service.FlagsPerRound; taskIndex++)
                     {
@@ -319,9 +319,9 @@ namespace EnoDatabase
             double maxRunningTime = config.RoundLengthInSeconds / 4;
             var taskStart = round.Begin;
             int tasksCount = 0;
-            foreach (var service in config.Services)
+            foreach (var service in config.ActiveServices)
             {
-                tasksCount += service.NoisesPerRound * config.Teams.Count;
+                tasksCount += service.NoisesPerRound * config.ActiveTeams.Count;
             }
             if (tasksCount == 0)
                 return;
@@ -329,10 +329,10 @@ namespace EnoDatabase
             var tasks = new CheckerTask[tasksCount];
             int i = 0;
 
-            foreach (var service in config.Services)
+            foreach (var service in config.ActiveServices)
             {
                 var checkers = config.Checkers[service.Id];
-                foreach (var team in config.Teams)
+                foreach (var team in config.ActiveTeams)
                 {
                     for (int taskIndex = 0; taskIndex < service.NoisesPerRound; taskIndex++)
                     {
@@ -371,9 +371,9 @@ namespace EnoDatabase
             double maxRunningTime = config.RoundLengthInSeconds / 4;
             var taskStart = round.Begin;
             int tasksCount = 0;
-            foreach (var service in config.Services)
+            foreach (var service in config.ActiveServices)
             {
-                tasksCount += service.HavocsPerRound * config.Teams.Count;
+                tasksCount += service.HavocsPerRound * config.ActiveTeams.Count;
             }
             if (tasksCount == 0)
                 return;
@@ -381,10 +381,10 @@ namespace EnoDatabase
             var tasks = new CheckerTask[tasksCount];
             int i = 0;
 
-            foreach (var service in config.Services)
+            foreach (var service in config.ActiveServices)
             {
                 var checkers = config.Checkers[service.Id];
-                foreach (var team in config.Teams)
+                foreach (var team in config.ActiveTeams)
                 {
                     for (int taskIndex = 0; taskIndex < service.HavocsPerRound; taskIndex++)
                     {
@@ -423,9 +423,9 @@ namespace EnoDatabase
             double maxRunningTime = config.RoundLengthInSeconds / 4;
             var taskStart = round.Quarter3;
             int tasksCount = 0;
-            foreach (var service in config.Services)
+            foreach (var service in config.ActiveServices)
             {
-                tasksCount += service.FlagsPerRound * config.Teams.Count;
+                tasksCount += service.FlagsPerRound * config.ActiveTeams.Count;
             }
             if (tasksCount == 0)
                 return;
@@ -433,10 +433,10 @@ namespace EnoDatabase
             var tasks = new CheckerTask[tasksCount];
             int i = 0;
 
-            foreach (var service in config.Services)
+            foreach (var service in config.ActiveServices)
             {
                 var checkers = config.Checkers[service.Id];
-                foreach (var team in config.Teams)
+                foreach (var team in config.ActiveTeams)
                 {
                     for (int taskIndex = 0; taskIndex < service.FlagsPerRound; taskIndex++)
                     {
@@ -476,10 +476,10 @@ namespace EnoDatabase
             var taskStart = round.Quarter2;
             int tasksCount = 0;
             int oldRoundsCount = (int)Math.Min(config.CheckedRoundsPerRound, round.Id) - 1;
-            foreach (var service in config.Services)
+            foreach (var service in config.ActiveServices)
             {
                 tasksCount += service.FlagsPerRound
-                    * config.Teams.Count
+                    * config.ActiveTeams.Count
                     * oldRoundsCount;
             }
             if (tasksCount == 0)
@@ -490,10 +490,10 @@ namespace EnoDatabase
 
             for (long oldRoundId = round.Id - 1; oldRoundId > (round.Id - config.CheckedRoundsPerRound) && oldRoundId > 0; oldRoundId--)
             {
-                foreach (var service in config.Services)
+                foreach (var service in config.ActiveServices)
                 {
                     var checkers = config.Checkers[service.Id];
-                    foreach (var team in config.Teams)
+                    foreach (var team in config.ActiveTeams)
                     {
                         for (int taskIndex = 0; taskIndex < service.FlagsPerRound; taskIndex++)
                         {
@@ -533,9 +533,9 @@ namespace EnoDatabase
             double maxRunningTime = config.RoundLengthInSeconds / 4;
             var taskStart = round.Quarter3;
             int tasksCount = 0;
-            foreach (var service in config.Services)
+            foreach (var service in config.ActiveServices)
             {
-                tasksCount += service.NoisesPerRound * config.Teams.Count;
+                tasksCount += service.NoisesPerRound * config.ActiveTeams.Count;
             }
             if (tasksCount == 0)
                 return;
@@ -543,10 +543,10 @@ namespace EnoDatabase
             var tasks = new CheckerTask[tasksCount];
             int i = 0;
 
-            foreach (var service in config.Services)
+            foreach (var service in config.ActiveServices)
             {
                 var checkers = config.Checkers[service.Id];
-                foreach (var team in config.Teams)
+                foreach (var team in config.ActiveTeams)
                 {
                     for (int taskIndex = 0; taskIndex < service.NoisesPerRound; taskIndex++)
                     {

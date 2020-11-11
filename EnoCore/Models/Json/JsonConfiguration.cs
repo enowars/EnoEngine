@@ -1,6 +1,7 @@
 ﻿using EnoCore.Models.Database;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -53,18 +54,38 @@ namespace EnoCore.Models.Json
                 throw new JsonConfigurationValidationException("teamSubnetBytesLength is <= 0.");
 
             List<ConfigurationTeam> teams = new();
+            List<ConfigurationTeam> activeTeams = new();
             List<ConfigurationService> services = new();
+            List<ConfigurationService> activeServices = new();
             Dictionary<long, string[]> checkers = new();
 
             foreach (var team in Teams)
-                teams.Add(team.Validate(TeamSubnetBytesLength));
-            // TODO ensure team ids are unique
+            {
+                if (teams.Where(t => t.Id == team.Id).Any())
+                    throw new JsonConfigurationValidationException($"Duplicate teamId ({team.Id})");
+
+                var validatedTeam = team.Validate(TeamSubnetBytesLength);
+                teams.Add(validatedTeam);
+
+                if (team.Active)
+                {
+                    activeTeams.Add(validatedTeam);
+                }
+            }
 
             foreach (var service in Services)
             {
-                services.Add(await service.Validate());
-                checkers.Add(service.Id, service.Checkers!);
-                // TODO ensure service ids are unique
+                if (services.Where(s => s.Id == service.Id).Any())
+                    throw new JsonConfigurationValidationException($"Duplicate serviceId ({service.Id})");
+
+                var validatedService = await service.Validate();
+                services.Add(validatedService);
+                checkers.Add(service.Id, validatedService.Checkers);
+
+                if (service.Active)
+                {
+                    activeServices.Add(validatedService);
+                }
             }
 
             return new Configuration(Title,
@@ -76,7 +97,9 @@ namespace EnoCore.Models.Json
                 FlagSigningKey,
                 Encoding,
                 teams,
+                activeTeams,
                 services,
+                activeServices,
                 checkers);
         }
 
