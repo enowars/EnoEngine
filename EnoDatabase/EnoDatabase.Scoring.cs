@@ -317,7 +317,7 @@ namespace EnoDatabase
                     {
                         var key = (fb.FlagServiceId, fb.FlagRoundOffset % service.FlagStores);
                         var n = new EnoScoreboardFirstblood(DateTime.UtcNow, fb.AttackerTeamId, fb.RoundId, "StoreDescription", fb.FlagRoundOffset % service.FlagStores);
-                        if (!firstbloods.ContainsKey(key)||firstbloods[key].FirstTime > n.FirstTime)
+                        if (!firstbloods.ContainsKey(key) || firstbloods[key].FirstTime > n.FirstTime)
                             firstbloods[key] = n;
                     }
                 }

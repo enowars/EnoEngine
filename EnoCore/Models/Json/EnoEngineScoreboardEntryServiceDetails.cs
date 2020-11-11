@@ -16,7 +16,7 @@ namespace EnoCore.Models.Json
         public double ServiceLevelAgreementPoints { get => ServiceStats.ServiceLevelAgreementPoints; }
         [JsonPropertyName("ServiceStatus")]
         [JsonConverter(typeof(JsonStringEnumConverter))]
-        public ServiceStatus ServiceStatus { get => ServiceStats.Status;  }
+        public ServiceStatus ServiceStatus { get => ServiceStats.Status; }
         public string? Message { get => ServiceStats.ErrorMessage; }
 
         public EnoEngineScoreboardEntryServiceDetails(TeamServicePoints serviceStats)

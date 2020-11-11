@@ -44,7 +44,7 @@ namespace EnoDatabase
                     oldFlags += 1;
                     continue;
                 }
-                if (flag.RoundId>currentRoundId)
+                if (flag.RoundId > currentRoundId)
                 {
                     Logger.LogError($"A Future Flag was submitted: Round is {currentRoundId}, Flag's round is {flag.RoundId}");
                 }

@@ -6,12 +6,12 @@ namespace EnoCore.Models.Database
 {
     public class Service
     {
-        public long Id { get; set;}
-        public string Name { get; set;}
-        public long FlagsPerRound { get; set;}
-        public long NoisesPerRound { get; set;}
-        public long HavocsPerRound { get; set;}
-        public long FlagStores { get; set;}
+        public long Id { get; set; }
+        public string Name { get; set; }
+        public long FlagsPerRound { get; set; }
+        public long NoisesPerRound { get; set; }
+        public long HavocsPerRound { get; set; }
+        public long FlagStores { get; set; }
         public bool Active { get; set; }
 
         public Service(long id,

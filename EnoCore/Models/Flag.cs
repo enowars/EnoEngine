@@ -152,7 +152,7 @@ namespace EnoCore.Models
                 Span<byte> baseBytes = stackalloc byte[(int)line.Length - Encoding.UTF8.GetByteCount(Flagprefix[0])]; // Raw input
                 Span<byte> flagBytes = stackalloc byte[(int)line.Length];   // Decoded bytes
                 Span<byte> computedSignature = stackalloc byte[20];         // HMACSHA1 output is always 20 bytes                           
-                //Base64.DecodeFromUtf8(base64Bytes, flagBytes, out var _, out var flagLength);   // Base64-decode the flag into flagBytes
+
                 Span<byte> bytes = stackalloc byte[36];
                 line.Slice(Encoding.UTF8.GetByteCount(Flagprefix[0])).CopyTo(baseBytes);
                 string flagstring = Encoding.UTF8.GetString(baseBytes);

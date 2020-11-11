@@ -11,8 +11,9 @@ namespace EnoCore.Utils.LoggerExtensions
     {
         public static IDisposable BeginEnoScope(this ILogger logger, CheckerTask checkerTask)
         {
-            return logger.BeginScope(new Dictionary<string, object> {
-                    [nameof(CheckerTask)] = checkerTask
+            return logger.BeginScope(new Dictionary<string, object>
+            {
+                [nameof(CheckerTask)] = checkerTask
             });
         }
 
