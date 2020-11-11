@@ -39,5 +39,5 @@ jobs:
         dotnet-version: '5.0.100-rc.2.20479.15'
     - name: install dotnet format
       run: dotnet tool install -g dotnet-format
-    - name: dotnet format
-      run: dotnet format
+    #- name: dotnet format
+    #  run: dotnet format
