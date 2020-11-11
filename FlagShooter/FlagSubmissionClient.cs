@@ -4,7 +4,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using EnoCore.Utils;
+using EnoCore;
 
 namespace FlagShooter
 {
@@ -43,10 +43,10 @@ namespace FlagShooter
                         throw new Exception($"result empty (connected={this.client.Client.Connected})");
                     }
 
-                    if (!(result + "\n" == Misc.SubmissionResultOk ||
-                        result + "\n" == Misc.SubmissionResultOld ||
-                        result + "\n" == Misc.SubmissionResultDuplicate ||
-                        result + "\n" == Misc.SubmissionResultOwn))
+                    if (!(result + "\n" == FlagSubmissionResultExtensions.SubmissionResultOk ||
+                        result + "\n" == FlagSubmissionResultExtensions.SubmissionResultOld ||
+                        result + "\n" == FlagSubmissionResultExtensions.SubmissionResultDuplicate ||
+                        result + "\n" == FlagSubmissionResultExtensions.SubmissionResultOwn))
                     {
                         Console.WriteLine($"received unexpected {result} ({result.Length} bytes)");
                     }

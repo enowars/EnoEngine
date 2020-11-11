@@ -9,11 +9,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using EnoCore;
 using EnoCore.Logging;
 using EnoCore.Models;
 using EnoCore.Models.Database;
 using EnoCore.Models.Json;
-using EnoCore.Utils;
 using EnoDatabase;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -114,22 +114,6 @@ namespace EnoEngine.FlagSubmission
             line = buffer.Slice(0, position.Value);
             buffer = buffer.Slice(buffer.GetPosition(1, position.Value));
             return true;
-        }
-
-        private static string FormatSubmissionResult(FlagSubmissionResult result)
-        {
-            return result switch
-            {
-                FlagSubmissionResult.Ok => Misc.SubmissionResultOk,
-                FlagSubmissionResult.Invalid => Misc.SubmissionResultInvalid,
-                FlagSubmissionResult.Duplicate => Misc.SubmissionResultDuplicate,
-                FlagSubmissionResult.Own => Misc.SubmissionResultOwn,
-                FlagSubmissionResult.Old => Misc.SubmissionResultOld,
-                FlagSubmissionResult.UnknownError => Misc.SubmissionResultUnknownError,
-                FlagSubmissionResult.InvalidSenderError => Misc.SubmissionResultInvalidSenderError,
-                FlagSubmissionResult.SpamError => Misc.SubmissionResultSpamError,
-                _ => Misc.SubmissionResultReallyUnknownError,
-            };
         }
 
         private async Task ProcessLinesAsync(Socket socket, long? teamId, Configuration config, CancellationToken token)
@@ -271,8 +255,8 @@ namespace EnoEngine.FlagSubmission
                         }
                     }
 
-                    var itemBytes = Encoding.ASCII.GetBytes(FormatSubmissionResult(item)); // TODO don't serialize every time
-                    await socket.SendAsync(itemBytes, SocketFlags.None, token);                 // TODO enforce batching
+                    var itemBytes = Encoding.ASCII.GetBytes(item.ToUserFriendlyString());       // TODO don't serialize every time
+                    await socket.SendAsync(itemBytes, SocketFlags.None, token);                 // TODO enforce batching if necessary
                     if (item == FlagSubmissionResult.SpamError)
                     {
                         // https://blog.netherlabs.nl/articles/2009/01/18/the-ultimate-so_linger-page-or-why-is-my-tcp-not-reliable
@@ -332,7 +316,7 @@ namespace EnoEngine.FlagSubmission
                                 }
                                 else
                                 {
-                                    var itemBytes = Encoding.ASCII.GetBytes(FormatSubmissionResult(FlagSubmissionResult.InvalidSenderError)); // TODO don't serialize every time
+                                    var itemBytes = Encoding.ASCII.GetBytes(FlagSubmissionResult.InvalidSenderError.ToUserFriendlyString());    // TODO don't serialize every time
                                     await client.Client.SendAsync(itemBytes, SocketFlags.None, token);
                                     client.Close();
                                 }

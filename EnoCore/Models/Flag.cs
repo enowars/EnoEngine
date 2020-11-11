@@ -1,5 +1,4 @@
 ﻿using EnoCore.Models.Database;
-using EnoCore.Utils;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Buffers;
@@ -13,6 +12,12 @@ using System.Text;
 
 namespace EnoCore.Models
 {
+    public enum FlagEncoding
+    {
+        Legacy,
+        UTF8
+    }
+
     /// <summary>
     /// PK: ServiceId, RoundId, OwnerId, RoundOffset
     /// </summary>

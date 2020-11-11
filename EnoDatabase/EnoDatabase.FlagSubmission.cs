@@ -1,4 +1,5 @@
-﻿using EnoCore.Logging;
+﻿using EnoCore;
+using EnoCore.Logging;
 using EnoCore.Models;
 using EnoCore.Models.Database;
 using EnoCore.Models.Json;
