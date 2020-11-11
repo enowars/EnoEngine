@@ -38,6 +38,17 @@ namespace EnoEngine
             Statistics = enoStatistics;
         }
 
+        private static async Task DelayUntil(DateTime time, CancellationToken token)
+        {
+            var now = DateTime.UtcNow;
+            if (now > time)
+            {
+                return;
+            }
+            var diff = time - now;
+            await Task.Delay(diff, token);
+        }
+
         public async Task RunContest()
         {
             // Gracefully shutdown when CTRL+C is invoked
@@ -61,20 +72,20 @@ namespace EnoEngine
                 while (!EngineCancelSource.IsCancellationRequested)
                 {
                     var end = await StartNewRound();
-                    await EnoDatabaseUtils.DelayUntil(end, EngineCancelSource.Token);
+                    await DelayUntil(end, EngineCancelSource.Token);
                 }
             }
             catch (OperationCanceledException) { }
             catch (Exception e)
             {
-                Logger.LogError($"GameLoop failed: {EnoDatabaseUtils.FormatException(e)}");
+                Logger.LogError($"GameLoop failed: {e.ToFancyString()}");
             }
             Logger.LogInformation("GameLoop finished");
         }
 
         private async Task AwaitOldRound()
         {
-            var lastRound = await EnoDatabaseUtils.RetryScopedDatabaseAction(ServiceProvider,
+            var lastRound = await EnoDatabaseUtil.RetryScopedDatabaseAction(ServiceProvider,
                     async (IEnoDatabase db) => await db.GetLastRound());
 
             if (lastRound != null)
@@ -91,7 +102,7 @@ namespace EnoEngine
         public async Task RunRecalculation()
         {
             Logger.LogInformation("RunRecalculation()");
-            var lastFinishedRound = await EnoDatabaseUtils.RetryScopedDatabaseAction(ServiceProvider,
+            var lastFinishedRound = await EnoDatabaseUtil.RetryScopedDatabaseAction(ServiceProvider,
                 async (IEnoDatabase db) => await db.PrepareRecalculation());
 
             for (int i = 1; i <= lastFinishedRound.Id; i++)

@@ -21,7 +21,7 @@ namespace EnoCore.Models
     public sealed record ConfigurationTeam(long Id,
         string Name,
         string? Address,
-        string TeamSubnet,
+        byte[] TeamSubnet,
         string? LogoUrl,
         string? FlagUrl,
         bool Active);

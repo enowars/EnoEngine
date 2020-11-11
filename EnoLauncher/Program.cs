@@ -92,7 +92,7 @@ namespace EnoLauncher
                 }
                 catch (Exception e)
                 {
-                    Logger.LogWarning($"LauncherLoop retrying because: {EnoDatabaseUtils.FormatException(e)}");
+                    Logger.LogWarning($"LauncherLoop retrying because: {e.ToFancyString()}");
                 }
             }
         }
@@ -150,7 +150,7 @@ namespace EnoLauncher
             }
             catch (Exception e)
             {
-                Logger.LogError($"{nameof(LaunchCheckerTask)} {task.Id} failed: {EnoDatabaseUtils.FormatException(e)}");
+                Logger.LogError($"{nameof(LaunchCheckerTask)} {task.Id} failed: {e.ToFancyString()}");
                 var updatedTask = task with { CheckerResult = CheckerResult.INTERNAL_ERROR, CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done };
                 Statistics.CheckerTaskFinishedMessage(updatedTask);
                 ResultsQueue.Enqueue(updatedTask);
@@ -170,7 +170,7 @@ namespace EnoLauncher
                         .AddDbContextPool<EnoDatabaseContext>(options =>
                         {
                             options.UseNpgsql(
-                                EnoDatabaseUtils.PostgresConnectionString,
+                                EnoDatabaseContext.PostgresConnectionString,
                                 pgoptions => pgoptions.EnableRetryOnFailure());
                         }, 90)
                         .AddLogging(loggingBuilder =>
@@ -228,7 +228,7 @@ namespace EnoLauncher
                         catch (OperationCanceledException) { throw; }
                         catch (Exception e)
                         {
-                            Logger.LogInformation($"UpdateDatabase retrying because: {EnoDatabaseUtils.FormatException(e)}");
+                            Logger.LogInformation($"UpdateDatabase retrying because: {e.ToFancyString()}");
                         }
                     }
                 }
@@ -236,7 +236,7 @@ namespace EnoLauncher
             catch (TaskCanceledException) { }
             catch (Exception e)
             {
-                Logger.LogCritical($"UpdateDatabase failed: {EnoDatabaseUtils.FormatException(e)}");
+                Logger.LogCritical($"UpdateDatabase failed: {e.ToFancyString()}");
             }
         }
     }

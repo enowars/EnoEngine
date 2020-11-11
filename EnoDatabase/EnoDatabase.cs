@@ -34,7 +34,7 @@ namespace EnoDatabase
         Task InsertHavocsTasks(Round currentRound, Configuration config);
         Task InsertRetrieveCurrentFlagsTasks(Round round, Configuration config);
         Task InsertRetrieveOldFlagsTasks(Round currentRound, Configuration config);
-        Task<Team?> GetTeamIdByPrefix(string attackerPrefixString);
+        Task<Team?> GetTeamIdByPrefix(byte[] attackerPrefixString);
         Task InsertRetrieveCurrentNoisesTasks(Round currentRound, Configuration config);
         Task<List<CheckerTask>> RetrievePendingCheckerTasks(int maxAmount);
         Task CalculateTotalPoints();
@@ -74,10 +74,9 @@ namespace EnoDatabase
             // Insert or update teams from config
             foreach (var team in config.Teams)
             {
-                string teamSubnet = EnoDatabaseUtils.ExtractSubnet(team.TeamSubnet, config.TeamSubnetBytesLength);
                 if (dbTeams.TryGetValue(team.Id, out var dbTeam))
                 {
-                    dbTeam.TeamSubnet = teamSubnet;
+                    dbTeam.TeamSubnet = team.TeamSubnet;
                     dbTeam.Name = team.Name;
                     dbTeam.Id = team.Id;
                     dbTeam.Active = team.Active;
@@ -89,7 +88,7 @@ namespace EnoDatabase
                     Logger.LogInformation($"Adding team {team.Name}({team.Id})");
                     _context.Teams.Add(new Team()
                     {
-                        TeamSubnet = teamSubnet,
+                        TeamSubnet = team.TeamSubnet,
                         Name = team.Name,
                         Id = team.Id,
                         Active = team.Active,
@@ -631,7 +630,7 @@ namespace EnoDatabase
                     {
                         if (currentRoundWorstResults[key2] != null)
                         {
-                            status = EnoDatabaseUtils.CheckerResultToServiceStatus(currentRoundWorstResults[key2]!.CheckerResult);
+                            status = currentRoundWorstResults[key2]!.CheckerResult.AsServiceStatus();
                             message = currentRoundWorstResults[key2]!.ErrorMessage;
                         }
                         else
@@ -665,7 +664,7 @@ namespace EnoDatabase
             await _context.SaveChangesAsync();
         }
 
-        public async Task<Team?> GetTeamIdByPrefix(string attackerPrefixString)
+        public async Task<Team?> GetTeamIdByPrefix(byte[] attackerPrefixString)
         {
             return await _context.Teams
                 .Where(t => t.TeamSubnet == attackerPrefixString)

@@ -49,12 +49,15 @@ namespace EnoCore.Models.Json
             if (FlagValidityInRounds <= 0)
                 throw new JsonConfigurationValidationException("flagValidityInRounds is <= 0.");
 
+            if (TeamSubnetBytesLength <= 0)
+                throw new JsonConfigurationValidationException("teamSubnetBytesLength is <= 0.");
+
             List<ConfigurationTeam> teams = new();
             List<ConfigurationService> services = new();
             Dictionary<long, string[]> checkers = new();
 
             foreach (var team in Teams)
-                teams.Add(team.Validate());
+                teams.Add(team.Validate(TeamSubnetBytesLength));
             // TODO ensure team ids are unique
 
             foreach (var service in Services)
