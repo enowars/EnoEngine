@@ -40,7 +40,7 @@ namespace EnoCore.Models.Json
             }
             catch (Exception e)
             {
-                throw new JsonConfigurationTeamValidationException($"Team subnet was no valid IP address (team {Id}).", e);
+                throw new JsonConfigurationTeamValidationException($"Team subnet is no valid IP address (team {Id}).", e);
             }
             
             byte[] teamSubnet = new byte[subnetBytesLength];
