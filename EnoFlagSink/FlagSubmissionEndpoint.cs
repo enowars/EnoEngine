@@ -116,18 +116,7 @@ namespace EnoEngine.FlagSubmission
             return true;
         }
 
-        private async Task ProcessLinesAsync(Socket socket, long? teamId, Configuration config, CancellationToken token)
-        {
-            var pipe = new Pipe();
-            Channel<Task<FlagSubmissionResult>> feedbackChannel = Channel.CreateUnbounded<Task<FlagSubmissionResult>>(new UnboundedChannelOptions() { SingleReader = true, SingleWriter = false });
-            Task writing = this.FillPipeAsync(socket, pipe.Writer, token);
-            Task reading = this.ReadPipeAsync(pipe.Reader, feedbackChannel.Writer, teamId, config, token);
-            Task responding = this.RespondAsync(socket, teamId, feedbackChannel.Reader, token);
-            await Task.WhenAll(reading, writing, responding);
-            socket.Close();
-        }
-
-        private async Task FillPipeAsync(Socket socket, PipeWriter writer, CancellationToken token)
+        private static async Task FillPipeAsync(Socket socket, PipeWriter writer, CancellationToken token)
         {
             const int minimumBufferSize = 512;
             while (true)
@@ -145,9 +134,8 @@ namespace EnoEngine.FlagSubmission
                     // Tell the PipeWriter how much was read from the Socket.
                     writer.Advance(bytesRead);
                 }
-                catch (Exception ex)
+                catch
                 {
-                    this.logger.LogDebug($"FillPipeAsync failed: {ex.Message}\n{ex.StackTrace}");
                     break;
                 }
                 // Make the data available to the PipeReader.
@@ -161,6 +149,17 @@ namespace EnoEngine.FlagSubmission
 
             // By completing PipeWriter, tell the PipeReader that there's no more data coming.
             await writer.CompleteAsync();
+        }
+
+        private async Task ProcessLinesAsync(Socket socket, long? teamId, Configuration config, CancellationToken token)
+        {
+            var pipe = new Pipe();
+            Channel<Task<FlagSubmissionResult>> feedbackChannel = Channel.CreateUnbounded<Task<FlagSubmissionResult>>(new UnboundedChannelOptions() { SingleReader = true, SingleWriter = false });
+            Task writing = FillPipeAsync(socket, pipe.Writer, token);
+            Task reading = this.ReadPipeAsync(pipe.Reader, feedbackChannel.Writer, teamId, config, token);
+            Task responding = this.RespondAsync(socket, teamId, feedbackChannel.Reader, token);
+            await Task.WhenAll(reading, writing, responding);
+            socket.Close();
         }
 
         private async Task ReadPipeAsync(PipeReader reader, ChannelWriter<Task<FlagSubmissionResult>> feedbackWriter, long? teamId, Configuration config, CancellationToken token)
