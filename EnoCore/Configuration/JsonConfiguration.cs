@@ -212,7 +212,7 @@
         string? Address,
         string? TeamSubnet,
         string? LogoUrl,
-        string? FlagUrl,
+        string? CountryFlagUrl,
         bool Active = true)
     {
         public ConfigurationTeam Validate(int subnetBytesLength)
@@ -250,7 +250,7 @@
                 this.Address,
                 teamSubnet,
                 this.LogoUrl,
-                this.FlagUrl,
+                this.CountryFlagUrl,
                 this.Active);
         }
     }

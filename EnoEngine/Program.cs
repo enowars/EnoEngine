@@ -68,7 +68,7 @@ try
     try
     {
         var teams = configuration.Teams
-            .Select(s => new ScoreboardInfoTeam(s.Id, s.Name, s.LogoUrl, s.FlagUrl, s.Active))
+            .Select(s => new ScoreboardInfoTeam(s.Id, s.Name, s.LogoUrl, s.CountryFlagUrl, s.Active))
             .ToArray();
         var json = JsonSerializer.Serialize(new ScoreboardInfo(configuration.Title, teams), EnoCoreUtil.CamelCaseEnumConverterOptions);
         File.WriteAllText($"{EnoCoreUtil.DataDirectory}scoreboardInfo.json", json);

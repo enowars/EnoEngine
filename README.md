@@ -44,7 +44,7 @@ interface Team {
     address: string | null;
     teamSubnet: string;
     logoUrl: string | null;
-    flagUrl: string | null;
+    countryFlagUrl: string | null;
     active: string | null;
 }
 ```

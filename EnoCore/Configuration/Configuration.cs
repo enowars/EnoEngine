@@ -26,7 +26,7 @@
         string? Address,
         byte[] TeamSubnet,
         string? LogoUrl,
-        string? FlagUrl, // TODO rename to countryflag or whatever
+        string? CountryFlagUrl,
         bool Active);
 
     public sealed record ConfigurationService(long Id,
