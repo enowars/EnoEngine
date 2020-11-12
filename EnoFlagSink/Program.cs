@@ -72,7 +72,8 @@ try
                 options.UseNpgsql(
                     EnoDatabaseContext.PostgresConnectionString,
                     pgoptions => pgoptions.EnableRetryOnFailure());
-            }, 90)
+            },
+            90)
         .AddLogging(loggingBuilder =>
         {
             loggingBuilder.SetMinimumLevel(LogLevel.Debug);

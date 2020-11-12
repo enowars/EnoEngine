@@ -1,30 +1,30 @@
-﻿using System;
-using System.Buffers;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Sockets;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
-using EnoCore.Models;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-
-namespace EnoDatabase
+﻿namespace EnoDatabase
 {
+    using System;
+    using System.Buffers;
+    using System.Collections;
+    using System.Collections.Concurrent;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Net;
+    using System.Net.Sockets;
+    using System.Runtime.CompilerServices;
+    using System.Security.Cryptography;
+    using System.Text;
+    using System.Text.Json;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using EnoCore.Models;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+
     public class EnoDatabaseUtil
     {
         public static async Task RetryScopedDatabaseAction(IServiceProvider serviceProvider, Func<IEnoDatabase, Task> function)
         {
             Exception? lastException = null;
-            for (int i = 0; i < EnoDatabaseContext.DATABASE_RETRIES; i++)
+            for (int i = 0; i < EnoDatabaseContext.DatabaseRetries; i++)
             {
                 try
                 {
@@ -50,7 +50,7 @@ namespace EnoDatabase
         public static async Task<T> RetryScopedDatabaseAction<T>(IServiceProvider serviceProvider, Func<IEnoDatabase, Task<T>> function)
         {
             Exception? lastException = null;
-            for (int i = 0; i < EnoDatabaseContext.DATABASE_RETRIES; i++)
+            for (int i = 0; i < EnoDatabaseContext.DatabaseRetries; i++)
             {
                 try
                 {

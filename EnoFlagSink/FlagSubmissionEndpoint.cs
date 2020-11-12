@@ -319,7 +319,8 @@ namespace EnoEngine.FlagSubmission
                                     await client.Client.SendAsync(itemBytes, SocketFlags.None, token);
                                     client.Close();
                                 }
-                            }, token);
+                            },
+                            token);
                     }
                     catch (Exception e)
                     {
@@ -347,7 +348,7 @@ namespace EnoEngine.FlagSubmission
                 while (!token.IsCancellationRequested)
                 {
                     bool isEmpty = true;
-                    List<(Flag flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult> result)> submissions = new List<(Flag flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult>)>();
+                    List<(Flag Flag, long AttackerTeamId, TaskCompletionSource<FlagSubmissionResult> Result)> submissions = new List<(Flag Flag, long AttackerTeamId, TaskCompletionSource<FlagSubmissionResult>)>();
                     foreach (var (teamid, channel) in this.channels)
                     {
                         int submissionsPerTeam = 0;

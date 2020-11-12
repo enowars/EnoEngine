@@ -1,30 +1,31 @@
-﻿using Microsoft.EntityFrameworkCore;
-using EnoCore;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using System.Runtime.InteropServices;
-using System.Diagnostics;
-using Microsoft.Extensions.DependencyInjection;
-using System.Net.Sockets;
-using System.Data;
-using EnoCore.Logging;
-using EnoCore.Models;
-using EnoCore.Configuration;
-using EnoCore.Scoreboard;
-
-namespace EnoDatabase
+﻿namespace EnoDatabase
 {
+    using System;
+    using System.Collections;
+    using System.Collections.Generic;
+    using System.Data;
+    using System.Diagnostics;
+    using System.IO;
+    using System.Linq;
+    using System.Net;
+    using System.Net.Sockets;
+    using System.Runtime.InteropServices;
+    using System.Text;
+    using System.Threading.Tasks;
+    using EnoCore;
+    using EnoCore.Configuration;
+    using EnoCore.Logging;
+    using EnoCore.Models;
+    using EnoCore.Scoreboard;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+
     public interface IEnoDatabase
     {
+#pragma warning disable SA1516 // Elements should be separated by blank line
         void ApplyConfig(Configuration configuration);
-        Task ProcessSubmissionsBatch(List<(Flag flag, long attackerTeamId, TaskCompletionSource<FlagSubmissionResult> result)> submissions, long flagValidityInRounds, EnoStatistics statistics);
+        Task ProcessSubmissionsBatch(List<(Flag Flag, long AttackerTeamId, TaskCompletionSource<FlagSubmissionResult> Result)> submissions, long flagValidityInRounds, EnoStatistics statistics);
         Task<Team[]> RetrieveTeams();
         Task<Service[]> RetrieveServices();
         Task<Round> CreateNewRound(DateTime begin, DateTime q2, DateTime q3, DateTime q4, DateTime end);
@@ -42,31 +43,32 @@ namespace EnoDatabase
         Task<Scoreboard> GetCurrentScoreboard(long roundId);
         void Migrate();
         Task UpdateTaskCheckerTaskResults(Memory<CheckerTask> tasks);
-        Task<(long newLatestSnapshotRoundId, long oldSnapshotRoundId, Service[] services, Team[] teams)> GetPointCalculationFrame(long roundId, Configuration configuration);
+        Task<(long NewLatestSnapshotRoundId, long OldSnapshotRoundId, Service[] Services, Team[] Teams)> GetPointCalculationFrame(long roundId, Configuration configuration);
         Task CalculateTeamServicePoints(Team[] teams, long roundId, Service service, long oldSnapshotRoundId, long newLatestSnapshotRoundId);
         Task<Round> PrepareRecalculation();
+#pragma warning restore SA1516 // Elements should be separated by blank line
     }
 
     public partial class EnoDatabase : IEnoDatabase
     {
-        private readonly ILogger Logger;
-        private readonly EnoDatabaseContext _context;
+        private readonly ILogger logger;
+        private readonly EnoDatabaseContext context;
 
         public EnoDatabase(EnoDatabaseContext context, ILogger<EnoDatabase> logger)
         {
-            _context = context;
-            Logger = logger;
+            this.context = context;
+            this.logger = logger;
         }
 
         public void ApplyConfig(Configuration config)
         {
-            Logger.LogDebug("Applying configuration to database");
+            this.logger.LogDebug("Applying configuration to database");
 
             // Migrate if needed
-            Migrate();
+            this.Migrate();
 
             // Get all teams from db
-            var dbTeams = _context
+            var dbTeams = this.context
                 .Teams
                 .ToList()
                 .ToDictionary(t => t.Id);
@@ -85,25 +87,26 @@ namespace EnoDatabase
                 }
                 else
                 {
-                    Logger.LogInformation($"Adding team {team.Name}({team.Id})");
-                    _context.Teams.Add(new Team()
+                    this.logger.LogInformation($"Adding team {team.Name}({team.Id})");
+                    this.context.Teams.Add(new Team()
                     {
                         TeamSubnet = team.TeamSubnet,
                         Name = team.Name,
                         Id = team.Id,
                         Active = team.Active,
-                        Address = team.Address
+                        Address = team.Address,
                     });
                 }
             }
+
             foreach (var (teamId, team) in dbTeams)
             {
-                Logger.LogWarning($"Deactivating stale team in db ({teamId})");
+                this.logger.LogWarning($"Deactivating stale team in db ({teamId})");
                 team.Active = false;
             }
 
             // Get all services from db
-            var dbServices = _context
+            var dbServices = this.context
                 .Services
                 .ToList()
                 .ToDictionary(s => s.Id);
@@ -122,8 +125,9 @@ namespace EnoDatabase
                 }
                 else
                 {
-                    Logger.LogInformation($"Adding service {service.Name}");
-                    _context.Services.Add(new Service(service.Id,
+                    this.logger.LogInformation($"Adding service {service.Name}");
+                    this.context.Services.Add(new Service(
+                        service.Id,
                         service.Name,
                         service.FlagsPerRound,
                         service.NoisesPerRound,
@@ -132,24 +136,27 @@ namespace EnoDatabase
                         service.Active));
                 }
             }
+
             foreach (var (serviceId, service) in dbServices)
             {
-                Logger.LogWarning($"Deactivating stale service in db ({serviceId})");
+                this.logger.LogWarning($"Deactivating stale service in db ({serviceId})");
                 service.Active = false;
             }
 
-            _context.SaveChanges(); // Save so that the services and teams receive proper IDs
-            foreach (var service in _context.Services.ToArray())
+            this.context.SaveChanges(); // Save so that the services and teams receive proper IDs
+
+            foreach (var service in this.context.Services.ToArray())
             {
-                foreach (var team in _context.Teams.ToArray())
+                foreach (var team in this.context.Teams.ToArray())
                 {
-                    var stats = _context.TeamServicePoints
+                    var stats = this.context.TeamServicePoints
                         .Where(ss => ss.TeamId == team.Id)
                         .Where(ss => ss.ServiceId == service.Id)
                         .SingleOrDefault();
                     if (stats == null)
                     {
-                        _context.TeamServicePoints.Add(new(team.Id,
+                        this.context.TeamServicePoints.Add(new(
+                            team.Id,
                             service.Id,
                             0,
                             0,
@@ -159,76 +166,76 @@ namespace EnoDatabase
                     }
                 }
             }
-            _context.SaveChanges();
+
+            this.context.SaveChanges();
         }
 
         public void Migrate()
         {
-            var pendingMigrations = _context.Database.GetPendingMigrations().Count();
+            var pendingMigrations = this.context.Database.GetPendingMigrations().Count();
             if (pendingMigrations > 0)
             {
-                Logger.LogInformation($"Applying {pendingMigrations} migration(s)");
-                _context.Database.Migrate();
-                _context.SaveChanges();
-                Logger.LogDebug($"Database migration complete");
+                this.logger.LogInformation($"Applying {pendingMigrations} migration(s)");
+                this.context.Database.Migrate();
+                this.context.SaveChanges();
+                this.logger.LogDebug($"Database migration complete");
             }
             else
             {
-                Logger.LogDebug($"No pending migrations");
+                this.logger.LogDebug($"No pending migrations");
             }
         }
 
         public async Task<Team[]> RetrieveTeams()
         {
-            return await _context.Teams
+            return await this.context.Teams
                 .AsNoTracking()
                 .ToArrayAsync();
         }
 
         public async Task<Service[]> RetrieveServices()
         {
-            return await _context.Services
+            return await this.context.Services
                 .AsNoTracking()
                 .ToArrayAsync();
         }
 
         public async Task<Round> CreateNewRound(DateTime begin, DateTime q2, DateTime q3, DateTime q4, DateTime end)
         {
-            var oldRound = await _context.Rounds
+            var oldRound = await this.context.Rounds
                 .OrderBy(r => r.Id)
                 .LastOrDefaultAsync();
             long roundId;
             if (oldRound != null)
+            {
                 roundId = oldRound.Id + 1;
+            }
             else
+            {
                 roundId = 1;
-            var round = new Round(roundId,
+            }
+
+            var round = new Round(
+                roundId,
                 begin,
                 q2,
                 q3,
                 q4,
                 end);
-            _context.Rounds.Add(round);
-            await _context.SaveChangesAsync();
+            this.context.Rounds.Add(round);
+            await this.context.SaveChangesAsync();
             return round;
-        }
-
-        private async Task InsertCheckerTasks(IEnumerable<CheckerTask> tasks)
-        {
-            Logger.LogDebug($"InsertCheckerTasks inserting {tasks.Count()} tasks");
-            _context.AddRange(tasks);
-            await _context.SaveChangesAsync();
         }
 
         public async Task<List<CheckerTask>> RetrievePendingCheckerTasks(int maxAmount)
         {
-            var strategy = _context.Database.CreateExecutionStrategy();
+            var strategy = this.context.Database.CreateExecutionStrategy();
             return await strategy.ExecuteAsync(async () =>
             {
-                using var transaction = _context.Database.BeginTransaction(IsolationLevel.Serializable);
+                using var transaction = this.context.Database.BeginTransaction(IsolationLevel.Serializable);
                 try
                 {
-                    var tasks = await _context.CheckerTasks
+                    var tasks = await this.context.CheckerTasks
                         .Where(t => t.CheckerTaskLaunchStatus == CheckerTaskLaunchStatus.New)
                         .OrderBy(t => t.StartTime)
                         .Take(maxAmount)
@@ -236,26 +243,30 @@ namespace EnoDatabase
                         .ToListAsync();
 
                     var launchedTasks = new CheckerTask[tasks.Count];
+
                     // TODO update launch status without delaying operation
                     for (int i = 0; i < launchedTasks.Length; i++)
+                    {
                         launchedTasks[i] = tasks[i] with { CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Launched };
+                    }
 
-                    _context.UpdateRange(launchedTasks);
-                    await _context.SaveChangesAsync();
+                    this.context.UpdateRange(launchedTasks);
+                    await this.context.SaveChangesAsync();
                     await transaction.CommitAsync();
                     return tasks;
                 }
                 catch (Exception e)
                 {
                     await transaction.RollbackAsync();
-                    Logger.LogDebug($"RetrievePendingCheckerTasks: Rolling Back Transaction{e.ToFancyString()}");
+                    this.logger.LogDebug($"RetrievePendingCheckerTasks: Rolling Back Transaction{e.ToFancyString()}");
                     throw new Exception(e.Message, e.InnerException);
                 }
             });
         }
+
         public async Task<Round> GetLastRound()
         {
-            var round = await _context.Rounds
+            var round = await this.context.Rounds
                 .OrderByDescending(f => f.Id)
                 .FirstOrDefaultAsync();
             return round;
@@ -271,8 +282,12 @@ namespace EnoDatabase
             {
                 tasksCount += service.FlagsPerRound * config.ActiveTeams.Count;
             }
+
             if (tasksCount == 0)
+            {
                 return;
+            }
+
             double timeDiff = (maxRunningTime - 2) / tasksCount;
             var tasks = new CheckerTask[tasksCount];
             int i = 0;
@@ -284,7 +299,8 @@ namespace EnoDatabase
                 {
                     for (int taskIndex = 0; taskIndex < service.FlagsPerRound; taskIndex++)
                     {
-                        var checkerTask = new CheckerTask(0,
+                        var checkerTask = new CheckerTask(
+                            0,
                             checkers[i % checkers.Length],
                             CheckerTaskMethod.putflag,
                             team.Address ?? $"team{team.Id}.{config.DnsSuffix}",
@@ -310,7 +326,7 @@ namespace EnoDatabase
             }
 
             // TODO shuffle
-            await InsertCheckerTasks(tasks);
+            await this.InsertCheckerTasks(tasks);
         }
 
         public async Task InsertPutNoisesTasks(Round round, Configuration config)
@@ -323,8 +339,12 @@ namespace EnoDatabase
             {
                 tasksCount += service.NoisesPerRound * config.ActiveTeams.Count;
             }
+
             if (tasksCount == 0)
+            {
                 return;
+            }
+
             double timeDiff = (maxRunningTime - 2) / tasksCount;
             var tasks = new CheckerTask[tasksCount];
             int i = 0;
@@ -336,7 +356,8 @@ namespace EnoDatabase
                 {
                     for (int taskIndex = 0; taskIndex < service.NoisesPerRound; taskIndex++)
                     {
-                        var checkerTask = new CheckerTask(0,
+                        var checkerTask = new CheckerTask(
+                            0,
                             checkers[i % checkers.Length],
                             CheckerTaskMethod.putnoise,
                             team.Address ?? $"team{team.Id}.{config.DnsSuffix}",
@@ -362,7 +383,7 @@ namespace EnoDatabase
             }
 
             // TODO shuffle
-            await InsertCheckerTasks(tasks);
+            await this.InsertCheckerTasks(tasks);
         }
 
         public async Task InsertHavocsTasks(Round round, Configuration config)
@@ -375,9 +396,13 @@ namespace EnoDatabase
             {
                 tasksCount += service.HavocsPerRound * config.ActiveTeams.Count;
             }
+
             if (tasksCount == 0)
+            {
                 return;
-            double timeDiff = (double)(maxRunningTime * 3) - 2 / tasksCount;
+            }
+
+            double timeDiff = (double)((maxRunningTime * 3) - 2) / tasksCount;
             var tasks = new CheckerTask[tasksCount];
             int i = 0;
 
@@ -388,7 +413,8 @@ namespace EnoDatabase
                 {
                     for (int taskIndex = 0; taskIndex < service.HavocsPerRound; taskIndex++)
                     {
-                        var checkerTask = new CheckerTask(0,
+                        var checkerTask = new CheckerTask(
+                            0,
                             checkers[i % checkers.Length],
                             CheckerTaskMethod.havoc,
                             team.Address ?? $"team{team.Id}.{config.DnsSuffix}",
@@ -414,7 +440,7 @@ namespace EnoDatabase
             }
 
             // TODO shuffle
-            await InsertCheckerTasks(tasks);
+            await this.InsertCheckerTasks(tasks);
         }
 
         public async Task InsertRetrieveCurrentFlagsTasks(Round round, Configuration config)
@@ -427,8 +453,12 @@ namespace EnoDatabase
             {
                 tasksCount += service.FlagsPerRound * config.ActiveTeams.Count;
             }
+
             if (tasksCount == 0)
+            {
                 return;
+            }
+
             double timeDiff = (maxRunningTime - 2) / tasksCount;
             var tasks = new CheckerTask[tasksCount];
             int i = 0;
@@ -440,7 +470,8 @@ namespace EnoDatabase
                 {
                     for (int taskIndex = 0; taskIndex < service.FlagsPerRound; taskIndex++)
                     {
-                        var checkerTask = new CheckerTask(0,
+                        var checkerTask = new CheckerTask(
+                            0,
                             checkers[i % checkers.Length],
                             CheckerTaskMethod.getflag,
                             team.Address ?? $"team{team.Id}.{config.DnsSuffix}",
@@ -466,7 +497,7 @@ namespace EnoDatabase
             }
 
             // TODO shuffle
-            await InsertCheckerTasks(tasks);
+            await this.InsertCheckerTasks(tasks);
         }
 
         public async Task InsertRetrieveOldFlagsTasks(Round round, Configuration config)
@@ -482,8 +513,12 @@ namespace EnoDatabase
                     * config.ActiveTeams.Count
                     * oldRoundsCount;
             }
+
             if (tasksCount == 0)
+            {
                 return;
+            }
+
             double timeDiff = (maxRunningTime - 2) / tasksCount;
             var tasks = new CheckerTask[tasksCount];
             int i = 0;
@@ -497,7 +532,8 @@ namespace EnoDatabase
                     {
                         for (int taskIndex = 0; taskIndex < service.FlagsPerRound; taskIndex++)
                         {
-                            var task = new CheckerTask(0,
+                            var task = new CheckerTask(
+                                0,
                                 checkers[i % checkers.Length],
                                 CheckerTaskMethod.getflag,
                                 team.Address ?? $"team{team.Id}.{config.DnsSuffix}",
@@ -523,8 +559,8 @@ namespace EnoDatabase
                 }
             }
 
-            //TODO shuffle
-            await InsertCheckerTasks(tasks);
+            // TODO shuffle
+            await this.InsertCheckerTasks(tasks);
         }
 
         public async Task InsertRetrieveCurrentNoisesTasks(Round round, Configuration config)
@@ -537,8 +573,12 @@ namespace EnoDatabase
             {
                 tasksCount += service.NoisesPerRound * config.ActiveTeams.Count;
             }
+
             if (tasksCount == 0)
+            {
                 return;
+            }
+
             double timeDiff = (maxRunningTime - 2) / tasksCount;
             var tasks = new CheckerTask[tasksCount];
             int i = 0;
@@ -550,7 +590,8 @@ namespace EnoDatabase
                 {
                     for (int taskIndex = 0; taskIndex < service.NoisesPerRound; taskIndex++)
                     {
-                        var checkerTask = new CheckerTask(0,
+                        var checkerTask = new CheckerTask(
+                            0,
                             checkers[i % checkers.Length],
                             CheckerTaskMethod.getnoise,
                             team.Address ?? $"team{team.Id}.{config.DnsSuffix}",
@@ -577,19 +618,18 @@ namespace EnoDatabase
             }
 
             // TODO shuffle
-            await InsertCheckerTasks(tasks);
+            await this.InsertCheckerTasks(tasks);
         }
 
         public async Task CalculateRoundTeamServiceStates(IServiceProvider serviceProvider, long roundId, EnoStatistics statistics)
         {
-            var teams = await _context.Teams.AsNoTracking().ToArrayAsync();
-            var services = await _context.Services.AsNoTracking().ToArrayAsync();
+            var teams = await this.context.Teams.AsNoTracking().ToArrayAsync();
+            var services = await this.context.Services.AsNoTracking().ToArrayAsync();
 
-            //Logger.LogError("Before Statement");
             var currentRoundWorstResults = new Dictionary<(long ServiceId, long TeamId), CheckerTask?>();
             var sw = new Stopwatch();
             sw.Start();
-            var foo = await _context.CheckerTasks
+            var foo = await this.context.CheckerTasks
                             .TagWith("CalculateRoundTeamServiceStates:currentRoundTasks")
                             .Where(ct => ct.CurrentRoundId == roundId)
                             .Where(ct => ct.RelatedRoundId == roundId)
@@ -606,9 +646,9 @@ namespace EnoDatabase
 
             sw.Stop();
             statistics.LogCheckerTaskAggregateMessage(roundId, sw.ElapsedMilliseconds);
-            Logger.LogInformation($"CalculateRoundTeamServiceStates: Data Aggregation for {teams.Length} Teams and {services.Length} Services took {sw.ElapsedMilliseconds}ms");
+            this.logger.LogInformation($"CalculateRoundTeamServiceStates: Data Aggregation for {teams.Length} Teams and {services.Length} Services took {sw.ElapsedMilliseconds}ms");
 
-            var oldRoundsWorstResults = await _context.CheckerTasks
+            var oldRoundsWorstResults = await this.context.CheckerTasks
                 .TagWith("CalculateRoundTeamServiceStates:oldRoundsTasks")
                 .Where(ct => ct.CurrentRoundId == roundId)
                 .Where(ct => ct.RelatedRoundId != roundId)
@@ -639,6 +679,7 @@ namespace EnoDatabase
                             message = null;
                         }
                     }
+
                     if (status == ServiceStatus.OK && oldRoundsWorstResults.ContainsKey(key))
                     {
                         if (oldRoundsWorstResults[key] != CheckerResult.OK)
@@ -646,38 +687,48 @@ namespace EnoDatabase
                             status = ServiceStatus.RECOVERING;
                         }
                     }
-                    newRoundTeamServiceStatus[(key.ServiceId, key.TeamId)] = new RoundTeamServiceStatus(status,
+
+                    newRoundTeamServiceStatus[(key.ServiceId, key.TeamId)] = new RoundTeamServiceStatus(
+                        status,
                         message,
                         key.TeamId,
                         key.ServiceId,
                         roundId);
                 }
             }
-            _context.RoundTeamServiceStatus.AddRange(newRoundTeamServiceStatus.Values);
-            await _context.SaveChangesAsync();
+
+            this.context.RoundTeamServiceStatus.AddRange(newRoundTeamServiceStatus.Values);
+            await this.context.SaveChangesAsync();
         }
 
         public async Task UpdateTaskCheckerTaskResults(Memory<CheckerTask> tasks)
         {
             var tasksEnumerable = MemoryMarshal.ToEnumerable<CheckerTask>(tasks);
-            _context.UpdateRange(tasksEnumerable);
-            await _context.SaveChangesAsync();
+            this.context.UpdateRange(tasksEnumerable);
+            await this.context.SaveChangesAsync();
         }
 
         public async Task<Team?> GetTeamIdByPrefix(byte[] attackerPrefixString)
         {
-            return await _context.Teams
+            return await this.context.Teams
                 .Where(t => t.TeamSubnet == attackerPrefixString)
                 .SingleOrDefaultAsync();
         }
 
         public async Task<Round> PrepareRecalculation()
         {
-            await _context.Database.ExecuteSqlRawAsync($"delete from \"{nameof(_context.TeamServicePointsSnapshot)}\";");
-            return await _context.Rounds
+            await this.context.Database.ExecuteSqlRawAsync($"delete from \"{nameof(this.context.TeamServicePointsSnapshot)}\";");
+            return await this.context.Rounds
                 .OrderByDescending(r => r.Id)
                 .Skip(1)
                 .FirstOrDefaultAsync();
+        }
+
+        private async Task InsertCheckerTasks(IEnumerable<CheckerTask> tasks)
+        {
+            this.logger.LogDebug($"InsertCheckerTasks inserting {tasks.Count()} tasks");
+            this.context.AddRange(tasks);
+            await this.context.SaveChangesAsync();
         }
     }
 }

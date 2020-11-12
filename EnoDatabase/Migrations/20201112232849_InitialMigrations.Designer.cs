@@ -10,23 +10,23 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EnoDatabase.Migrations
 {
     [DbContext(typeof(EnoDatabaseContext))]
-    [Migration("20201110180529_InitialMigrations")]
+    [Migration("20201112232849_InitialMigrations")]
     partial class InitialMigrations
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
-                .HasAnnotation("ProductVersion", "3.0.0")
-                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+                .UseIdentityByDefaultColumns()
+                .HasAnnotation("Relational:MaxIdentifierLength", 63)
+                .HasAnnotation("ProductVersion", "5.0.0");
 
-            modelBuilder.Entity("EnoCore.Models.Database.CheckerTask", b =>
+            modelBuilder.Entity("EnoCore.Models.CheckerTask", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+                        .UseIdentityByDefaultColumn();
 
                     b.Property<string>("Address")
                         .IsRequired()
@@ -92,12 +92,12 @@ namespace EnoDatabase.Migrations
                     b.ToTable("CheckerTasks");
                 });
 
-            modelBuilder.Entity("EnoCore.Models.Database.Round", b =>
+            modelBuilder.Entity("EnoCore.Models.Round", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+                        .UseIdentityByDefaultColumn();
 
                     b.Property<DateTime>("Begin")
                         .HasColumnType("timestamp without time zone");
@@ -119,7 +119,7 @@ namespace EnoDatabase.Migrations
                     b.ToTable("Rounds");
                 });
 
-            modelBuilder.Entity("EnoCore.Models.Database.RoundTeamServiceStatus", b =>
+            modelBuilder.Entity("EnoCore.Models.RoundTeamServiceStatus", b =>
                 {
                     b.Property<long>("ServiceId")
                         .HasColumnType("bigint");
@@ -141,12 +141,12 @@ namespace EnoDatabase.Migrations
                     b.ToTable("RoundTeamServiceStatus");
                 });
 
-            modelBuilder.Entity("EnoCore.Models.Database.Service", b =>
+            modelBuilder.Entity("EnoCore.Models.Service", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+                        .UseIdentityByDefaultColumn();
 
                     b.Property<bool>("Active")
                         .HasColumnType("boolean");
@@ -172,7 +172,7 @@ namespace EnoDatabase.Migrations
                     b.ToTable("Services");
                 });
 
-            modelBuilder.Entity("EnoCore.Models.Database.SubmittedFlag", b =>
+            modelBuilder.Entity("EnoCore.Models.SubmittedFlag", b =>
                 {
                     b.Property<long>("FlagServiceId")
                         .HasColumnType("bigint");
@@ -205,12 +205,12 @@ namespace EnoDatabase.Migrations
                     b.ToTable("SubmittedFlags");
                 });
 
-            modelBuilder.Entity("EnoCore.Models.Database.Team", b =>
+            modelBuilder.Entity("EnoCore.Models.Team", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+                        .UseIdentityByDefaultColumn();
 
                     b.Property<bool>("Active")
                         .HasColumnType("boolean");
@@ -234,9 +234,9 @@ namespace EnoDatabase.Migrations
                     b.Property<long>("ServiceStatsId")
                         .HasColumnType("bigint");
 
-                    b.Property<string>("TeamSubnet")
+                    b.Property<byte[]>("TeamSubnet")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("bytea");
 
                     b.Property<double>("TotalPoints")
                         .HasColumnType("double precision");
@@ -246,7 +246,7 @@ namespace EnoDatabase.Migrations
                     b.ToTable("Teams");
                 });
 
-            modelBuilder.Entity("EnoCore.Models.Database.TeamServicePoints", b =>
+            modelBuilder.Entity("EnoCore.Models.TeamServicePoints", b =>
                 {
                     b.Property<long>("TeamId")
                         .HasColumnType("bigint");
@@ -274,7 +274,7 @@ namespace EnoDatabase.Migrations
                     b.ToTable("TeamServicePoints");
                 });
 
-            modelBuilder.Entity("EnoCore.Models.Database.TeamServicePointsSnapshot", b =>
+            modelBuilder.Entity("EnoCore.Models.TeamServicePointsSnapshot", b =>
                 {
                     b.Property<long>("ServiceId")
                         .HasColumnType("bigint");
@@ -299,13 +299,18 @@ namespace EnoDatabase.Migrations
                     b.ToTable("TeamServicePointsSnapshot");
                 });
 
-            modelBuilder.Entity("EnoCore.Models.Database.TeamServicePoints", b =>
+            modelBuilder.Entity("EnoCore.Models.TeamServicePoints", b =>
                 {
-                    b.HasOne("EnoCore.Models.Database.Team", null)
-                        .WithMany("ServiceStats")
+                    b.HasOne("EnoCore.Models.Team", null)
+                        .WithMany("TeamServicePoints")
                         .HasForeignKey("TeamId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("EnoCore.Models.Team", b =>
+                {
+                    b.Navigation("TeamServicePoints");
                 });
 #pragma warning restore 612, 618
         }

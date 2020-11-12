@@ -1,31 +1,26 @@
-﻿using EnoCore.Models;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Design;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace EnoDatabase
+﻿namespace EnoDatabase
 {
-    public class EnoDatabaseContextFactory : IDesignTimeDbContextFactory<EnoDatabaseContext>
-    {
-        public EnoDatabaseContext CreateDbContext(string[] args)
-        {
-            var optionsBuilder = new DbContextOptionsBuilder<EnoDatabaseContext>();
-            optionsBuilder.UseNpgsql(EnoDatabaseContext.PostgresConnectionString, pgoptions => pgoptions.EnableRetryOnFailure());
-            return new EnoDatabaseContext(optionsBuilder.Options);
-        }
-    }
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+    using EnoCore.Models;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.EntityFrameworkCore.Design;
 
     public class EnoDatabaseContext : DbContext
     {
-        public const int DATABASE_RETRIES = 500;
+#pragma warning disable SA1516 // Elements should be separated by blank line
+        public const int DatabaseRetries = 500;
+#pragma warning disable CS8618
+        public EnoDatabaseContext(DbContextOptions<EnoDatabaseContext> options)
+            : base(options)
+        {
+        }
+
         public static string PostgresDomain => Environment.GetEnvironmentVariable("DATABASE_DOMAIN") ?? "localhost";
         public static string PostgresConnectionString => $@"Server={PostgresDomain};Port=5432;Database=EnoDatabase;User Id=docker;Password=docker;Timeout=15;SslMode=Disable;";
-
-#pragma warning disable CS8618
         public DbSet<CheckerTask> CheckerTasks { get; set; }
         public DbSet<Service> Services { get; set; }
         public DbSet<Team> Teams { get; set; }
@@ -34,8 +29,7 @@ namespace EnoDatabase
         public DbSet<SubmittedFlag> SubmittedFlags { get; set; }
         public DbSet<TeamServicePoints> TeamServicePoints { get; set; }
         public DbSet<TeamServicePointsSnapshot> TeamServicePointsSnapshot { get; set; }
-
-        public EnoDatabaseContext(DbContextOptions<EnoDatabaseContext> options) : base(options) { }
+#pragma warning restore SA1516 // Elements should be separated by blank line
 #pragma warning restore CS8618
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
