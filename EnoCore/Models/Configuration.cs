@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace EnoCore.Models
+﻿namespace EnoCore.Models
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+
     public sealed record Configuration(string Title,
         long FlagValidityInRounds,
         int CheckedRoundsPerRound,

@@ -128,7 +128,7 @@ namespace EnoDatabase
                 stopWatch.Stop();
 
             }
-            statistics.SubmissionBatchMessage(submissions.Count,
+            statistics.LogSubmissionBatchMessage(submissions.Count,
                 okFlags, duplicateFlags, oldFlags, stopWatch.ElapsedMilliseconds);
         }
     }

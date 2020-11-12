@@ -1,10 +1,10 @@
-﻿using EnoCore.Models.Database;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace EnoCore.Models.Database
+﻿namespace EnoCore.Models.Database
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Text;
+    using EnoCore.Models.Database;
+
     public class Team
     {
 #pragma warning disable CS8618

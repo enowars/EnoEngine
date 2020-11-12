@@ -25,7 +25,7 @@ namespace DummyChecker
                 if (Environment.GetEnvironmentVariable("USE_ELK") != null)
                 {
                     loggingBuilder.ClearProviders();
-                    loggingBuilder.AddProvider(new EnoLogMessageConsoleLoggerProvider("GamemasterChecker", CancellationToken.None));
+                    // loggingBuilder.AddProvider(new Console("GamemasterChecker")); // TODO
                 }
             });
         }

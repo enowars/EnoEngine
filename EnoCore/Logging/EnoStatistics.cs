@@ -1,162 +1,134 @@
-﻿using EnoCore.Models.Database;
-using EnoCore.Models.Json;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Text.Json;
-using System.Threading;
-
-namespace EnoCore.Logging
+﻿namespace EnoCore.Logging
 {
-    public class EnoStatistics
+    using System;
+    using System.Collections.Generic;
+    using System.Runtime.CompilerServices;
+    using System.Text;
+    using System.Text.Json;
+    using System.Threading;
+    using EnoCore.Models.Database;
+    using EnoCore.Models.Json;
+
+    public sealed class EnoStatistics : IDisposable
     {
         private static readonly string PREFIX = "##ENOSTATISTICSMESSAGE ";
-        private readonly FileQueue Queue;
+        private readonly FileQueue queue;
 
         public EnoStatistics(string tool)
         {
-            Queue = new FileQueue($"../data/{tool}.statistics.log", CancellationToken.None);
+            this.queue = new FileQueue($"../data/{tool}.statistics.log", CancellationToken.None);
         }
 
-        public void SubmissionBatchMessage(long flagsProcessed, long okFlags,
-            long duplicateFlags, long oldFlags, long duration)
+        public void LogSubmissionBatchMessage(
+            long flagsProcessed,
+            long okFlags,
+            long duplicateFlags,
+            long oldFlags,
+            long duration)
         {
-            var message = new SubmissionBatchMessage(flagsProcessed,
-                okFlags, duplicateFlags, oldFlags, duration);
-            Queue.Enqueue(PREFIX + JsonSerializer.Serialize(message) + "\n");
+            var message = new SubmissionBatchMessage(
+                flagsProcessed,
+                okFlags,
+                duplicateFlags,
+                oldFlags,
+                duration);
+            this.queue.Enqueue(PREFIX + JsonSerializer.Serialize(message) + "\n");
         }
 
-        public void CheckerTaskLaunchMessage(CheckerTask task)
+        public void LogCheckerTaskLaunchMessage(CheckerTask task)
         {
-            var message = new CheckerTaskLaunchMessage(task);
-            Queue.Enqueue(PREFIX + JsonSerializer.Serialize(message) + "\n");
+            var message = CheckerTaskLaunchMessage.FromCheckerTask(task);
+            this.queue.Enqueue(PREFIX + JsonSerializer.Serialize(message) + "\n");
         }
 
-        public void CheckerTaskAggregateMessage(long roundId, string message, long time)
+        public void LogCheckerTaskAggregateMessage(long roundId, long time)
         {
-            var msg = new CheckerTaskAggregateMessage(roundId, message, time);
-            Queue.Enqueue(PREFIX + JsonSerializer.Serialize(msg) + "\n");
+            var msg = new CheckerTaskAggregateMessage(roundId, time);
+            this.queue.Enqueue(PREFIX + JsonSerializer.Serialize(msg) + "\n");
         }
 
-        public void CheckerTaskFinishedMessage(CheckerTask task)
+        public void LogCheckerTaskFinishedMessage(CheckerTask task)
         {
-            var msg = new CheckerTaskFinishedMessage(task);
-            Queue.Enqueue(PREFIX + JsonSerializer.Serialize(msg) + "\n");
+            var msg = CheckerTaskFinishedMessage.FromCheckerTask(task);
+            this.queue.Enqueue(PREFIX + JsonSerializer.Serialize(msg) + "\n");
         }
 
         public void FlagSubmissionStatisticsMessage(string teamName, long teamId, long okFlags, long duplicateFlags, long oldFlags, long invalidFlags, long ownFlags)
         {
             var msg = new TeamFlagSubmissionStatisticMessage(teamName, teamId, okFlags, duplicateFlags, oldFlags, invalidFlags, ownFlags);
-            Queue.Enqueue(PREFIX + JsonSerializer.Serialize(msg) + "\n");
+            this.queue.Enqueue(PREFIX + JsonSerializer.Serialize(msg) + "\n");
         }
-    }
 
-    public class EnoStatisticsMessage
-    {
-        public string MessageType => GetType().Name;
-        public string Timestamp { get; } = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
-    }
-
-    public class SubmissionBatchMessage : EnoStatisticsMessage
-    {
-        public long FlagsProcessed { get; }
-        public long OkFlags { get; }
-        public long DuplicateFlags { get; }
-        public long OldFlags { get; }
-        public long Duration { get; }
-
-        public SubmissionBatchMessage(long flagsProcessed, long okFlags,
-            long duplicateFlags, long oldFlags, long duration)
+        public void Dispose()
         {
-            FlagsProcessed = flagsProcessed;
-            OkFlags = okFlags;
-            DuplicateFlags = duplicateFlags;
-            OldFlags = oldFlags;
-            Duration = duration;
+            this.queue.Dispose();
         }
     }
 
-    public class CheckerTaskLaunchMessage : EnoStatisticsMessage
+#pragma warning disable SA1201 // Elements should appear in the correct order
+    public record EnoStatisticsMessage(
+#pragma warning restore SA1201 // Elements should appear in the correct order
+        string MessageType,
+        string Timestamp);
+
+    public record SubmissionBatchMessage(
+        long FlagsProcessed,
+        long OkFlags,
+        long DuplicateFlags,
+        long OldFlags,
+        long Duration)
+        : EnoStatisticsMessage(nameof(SubmissionBatchMessage), EnoCoreUtil.GetCurrentTimestamp());
+
+    public record CheckerTaskLaunchMessage(
+        long RoundId,
+        string ServiceName,
+        string Method,
+        long TaskIndex)
+        : EnoStatisticsMessage(nameof(CheckerTaskLaunchMessage), EnoCoreUtil.GetCurrentTimestamp())
     {
-        public long RoundId { get; }
-        public string ServiceName { get; }
-        public string Method { get; }
-        public long TaskIndex { get; }
-
-        public CheckerTaskLaunchMessage(CheckerTask task)
+        public static CheckerTaskLaunchMessage FromCheckerTask(CheckerTask task)
         {
-            RoundId = task.CurrentRoundId;
-            ServiceName = task.ServiceName;
-            Method = task.Method.ToString();
-            TaskIndex = task.TaskIndex;
+            return new(
+                task.CurrentRoundId,
+                task.ServiceName,
+                task.Method.ToString(),
+                task.TaskIndex);
         }
     }
-    public class CheckerTaskFinishedMessage : EnoStatisticsMessage
+
+    public record CheckerTaskFinishedMessage(
+        long RoundId,
+        string ServiceName,
+        string Metho,
+        long TaskIndex,
+        double Duration,
+        string Result)
+        : EnoStatisticsMessage(nameof(CheckerTaskFinishedMessage), EnoCoreUtil.GetCurrentTimestamp())
     {
-        public long RoundId { get; }
-        public string ServiceName { get; }
-        public string Method { get; }
-        public long TaskIndex { get; }
-        public double Duration { get; }
-        public string Result { get; }
-
-        public CheckerTaskFinishedMessage(CheckerTask task)
+        public static CheckerTaskFinishedMessage FromCheckerTask(CheckerTask task)
         {
-            RoundId = task.CurrentRoundId;
-            ServiceName = task.ServiceName;
-            Method = task.Method.ToString();
-            TaskIndex = task.TaskIndex;
-            Duration = (DateTime.UtcNow - task.StartTime).TotalSeconds;
-            Result = task.CheckerResult.ToString();
-        }
-    }
-    public class CheckerTaskAggregateMessage : EnoStatisticsMessage
-    {
-        public long RoundId { get; }
-        public long Time { get; }
-        public string Message { get; }
-
-        public CheckerTaskAggregateMessage(long roundId, string message, long time)
-        {
-            RoundId = roundId;
-            Message = message;
-            Time = time;
+            return new(
+                task.CurrentRoundId,
+                task.ServiceName,
+                task.Method.ToString(),
+                task.TaskIndex,
+                (DateTime.UtcNow - task.StartTime).TotalSeconds,
+                task.CheckerResult.ToString());
         }
     }
 
-    public class TeamFlagSubmissionStatisticMessage : EnoStatisticsMessage
-    {
-        public string TeamName { get; set; }
-        public long TeamId { get; set; }
-        public long OkFlags { get; set; }
-        public long DuplicateFlags { get; set; }
-        public long OldFlags { get; set; }
-        public long InvalidFlags { get; set; }
-        public long OwnFlags { get; set; }
+    public record CheckerTaskAggregateMessage(
+        long RoundId,
+        long Time)
+        : EnoStatisticsMessage(nameof(CheckerTaskAggregateMessage), EnoCoreUtil.GetCurrentTimestamp());
 
-        public TeamFlagSubmissionStatisticMessage(string teamName, long teamId, long okFlags, long duplicateFlags, long oldFlags, long invalidFlags, long ownFlags)
-        {
-            TeamName = teamName;
-            TeamId = teamId;
-            OkFlags = okFlags;
-            DuplicateFlags = duplicateFlags;
-            OldFlags = oldFlags;
-            InvalidFlags = invalidFlags;
-            OwnFlags = ownFlags;
-        }
-    }
-
-    public class TeamFlagSubmissionStatistic
-    {
-        public long TeamId;
-        public long OkFlags;
-        public long DuplicateFlags;
-        public long OldFlags;
-        public long InvalidFlags;
-        public long OwnFlags;
-        public TeamFlagSubmissionStatistic(long teamId)
-        {
-            TeamId = teamId;
-        }
-    }
+    public record TeamFlagSubmissionStatisticMessage(
+        string TeamName,
+        long TeamId,
+        long OkFlags,
+        long DuplicateFlags,
+        long OldFlags,
+        long InvalidFlags,
+        long OwnFlags)
+        : EnoStatisticsMessage(nameof(TeamFlagSubmissionStatisticMessage), EnoCoreUtil.GetCurrentTimestamp());
 }

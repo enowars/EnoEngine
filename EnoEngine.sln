@@ -23,6 +23,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DummyChecker", "DummyChecke
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EnoFlagSink", "EnoFlagSink\EnoFlagSink.csproj", "{A7AFE887-82F7-4318-BBB6-1C91FBC02126}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D1345D92-C3B5-4D2C-B3C1-CF80111B1B16}"
+	ProjectSection(SolutionItems) = preProject
+		ENOWARS.ruleset = ENOWARS.ruleset
+		stylecop.json = stylecop.json
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

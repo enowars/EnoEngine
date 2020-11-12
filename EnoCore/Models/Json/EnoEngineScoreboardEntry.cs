@@ -1,32 +1,33 @@
-﻿using EnoCore.Models.Database;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace EnoCore.Models.Json
+﻿namespace EnoCore.Models.Json
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using EnoCore.Models.Database;
+
     public class EnoEngineScoreboardEntry
     {
-        private readonly Team Team;
-
-        public string Name { get => Team.Name; }
-        public long TeamId { get => Team.Id; }
-        public double TotalPoints { get => Team.TotalPoints; }
-        public double AttackPoints { get => Team.AttackPoints; }
-        public double LostDefensePoints { get => Team.DefensePoints; }
-        public double ServiceLevelAgreementPoints { get => Team.ServiceLevelAgreementPoints; }
-        public EnoEngineScoreboardEntryServiceDetails[] ServiceDetails { get; set; }
+        private readonly Team team;
 
         public EnoEngineScoreboardEntry(Team team)
         {
-            Team = team;
-            ServiceDetails = team.ServiceStats.Select(s => new EnoEngineScoreboardEntryServiceDetails(s)).ToArray();
+            this.team = team;
+            this.ServiceDetails = team.ServiceStats.Select(s => new EnoEngineScoreboardEntryServiceDetails(s)).ToArray();
         }
+
         protected EnoEngineScoreboardEntry()
         {
-            Team = default!;
-            ServiceDetails = default!;
+            this.team = default!;
+            this.ServiceDetails = default!;
         }
+
+        public string Name { get => this.team.Name; }
+        public long TeamId { get => this.team.Id; }
+        public double TotalPoints { get => this.team.TotalPoints; }
+        public double AttackPoints { get => this.team.AttackPoints; }
+        public double LostDefensePoints { get => this.team.DefensePoints; }
+        public double ServiceLevelAgreementPoints { get => this.team.ServiceLevelAgreementPoints; }
+        public EnoEngineScoreboardEntryServiceDetails[] ServiceDetails { get; set; }
     }
 }

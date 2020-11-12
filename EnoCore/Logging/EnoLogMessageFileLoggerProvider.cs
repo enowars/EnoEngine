@@ -1,38 +1,42 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
-
-namespace EnoCore.Logging
+﻿namespace EnoCore.Logging
 {
-    public sealed class EnoLogMessageFileLoggerProvider : ILoggerProvider, ISupportExternalScope, IEnoLogMessageProvider
+    using System;
+    using System.Collections.Generic;
+    using System.Text;
+    using System.Threading;
+    using Microsoft.Extensions.Logging;
+
+    public sealed class EnoLogMessageFileLoggerProvider : ILoggerProvider, ISupportExternalScope, IEnoLogMessageProvider, IDisposable
     {
-        public IExternalScopeProvider? ScopeProvider { get; internal set; }
-        public string Tool { get; }
-        private readonly FileQueue Queue;
+        private readonly FileQueue queue;
 
         public EnoLogMessageFileLoggerProvider(string tool, CancellationToken token)
         {
-            Tool = tool;
-            Queue = new FileQueue($"../data/{tool}.log", token);
+            this.Tool = tool;
+            this.queue = new FileQueue($"../data/{tool}.log", token);
         }
+
+        public IExternalScopeProvider? ScopeProvider { get; internal set; }
+        public string Tool { get; }
 
         public ILogger CreateLogger(string categoryName)
         {
-            return new EnoLogMessageFileLogger(this, categoryName);
+            return new EnoLogger(this, categoryName);
         }
 
         public void SetScopeProvider(IExternalScopeProvider scopeProvider)
         {
-            ScopeProvider = scopeProvider;
+            this.ScopeProvider = scopeProvider;
         }
 
-        public void Dispose() { }
+        public void Dispose()
+        {
+            this.queue.Dispose();
+        }
 
         public void Log(string data)
         {
-            Queue.Enqueue(data);
+            this.queue.Enqueue(data);
         }
     }
 }

@@ -117,7 +117,7 @@ namespace EnoLauncher
                 }
                 var content = new StringContent(JsonSerializer.Serialize(CheckerTaskMessage.FromCheckerTask(task)), Encoding.UTF8, "application/json");
                 cancelSource.CancelAfter(task.MaxRunningTime);
-                Statistics.CheckerTaskLaunchMessage(task);
+                Statistics.LogCheckerTaskLaunchMessage(task);
                 Logger.LogDebug($"LaunchCheckerTask {task.Id} POSTing {task.Method} to checker");
                 var response = await Client.PostAsync(task.CheckerUrl, content, cancelSource.Token);
                 if (response.StatusCode == HttpStatusCode.OK)
@@ -128,7 +128,7 @@ namespace EnoLauncher
                     var checkerResult = resultMessage!.Result;
                     Logger.LogDebug($"LaunchCheckerTask {task.Id} returned {checkerResult} with Message {resultMessage.Message}");
                     CheckerTask updatedTask = task with { CheckerResult = checkerResult, ErrorMessage = resultMessage.Message, CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done };
-                    Statistics.CheckerTaskFinishedMessage(updatedTask);
+                    Statistics.LogCheckerTaskFinishedMessage(updatedTask);
                     ResultsQueue.Enqueue(updatedTask);
                     return;
                 }
@@ -136,7 +136,7 @@ namespace EnoLauncher
                 {
                     Logger.LogError($"LaunchCheckerTask {task.Id} {task.Method} returned {response.StatusCode} ({(int)response.StatusCode})");
                     var updatedTask = task with { CheckerResult = CheckerResult.INTERNAL_ERROR, CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done };
-                    Statistics.CheckerTaskFinishedMessage(updatedTask);
+                    Statistics.LogCheckerTaskFinishedMessage(updatedTask);
                     ResultsQueue.Enqueue(updatedTask);
                     return;
                 }
@@ -145,14 +145,14 @@ namespace EnoLauncher
             {
                 Logger.LogError($"{nameof(LaunchCheckerTask)} {task.Id} {task.Method}  was cancelled because it did not finish");
                 var updatedTask = task with { CheckerResult = CheckerResult.INTERNAL_ERROR, CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done };
-                Statistics.CheckerTaskFinishedMessage(updatedTask);
+                Statistics.LogCheckerTaskFinishedMessage(updatedTask);
                 ResultsQueue.Enqueue(updatedTask);
             }
             catch (Exception e)
             {
                 Logger.LogError($"{nameof(LaunchCheckerTask)} {task.Id} failed: {e.ToFancyString()}");
                 var updatedTask = task with { CheckerResult = CheckerResult.INTERNAL_ERROR, CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done };
-                Statistics.CheckerTaskFinishedMessage(updatedTask);
+                Statistics.LogCheckerTaskFinishedMessage(updatedTask);
                 ResultsQueue.Enqueue(updatedTask);
             }
         }

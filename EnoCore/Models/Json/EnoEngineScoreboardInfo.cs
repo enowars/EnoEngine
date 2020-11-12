@@ -1,35 +1,41 @@
-﻿using EnoCore.Models.Database;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace EnoCore.Models.Json
+﻿namespace EnoCore.Models.Json
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using EnoCore.Models.Database;
+
     public class EnoEngineScoreboardInfo
     {
-        private readonly Configuration Config;
-        public string Title { get => Config.Title; }
-        public List<EnoEngineScoreboardTeam> Teams { get => Config.Teams.Select(t => new EnoEngineScoreboardTeam(t)).ToList(); }
+        private readonly Configuration config;
+
         public EnoEngineScoreboardInfo(Configuration config)
         {
-            Config = config;
+            this.config = config;
         }
+
+        public string Title { get => this.config.Title; }
+        public List<EnoEngineScoreboardTeam> Teams { get => this.config.Teams.Select(t => EnoEngineScoreboardTeam.FromConfigurationTeam(t)).ToList(); }
     }
-    public class EnoEngineScoreboardTeam
+
+#pragma warning disable SA1201 // Elements should appear in the correct order
+    public record EnoEngineScoreboardTeam(
+#pragma warning restore SA1201 // Elements should appear in the correct order
+        long Id,
+        string Name,
+        string? LogoUrl,
+        string? FlagUrl,
+        bool Active)
     {
-        public long Id { get; set; }
-        public string Name { get; set; }
-        public string? LogoUrl { get; set; }
-        public string? FlagUrl { get; set; }
-        public bool Active { get; set; }
-        public EnoEngineScoreboardTeam(ConfigurationTeam t)
+        public static EnoEngineScoreboardTeam FromConfigurationTeam(ConfigurationTeam t)
         {
-            Id = t.Id;
-            Name = t.Name;
-            LogoUrl = t.LogoUrl;
-            FlagUrl = t.FlagUrl;
-            Active = t.Active;
+            return new(
+                t.Id,
+                t.Name,
+                t.LogoUrl,
+                t.FlagUrl,
+                t.Active);
         }
     }
 }

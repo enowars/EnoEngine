@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace EnoCore
+﻿namespace EnoCore
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+
     public enum FlagSubmissionResult
     {
         Ok,
@@ -15,7 +15,7 @@ namespace EnoCore
         Old,
         UnknownError,
         InvalidSenderError,
-        SpamError
+        SpamError,
     }
 
     public static class FlagSubmissionResultExtensions

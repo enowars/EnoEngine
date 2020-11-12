@@ -1,4 +1,5 @@
-﻿using EnoCore.Models;
+﻿using EnoCore;
+using EnoCore.Models;
 using EnoCore.Models.Database;
 using EnoCore.Models.Json;
 using Microsoft.EntityFrameworkCore;
@@ -305,19 +306,26 @@ namespace EnoDatabase
             Dictionary<(long serviceid, long flagindex), EnoScoreboardFirstblood> firstbloods = new Dictionary<(long serviceid, long flagindex), EnoScoreboardFirstblood>();
             foreach (var service in services)
             {
+                // TODO save announced FPS per round?
                 for (int i = 0; i < service.FlagsPerRound; i++)
                 {
                     var fb = await _context.SubmittedFlags
                         .Where(sf => sf.FlagServiceId == service.Id)
-                        //.Where(sf => sf.FlagRoundOffset % service.FetchedFlagsPerRound == i)
                         .Where(sf => sf.FlagRoundOffset == i)
                         .OrderBy(sf => sf.Timestamp)
                         .FirstOrDefaultAsync();
                     if (fb != null)
                     {
+                        var now = DateTime.UtcNow;
                         var key = (fb.FlagServiceId, fb.FlagRoundOffset % service.FlagStores);
-                        var n = new EnoScoreboardFirstblood(DateTime.UtcNow, fb.AttackerTeamId, fb.RoundId, "StoreDescription", fb.FlagRoundOffset % service.FlagStores);
-                        if (!firstbloods.ContainsKey(key) || firstbloods[key].FirstTime > n.FirstTime)
+                        var n = new EnoScoreboardFirstblood(
+                            fb.AttackerTeamId,
+                            now.ToString(EnoCoreUtil.DateTimeFormat),
+                            now.Subtract(DateTime.UnixEpoch).TotalSeconds,
+                            fb.RoundId,
+                            null,
+                            fb.FlagRoundOffset % service.FlagStores);
+                        if (!firstbloods.ContainsKey(key) || firstbloods[key].TimeEpoch > n.TimeEpoch)
                             firstbloods[key] = n;
                     }
                 }
