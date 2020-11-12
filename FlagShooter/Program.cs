@@ -97,9 +97,14 @@ namespace FlagShooter
 
                     configuration = Task.Run(() => jsonConfiguration.ValidateAsync()).Result;
                 }
-                catch (Exception e)
+                catch (JsonException e)
                 {
-                    Console.WriteLine($"Failed to load and parse ctf.json: {e.Message}");
+                    Console.WriteLine($"Configuration could not be deserialized: {e.Message}");
+                    return;
+                }
+                catch (JsonConfigurationValidationException e)
+                {
+                    Console.WriteLine($"Configuration is invalid: {e.Message}");
                     return;
                 }
 
