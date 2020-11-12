@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace EnoCore.Models.Database
+﻿namespace EnoCore.Models.Database
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Text;
+
     /// <summary>
     /// The points of a particular team in a particular service.
     /// PK: TeamId, ServiceId

@@ -1,15 +1,15 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace EnoCore.Logging
+﻿namespace EnoCore.Logging
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.Logging;
+
     public interface IEnoLogMessageProvider
     {
-        void Log(string data);
         IExternalScopeProvider? ScopeProvider { get; }
         string Tool { get; }
+        void Log(string data);
     }
 }

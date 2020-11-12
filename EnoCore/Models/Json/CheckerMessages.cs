@@ -1,8 +1,8 @@
-﻿using EnoCore.Models.Database;
-using System.Text.Json.Serialization;
-
-namespace EnoCore.Models.Json
+﻿namespace EnoCore.Models.Json
 {
+    using System.Text.Json.Serialization;
+    using EnoCore.Models.Database;
+
     public sealed record CheckerResultMessage(CheckerResult Result,
         string? Message);
 

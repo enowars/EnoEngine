@@ -1,52 +1,57 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace EnoCore.Logging
+﻿namespace EnoCore.Logging
 {
-    public class FileQueue
+    using System;
+    using System.Collections.Concurrent;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
+
+    public sealed class FileQueue : IDisposable
     {
-        private readonly ConcurrentQueue<string> Queue = new ConcurrentQueue<string>();
-        private readonly StreamWriter Writer;
-        private readonly CancellationToken CancelToken;
+        private readonly ConcurrentQueue<string> queue = new ConcurrentQueue<string>();
+        private readonly StreamWriter writer;
+        private readonly CancellationToken cancelToken;
 
         public FileQueue(string filename, CancellationToken cancelToken)
         {
-            Writer = new StreamWriter(filename);
-            CancelToken = cancelToken;
-            Task.Run(WriterTask, cancelToken);
+            this.writer = new StreamWriter(filename);
+            this.cancelToken = cancelToken;
+            Task.Run(this.WriterTask, cancelToken);
+        }
+
+        public void Dispose()
+        {
+            this.writer.Dispose();
         }
 
         public void Enqueue(string data)
         {
-            CancelToken.ThrowIfCancellationRequested();
-            Queue.Enqueue(data);
+            this.cancelToken.ThrowIfCancellationRequested();
+            this.queue.Enqueue(data);
         }
 
         private async Task WriterTask()
         {
             int i = 0;
-            while (!CancelToken.IsCancellationRequested)
+            while (!this.cancelToken.IsCancellationRequested)
             {
                 try
                 {
-                    if (Queue.TryDequeue(out var data))
+                    if (this.queue.TryDequeue(out var data))
                     {
-                        await Writer.WriteAsync(data);
+                        await this.writer.WriteAsync(data);
                         i += 1;
                         if (i == 50)
                         {
-                            await Writer.FlushAsync();
+                            await this.writer.FlushAsync();
                             i = 0;
                         }
                     }
                     else
                     {
-                        await Writer.FlushAsync();
+                        await this.writer.FlushAsync();
                         await Task.Delay(100);
                     }
                 }
@@ -55,8 +60,9 @@ namespace EnoCore.Logging
                     Console.WriteLine(e.ToFancyString());
                 }
             }
-            await Writer.FlushAsync();
-            Writer.Close();
+
+            await this.writer.FlushAsync();
+            this.writer.Close();
         }
     }
 }

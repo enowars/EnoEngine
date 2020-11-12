@@ -605,7 +605,7 @@ namespace EnoDatabase
             }
 
             sw.Stop();
-            statistics.CheckerTaskAggregateMessage(roundId, "", sw.ElapsedMilliseconds);
+            statistics.LogCheckerTaskAggregateMessage(roundId, sw.ElapsedMilliseconds);
             Logger.LogInformation($"CalculateRoundTeamServiceStates: Data Aggregation for {teams.Length} Teams and {services.Length} Services took {sw.ElapsedMilliseconds}ms");
 
             var oldRoundsWorstResults = await _context.CheckerTasks

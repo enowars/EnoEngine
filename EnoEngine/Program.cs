@@ -16,6 +16,7 @@ using System.Text.Json;
 using System.Threading;
 using EnoEngine;
 using EnoCore.Models;
+using EnoCore.JsonConfiguration;
 
 const string MODE_RECALCULATE = "recalculate";
 const string mutexId = @"Global\EnoEngine";

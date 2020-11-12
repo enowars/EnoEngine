@@ -1,32 +1,32 @@
-﻿using EnoCore.Models.Database;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Text.Json.Serialization;
-
-namespace EnoCore.Models.Json
+﻿namespace EnoCore.Models.Json
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Text;
+    using System.Text.Json.Serialization;
+    using EnoCore.Models.Database;
+
     public class EnoEngineScoreboardEntryServiceDetails
     {
-        private readonly TeamServicePoints ServiceStats;
-
-        public long ServiceId { get => ServiceStats.ServiceId; }
-        public double AttackPoints { get => ServiceStats.AttackPoints; }
-        public double LostDefensePoints { get => ServiceStats.DefensePoints; }
-        public double ServiceLevelAgreementPoints { get => ServiceStats.ServiceLevelAgreementPoints; }
-        [JsonPropertyName("ServiceStatus")]
-        [JsonConverter(typeof(JsonStringEnumConverter))]
-        public ServiceStatus ServiceStatus { get => ServiceStats.Status; }
-        public string? Message { get => ServiceStats.ErrorMessage; }
+        private readonly TeamServicePoints serviceStats;
 
         public EnoEngineScoreboardEntryServiceDetails(TeamServicePoints serviceStats)
         {
-            ServiceStats = serviceStats;
+            this.serviceStats = serviceStats;
         }
 
         protected EnoEngineScoreboardEntryServiceDetails()
         {
-            ServiceStats = default!;
+            this.serviceStats = default!;
         }
+
+        public long ServiceId { get => this.serviceStats.ServiceId; }
+        public double AttackPoints { get => this.serviceStats.AttackPoints; }
+        public double LostDefensePoints { get => this.serviceStats.DefensePoints; }
+        public double ServiceLevelAgreementPoints { get => this.serviceStats.ServiceLevelAgreementPoints; }
+        [JsonPropertyName("ServiceStatus")]
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public ServiceStatus ServiceStatus { get => this.serviceStats.Status; }
+        public string? Message { get => this.serviceStats.ErrorMessage; }
     }
 }
