@@ -12,10 +12,9 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using EnoCore;
-using EnoCore.JsonConfiguration;
+using EnoCore.Configuration;
 using EnoCore.Models;
-using EnoCore.Models.Database;
-using EnoCore.Models.Json;
+using EnoCore.Scoreboard;
 using EnoDatabase;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,7 +25,7 @@ namespace FlagShooter
     internal class Program
     {
         private static readonly CancellationTokenSource FlagShooterCancelSource = new CancellationTokenSource();
-        private static EnoEngineScoreboard? sb;
+        private static Scoreboard? sb;
         private readonly int flagCount;
         private readonly int teamStart;
         private readonly int roundDelay;
@@ -109,8 +108,8 @@ namespace FlagShooter
                     return;
                 }
 
-                ParseScoreboard(Path.Combine(EnoDataDirectory.Directory, "scoreboard.json"));
-                Task.Run(async () => await PollConfig(EnoDataDirectory.Directory, FlagShooterCancelSource.Token));
+                ParseScoreboard(Path.Combine(EnoCoreUtil.DataDirectory, "scoreboard.json"));
+                Task.Run(async () => await PollConfig(EnoCoreUtil.DataDirectory, FlagShooterCancelSource.Token));
                 new Program(flagCount, roundDelay, teamStart, teamCount, teamConnections, configuration).Start();
             }
             catch (Exception e)
@@ -185,7 +184,7 @@ namespace FlagShooter
             try
             {
                 var content = File.ReadAllText(fileName);
-                sb = JsonSerializer.Deserialize<EnoEngineScoreboard>(content);
+                sb = JsonSerializer.Deserialize<Scoreboard>(content);
             }
             catch (Exception e)
             {

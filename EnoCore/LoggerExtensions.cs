@@ -6,7 +6,7 @@
     using System.Text;
     using System.Threading.Tasks;
     using EnoCore.Logging;
-    using EnoCore.Models.Database;
+    using EnoCore.Models;
     using Microsoft.Extensions.Logging;
 
     public static class LoggerExtensions

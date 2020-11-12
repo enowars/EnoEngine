@@ -7,7 +7,8 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using EnoCore.Models.Json;
+using EnoCore;
+using EnoCore.Models;
 
 namespace GamemasterChecker.Controllers
 {
@@ -51,11 +52,8 @@ namespace GamemasterChecker.Controllers
         [Route("/service")]
         public IActionResult Service()
         {
-            return Ok(JsonSerializer.Serialize(new CheckerInfoMessage("DummyChecker",
-                1,
-                1,
-                1), new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }
-            ));
+            var cim = new CheckerInfoMessage("DummyChecker", 1, 1, 1);
+            return Ok(JsonSerializer.Serialize(cim, EnoCoreUtil.CamelCaseEnumConverterOptions));
         }
     }
 }

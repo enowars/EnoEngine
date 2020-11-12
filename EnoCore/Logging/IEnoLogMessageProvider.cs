@@ -9,7 +9,7 @@
     public interface IEnoLogMessageProvider
     {
         IExternalScopeProvider? ScopeProvider { get; }
-        string Tool { get; }
+
         void Log(string data);
     }
 }

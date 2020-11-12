@@ -9,7 +9,6 @@
     using System.Resources;
     using System.Security.Cryptography;
     using System.Text;
-    using EnoCore.Models.Database;
     using Microsoft.Extensions.Logging;
 
     public enum FlagEncoding

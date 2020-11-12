@@ -5,7 +5,7 @@
     using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
-    using EnoCore.Models.Database;
+    using EnoCore.Models;
 
     public static class CheckerResultExtensions
     {

@@ -1,9 +1,8 @@
-﻿namespace EnoCore.Models.Database
+﻿namespace EnoCore.Models
 {
     using System;
     using System.Collections.Generic;
     using System.Text;
-    using EnoCore.Models.Json;
 
     public enum CheckerTaskMethod
     {

@@ -9,19 +9,19 @@
     public sealed class EnoLogMessageFileLoggerProvider : ILoggerProvider, ISupportExternalScope, IEnoLogMessageProvider, IDisposable
     {
         private readonly FileQueue queue;
+        private readonly string tool;
 
         public EnoLogMessageFileLoggerProvider(string tool, CancellationToken token)
         {
-            this.Tool = tool;
+            this.tool = tool;
             this.queue = new FileQueue($"../data/{tool}.log", token);
         }
 
         public IExternalScopeProvider? ScopeProvider { get; internal set; }
-        public string Tool { get; }
 
         public ILogger CreateLogger(string categoryName)
         {
-            return new EnoLogger(this, categoryName);
+            return new EnoLogger(this, categoryName, this.tool);
         }
 
         public void SetScopeProvider(IExternalScopeProvider scopeProvider)

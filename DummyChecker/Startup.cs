@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using EnoCore.Logging;
@@ -19,7 +21,14 @@ namespace DummyChecker
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public static void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddControllers()
+                .AddJsonOptions(jsonOptions =>
+                {
+                    jsonOptions.JsonSerializerOptions.AllowTrailingCommas = true;
+                    jsonOptions.JsonSerializerOptions.ReadCommentHandling = JsonCommentHandling.Skip;
+                    jsonOptions.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                    jsonOptions.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                });
             services.AddLogging(loggingBuilder =>
             {
                 if (Environment.GetEnvironmentVariable("USE_ELK") != null)

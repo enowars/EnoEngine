@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using EnoCore;
+using EnoCore.Models;
 
 namespace FlagShooter
 {

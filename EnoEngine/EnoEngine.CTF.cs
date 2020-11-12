@@ -1,7 +1,5 @@
 ﻿using EnoCore;
 using EnoCore.Models;
-using EnoCore.Models.Database;
-using EnoCore.Models.Json;
 using EnoDatabase;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -87,12 +85,11 @@ namespace EnoEngine
             var scoreboard = await EnoDatabaseUtil.RetryScopedDatabaseAction(
                 ServiceProvider,
                 db => db.GetCurrentScoreboard(roundId));
-            var json = JsonSerializer.Serialize(scoreboard);
-            File.WriteAllText($"{EnoDataDirectory.Directory}scoreboard{roundId}.json", json);
-            File.WriteAllText($"{EnoDataDirectory.Directory}scoreboard.json", json);
+            var json = JsonSerializer.Serialize(scoreboard, EnoCoreUtil.CamelCaseEnumConverterOptions);
+            File.WriteAllText($"{EnoCoreUtil.DataDirectory}scoreboard{roundId}.json", json);
+            File.WriteAllText($"{EnoCoreUtil.DataDirectory}scoreboard.json", json);
             jsonStopWatch.Stop();
             Logger.LogInformation($"Scoreboard Generation Took {jsonStopWatch.ElapsedMilliseconds} ms");
-            //TODO EnoLogger.LogStatistics(ScoreboardJsonGenerationFinishedMessage.Create(jsonStopWatch.ElapsedMilliseconds));
             return DateTime.UtcNow;
         }
 

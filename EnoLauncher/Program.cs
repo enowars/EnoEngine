@@ -1,7 +1,6 @@
 ﻿using EnoCore;
 using EnoCore.Logging;
-using EnoCore.Models.Database;
-using EnoCore.Models.Json;
+using EnoCore.Models;
 using EnoDatabase;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,12 +29,6 @@ namespace EnoLauncher
         private static readonly ConcurrentQueue<CheckerTask> ResultsQueue = new ConcurrentQueue<CheckerTask>();
         private static readonly CancellationTokenSource LauncherCancelSource = new CancellationTokenSource();
         private static readonly HttpClient Client = new HttpClient();
-        private static readonly JsonSerializerOptions JsonSerializerOptions = new()
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            ReadCommentHandling = JsonCommentHandling.Skip,
-            AllowTrailingCommas = true
-        };
         private readonly Task UpdateDatabaseTask;
         private readonly ServiceProvider ServiceProvider;
         private readonly EnoStatistics Statistics;
@@ -43,7 +36,6 @@ namespace EnoLauncher
 
         public Program(ServiceProvider serviceProvider)
         {
-            JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             ServiceProvider = serviceProvider;
             Statistics = new EnoStatistics(nameof(EnoLauncher));
             UpdateDatabaseTask = Task.Run(async () => await UpdateDatabaseLoop());
@@ -115,7 +107,25 @@ namespace EnoLauncher
                     Logger.LogTrace($"Task {task.Id} sleeping: {span}");
                     await Task.Delay(span);
                 }
-                var content = new StringContent(JsonSerializer.Serialize(CheckerTaskMessage.FromCheckerTask(task)), Encoding.UTF8, "application/json");
+                var content = new StringContent(
+                    JsonSerializer.Serialize(
+                        new CheckerTaskMessage(
+                            task.Id,
+                            task.Method,
+                            task.Address,
+                            task.ServiceId,
+                            task.ServiceName,
+                            task.TeamId,
+                            task.TeamName,
+                            task.RelatedRoundId,
+                            task.CurrentRoundId,
+                            task.Payload,
+                            task.TaskIndex,
+                            task.MaxRunningTime,
+                            task.RoundLength),
+                            EnoCoreUtil.CamelCaseEnumConverterOptions),
+                    Encoding.UTF8,
+                    "application/json");
                 cancelSource.CancelAfter(task.MaxRunningTime);
                 Statistics.LogCheckerTaskLaunchMessage(task);
                 Logger.LogDebug($"LaunchCheckerTask {task.Id} POSTing {task.Method} to checker");
@@ -124,7 +134,7 @@ namespace EnoLauncher
                 {
                     var responseString = (await response.Content.ReadAsStringAsync()).TrimEnd(Environment.NewLine.ToCharArray());
                     Logger.LogDebug($"LaunchCheckerTask received {responseString}");
-                    var resultMessage = JsonSerializer.Deserialize<CheckerResultMessage>(responseString, JsonSerializerOptions);
+                    var resultMessage = JsonSerializer.Deserialize<CheckerResultMessage>(responseString, EnoCoreUtil.CamelCaseEnumConverterOptions);
                     var checkerResult = resultMessage!.Result;
                     Logger.LogDebug($"LaunchCheckerTask {task.Id} returned {checkerResult} with Message {resultMessage.Message}");
                     CheckerTask updatedTask = task with { CheckerResult = checkerResult, ErrorMessage = resultMessage.Message, CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done };

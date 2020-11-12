@@ -1,7 +1,7 @@
 ﻿using EnoCore;
+using EnoCore.Configuration;
 using EnoCore.Models;
-using EnoCore.Models.Database;
-using EnoCore.Models.Json;
+using EnoCore.Scoreboard;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
@@ -282,13 +282,13 @@ namespace EnoDatabase
             return oldSnapshots; //TODO (re)create if not complete
         }
 
-        public async Task<EnoEngineScoreboard> GetCurrentScoreboard(long roundId)
+        public async Task<Scoreboard> GetCurrentScoreboard(long roundId)
         {
             var sw = new Stopwatch();
             sw.Start();
             Logger.LogInformation($"{nameof(GetCurrentScoreboard)}Started Scoreboard Generation");
             var teams = _context.Teams
-                .Include(t => t.ServiceStats)
+                .Include(t => t.TeamServicePoints)
                 .AsNoTracking()
                 .OrderByDescending(t => t.TotalPoints)
                 .ToList();
@@ -303,36 +303,78 @@ namespace EnoDatabase
                 .OrderBy(s => s.Id)
                 .ToList();
             Logger.LogInformation($"{nameof(GetCurrentScoreboard)}Fetched services after: {sw.ElapsedMilliseconds}ms");
-            Dictionary<(long serviceid, long flagindex), EnoScoreboardFirstblood> firstbloods = new Dictionary<(long serviceid, long flagindex), EnoScoreboardFirstblood>();
+
+            var scoreboardTeams = new List<ScoreboardTeam>();
+            var scoreboardServices = new List<ScoreboardService>();
+
             foreach (var service in services)
             {
-                // TODO save announced FPS per round?
+                var firstBloods = new SubmittedFlag[service.FlagStores];
                 for (int i = 0; i < service.FlagsPerRound; i++)
                 {
+                    var storeId = i % service.FlagStores;
                     var fb = await _context.SubmittedFlags
                         .Where(sf => sf.FlagServiceId == service.Id)
                         .Where(sf => sf.FlagRoundOffset == i)
                         .OrderBy(sf => sf.Timestamp)
                         .FirstOrDefaultAsync();
-                    if (fb != null)
+
+                    if (fb is null)
                     {
-                        var now = DateTime.UtcNow;
-                        var key = (fb.FlagServiceId, fb.FlagRoundOffset % service.FlagStores);
-                        var n = new EnoScoreboardFirstblood(
-                            fb.AttackerTeamId,
-                            now.ToString(EnoCoreUtil.DateTimeFormat),
-                            now.Subtract(DateTime.UnixEpoch).TotalSeconds,
-                            fb.RoundId,
-                            null,
-                            fb.FlagRoundOffset % service.FlagStores);
-                        if (!firstbloods.ContainsKey(key) || firstbloods[key].TimeEpoch > n.TimeEpoch)
-                            firstbloods[key] = n;
+                        continue;
                     }
+
+                    if (firstBloods[storeId] == null || firstBloods[storeId].Timestamp > fb.Timestamp)
+                    {
+                        firstBloods[storeId] = fb;
+                    }
+
+                    scoreboardServices.Add(new ScoreboardService(
+                        service.Id,
+                        service.Name,
+                        service.FlagsPerRound,
+                        firstBloods
+                            .Select(sf => new ScoreboardFirstBlood(
+                                sf.AttackerTeamId,
+                                sf.Timestamp.ToString(EnoCoreUtil.DateTimeFormat),
+                                EnoCoreUtil.SecondsSinceEpoch(sf.Timestamp),
+                                sf.RoundId,
+                                null,
+                                storeId))
+                            .ToArray()));
                 }
             }
-            Logger.LogInformation($"{nameof(GetCurrentScoreboard)}Iterated Firstblood after: {sw.ElapsedMilliseconds}ms");
-            var scoreboard = new EnoEngineScoreboard(round, services, firstbloods, teams);
-            Logger.LogInformation($"{nameof(GetCurrentScoreboard)}Finished after: {sw.ElapsedMilliseconds}ms");
+            Logger.LogInformation($"{nameof(GetCurrentScoreboard)}Iterated services after: {sw.ElapsedMilliseconds}ms");
+
+            foreach (var team in teams)
+            {
+                scoreboardTeams.Add(new ScoreboardTeam(
+                    team.Name,
+                    team.Id,
+                    team.TotalPoints,
+                    team.AttackPoints,
+                    team.DefensePoints,
+                    team.ServiceLevelAgreementPoints,
+                    team.TeamServicePoints.Select(
+                        tsp => new ScoreboardTeamDetails(
+                            tsp.ServiceId,
+                            tsp.AttackPoints,
+                            tsp.DefensePoints,
+                            tsp.ServiceLevelAgreementPoints,
+                            tsp.Status,
+                            tsp.ErrorMessage))
+                    .ToArray()));
+            }
+            Logger.LogInformation($"{nameof(GetCurrentScoreboard)} Iterated teams after: {sw.ElapsedMilliseconds}ms");
+
+            var scoreboard = new Scoreboard(roundId,
+                round.Begin.ToString(EnoCoreUtil.DateTimeFormat),
+                round.Begin.Subtract(DateTime.UnixEpoch).TotalSeconds,
+                round.End.ToString(EnoCoreUtil.DateTimeFormat),
+                round.End.Subtract(DateTime.UnixEpoch).TotalSeconds,
+                scoreboardServices.ToArray(),
+                scoreboardTeams.ToArray());
+            Logger.LogInformation($"{nameof(GetCurrentScoreboard)} Finished after: {sw.ElapsedMilliseconds}ms");
             return scoreboard;
         }
     }

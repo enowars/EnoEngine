@@ -1,4 +1,4 @@
-﻿namespace EnoCore.JsonConfiguration
+﻿namespace EnoCore.Configuration
 {
     using System;
     using System.Collections.Generic;

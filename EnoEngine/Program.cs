@@ -1,7 +1,5 @@
 ﻿using EnoCore;
 using EnoCore.Logging;
-using EnoCore.Models.Database;
-using EnoCore.Models.Json;
 using EnoDatabase;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -16,7 +14,9 @@ using System.Text.Json;
 using System.Threading;
 using EnoEngine;
 using EnoCore.Models;
-using EnoCore.JsonConfiguration;
+using EnoCore.Configuration;
+using System.Linq;
+using EnoCore.Scoreboard;
 
 const string MODE_RECALCULATE = "recalculate";
 const string mutexId = @"Global\EnoEngine";
@@ -64,11 +64,14 @@ try
         return;
     }
 
-    // Generate round 0 scoreboard.json
+    // Generate scoreboardInfo.json
     try
     {
-        var json = JsonSerializer.Serialize(new EnoEngineScoreboardInfo(configuration));
-        File.WriteAllText($"{EnoDataDirectory.Directory}scoreboardInfo.json", json);
+        var teams = configuration.Teams
+            .Select(s => new ScoreboardInfoTeam(s.Id, s.Name, s.LogoUrl, s.FlagUrl, s.Active))
+            .ToArray();
+        var json = JsonSerializer.Serialize(new ScoreboardInfo(configuration.Title, teams), EnoCoreUtil.CamelCaseEnumConverterOptions);
+        File.WriteAllText($"{EnoCoreUtil.DataDirectory}scoreboardInfo.json", json);
     }
     catch (Exception e)
     {

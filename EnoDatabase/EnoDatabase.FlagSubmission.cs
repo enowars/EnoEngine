@@ -1,8 +1,6 @@
 ﻿using EnoCore;
 using EnoCore.Logging;
 using EnoCore.Models;
-using EnoCore.Models.Database;
-using EnoCore.Models.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;

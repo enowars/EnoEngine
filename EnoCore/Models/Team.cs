@@ -1,13 +1,13 @@
-﻿namespace EnoCore.Models.Database
+﻿namespace EnoCore.Models
 {
     using System;
     using System.Collections.Generic;
     using System.Text;
-    using EnoCore.Models.Database;
 
     public class Team
     {
 #pragma warning disable CS8618
+#pragma warning disable SA1516 // Elements should be separated by blank line
         public long Id { get; set; }
         public string Name { get; set; }
         public byte[] TeamSubnet { get; set; }
@@ -17,8 +17,9 @@
         public double ServiceLevelAgreementPoints { get; set; }
         public string? Address { get; set; }
         public long ServiceStatsId { get; set; }
-        public List<TeamServicePoints> ServiceStats { get; set; }
+        public List<TeamServicePoints> TeamServicePoints { get; set; }
         public bool Active { get; set; }
+#pragma warning restore SA1516 // Elements should be separated by blank line
 #pragma warning restore CS8618
     }
 }

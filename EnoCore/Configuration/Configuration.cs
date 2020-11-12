@@ -1,10 +1,11 @@
-﻿namespace EnoCore.Models
+﻿namespace EnoCore.Configuration
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
+    using EnoCore.Models;
 
     public sealed record Configuration(string Title,
         long FlagValidityInRounds,
@@ -25,7 +26,7 @@
         string? Address,
         byte[] TeamSubnet,
         string? LogoUrl,
-        string? FlagUrl,
+        string? FlagUrl, // TODO rename to countryflag or whatever
         bool Active);
 
     public sealed record ConfigurationService(long Id,

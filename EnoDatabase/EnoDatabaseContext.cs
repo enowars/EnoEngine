@@ -1,6 +1,4 @@
 ﻿using EnoCore.Models;
-using EnoCore.Models.Database;
-using EnoCore.Models.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using System;

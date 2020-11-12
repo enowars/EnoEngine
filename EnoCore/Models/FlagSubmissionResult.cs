@@ -1,4 +1,4 @@
-﻿namespace EnoCore
+﻿namespace EnoCore.Models
 {
     using System;
     using System.Collections.Generic;

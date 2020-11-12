@@ -1,4 +1,4 @@
-﻿namespace EnoCore.Models.Json
+﻿namespace EnoCore.Configuration
 {
     using System;
     using System.Collections.Generic;
@@ -10,8 +10,7 @@
     using System.Text.Json.Serialization;
     using System.Threading;
     using System.Threading.Tasks;
-    using EnoCore.JsonConfiguration;
-    using EnoCore.Models.Database;
+    using EnoCore.Models;
 
     public sealed record JsonConfiguration(
         string? Title,
@@ -27,14 +26,7 @@
     {
         public static JsonConfiguration? Deserialize(string json)
         {
-            var jsonSerializerOptions = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                ReadCommentHandling = JsonCommentHandling.Skip,
-                AllowTrailingCommas = true,
-            };
-            jsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-            return JsonSerializer.Deserialize<JsonConfiguration>(json, jsonSerializerOptions);
+            return JsonSerializer.Deserialize<JsonConfiguration>(json, EnoCoreUtil.CamelCaseEnumConverterOptions);
         }
 
         public async Task<Configuration> ValidateAsync()
@@ -189,9 +181,7 @@
                 var cancelSource = new CancellationTokenSource();
                 cancelSource.CancelAfter(5 * 1000);
                 var responseString = await client.GetStringAsync($"{this.Checkers[0]}/service", cancelSource.Token);
-                infoMessage = JsonSerializer.Deserialize<CheckerInfoMessage>(
-                    responseString,
-                    new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+                infoMessage = JsonSerializer.Deserialize<CheckerInfoMessage>(responseString, EnoCoreUtil.CamelCaseEnumConverterOptions);
             }
             catch (Exception e)
             {

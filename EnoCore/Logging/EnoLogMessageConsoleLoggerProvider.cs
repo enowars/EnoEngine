@@ -6,24 +6,20 @@
     using System.Threading;
     using Microsoft.Extensions.Logging;
 
-    public sealed class EnoLogMessageConsoleLoggerProvider : ILoggerProvider, ISupportExternalScope, IEnoLogMessageProvider
+    public sealed class EnoLogMessageConsoleLoggerProvider : ILoggerProvider, IEnoLogMessageProvider
     {
+        private readonly string tool;
+
         public EnoLogMessageConsoleLoggerProvider(string tool)
         {
-            this.Tool = tool;
+            this.tool = tool;
         }
 
-        public IExternalScopeProvider? ScopeProvider { get; internal set; }
-        public string Tool { get; }
+        public IExternalScopeProvider? ScopeProvider { get; set; }
 
         public ILogger CreateLogger(string categoryName)
         {
-            return new EnoLogger(this, categoryName);
-        }
-
-        public void SetScopeProvider(IExternalScopeProvider scopeProvider)
-        {
-            this.ScopeProvider = scopeProvider;
+            return new EnoLogger(this, categoryName, this.tool);
         }
 
         public void Dispose()

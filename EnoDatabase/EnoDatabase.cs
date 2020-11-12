@@ -8,8 +8,6 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using EnoCore.Models.Json;
-using EnoCore.Models.Database;
 using Microsoft.Extensions.Logging;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
@@ -18,6 +16,8 @@ using System.Net.Sockets;
 using System.Data;
 using EnoCore.Logging;
 using EnoCore.Models;
+using EnoCore.Configuration;
+using EnoCore.Scoreboard;
 
 namespace EnoDatabase
 {
@@ -39,7 +39,7 @@ namespace EnoDatabase
         Task<List<CheckerTask>> RetrievePendingCheckerTasks(int maxAmount);
         Task CalculateTotalPoints();
         Task<Round> GetLastRound();
-        Task<EnoEngineScoreboard> GetCurrentScoreboard(long roundId);
+        Task<Scoreboard> GetCurrentScoreboard(long roundId);
         void Migrate();
         Task UpdateTaskCheckerTaskResults(Memory<CheckerTask> tasks);
         Task<(long newLatestSnapshotRoundId, long oldSnapshotRoundId, Service[] services, Team[] teams)> GetPointCalculationFrame(long roundId, Configuration configuration);
