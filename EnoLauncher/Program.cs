@@ -164,7 +164,7 @@
             catch (TaskCanceledException)
             {
                 this.logger.LogError($"{nameof(this.LaunchCheckerTask)} {task.Id} {task.Method}  was cancelled because it did not finish");
-                var updatedTask = task with { CheckerResult = CheckerResult.INTERNAL_ERROR, CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done };
+                var updatedTask = task with { CheckerResult = CheckerResult.OFFLINE, CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done };
                 this.statistics.LogCheckerTaskFinishedMessage(updatedTask);
                 ResultsQueue.Enqueue(updatedTask);
             }
