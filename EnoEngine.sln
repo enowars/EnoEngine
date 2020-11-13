@@ -29,6 +29,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		stylecop.json = stylecop.json
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnoChecker", "EnoChecker\EnoChecker.csproj", "{40DCE6CF-85BE-440C-B62B-4FC075DD8843}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +65,10 @@ Global
 		{A7AFE887-82F7-4318-BBB6-1C91FBC02126}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A7AFE887-82F7-4318-BBB6-1C91FBC02126}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A7AFE887-82F7-4318-BBB6-1C91FBC02126}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40DCE6CF-85BE-440C-B62B-4FC075DD8843}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40DCE6CF-85BE-440C-B62B-4FC075DD8843}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40DCE6CF-85BE-440C-B62B-4FC075DD8843}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40DCE6CF-85BE-440C-B62B-4FC075DD8843}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

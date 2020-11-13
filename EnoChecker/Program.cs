@@ -20,8 +20,7 @@
                 return;
             }
 
-            string pluginAssembly = args[0];
-            Assembly pluginAssembly = LoadPlugin(pluginAssembly);
+            Assembly pluginAssembly = LoadPlugin(args[0]);
             CreateHostBuilder(args).Build().Run();
         }
 
@@ -34,7 +33,7 @@
 
         private static Assembly LoadPlugin(string path)
         {
-
+            throw new NotImplementedException();
         }
     }
 }
