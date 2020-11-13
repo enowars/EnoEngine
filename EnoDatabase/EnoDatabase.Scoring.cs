@@ -232,21 +232,21 @@
                     {
                         firstBloods[storeId] = fb;
                     }
-
-                    scoreboardServices.Add(new ScoreboardService(
-                        service.Id,
-                        service.Name,
-                        service.FlagsPerRound,
-                        firstBloods
-                            .Select(sf => new ScoreboardFirstBlood(
-                                sf.AttackerTeamId,
-                                sf.Timestamp.ToString(EnoCoreUtil.DateTimeFormat),
-                                EnoCoreUtil.SecondsSinceEpoch(sf.Timestamp),
-                                sf.RoundId,
-                                null,
-                                storeId))
-                            .ToArray()));
                 }
+
+                scoreboardServices.Add(new ScoreboardService(
+                    service.Id,
+                    service.Name,
+                    service.FlagsPerRound,
+                    firstBloods
+                        .Select(sf => new ScoreboardFirstBlood(
+                            sf.AttackerTeamId,
+                            sf.Timestamp.ToString(EnoCoreUtil.DateTimeFormat),
+                            EnoCoreUtil.SecondsSinceEpoch(sf.Timestamp),
+                            sf.RoundId,
+                            null,
+                            sf.FlagRoundOffset % service.FlagStores))
+                        .ToArray()));
             }
 
             this.logger.LogInformation($"{nameof(this.GetCurrentScoreboard)} Iterated services after: {sw.ElapsedMilliseconds}ms");
