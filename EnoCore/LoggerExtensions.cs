@@ -28,5 +28,13 @@
                 },
             });
         }
+
+        public static IDisposable BeginEnoScope(this ILogger logger, CheckerTaskMessage checkerTaskMessage)
+        {
+            return logger.BeginScope(new Dictionary<string, object>
+            {
+                [nameof(CheckerTaskMessage)] = checkerTaskMessage,
+            });
+        }
     }
 }

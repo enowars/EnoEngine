@@ -6,7 +6,7 @@
     using System.Threading;
     using Microsoft.Extensions.Logging;
 
-    public sealed class EnoLogMessageConsoleLoggerProvider : ILoggerProvider, IEnoLogMessageProvider
+    public sealed class EnoLogMessageConsoleLoggerProvider : ILoggerProvider, ISupportExternalScope, IEnoLogMessageProvider
     {
         private readonly string tool;
 
@@ -20,6 +20,11 @@
         public ILogger CreateLogger(string categoryName)
         {
             return new EnoLogger(this, categoryName, this.tool);
+        }
+
+        public void SetScopeProvider(IExternalScopeProvider scopeProvider)
+        {
+            this.ScopeProvider = scopeProvider;
         }
 
         public void Dispose()

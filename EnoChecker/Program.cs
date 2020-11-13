@@ -5,6 +5,7 @@
     using System.Linq;
     using System.Reflection;
     using System.Threading.Tasks;
+    using EnoCore;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;
@@ -14,13 +15,6 @@
     {
         public static void Main(string[] args)
         {
-            if (args.Length != 1)
-            {
-                Console.WriteLine("Invalid arguments.");
-                return;
-            }
-
-            Assembly pluginAssembly = LoadPlugin(args[0]);
             CreateHostBuilder(args).Build().Run();
         }
 
@@ -30,10 +24,5 @@
                 {
                     webBuilder.UseStartup<Startup>();
                 });
-
-        private static Assembly LoadPlugin(string path)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

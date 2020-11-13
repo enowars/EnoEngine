@@ -1,4 +1,4 @@
-﻿namespace EnoCore
+﻿namespace EnoCore.Checker
 {
     using System;
     using System.Collections.Generic;
@@ -10,6 +10,12 @@
 
     public interface IChecker
     {
+        int FlagsPerRound { get; }
+
+        int NoisesPerRound { get; }
+
+        int HavocsPerRound { get; }
+
         Task HandlePutFlag(CheckerTaskMessage task, CancellationToken token);
 
         Task HandleGetFlag(CheckerTaskMessage task, CancellationToken token);

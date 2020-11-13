@@ -76,7 +76,7 @@ try
             .Select(s => new ScoreboardInfoTeam(s.Id, s.Name, s.LogoUrl, s.CountryFlagUrl, s.Active))
             .ToArray();
         var services = configuration.Services
-            .Select(s => new ScoreboardService(s.Id, s.Name, s.FlagStores, new ScoreboardFirstBlood[0]))
+            .Select(s => new ScoreboardService(s.Id, s.Name, s.FlagStores, Array.Empty<ScoreboardFirstBlood>()))
             .ToArray();
         var json = JsonSerializer.Serialize(
             new ScoreboardInfo(configuration.Title, configuration.DnsSuffix, services, teams),

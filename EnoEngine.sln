@@ -29,7 +29,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		stylecop.json = stylecop.json
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnoChecker", "EnoChecker\EnoChecker.csproj", "{40DCE6CF-85BE-440C-B62B-4FC075DD8843}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EnoChecker", "EnoChecker\EnoChecker.csproj", "{40DCE6CF-85BE-440C-B62B-4FC075DD8843}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleChecker", "SampleChecker\SampleChecker.csproj", "{F9A0382D-76C6-48D3-A0CA-CD5E290AD8FB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -69,6 +71,10 @@ Global
 		{40DCE6CF-85BE-440C-B62B-4FC075DD8843}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{40DCE6CF-85BE-440C-B62B-4FC075DD8843}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{40DCE6CF-85BE-440C-B62B-4FC075DD8843}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F9A0382D-76C6-48D3-A0CA-CD5E290AD8FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9A0382D-76C6-48D3-A0CA-CD5E290AD8FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9A0382D-76C6-48D3-A0CA-CD5E290AD8FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9A0382D-76C6-48D3-A0CA-CD5E290AD8FB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
