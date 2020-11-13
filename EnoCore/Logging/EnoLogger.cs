@@ -73,6 +73,7 @@
                 string severity = GetSeverity(logLevel);
                 long severityLevel = GetSeverityLevel(logLevel);
 
+                bool hadScope = false;
                 if (this.provider.ScopeProvider != null)
                 {
                     this.provider.ScopeProvider.ForEachScope(
@@ -102,7 +103,7 @@
                                             task.ServiceName,
                                             Enum.GetName(typeof(CheckerTaskMethod), task.Method));
                                         this.provider.Log($"##ENOLOGMESSAGE {JsonSerializer.Serialize(enoLogMessage, EnoCoreUtil.CamelCaseEnumConverterOptions)}\n");
-                                        return;
+                                        hadScope = true;
                                     }
                                     else if (pair.Value is CheckerTaskMessage taskMessage)
                                     {
@@ -124,7 +125,7 @@
                                             taskMessage.ServiceName,
                                             Enum.GetName(typeof(CheckerTaskMethod), taskMessage.Method));
                                         this.provider.Log($"##ENOLOGMESSAGE {JsonSerializer.Serialize(enoLogMessage, EnoCoreUtil.CamelCaseEnumConverterOptions)}\n");
-                                        return;
+                                        hadScope = true;
                                     }
                                 }
                             }
@@ -132,24 +133,27 @@
                         state);
                 }
 
-                var enoLogMessage = new EnoLogMessage(
-                    tool,
-                    severity,
-                    severityLevel,
-                    EnoCoreUtil.GetCurrentTimestamp(),
-                    module,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    message,
-                    null,
-                    null,
-                    null,
-                    null);
-                this.provider.Log($"##ENOLOGMESSAGE {JsonSerializer.Serialize(enoLogMessage, EnoCoreUtil.CamelCaseEnumConverterOptions)}\n");
+                if (!hadScope)
+                {
+                    var enoLogMessage = new EnoLogMessage(
+                        tool,
+                        severity,
+                        severityLevel,
+                        EnoCoreUtil.GetCurrentTimestamp(),
+                        module,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        message,
+                        null,
+                        null,
+                        null,
+                        null);
+                    this.provider.Log($"##ENOLOGMESSAGE {JsonSerializer.Serialize(enoLogMessage, EnoCoreUtil.CamelCaseEnumConverterOptions)}\n");
+                }
             }
         }
     }
