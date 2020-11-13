@@ -71,11 +71,9 @@ try
         .AddDbContextPool<EnoDatabaseContext>(
             options =>
             {
-                options.UseNpgsql(
-                    EnoDatabaseContext.PostgresConnectionString,
-                    pgoptions => pgoptions.EnableRetryOnFailure());
+                options.UseNpgsql(EnoDatabaseContext.PostgresConnectionString);
             },
-            90)
+            10)
         .AddLogging(loggingBuilder =>
         {
             loggingBuilder.SetMinimumLevel(LogLevel.Debug);
