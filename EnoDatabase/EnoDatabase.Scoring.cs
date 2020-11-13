@@ -275,10 +275,10 @@
 
             var scoreboard = new Scoreboard(
                 roundId,
-                round.Begin.ToString(EnoCoreUtil.DateTimeFormat),
-                round.Begin.Subtract(DateTime.UnixEpoch).TotalSeconds,
-                round.End.ToString(EnoCoreUtil.DateTimeFormat),
-                round.End.Subtract(DateTime.UnixEpoch).TotalSeconds,
+                round?.Begin.ToString(EnoCoreUtil.DateTimeFormat),
+                round?.Begin.Subtract(DateTime.UnixEpoch).TotalSeconds,
+                round?.End.ToString(EnoCoreUtil.DateTimeFormat),
+                round?.End.Subtract(DateTime.UnixEpoch).TotalSeconds,
                 scoreboardServices.ToArray(),
                 scoreboardTeams.ToArray());
             this.logger.LogInformation($"{nameof(this.GetCurrentScoreboard)} Finished after: {sw.ElapsedMilliseconds}ms");
