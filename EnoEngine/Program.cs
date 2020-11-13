@@ -75,7 +75,12 @@ try
         var teams = configuration.Teams
             .Select(s => new ScoreboardInfoTeam(s.Id, s.Name, s.LogoUrl, s.CountryFlagUrl, s.Active))
             .ToArray();
-        var json = JsonSerializer.Serialize(new ScoreboardInfo(configuration.Title, teams), EnoCoreUtil.CamelCaseEnumConverterOptions);
+        var services = configuration.Services
+            .Select(s => new ScoreboardService(s.Id, s.Name, s.FlagStores, new ScoreboardFirstBlood[0]))
+            .ToArray();
+        var json = JsonSerializer.Serialize(
+            new ScoreboardInfo(configuration.Title, configuration.DnsSuffix, services, teams),
+            EnoCoreUtil.CamelCaseEnumConverterOptions);
         File.WriteAllText($"{EnoCoreUtil.DataDirectory}scoreboardInfo.json", json);
     }
     catch (Exception e)

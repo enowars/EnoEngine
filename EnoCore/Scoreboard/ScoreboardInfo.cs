@@ -9,6 +9,8 @@
 
     public record ScoreboardInfo(
         string Title,
+        string? DnsSuffix,
+        ScoreboardService[] Services,
         ScoreboardInfoTeam[] Teams);
 
     public record ScoreboardInfoTeam(
