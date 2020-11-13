@@ -1,0 +1,86 @@
+{
+    "title": "BambiCTF #4",
+    "flagValidityInRounds": 15,
+    "checkedRoundsPerRound": 3,
+    "roundLengthInSeconds": 60,
+    "dnsSuffix": "bambi.ovh",
+    "teamSubnetBytesLength": 16,
+    "flagSigningKey": "ir7PRm0SzqzA0lmFyBfUv68E6Yb7cjbJDp6dummqwr0Od70Sar7P27HVY6oc8Pux",
+    "noiseSigningKey": "cGSiyYn6VjTUxS7PZInBaCYW83KTaFJPq6zaWji0NGzJ6wpZMUDJKbgo8tkfT35x",
+    "encoding": "Legacy",
+    "teams": [{
+        "id": 1,
+        "name": "Northern Pudú",
+        "teamSubnet": "::ffff:10.0.0.1"
+    },{
+        "id": 2,
+        "name": "Southern Pudú",
+        "teamSubnet": "::ffff:10.0.0.2"
+    },{
+        "id": 3,
+        "name": "Gray Brocket",
+        "teamSubnet": "::ffff:10.0.0.3"
+    },{
+        "id": 4,
+        "name": "White-Tailed Deer",
+        "teamSubnet": "::ffff:10.0.0.4"
+    },{
+        "id": 5,
+        "name": "Chital",
+        "teamSubnet": "::ffff:10.0.0.5"
+    },{
+        "id": 6,
+        "name": "Chinese Muntjac",
+        "teamSubnet": "::ffff:10.0.0.6"
+    },{
+        "id": 7,
+        "name": "Pygmy brocket",
+        "teamSubnet": "::ffff:10.0.0.7"
+    },{
+        "id": 8,
+        "name": "Water Deer",
+        "teamSubnet": "::ffff:10.0.0.8"
+    },{
+        "id": 9,
+        "name": "Brazilian Brocket",
+        "teamSubnet": "::ffff:10.0.0.9"
+    },{
+        "id": 10,
+        "name": "Tufted Deer",
+        "teamSubnet": "::ffff:10.0.0.10"
+    }],
+    "services": [{
+            "id": 1,
+            "name": "WASP",
+            "flagsPerRoundMultiplier": 1,
+            "noisesPerRoundMultiplier": 1,
+            "havocsPerRoundMultiplier": 1,
+            "weightFactor": 1,
+            "checkers": ["http://192.168.1.1:8000"]
+        },{
+            "id": 2,
+            "name": "DJBooth",
+            "flagsPerRoundMultiplier": 1,
+            "noisesPerRoundMultiplier": 1,
+            "havocsPerRoundMultiplier": 1,
+            "weightFactorMultiplier": 1,
+            "checkers": ["http://192.168.1.1:8001"]
+        },{
+            "id": 3,
+            "name": "switzerland",
+            "flagsPerRoundMultiplier": 1,
+            "noisesPerRoundMultiplier": 1,
+            "havocsPerRoundMultiplier": 1,
+            "weightFactorMultiplier": 1,
+            "checkers": ["http://192.168.1.1:8003"]
+        },{
+            "id": 4,
+            "name": "teapot",
+            "flagsPerRoundMultiplier": 1,
+            "noisesPerRoundMultiplier": 1,
+            "havocsPerRoundMultiplier": 1,
+            "weightFactor": 1,
+            "checkers": ["http://192.168.1.1:8004"]
+        }
+    ]
+}
