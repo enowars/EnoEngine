@@ -1,4 +1,5 @@
 #!/bin/sh
+tmux start-server
 tmux kill-session -t benni_session
 
 session="benni_session"
