@@ -1,27 +1,31 @@
-﻿using EnoCore;
-using EnoCore.Logging;
-using EnoDatabase;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+﻿#pragma warning disable SA1200 // Using directives should be placed correctly
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
-using EnoEngine;
-using EnoCore.Models;
+using EnoCore;
 using EnoCore.Configuration;
-using System.Linq;
+using EnoCore.Logging;
+using EnoCore.Models;
 using EnoCore.Scoreboard;
+using EnoDatabase;
+using EnoEngine;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+#pragma warning restore SA1200 // Using directives should be placed correctly
 
 const string MODE_RECALCULATE = "recalculate";
+
 const string mutexId = @"Global\EnoEngine";
 
 CancellationTokenSource cancelSource = new();
+
 using var mutex = new Mutex(false, mutexId, out bool _);
 
 try
@@ -51,6 +55,7 @@ try
             Console.WriteLine("Deserialization of config failed.");
             return;
         }
+
         configuration = await jsonConfiguration.ValidateAsync();
     }
     catch (JsonException e)
@@ -85,12 +90,14 @@ try
         .AddSingleton(new EnoStatistics(nameof(EnoEngine)))
         .AddScoped<IEnoDatabase, EnoDatabase.EnoDatabase>()
         .AddSingleton<EnoEngine.EnoEngine>()
-        .AddDbContextPool<EnoDatabaseContext>(options =>
-        {
-            options.UseNpgsql(
-                EnoDatabaseContext.PostgresConnectionString,
-                pgoptions => pgoptions.EnableRetryOnFailure());
-        }, 90)
+        .AddDbContextPool<EnoDatabaseContext>(
+            options =>
+            {
+                options.UseNpgsql(
+                    EnoDatabaseContext.PostgresConnectionString,
+                    pgoptions => pgoptions.EnableRetryOnFailure());
+            },
+            90)
         .AddLogging(loggingBuilder =>
         {
             loggingBuilder.SetMinimumLevel(LogLevel.Debug);

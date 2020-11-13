@@ -1,40 +1,67 @@
-﻿using EnoCore.Models;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net;
-using System.Threading;
-using System.Threading.Tasks;
-using EnoCore;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Console;
-using Microsoft.Extensions.DependencyInjection;
-using System.Diagnostics;
-using System.ComponentModel;
-using Microsoft.EntityFrameworkCore;
-using EnoCore.Logging;
-using EnoDatabase;
-using System.Net.Http;
-using System.Text.Json;
-using EnoCore.Configuration;
-
-namespace EnoEngine
+﻿namespace EnoEngine
 {
-    partial class EnoEngine
+    using System;
+    using System.Collections.Generic;
+    using System.ComponentModel;
+    using System.Diagnostics;
+    using System.IO;
+    using System.Net;
+    using System.Net.Http;
+    using System.Text.Json;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using EnoCore;
+    using EnoCore.Configuration;
+    using EnoCore.Logging;
+    using EnoCore.Models;
+    using EnoDatabase;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Console;
+
+    internal partial class EnoEngine
     {
         private static readonly CancellationTokenSource EngineCancelSource = new CancellationTokenSource();
 
-        private readonly ILogger Logger;
-        private readonly Configuration Configuration;
-        private readonly IServiceProvider ServiceProvider;
-        private readonly EnoStatistics Statistics;
+        private readonly ILogger logger;
+        private readonly Configuration configuration;
+        private readonly IServiceProvider serviceProvider;
+        private readonly EnoStatistics statistics;
 
         public EnoEngine(ILogger<EnoEngine> logger, Configuration configuration, IServiceProvider serviceProvider, EnoStatistics enoStatistics)
         {
-            Logger = logger;
-            Configuration = configuration;
-            ServiceProvider = serviceProvider;
-            Statistics = enoStatistics;
+            this.logger = logger;
+            this.configuration = configuration;
+            this.serviceProvider = serviceProvider;
+            this.statistics = enoStatistics;
+        }
+
+        internal async Task RunContest()
+        {
+            // Gracefully shutdown when CTRL+C is invoked
+            Console.CancelKeyPress += (s, e) =>
+            {
+                this.logger.LogInformation("Shutting down EnoEngine");
+                e.Cancel = true;
+                EngineCancelSource.Cancel();
+            };
+            var db = this.serviceProvider.CreateScope().ServiceProvider.GetRequiredService<IEnoDatabase>();
+            db.ApplyConfig(this.configuration);
+            await this.GameLoop();
+        }
+
+        internal async Task RunRecalculation()
+        {
+            this.logger.LogInformation("RunRecalculation()");
+            var lastFinishedRound = await EnoDatabaseUtil.RetryScopedDatabaseAction(
+                this.serviceProvider,
+                db => db.PrepareRecalculation());
+
+            for (int i = 1; i <= lastFinishedRound.Id; i++)
+            {
+                await this.HandleRoundEnd(i, true);
+            }
         }
 
         private static async Task DelayUntil(DateTime time, CancellationToken token)
@@ -44,69 +71,48 @@ namespace EnoEngine
             {
                 return;
             }
+
             var diff = time - now;
             await Task.Delay(diff, token);
-        }
-
-        public async Task RunContest()
-        {
-            // Gracefully shutdown when CTRL+C is invoked
-            Console.CancelKeyPress += (s, e) =>
-            {
-                Logger.LogInformation("Shutting down EnoEngine");
-                e.Cancel = true;
-                EngineCancelSource.Cancel();
-            };
-            var db = ServiceProvider.CreateScope().ServiceProvider.GetRequiredService<IEnoDatabase>();
-            db.ApplyConfig(Configuration);
-            await GameLoop();
         }
 
         private async Task GameLoop()
         {
             try
             {
-                //Check if there is an old round running
-                await AwaitOldRound();
+                // Check if there is an old round running
+                await this.AwaitOldRound();
                 while (!EngineCancelSource.IsCancellationRequested)
                 {
-                    var end = await StartNewRound();
+                    var end = await this.StartNewRound();
                     await DelayUntil(end, EngineCancelSource.Token);
                 }
             }
-            catch (OperationCanceledException) { }
+            catch (OperationCanceledException)
+            {
+            }
             catch (Exception e)
             {
-                Logger.LogError($"GameLoop failed: {e.ToFancyString()}");
+                this.logger.LogError($"GameLoop failed: {e.ToFancyString()}");
             }
-            Logger.LogInformation("GameLoop finished");
+
+            this.logger.LogInformation("GameLoop finished");
         }
 
         private async Task AwaitOldRound()
         {
-            var lastRound = await EnoDatabaseUtil.RetryScopedDatabaseAction(ServiceProvider,
-                    async (IEnoDatabase db) => await db.GetLastRound());
+            var lastRound = await EnoDatabaseUtil.RetryScopedDatabaseAction(
+                this.serviceProvider,
+                db => db.GetLastRound());
 
             if (lastRound != null)
             {
                 var span = lastRound.End.Subtract(DateTime.UtcNow);
                 if (span.Seconds > 1)
                 {
-                    Logger.LogInformation($"Sleeping until old round ends ({lastRound.End})");
+                    this.logger.LogInformation($"Sleeping until old round ends ({lastRound.End})");
                     await Task.Delay(span);
                 }
-            }
-        }
-
-        public async Task RunRecalculation()
-        {
-            Logger.LogInformation("RunRecalculation()");
-            var lastFinishedRound = await EnoDatabaseUtil.RetryScopedDatabaseAction(ServiceProvider,
-                async (IEnoDatabase db) => await db.PrepareRecalculation());
-
-            for (int i = 1; i <= lastFinishedRound.Id; i++)
-            {
-                await HandleRoundEnd(i, true);
             }
         }
     }

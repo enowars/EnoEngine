@@ -1,27 +1,27 @@
-﻿using EnoCore;
-using EnoCore.Models;
-using EnoDatabase;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Text;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace EnoEngine
+﻿namespace EnoEngine
 {
-    partial class EnoEngine
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.IO;
+    using System.Text;
+    using System.Text.Json;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using EnoCore;
+    using EnoCore.Models;
+    using EnoDatabase;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+
+    internal partial class EnoEngine
     {
         public async Task<DateTime> StartNewRound()
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-            Logger.LogDebug("Starting new Round");
-            double quatherLength = Configuration.RoundLengthInSeconds / 4;
+            this.logger.LogDebug("Starting new Round");
+            double quatherLength = this.configuration.RoundLengthInSeconds / 4;
             DateTime begin = DateTime.UtcNow;
             DateTime q2 = begin.AddSeconds(quatherLength);
             DateTime q3 = begin.AddSeconds(quatherLength * 2);
@@ -32,40 +32,43 @@ namespace EnoEngine
                 Round newRound;
 
                 // start the next round
-                using (var scope = ServiceProvider.CreateScope())
+                using (var scope = this.serviceProvider.CreateScope())
                 {
                     var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
                     newRound = await db.CreateNewRound(begin, q2, q3, q4, end);
                 }
-                Logger.LogInformation($"CreateNewRound for {newRound.Id} finished ({stopwatch.ElapsedMilliseconds}ms)");
+
+                this.logger.LogInformation($"CreateNewRound for {newRound.Id} finished ({stopwatch.ElapsedMilliseconds}ms)");
 
                 // insert put tasks
-                var insertPutNewFlagsTask = EnoDatabaseUtil.RetryScopedDatabaseAction(ServiceProvider, db => db.InsertPutFlagsTasks(newRound, Configuration));
-                var insertPutNewNoisesTask = EnoDatabaseUtil.RetryScopedDatabaseAction(ServiceProvider, db => db.InsertPutNoisesTasks(newRound, Configuration));
-                var insertHavocsTask = EnoDatabaseUtil.RetryScopedDatabaseAction(ServiceProvider, db => db.InsertHavocsTasks(newRound, Configuration));
+                var insertPutNewFlagsTask = EnoDatabaseUtil.RetryScopedDatabaseAction(this.serviceProvider, db => db.InsertPutFlagsTasks(newRound, this.configuration));
+                var insertPutNewNoisesTask = EnoDatabaseUtil.RetryScopedDatabaseAction(this.serviceProvider, db => db.InsertPutNoisesTasks(newRound, this.configuration));
+                var insertHavocsTask = EnoDatabaseUtil.RetryScopedDatabaseAction(this.serviceProvider, db => db.InsertHavocsTasks(newRound, this.configuration));
 
                 await insertPutNewFlagsTask;
                 await insertPutNewNoisesTask;
                 await insertHavocsTask;
 
                 // insert get tasks
-                var insertRetrieveCurrentFlagsTask = EnoDatabaseUtil.RetryScopedDatabaseAction(ServiceProvider, db => db.InsertRetrieveCurrentFlagsTasks(newRound, Configuration));
-                var insertRetrieveOldFlagsTask = EnoDatabaseUtil.RetryScopedDatabaseAction(ServiceProvider, db => db.InsertRetrieveOldFlagsTasks(newRound, Configuration));
-                var insertGetCurrentNoisesTask = EnoDatabaseUtil.RetryScopedDatabaseAction(ServiceProvider, db => db.InsertRetrieveCurrentNoisesTasks(newRound, Configuration));
+                var insertRetrieveCurrentFlagsTask = EnoDatabaseUtil.RetryScopedDatabaseAction(this.serviceProvider, db => db.InsertRetrieveCurrentFlagsTasks(newRound, this.configuration));
+                var insertRetrieveOldFlagsTask = EnoDatabaseUtil.RetryScopedDatabaseAction(this.serviceProvider, db => db.InsertRetrieveOldFlagsTasks(newRound, this.configuration));
+                var insertGetCurrentNoisesTask = EnoDatabaseUtil.RetryScopedDatabaseAction(this.serviceProvider, db => db.InsertRetrieveCurrentNoisesTasks(newRound, this.configuration));
 
                 await insertRetrieveCurrentFlagsTask;
                 await insertRetrieveOldFlagsTask;
                 await insertGetCurrentNoisesTask;
 
-                Logger.LogInformation($"All checker tasks for round {newRound.Id} are created ({stopwatch.ElapsedMilliseconds}ms)");
-                await HandleRoundEnd(newRound.Id - 1);
-                Logger.LogInformation($"HandleRoundEnd for round {newRound.Id - 1} finished ({stopwatch.ElapsedMilliseconds}ms)");
-                //TODO EnoLogger.LogStatistics(StartNewRoundFinishedMessage.Create(oldRound?.Id ?? 0, stopwatch.ElapsedMilliseconds));
+                this.logger.LogInformation($"All checker tasks for round {newRound.Id} are created ({stopwatch.ElapsedMilliseconds}ms)");
+                await this.HandleRoundEnd(newRound.Id - 1);
+                this.logger.LogInformation($"HandleRoundEnd for round {newRound.Id - 1} finished ({stopwatch.ElapsedMilliseconds}ms)");
+
+                // TODO EnoLogger.LogStatistics(StartNewRoundFinishedMessage.Create(oldRound?.Id ?? 0, stopwatch.ElapsedMilliseconds));
             }
             catch (Exception e)
             {
-                Logger.LogError($"StartNewRound failed: {e.ToFancyString()}");
+                this.logger.LogError($"StartNewRound failed: {e.ToFancyString()}");
             }
+
             return end;
         }
 
@@ -75,21 +78,23 @@ namespace EnoEngine
             {
                 if (!recalculating)
                 {
-                    await RecordServiceStates(roundId);
+                    await this.RecordServiceStates(roundId);
                 }
-                await CalculateServicePoints(roundId);
-                await CalculateTotalPoints();
+
+                await this.CalculateServicePoints(roundId);
+                await this.CalculateTotalPoints();
             }
+
             var jsonStopWatch = new Stopwatch();
             jsonStopWatch.Start();
             var scoreboard = await EnoDatabaseUtil.RetryScopedDatabaseAction(
-                ServiceProvider,
+                this.serviceProvider,
                 db => db.GetCurrentScoreboard(roundId));
             var json = JsonSerializer.Serialize(scoreboard, EnoCoreUtil.CamelCaseEnumConverterOptions);
             File.WriteAllText($"{EnoCoreUtil.DataDirectory}scoreboard{roundId}.json", json);
             File.WriteAllText($"{EnoCoreUtil.DataDirectory}scoreboard.json", json);
             jsonStopWatch.Stop();
-            Logger.LogInformation($"Scoreboard Generation Took {jsonStopWatch.ElapsedMilliseconds} ms");
+            this.logger.LogInformation($"Scoreboard Generation Took {jsonStopWatch.ElapsedMilliseconds} ms");
             return DateTime.UtcNow;
         }
 
@@ -100,29 +105,31 @@ namespace EnoEngine
             try
             {
                 await EnoDatabaseUtil.RetryScopedDatabaseAction(
-                    ServiceProvider,
+                    this.serviceProvider,
                     db => db.CalculateTotalPoints());
             }
             catch (Exception e)
             {
-                Logger.LogError($"CalculateTotalPoints failed because: {e}");
+                this.logger.LogError($"CalculateTotalPoints failed because: {e}");
             }
             finally
             {
                 stopWatch.Stop();
-                Logger.LogInformation($"{nameof(CalculateTotalPoints)} Took {stopWatch.ElapsedMilliseconds} ms");
-                //TODO EnoLogger.LogStatistics(CalculateTotalPointsFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
+                this.logger.LogInformation($"{nameof(this.CalculateTotalPoints)} Took {stopWatch.ElapsedMilliseconds} ms");
+
+                // TODO EnoLogger.LogStatistics(CalculateTotalPointsFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
             }
         }
 
-        public async Task CalculateServicePoints(long roundId)
+        private async Task CalculateServicePoints(long roundId)
         {
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
             try
             {
-                var (newLatestSnapshotRoundId, oldSnapshotRoundId, services, teams) = await EnoDatabaseUtil.RetryScopedDatabaseAction(ServiceProvider,
-                    async (IEnoDatabase db) => await db.GetPointCalculationFrame(roundId, Configuration));
+                var (newLatestSnapshotRoundId, oldSnapshotRoundId, services, teams) = await EnoDatabaseUtil.RetryScopedDatabaseAction(
+                    this.serviceProvider,
+                    db => db.GetPointCalculationFrame(roundId, this.configuration));
 
                 var servicePointsTasks = new List<Task>(services.Length);
                 foreach (var service in services)
@@ -130,21 +137,23 @@ namespace EnoEngine
                     servicePointsTasks.Add(Task.Run(async () =>
                     {
                         await EnoDatabaseUtil.RetryScopedDatabaseAction(
-                            ServiceProvider,
+                            this.serviceProvider,
                             db => db.CalculateTeamServicePoints(teams, roundId, service, oldSnapshotRoundId, newLatestSnapshotRoundId));
                     }));
                 }
+
                 await Task.WhenAll(servicePointsTasks);
             }
             catch (Exception e)
             {
-                Logger.LogError($"CalculateServicePoints failed because: {e}");
+                this.logger.LogError($"CalculateServicePoints failed because: {e}");
             }
             finally
             {
                 stopWatch.Stop();
-                Logger.LogInformation($"{nameof(CalculateServicePoints)} Took {stopWatch.ElapsedMilliseconds} ms");
-                //TODO EnoLogger.LogStatistics(CalculateServicePointsFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
+                this.logger.LogInformation($"{nameof(this.CalculateServicePoints)} Took {stopWatch.ElapsedMilliseconds} ms");
+
+                // TODO EnoLogger.LogStatistics(CalculateServicePointsFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
             }
         }
 
@@ -155,18 +164,19 @@ namespace EnoEngine
             try
             {
                 await EnoDatabaseUtil.RetryScopedDatabaseAction(
-                    ServiceProvider,
-                    db => db.CalculateRoundTeamServiceStates(ServiceProvider, roundId, Statistics));
+                    this.serviceProvider,
+                    db => db.CalculateRoundTeamServiceStates(this.serviceProvider, roundId, this.statistics));
             }
             catch (Exception e)
             {
-                Logger.LogError($"RecordServiceStates failed because: {e}");
+                this.logger.LogError($"RecordServiceStates failed because: {e}");
             }
             finally
             {
                 stopWatch.Stop();
-                //TODO EnoLogger.LogStatistics(RecordServiceStatesFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
-                Logger.LogInformation($"RecordServiceStates took {stopWatch.ElapsedMilliseconds}ms");
+
+                // TODO EnoLogger.LogStatistics(RecordServiceStatesFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
+                this.logger.LogInformation($"RecordServiceStates took {stopWatch.ElapsedMilliseconds}ms");
             }
         }
     }
