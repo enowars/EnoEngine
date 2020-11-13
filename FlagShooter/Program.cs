@@ -1,27 +1,27 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Sockets;
-using System.Text;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
-using EnoCore;
-using EnoCore.Configuration;
-using EnoCore.Models;
-using EnoCore.Scoreboard;
-using EnoDatabase;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-
-namespace FlagShooter
+﻿namespace FlagShooter
 {
+    using System;
+    using System.Collections.Concurrent;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Net;
+    using System.Net.Http;
+    using System.Net.Sockets;
+    using System.Text;
+    using System.Text.Json;
+    using System.Threading;
+    using System.Threading.Channels;
+    using System.Threading.Tasks;
+    using EnoCore;
+    using EnoCore.Configuration;
+    using EnoCore.Models;
+    using EnoCore.Scoreboard;
+    using EnoDatabase;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+
     internal class Program
     {
         private static readonly CancellationTokenSource FlagShooterCancelSource = new CancellationTokenSource();
@@ -50,7 +50,7 @@ namespace FlagShooter
                 {
                     var channel = Channel.CreateBounded<byte[]>(new BoundedChannelOptions(1000)
                     {
-                        SingleWriter = true
+                        SingleWriter = true,
                     });
                     int localI = i;
                     int localJ = i;
@@ -129,17 +129,28 @@ namespace FlagShooter
                 if (sb != null && sb.CurrentRound != null && sb.CurrentRound > 0)
                 {
                     for (long r = sb.CurrentRound.Value; r > Math.Max(sb.CurrentRound.Value - this.configuration.FlagValidityInRounds, 0); r--)
+                    {
                         for (int team = 0; team < this.configuration.Teams.Count; team++)
+                        {
                             foreach (var s in sb.Services)
+                            {
                                 for (int store = 0; store < s.MaxStores; store++)
                                 {
                                     if (i++ > flagCount)
+                                    {
                                         return result;
+                                    }
+
                                     result.Add(this.SubmitFlag(new Flag(team, s.ServiceId, store, r, 0)));
                                 }
+                            }
+                        }
+                    }
+
                     Console.WriteLine($"Not Enough Flags available, requested {flagCount} and got {i}");
                     return result;
                 }
+
                 Console.WriteLine($"No Flags could be generated, Scoreboard data not Found");
                 return result;
             }

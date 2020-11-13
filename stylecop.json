@@ -11,7 +11,8 @@
       "documentInterfaces": false,
       "documentExposedElements": false,
       "documentPrivateElements": false,
-      "documentPrivateFields": false
+      "documentPrivateFields": false,
+      "documentInternalElements": false
     },
     "maintainabilityRules": {
       "topLevelTypes": []

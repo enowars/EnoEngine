@@ -1,14 +1,14 @@
-﻿using System;
-using System.IO;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading.Channels;
-using System.Threading.Tasks;
-using EnoCore;
-using EnoCore.Models;
-
-namespace FlagShooter
+﻿namespace FlagShooter
 {
+    using System;
+    using System.IO;
+    using System.Net.Sockets;
+    using System.Text;
+    using System.Threading.Channels;
+    using System.Threading.Tasks;
+    using EnoCore;
+    using EnoCore.Models;
+
     internal class FlagSubmissionClient
     {
         private readonly ChannelReader<byte[]> flagsReader;
