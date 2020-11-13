@@ -1,24 +1,24 @@
-﻿using System;
-using System.Buffers;
-using System.Collections.Generic;
-using System.IO.Pipelines;
-using System.Linq;
-using System.Net;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
-using EnoCore;
-using EnoCore.Configuration;
-using EnoCore.Logging;
-using EnoCore.Models;
-using EnoDatabase;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-
-namespace EnoEngine.FlagSubmission
+﻿namespace EnoFlagSink
 {
+    using System;
+    using System.Buffers;
+    using System.Collections.Generic;
+    using System.IO.Pipelines;
+    using System.Linq;
+    using System.Net;
+    using System.Net.Sockets;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Channels;
+    using System.Threading.Tasks;
+    using EnoCore;
+    using EnoCore.Configuration;
+    using EnoCore.Logging;
+    using EnoCore.Models;
+    using EnoDatabase;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+
     internal class FlagSubmissionEndpoint
     {
         private const int MaxLineLength = 200;
@@ -137,6 +137,7 @@ namespace EnoEngine.FlagSubmission
                 {
                     break;
                 }
+
                 // Make the data available to the PipeReader.
                 FlushResult result = await writer.FlushAsync(token);
 
@@ -281,7 +282,9 @@ namespace EnoEngine.FlagSubmission
             catch (Exception e)
             {
                 if (!(e is ObjectDisposedException || e is TaskCanceledException))
+                {
                     this.logger.LogCritical($"RunDebugEndpoint failed: {e.ToFancyString()}");
+                }
             }
 
             this.logger.LogInformation("RunDebugEndpoint finished");
@@ -299,7 +302,10 @@ namespace EnoEngine.FlagSubmission
                     {
                         var client = await this.productionListener.AcceptTcpClientAsync();
                         if (client is null)
+                        {
                             continue;
+                        }
+
                         var t = Task.Run(
                             async () =>
                             {
@@ -324,7 +330,11 @@ namespace EnoEngine.FlagSubmission
                     }
                     catch (Exception e)
                     {
-                        if (e is TaskCanceledException) throw;
+                        if (e is TaskCanceledException)
+                        {
+                            throw;
+                        }
+
                         this.logger.LogWarning($"RunProductionEndpoint failed to accept connection: {e.ToFancyString()}");
                     }
                 }
@@ -415,7 +425,7 @@ namespace EnoEngine.FlagSubmission
             }
         }
 
-        public class TeamFlagSubmissionStatistic
+        internal class TeamFlagSubmissionStatistic
         {
 #pragma warning disable SA1401 // Fields should be private
             public long TeamId;
@@ -427,7 +437,7 @@ namespace EnoEngine.FlagSubmission
             public long OwnFlags;
 #pragma warning restore SA1401 // Fields should be private
 
-            public TeamFlagSubmissionStatistic(long teamId)
+            internal TeamFlagSubmissionStatistic(long teamId)
             {
                 this.TeamId = teamId;
                 this.OkFlags = 0;

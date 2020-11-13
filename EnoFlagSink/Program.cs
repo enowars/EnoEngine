@@ -1,4 +1,5 @@
-﻿using System;
+﻿#pragma warning disable SA1200 // Using directives should be placed correctly
+using System;
 using System.IO;
 using System.Text.Json;
 using System.Threading;
@@ -7,10 +8,11 @@ using EnoCore.Configuration;
 using EnoCore.Logging;
 using EnoCore.Models;
 using EnoDatabase;
-using EnoEngine.FlagSubmission;
+using EnoFlagSink;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+#pragma warning restore SA1200 // Using directives should be placed correctly
 
 const string mutexId = @"Global\EnoFlagSink";
 
