@@ -239,6 +239,7 @@
                     service.Name,
                     service.FlagsPerRound,
                     firstBloods
+                        .Where(sf => sf != null)
                         .Select(sf => new ScoreboardFirstBlood(
                             sf.AttackerTeamId,
                             sf.Timestamp.ToString(EnoCoreUtil.DateTimeFormat),
