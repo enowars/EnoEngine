@@ -106,6 +106,19 @@ interface CheckerResultMessage {
 ## Scoreboard API
 ```ts
 interface ScoreboardInfo {
+    dnsSuffix: string | null;                   // ".bambi.ovh"
+    services: Service[];
+    teams: ScoreboardInfoTeam[];
+}
+
+interface ScoreboardInfoTeam {
+    id: number;                                 // 40
+    name: string;                               // "teamname40"
+    logoUrl: string | null;                     // "http://..."
+    flagUrl: string | null;                     // "http://..."
+}
+
+interface Scoreboard {
     currentRound: number | null;
     startTimestamp: string | null;              // Timestamps according ISO-86-01 ("yyyy-MM-ddTHH:mm:ss.fffZ")
     startTimeEpoch: number | null;              // Unix time in seconds
@@ -114,13 +127,6 @@ interface ScoreboardInfo {
     dnsSuffix: string | null;                   // ".bambi.ovh"
     services: Service[];
     teams: Team[];
-}
-
-interface ScoreboardInfoTeam {
-    id: number;                                 // 40
-    name: string;                               // "teamname40"
-    logoUrl: string | null;                     // "http://..."
-    flagUrl: string | null;                     // "http://..."
 }
 
 interface Team {
