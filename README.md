@@ -106,49 +106,56 @@ interface CheckerResultMessage {
 ## Scoreboard API
 ```ts
 interface ScoreboardInfo {
-    CurrentRound: number | null;
-    StartTimestamp: string | null;              // Timestamps according ISO-86-01 ("yyyy-MM-ddTHH:mm:ss.fffZ")
-    StartTimeEpoch: number | null;              // Unix time in seconds
-    EndTimestamp: string | null;                // Timestamps according ISO-86-01 ("yyyy-MM-ddTHH:mm:ss.fffZ")
-    EndTimeEpoch: number | null;                // Unix time in seconds
-    Services: Service[];
-    Teams: Team[];
+    currentRound: number | null;
+    startTimestamp: string | null;              // Timestamps according ISO-86-01 ("yyyy-MM-ddTHH:mm:ss.fffZ")
+    startTimeEpoch: number | null;              // Unix time in seconds
+    endTimestamp: string | null;                // Timestamps according ISO-86-01 ("yyyy-MM-ddTHH:mm:ss.fffZ")
+    endTimeEpoch: number | null;                // Unix time in seconds
+    dnsSuffix: string | null;                   // ".bambi.ovh"
+    services: Service[];
+    teams: Team[];
+}
+
+interface ScoreboardInfoTeam {
+    id: number;                                 // 40
+    name: string;                               // "teamname40"
+    logoUrl: string | null;                     // "http://..."
+    flagUrl: string | null;                     // "http://..."
 }
 
 interface Team {
-    TeamName: string;                               //"teamname40"
-    TeamId: number;                             //40
-    TotalPoints: number;                        //2692.662622758371
-    AttackPoints: number;                       //0.0
-    LostDefensePoints: number;                  //0.0
-    ServiceLevelAgreementPoints: number;        //2692.662622758371
-    ServiceDetails: ServiceDetail[];
+    teamName: string;                           // "teamname40"
+    teamId: number;                             // 40
+    totalPoints: number;                        // 2692.662622758371
+    attackPoints: number;                       // 0.0
+    lostDefensePoints: number;                  // 0.0
+    serviceLevelAgreementPoints: number;        // 2692.662622758371
+    serviceDetails: ServiceDetail[];
 }
 
 interface ServiceDetail {
-    ServiceId: number;
-    AttackPoints: number;
-    LostDefensePoints: number;
-    ServiceLevelAgreementPoints: number;
-    ServiceStatus: string;                      // INTERNAL_ERROR,OFFLINE,MUMBLE,RECOVERING,OK,INACTIVE
-    Message: string | null;                     // Leave null for no message, otherwise the message is displayed
+    serviceId: number;                          // 0.0
+    attackPoints: number;                       // 0.0
+    lostDefensePoints: number;                  // 0.0
+    serviceLevelAgreementPoints: number;        // 0.0
+    serviceStatus: string;                      // INTERNAL_ERROR,OFFLINE,MUMBLE,RECOVERING,OK,INACTIVE
+    message: string | null;                     // Leave null for no message, otherwise the message is displayed
 }
 
 interface Service {
-    ServiceId: number;
-    ServiceName: string;
-    MaxStores: number;
-    FirstBloods: FirstBlood[];
+    serviceId: number;
+    serviceName: string;
+    maxStores: number;
+    firstBloods: FirstBlood[];
 }
 
 interface FirstBlood {
-    TeamId: number;
-    Timestamp: string;                  // Timestamps according ISO-86-01 ("yyyy-MM-ddTHH:mm:ss.fffZ")
-    TimeEpoch: number;                  // Unix time in seconds
-    RoundId: number;
-    StoreDescription: string | null;
-    StoreIndex: number;
-
+    teamId: number;
+    timestamp: string;                          // Timestamps according ISO-86-01 ("yyyy-MM-ddTHH:mm:ss.fffZ")
+    timeEpoch: number;                          // Unix time in seconds
+    roundId: number;                            // 1
+    storeDescription: string | null;            // "Private user notes"
+    storeIndex: number;                         // 0
 }
 ```
 ## Flagsubmission Endpoint:
