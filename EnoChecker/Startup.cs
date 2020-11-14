@@ -52,7 +52,7 @@
                 if (Environment.GetEnvironmentVariable("USE_ELK") != null)
                 {
                     loggingBuilder.ClearProviders();
-                    loggingBuilder.AddProvider(new EnoLogMessageConsoleLoggerProvider($"{initializerInstance}Checker"));
+                    loggingBuilder.AddProvider(new EnoLogMessageConsoleLoggerProvider($"{initializerInstance.ServiceName}Checker"));
                 }
             });
         }
