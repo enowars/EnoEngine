@@ -17,8 +17,8 @@
 
         public static void Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
             Path = args[0]; // TODO do proper configuration
+            CreateHostBuilder(args).Build().Run();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
