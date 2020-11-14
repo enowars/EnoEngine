@@ -1,11 +1,9 @@
-.git
-
-# from .gitignore
 .vs
 */bin/
 */obj/
+*/Properties/
 *.cfg
-*.json
+ctf.json
+ctf.*.json
 *.code-workspace
-data
-obj
+*.binlog
