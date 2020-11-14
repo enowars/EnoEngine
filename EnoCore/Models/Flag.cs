@@ -183,7 +183,7 @@
             }
             catch (Exception e)
             {
-                logger.LogError(e.ToFancyString());
+                logger.LogError(e.ToFancyStringWithCaller());
                 return null;
             }
         }

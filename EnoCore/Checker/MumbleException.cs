@@ -9,10 +9,8 @@
     public class MumbleException : Exception
     {
         public MumbleException(string scoreboardMessage)
+            : base(scoreboardMessage)
         {
-            this.ScoreboardMessage = scoreboardMessage;
         }
-
-        public string ScoreboardMessage { get; set; }
     }
 }

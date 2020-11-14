@@ -93,7 +93,7 @@
             }
             catch (Exception e)
             {
-                this.logger.LogError($"GameLoop failed: {e.ToFancyString()}");
+                this.logger.LogError($"GameLoop failed: {e.ToFancyStringWithCaller()}");
             }
 
             this.logger.LogInformation("GameLoop finished");

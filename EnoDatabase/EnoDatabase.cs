@@ -258,7 +258,7 @@
                 catch (Exception e)
                 {
                     await transaction.RollbackAsync();
-                    this.logger.LogDebug($"RetrievePendingCheckerTasks: Rolling Back Transaction{e.ToFancyString()}");
+                    this.logger.LogDebug($"RetrievePendingCheckerTasks: Rolling Back Transaction{e.ToFancyStringWithCaller()}");
                     throw new Exception(e.Message, e.InnerException);
                 }
             });

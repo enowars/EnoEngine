@@ -66,7 +66,7 @@
             }
             catch (Exception e)
             {
-                this.logger.LogError($"StartNewRound failed: {e.ToFancyString()}");
+                this.logger.LogError($"StartNewRound failed: {e.ToFancyStringWithCaller()}");
             }
 
             return end;

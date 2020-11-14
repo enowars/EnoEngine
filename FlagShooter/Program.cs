@@ -114,7 +114,7 @@
             }
             catch (Exception e)
             {
-                Console.WriteLine($"FlagShooter failed: {e.ToFancyString()}");
+                Console.WriteLine($"FlagShooter failed: {e.ToFancyStringWithCaller()}");
             }
         }
 
@@ -156,7 +156,7 @@
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Exception Generating flags: {e.ToFancyString()}");
+                Console.WriteLine($"Exception Generating flags: {e.ToFancyStringWithCaller()}");
                 return result;
             }
         }
@@ -179,7 +179,7 @@
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"FlagRunnerLoop retrying because: {e.ToFancyString()}");
+                    Console.WriteLine($"FlagRunnerLoop retrying because: {e.ToFancyStringWithCaller()}");
                 }
             }
         }

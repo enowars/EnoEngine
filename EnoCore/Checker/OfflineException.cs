@@ -9,10 +9,8 @@
     public class OfflineException : Exception
     {
         public OfflineException(string scoreboardMessage)
+            : base(scoreboardMessage)
         {
-            this.ScoreboardMessage = scoreboardMessage;
         }
-
-        public string ScoreboardMessage { get; set; }
     }
 }

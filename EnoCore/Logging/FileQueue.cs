@@ -57,7 +57,7 @@
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.ToFancyString());
+                    Console.WriteLine(e.ToFancyStringWithCaller());
                 }
             }
 

@@ -283,7 +283,7 @@
             {
                 if (!(e is ObjectDisposedException || e is TaskCanceledException))
                 {
-                    this.logger.LogCritical($"RunDebugEndpoint failed: {e.ToFancyString()}");
+                    this.logger.LogCritical($"RunDebugEndpoint failed: {e.ToFancyStringWithCaller()}");
                 }
             }
 
@@ -335,7 +335,7 @@
                             throw;
                         }
 
-                        this.logger.LogWarning($"RunProductionEndpoint failed to accept connection: {e.ToFancyString()}");
+                        this.logger.LogWarning($"RunProductionEndpoint failed to accept connection: {e.ToFancyStringWithCaller()}");
                     }
                 }
             }
@@ -343,7 +343,7 @@
             {
                 if (!(e is ObjectDisposedException || e is TaskCanceledException))
                 {
-                    this.logger.LogCritical($"RunProductionEndpoint failed: {e.ToFancyString()}");
+                    this.logger.LogCritical($"RunProductionEndpoint failed: {e.ToFancyStringWithCaller()}");
                 }
             }
 
@@ -378,7 +378,7 @@
                                 }
                                 catch (Exception e)
                                 {
-                                    this.logger.LogError($"InsertSubmissionsLoop dropping batch because: {e.ToFancyString()}");
+                                    this.logger.LogError($"InsertSubmissionsLoop dropping batch because: {e.ToFancyStringWithCaller()}");
                                     foreach (var (flag, attackerTeamId, tcs) in submissions)
                                     {
                                         tcs.SetResult(FlagSubmissionResult.UnknownError);
@@ -406,7 +406,7 @@
                         }
                         catch (Exception e)
                         {
-                            this.logger.LogError($"InsertSubmissionsLoop dropping batch because: {e.ToFancyString()}");
+                            this.logger.LogError($"InsertSubmissionsLoop dropping batch because: {e.ToFancyStringWithCaller()}");
                             foreach (var (flag, attackerTeamId, tcs) in submissions)
                             {
                                 tcs.SetResult(FlagSubmissionResult.UnknownError);
@@ -421,7 +421,7 @@
             }
             catch (Exception e)
             {
-                this.logger.LogCritical($"InsertSubmissionsLoop failed: {e.ToFancyString()}");
+                this.logger.LogCritical($"InsertSubmissionsLoop failed: {e.ToFancyStringWithCaller()}");
             }
         }
 

@@ -9,7 +9,7 @@
 
     public static class ExceptionExtensions
     {
-        public static string ToFancyString(this Exception e, [CallerMemberName] string memberName = "", bool full = true)
+        public static string ToFancyStringWithCaller(this Exception e, [CallerMemberName] string memberName = "", bool full = true)
         {
             string fancy = $"{memberName} failed: {e.Message} ({e.GetType()})\n{e.StackTrace}";
             if (e.InnerException != null)
@@ -20,7 +20,7 @@
             return fancy;
         }
 
-        private static string ToFancyString(this Exception e, bool full = true)
+        public static string ToFancyString(this Exception e, bool full = true)
         {
             string fancy = $"{e.Message} ({e.GetType()})\n{e.StackTrace}";
             if (e.InnerException != null)

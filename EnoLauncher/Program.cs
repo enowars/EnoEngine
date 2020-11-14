@@ -92,7 +92,7 @@
                 }
                 catch (Exception e)
                 {
-                    this.logger.LogWarning($"LauncherLoop retrying because: {e.ToFancyString()}");
+                    this.logger.LogWarning($"LauncherLoop retrying because: {e.ToFancyStringWithCaller()}");
                 }
             }
         }
@@ -170,7 +170,7 @@
             }
             catch (Exception e)
             {
-                this.logger.LogError($"{nameof(this.LaunchCheckerTask)} {task.Id} failed: {e.ToFancyString()}");
+                this.logger.LogError($"{nameof(this.LaunchCheckerTask)} {task.Id} failed: {e.ToFancyStringWithCaller()}");
                 var updatedTask = task with { CheckerResult = CheckerResult.INTERNAL_ERROR, CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done };
                 this.statistics.LogCheckerTaskFinishedMessage(updatedTask);
                 ResultsQueue.Enqueue(updatedTask);
@@ -259,7 +259,7 @@
                         }
                         catch (Exception e)
                         {
-                            this.logger.LogInformation($"UpdateDatabase retrying because: {e.ToFancyString()}");
+                            this.logger.LogInformation($"UpdateDatabase retrying because: {e.ToFancyStringWithCaller()}");
                         }
                     }
                 }
@@ -269,7 +269,7 @@
             }
             catch (Exception e)
             {
-                this.logger.LogCritical($"UpdateDatabase failed: {e.ToFancyString()}");
+                this.logger.LogCritical($"UpdateDatabase failed: {e.ToFancyStringWithCaller()}");
             }
         }
     }
