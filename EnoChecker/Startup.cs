@@ -36,7 +36,6 @@
                 throw new Exception("Could not create ICheckerInitializer");
             }
 
-            initializerInstance.Initialize(services);
             services.AddSingleton(typeof(IChecker), checkerType);
             services.AddSingleton(typeof(ICheckerInitializer), initializerInstance);
             services.AddControllers()
@@ -55,6 +54,7 @@
                     loggingBuilder.AddProvider(new EnoLogMessageConsoleLoggerProvider($"{initializerInstance.ServiceName}Checker"));
                 }
             });
+            initializerInstance.Initialize(services);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
