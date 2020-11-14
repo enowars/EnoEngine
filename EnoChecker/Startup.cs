@@ -38,6 +38,7 @@
 
             initializerInstance.Initialize(services);
             services.AddSingleton(typeof(IChecker), checkerType);
+            services.AddSingleton(typeof(ICheckerInitializer), initializerInstance);
             services.AddControllers()
                 .AddJsonOptions(jsonOptions =>
                 {
@@ -48,7 +49,7 @@
                 });
             services.AddLogging(loggingBuilder =>
             {
-                if (Environment.GetEnvironmentVariable("USE_ELK") == null)
+                if (Environment.GetEnvironmentVariable("USE_ELK") != null)
                 {
                     loggingBuilder.ClearProviders();
                     loggingBuilder.AddProvider(new EnoLogMessageConsoleLoggerProvider("GamemasterChecker"));

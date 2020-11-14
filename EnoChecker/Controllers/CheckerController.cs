@@ -23,17 +23,20 @@
     {
         private readonly ILogger logger;
         private readonly IChecker checker;
+        private readonly ICheckerInitializer checkerInitializer;
 
-        public CheckerController(ILogger<CheckerController> logger, IChecker checker)
+        public CheckerController(ILogger<CheckerController> logger, IChecker checker, ICheckerInitializer checkerInitializer)
         {
             this.logger = logger;
             this.checker = checker;
+            this.checkerInitializer = checkerInitializer;
         }
 
         [HttpPost]
         [Route("/")]
         public IActionResult Flag([FromBody] CheckerTaskMessage ctm)
         {
+            // TODO merge .RequestAborted with timer
             using var scope = this.logger.BeginEnoScope(ctm);
             this.logger.LogDebug(ctm.ToString());
             try
@@ -87,7 +90,7 @@
         [Route("/service")]
         public IActionResult Service()
         {
-            var cim = new CheckerInfoMessage("DummyChecker", 1, 1, 1);
+            var cim = new CheckerInfoMessage(this.checkerInitializer.ServiceName, 1, 1, 1);
             return this.Json(cim, null);
         }
     }
