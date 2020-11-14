@@ -24,8 +24,7 @@
         public void ConfigureServices(IServiceCollection services)
         {
             // TODO gracefully abort
-            var path = @"C:\Users\Benni\repositories\EnoEngine\SampleChecker\bin\Debug\net5.0\SampleChecker.dll";
-            var (checkerType, checkerInitializerType) = LoadCheckerFromAssembly(path);
+            var (checkerType, checkerInitializerType) = LoadCheckerFromAssembly(Program.Path!);
 
             if (checkerInitializerType.InvokeMember(
                 string.Empty,

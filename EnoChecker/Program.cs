@@ -13,9 +13,12 @@
 
     public class Program
     {
+        public static string? Path { get; internal set; }
+
         public static void Main(string[] args)
         {
             CreateHostBuilder(args).Build().Run();
+            Path = args[0]; // TODO do proper configuration
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
