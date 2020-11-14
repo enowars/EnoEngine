@@ -63,6 +63,7 @@
                     throw new Exception("invalid method");
                 }
 
+                this.logger.LogInformation($"Task {ctm.RunId} succeeded");
                 return this.Json(new CheckerResultMessage(CheckerResult.OK, null));
             }
             catch (OperationCanceledException)
