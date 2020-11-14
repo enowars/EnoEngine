@@ -1,4 +1,5 @@
 {
+    "title": "foobarctf",
     "flagValidityInRounds": 2,
     "checkedRoundsPerRound": 3,
     "roundLengthInSeconds": 60,
@@ -1030,14 +1031,14 @@
         "name": "teamname256",
         "teamSubnet": "fd00:1337:256::"
     }],
-    "Services": [{
+    "services": [{
         "id": 1,
         "name": "WASP",
         "flagsPerRoundMultiplier": 2,
         "noisesPerRoundMultiplier": 0,
         "havocsPerRoundMultiplier": 0,
         "weightFactor": 1,
-        "checkers": ["http://[::1]:3031"]
+        "checkers": ["http://[::1]:8000"]
     },{
         "id": 2,
         "name": "teapot",
@@ -1045,7 +1046,7 @@
         "noisesPerRoundMultiplier": 0,
         "havocsPerRoundMultiplier": 0,
         "weightFactor": 1,
-        "checkers": ["http://[::1]:3031"]
+        "checkers": ["http://[::1]:8000"]
     },{
         "id": 3,
         "name": "secretstore",
@@ -1053,7 +1054,7 @@
         "noisesPerRoundMultiplier": 0,
         "havocsPerRoundMultiplier": 0,
         "weightFactor": 1,
-        "checkers": ["http://[::1]:3031"]
+        "checkers": ["http://[::1]:8000"]
     },{
         "id": 4,
         "name": "socks",
@@ -1061,7 +1062,7 @@
         "noisesPerRoundMultiplier": 0,
         "havocsPerRoundMultiplier": 0,
         "weightFactor": 1,
-        "checkers": ["http://[::1]:3031"]
+        "checkers": ["http://[::1]:8000"]
     },{
         "id": 5,
         "name": "faustnotes",
@@ -1069,7 +1070,7 @@
         "noisesPerRoundMultiplier": 1,
         "havocsPerRoundMultiplier": 0,
         "weightFactor": 1,
-        "checkers": ["http://[::1]:3031"]
+        "checkers": ["http://[::1]:8000"]
     },{
         "id": 6,
         "name": "pie",
@@ -1077,7 +1078,7 @@
         "noisesPerRoundMultiplier": 1,
         "havocsPerRoundMultiplier": 0,
         "weightFactor": 1,
-        "checkers": ["http://[::1]:3031"]
+        "checkers": ["http://[::1]:8000"]
     },{
         "id": 7,
         "name": "taskk33per",
@@ -1085,7 +1086,7 @@
         "noisesPerRoundMultiplier": 1,
         "havocsPerRoundMultiplier": 0,
         "weightFactor": 1,
-        "checkers": ["http://[::1]:3031"]
+        "checkers": ["http://[::1]:8000"]
     },{
         "id": 8,
         "name": "broadcast",
@@ -1093,6 +1094,6 @@
         "noisesPerRoundMultiplier": 1,
         "havocsPerRoundMultiplier": 0,
         "weightFactor": 1,
-        "checkers": ["http://[::1]:3031"]
+        "checkers": ["http://[::1]:8000"]
     }]
 }
