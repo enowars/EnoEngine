@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 using EnoCore;
 using EnoCore.Models;
 
-namespace GamemasterChecker.Controllers
+namespace DummyChecker.Controllers
 {
     /// <summary>
     /// Dummy checker for EnoEngine tests.

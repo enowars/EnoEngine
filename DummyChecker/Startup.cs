@@ -29,14 +29,7 @@ namespace DummyChecker
                     jsonOptions.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
                     jsonOptions.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                 });
-            services.AddLogging(loggingBuilder =>
-            {
-                if (Environment.GetEnvironmentVariable("USE_ELK") != null)
-                {
-                    loggingBuilder.ClearProviders();
-                    // loggingBuilder.AddProvider(new Console("GamemasterChecker")); // TODO
-                }
-            });
+            services.AddLogging();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

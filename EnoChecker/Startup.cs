@@ -52,7 +52,7 @@
                 if (Environment.GetEnvironmentVariable("USE_ELK") != null)
                 {
                     loggingBuilder.ClearProviders();
-                    loggingBuilder.AddProvider(new EnoLogMessageConsoleLoggerProvider("GamemasterChecker"));
+                    loggingBuilder.AddProvider(new EnoLogMessageConsoleLoggerProvider($"{initializerInstance}Checker"));
                 }
             });
         }

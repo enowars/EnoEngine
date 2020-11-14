@@ -1,4 +1,4 @@
-﻿namespace GamemasterChecker.Controllers
+﻿namespace EnoChecker.Controllers
 {
     using System;
     using System.Collections.Generic;
@@ -13,9 +13,6 @@
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Logging;
 
-    /// <summary>
-    /// Dummy checker for EnoEngine tests.
-    /// </summary>
     [ApiController]
     [Route("/")]
     [Route("/service")]
