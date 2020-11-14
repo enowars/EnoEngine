@@ -31,7 +31,7 @@
 
         [HttpPost]
         [Route("/")]
-        public IActionResult Flag([FromBody] CheckerTaskMessage ctm)
+        public async Task<IActionResult> Flag([FromBody] CheckerTaskMessage ctm)
         {
             // TODO merge .RequestAborted with timer
             using var scope = this.logger.BeginEnoScope(ctm);
@@ -40,23 +40,23 @@
             {
                 if (ctm.Method == CheckerTaskMethod.putflag)
                 {
-                    this.checker.HandlePutFlag(ctm, this.HttpContext.RequestAborted);
+                    await this.checker.HandlePutFlag(ctm, this.HttpContext.RequestAborted);
                 }
                 else if (ctm.Method == CheckerTaskMethod.getflag)
                 {
-                    this.checker.HandleGetFlag(ctm, this.HttpContext.RequestAborted);
+                    await this.checker.HandleGetFlag(ctm, this.HttpContext.RequestAborted);
                 }
                 else if (ctm.Method == CheckerTaskMethod.putnoise)
                 {
-                    this.checker.HandlePutNoise(ctm, this.HttpContext.RequestAborted);
+                    await this.checker.HandlePutNoise(ctm, this.HttpContext.RequestAborted);
                 }
                 else if (ctm.Method == CheckerTaskMethod.getnoise)
                 {
-                    this.checker.HandleGetNoise(ctm, this.HttpContext.RequestAborted);
+                    await this.checker.HandleGetNoise(ctm, this.HttpContext.RequestAborted);
                 }
                 else if (ctm.Method == CheckerTaskMethod.havoc)
                 {
-                    this.checker.HandleHavoc(ctm, this.HttpContext.RequestAborted);
+                    await this.checker.HandleHavoc(ctm, this.HttpContext.RequestAborted);
                 }
                 else
                 {
