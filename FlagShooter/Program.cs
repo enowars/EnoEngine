@@ -10,6 +10,7 @@
     using System.Net.Sockets;
     using System.Text;
     using System.Text.Json;
+    using System.Text.Json.Serialization;
     using System.Threading;
     using System.Threading.Channels;
     using System.Threading.Tasks;
@@ -195,7 +196,13 @@
             try
             {
                 var content = File.ReadAllText(fileName);
-                sb = JsonSerializer.Deserialize<Scoreboard>(content);
+                sb = JsonSerializer.Deserialize<Scoreboard>(content, new JsonSerializerOptions()
+                {
+                    AllowTrailingCommas = true,
+                    ReadCommentHandling = JsonCommentHandling.Skip,
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    Converters = { new JsonStringEnumConverter() },
+                });
             }
             catch (Exception e)
             {
