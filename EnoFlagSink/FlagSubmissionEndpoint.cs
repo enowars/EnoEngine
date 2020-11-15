@@ -378,10 +378,11 @@
                                 }
                                 catch (Exception e)
                                 {
-                                    this.logger.LogError($"InsertSubmissionsLoop dropping batch because: {e.ToFancyStringWithCaller()}");
+                                    this.logger.LogError($"InsertSubmissionsLoop dropping batch because: {e.ToFancyString()}");
                                     foreach (var (flag, attackerTeamId, tcs) in submissions)
                                     {
-                                        tcs.SetResult(FlagSubmissionResult.UnknownError);
+                                        // The tcs might already be completed in ProcessSubmissionsBatch, so we TrySetResult
+                                        tcs.TrySetResult(FlagSubmissionResult.UnknownError);
                                     }
                                 }
                                 finally
@@ -406,10 +407,11 @@
                         }
                         catch (Exception e)
                         {
-                            this.logger.LogError($"InsertSubmissionsLoop dropping batch because: {e.ToFancyStringWithCaller()}");
+                            this.logger.LogError($"InsertSubmissionsLoop dropping batch because: {e.ToFancyString()}");
                             foreach (var (flag, attackerTeamId, tcs) in submissions)
                             {
-                                tcs.SetResult(FlagSubmissionResult.UnknownError);
+                                // The tcs might already be completed in ProcessSubmissionsBatch, so we TrySetResult
+                                tcs.TrySetResult(FlagSubmissionResult.UnknownError);
                             }
                         }
                     }
@@ -429,7 +431,6 @@
         {
 #pragma warning disable SA1401 // Fields should be private
             public long TeamId;
-
             public long OkFlags;
             public long DuplicateFlags;
             public long OldFlags;
