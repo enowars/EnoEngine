@@ -1,4 +1,4 @@
-name: EnoChecker Nightly Image
+name: EnoChecker Docker Image (nightly)
 
 on:
   push:

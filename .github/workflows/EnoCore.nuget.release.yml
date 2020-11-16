@@ -24,8 +24,6 @@ jobs:
       run: dotnet build --configuration Release --no-restore -warnaserror
     - name: Test
       run: dotnet test --no-restore --verbosity normal
-    - name: Test
-      run: dotnet test --no-restore --verbosity normal
     - name: Pack
       run: dotnet pack -c Release EnoCore
     - name: Push

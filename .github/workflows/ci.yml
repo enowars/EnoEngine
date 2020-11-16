@@ -1,4 +1,4 @@
-name: .NET Core
+name: CI Tests
 
 on:
   push:
@@ -28,16 +28,3 @@ jobs:
       run: dotnet build --configuration Release --no-restore -warnaserror
     - name: Test
       run: dotnet test --no-restore --verbosity normal
-
-  format:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: '5.0.100-rc.2.20479.15'
-    - name: install dotnet format
-      run: dotnet tool install -g dotnet-format
-    #- name: dotnet format
-    #  run: dotnet format
