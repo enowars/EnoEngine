@@ -1,17 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <PackageProjectUrl>https://github.com/enowars/EnoEngine</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/enowars/EnoEngine</RepositoryUrl>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <EmbedUntrackedSources>true</EmbedUntrackedSources>
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <Version>0.0.8</Version>
-    <CodeAnalysisRuleSet>../ENOWARS.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 
   <ItemGroup>

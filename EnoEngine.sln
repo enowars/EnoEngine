@@ -25,13 +25,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EnoFlagSink", "EnoFlagSink\
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D1345D92-C3B5-4D2C-B3C1-CF80111B1B16}"
 	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
 		ENOWARS.ruleset = ENOWARS.ruleset
 		stylecop.json = stylecop.json
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EnoChecker", "EnoChecker\EnoChecker.csproj", "{40DCE6CF-85BE-440C-B62B-4FC075DD8843}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleChecker", "SampleChecker\SampleChecker.csproj", "{F9A0382D-76C6-48D3-A0CA-CD5E290AD8FB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleChecker", "SampleChecker\SampleChecker.csproj", "{F9A0382D-76C6-48D3-A0CA-CD5E290AD8FB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

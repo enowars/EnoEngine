@@ -2,10 +2,6 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net5.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <CodeAnalysisRuleSet>../ENOWARS.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 
   <ItemGroup>
