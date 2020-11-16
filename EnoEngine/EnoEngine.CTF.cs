@@ -41,18 +41,18 @@
                 this.logger.LogInformation($"CreateNewRound for {newRound.Id} finished ({stopwatch.ElapsedMilliseconds}ms)");
 
                 // insert put tasks
-                var insertPutNewFlagsTask = EnoDatabaseUtil.RetryScopedDatabaseAction(this.serviceProvider, db => db.InsertPutFlagsTasks(newRound, this.configuration));
-                var insertPutNewNoisesTask = EnoDatabaseUtil.RetryScopedDatabaseAction(this.serviceProvider, db => db.InsertPutNoisesTasks(newRound, this.configuration));
-                var insertHavocsTask = EnoDatabaseUtil.RetryScopedDatabaseAction(this.serviceProvider, db => db.InsertHavocsTasks(newRound, this.configuration));
+                var insertPutNewFlagsTask = this.databaseUtil.RetryScopedDatabaseAction(this.serviceProvider, db => db.InsertPutFlagsTasks(newRound, this.configuration));
+                var insertPutNewNoisesTask = this.databaseUtil.RetryScopedDatabaseAction(this.serviceProvider, db => db.InsertPutNoisesTasks(newRound, this.configuration));
+                var insertHavocsTask = this.databaseUtil.RetryScopedDatabaseAction(this.serviceProvider, db => db.InsertHavocsTasks(newRound, this.configuration));
 
                 await insertPutNewFlagsTask;
                 await insertPutNewNoisesTask;
                 await insertHavocsTask;
 
                 // insert get tasks
-                var insertRetrieveCurrentFlagsTask = EnoDatabaseUtil.RetryScopedDatabaseAction(this.serviceProvider, db => db.InsertRetrieveCurrentFlagsTasks(newRound, this.configuration));
-                var insertRetrieveOldFlagsTask = EnoDatabaseUtil.RetryScopedDatabaseAction(this.serviceProvider, db => db.InsertRetrieveOldFlagsTasks(newRound, this.configuration));
-                var insertGetCurrentNoisesTask = EnoDatabaseUtil.RetryScopedDatabaseAction(this.serviceProvider, db => db.InsertRetrieveCurrentNoisesTasks(newRound, this.configuration));
+                var insertRetrieveCurrentFlagsTask = this.databaseUtil.RetryScopedDatabaseAction(this.serviceProvider, db => db.InsertRetrieveCurrentFlagsTasks(newRound, this.configuration));
+                var insertRetrieveOldFlagsTask = this.databaseUtil.RetryScopedDatabaseAction(this.serviceProvider, db => db.InsertRetrieveOldFlagsTasks(newRound, this.configuration));
+                var insertGetCurrentNoisesTask = this.databaseUtil.RetryScopedDatabaseAction(this.serviceProvider, db => db.InsertRetrieveCurrentNoisesTasks(newRound, this.configuration));
 
                 await insertRetrieveCurrentFlagsTask;
                 await insertRetrieveOldFlagsTask;
@@ -87,7 +87,7 @@
 
             var jsonStopWatch = new Stopwatch();
             jsonStopWatch.Start();
-            var scoreboard = await EnoDatabaseUtil.RetryScopedDatabaseAction(
+            var scoreboard = await this.databaseUtil.RetryScopedDatabaseAction(
                 this.serviceProvider,
                 db => db.GetCurrentScoreboard(roundId));
             var json = JsonSerializer.Serialize(scoreboard, EnoCoreUtil.CamelCaseEnumConverterOptions);
@@ -104,7 +104,7 @@
             stopWatch.Start();
             try
             {
-                await EnoDatabaseUtil.RetryScopedDatabaseAction(
+                await this.databaseUtil.RetryScopedDatabaseAction(
                     this.serviceProvider,
                     db => db.CalculateTotalPoints());
             }
@@ -127,7 +127,7 @@
             stopWatch.Start();
             try
             {
-                var (newLatestSnapshotRoundId, oldSnapshotRoundId, services, teams) = await EnoDatabaseUtil.RetryScopedDatabaseAction(
+                var (newLatestSnapshotRoundId, oldSnapshotRoundId, services, teams) = await this.databaseUtil.RetryScopedDatabaseAction(
                     this.serviceProvider,
                     db => db.GetPointCalculationFrame(roundId, this.configuration));
 
@@ -136,7 +136,7 @@
                 {
                     servicePointsTasks.Add(Task.Run(async () =>
                     {
-                        await EnoDatabaseUtil.RetryScopedDatabaseAction(
+                        await this.databaseUtil.RetryScopedDatabaseAction(
                             this.serviceProvider,
                             db => db.CalculateTeamServicePoints(teams, roundId, service, oldSnapshotRoundId, newLatestSnapshotRoundId));
                     }));
@@ -163,7 +163,7 @@
             stopWatch.Start();
             try
             {
-                await EnoDatabaseUtil.RetryScopedDatabaseAction(
+                await this.databaseUtil.RetryScopedDatabaseAction(
                     this.serviceProvider,
                     db => db.CalculateRoundTeamServiceStates(this.serviceProvider, roundId, this.statistics));
             }

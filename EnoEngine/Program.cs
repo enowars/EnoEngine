@@ -92,6 +92,7 @@ try
     var serviceProvider = new ServiceCollection()
         .AddLogging()
         .AddSingleton(configuration)
+        .AddSingleton(typeof(EnoDatabaseUtil))
         .AddSingleton(new EnoStatistics(nameof(EnoEngine)))
         .AddScoped<IEnoDatabase, EnoDatabase.EnoDatabase>()
         .AddSingleton<EnoEngine.EnoEngine>()

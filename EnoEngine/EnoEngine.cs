@@ -27,13 +27,15 @@
         private readonly ILogger logger;
         private readonly Configuration configuration;
         private readonly IServiceProvider serviceProvider;
+        private readonly EnoDatabaseUtil databaseUtil;
         private readonly EnoStatistics statistics;
 
-        public EnoEngine(ILogger<EnoEngine> logger, Configuration configuration, IServiceProvider serviceProvider, EnoStatistics enoStatistics)
+        public EnoEngine(ILogger<EnoEngine> logger, Configuration configuration, IServiceProvider serviceProvider, EnoDatabaseUtil databaseUtil, EnoStatistics enoStatistics)
         {
             this.logger = logger;
             this.configuration = configuration;
             this.serviceProvider = serviceProvider;
+            this.databaseUtil = databaseUtil;
             this.statistics = enoStatistics;
         }
 
@@ -54,7 +56,7 @@
         internal async Task RunRecalculation()
         {
             this.logger.LogInformation("RunRecalculation()");
-            var lastFinishedRound = await EnoDatabaseUtil.RetryScopedDatabaseAction(
+            var lastFinishedRound = await this.databaseUtil.RetryScopedDatabaseAction(
                 this.serviceProvider,
                 db => db.PrepareRecalculation());
 
@@ -101,7 +103,7 @@
 
         private async Task AwaitOldRound()
         {
-            var lastRound = await EnoDatabaseUtil.RetryScopedDatabaseAction(
+            var lastRound = await this.databaseUtil.RetryScopedDatabaseAction(
                 this.serviceProvider,
                 db => db.GetLastRound());
 

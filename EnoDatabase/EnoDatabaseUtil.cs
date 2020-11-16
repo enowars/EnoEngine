@@ -15,13 +15,21 @@
     using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
+    using EnoCore;
     using EnoCore.Models;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
 
     public class EnoDatabaseUtil
     {
-        public static async Task RetryScopedDatabaseAction(IServiceProvider serviceProvider, Func<IEnoDatabase, Task> function)
+        private readonly ILogger<EnoDatabaseUtil> logger;
+
+        public EnoDatabaseUtil(ILogger<EnoDatabaseUtil> logger)
+        {
+            this.logger = logger;
+        }
+
+        public async Task RetryScopedDatabaseAction(IServiceProvider serviceProvider, Func<IEnoDatabase, Task> function)
         {
             Exception? lastException = null;
             for (int i = 0; i < EnoDatabaseContext.DatabaseRetries; i++)
@@ -35,19 +43,20 @@
                 }
                 catch (SocketException e)
                 {
+                    this.logger.LogError($"{nameof(this.RetryScopedDatabaseAction)} caught an exception: {e.ToFancyString()}");
                     lastException = e;
                 }
                 catch (IOException e)
                 {
+                    this.logger.LogError($"{nameof(this.RetryScopedDatabaseAction)} caught an exception: {e.ToFancyString()}");
                     lastException = e;
                 }
             }
-#pragma warning disable CS8597
-            throw lastException;
-#pragma warning restore CS8597
+
+            throw new Exception($"{nameof(this.RetryScopedDatabaseAction)} giving up after {EnoDatabaseContext.DatabaseRetries} retries", lastException);
         }
 
-        public static async Task<T> RetryScopedDatabaseAction<T>(IServiceProvider serviceProvider, Func<IEnoDatabase, Task<T>> function)
+        public async Task<T> RetryScopedDatabaseAction<T>(IServiceProvider serviceProvider, Func<IEnoDatabase, Task<T>> function)
         {
             Exception? lastException = null;
             for (int i = 0; i < EnoDatabaseContext.DatabaseRetries; i++)
@@ -60,16 +69,17 @@
                 }
                 catch (SocketException e)
                 {
+                    this.logger.LogError($"{nameof(this.RetryScopedDatabaseAction)} caught an exception: {e.ToFancyString()}");
                     lastException = e;
                 }
                 catch (IOException e)
                 {
+                    this.logger.LogError($"{nameof(this.RetryScopedDatabaseAction)} caught an exception: {e.ToFancyString()}");
                     lastException = e;
                 }
             }
-#pragma warning disable CS8597
-            throw lastException;
-#pragma warning restore CS8597
+
+            throw new Exception($"{nameof(this.RetryScopedDatabaseAction)} giving up after {EnoDatabaseContext.DatabaseRetries} retries", lastException);
         }
     }
 }

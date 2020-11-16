@@ -30,17 +30,20 @@
         private readonly TcpListener debugListener = new TcpListener(IPAddress.IPv6Any, 1338);
         private readonly ILogger logger;
         private readonly Configuration configuration;
+        private readonly EnoDatabaseUtil databaseUtil;
         private readonly IServiceProvider serviceProvider;
         private readonly EnoStatistics enoStatistics;
 
-        public FlagSubmissionEndpoint(IServiceProvider serviceProvider, ILogger<FlagSubmissionEndpoint> logger, Configuration configuration, EnoStatistics enoStatistics)
+        public FlagSubmissionEndpoint(IServiceProvider serviceProvider, ILogger<FlagSubmissionEndpoint> logger, Configuration configuration, EnoDatabaseUtil databaseUtil, EnoStatistics enoStatistics)
         {
+            this.serviceProvider = serviceProvider;
             this.logger = logger;
             this.configuration = configuration;
+            this.databaseUtil = databaseUtil;
             this.enoStatistics = enoStatistics;
             this.productionListener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
             this.debugListener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
-            this.serviceProvider = serviceProvider;
+
             foreach (var team in configuration.Teams)
             {
                 this.channels[team.Id] = Channel.CreateBounded<(Flag, TaskCompletionSource<FlagSubmissionResult>)>(new BoundedChannelOptions(100) { SingleReader = false, SingleWriter = false });
@@ -312,7 +315,7 @@
                                 var attackerAddress = ((IPEndPoint)client.Client.RemoteEndPoint!).Address.GetAddressBytes();
                                 var attackerPrefix = new byte[this.configuration.TeamSubnetBytesLength];
                                 Array.Copy(attackerAddress, attackerPrefix, this.configuration.TeamSubnetBytesLength);
-                                var team = await EnoDatabaseUtil.RetryScopedDatabaseAction(
+                                var team = await this.databaseUtil.RetryScopedDatabaseAction(
                                     this.serviceProvider,
                                     db => db.GetTeamIdByPrefix(attackerPrefix));
                                 if (team != null)
@@ -372,7 +375,7 @@
                             {
                                 try
                                 {
-                                    await EnoDatabaseUtil.RetryScopedDatabaseAction(
+                                    await this.databaseUtil.RetryScopedDatabaseAction(
                                         this.serviceProvider,
                                         db => db.ProcessSubmissionsBatch(submissions, this.configuration.FlagValidityInRounds, this.enoStatistics));
                                 }
@@ -401,7 +404,7 @@
                     {
                         try
                         {
-                            await EnoDatabaseUtil.RetryScopedDatabaseAction(
+                            await this.databaseUtil.RetryScopedDatabaseAction(
                                 this.serviceProvider,
                                 db => db.ProcessSubmissionsBatch(submissions, this.configuration.FlagValidityInRounds, this.enoStatistics));
                         }

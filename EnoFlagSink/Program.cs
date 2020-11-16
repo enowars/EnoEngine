@@ -65,6 +65,7 @@ try
     var serviceProvider = new ServiceCollection()
         .AddLogging()
         .AddSingleton(configuration)
+        .AddSingleton(typeof(EnoDatabaseUtil))
         .AddSingleton<FlagSubmissionEndpoint>()
         .AddSingleton(new EnoStatistics("EnoFlagSink"))
         .AddScoped<IEnoDatabase, EnoDatabase.EnoDatabase>()

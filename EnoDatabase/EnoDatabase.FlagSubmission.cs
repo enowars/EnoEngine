@@ -40,7 +40,7 @@
                 var tResult = result;
                 if (flag.RoundId + flagValidityInRounds < currentRoundId)
                 {
-                    tResult.SetResult(FlagSubmissionResult.Old);
+                    tResult.TrySetResult(FlagSubmissionResult.Old);
                     oldFlags += 1;
                     continue;
                 }
@@ -52,7 +52,7 @@
 
                 if (updates.TryGetValue((flag.ServiceId, flag.RoundId, flag.OwnerId, flag.RoundOffset, attackerTeamId), out var entry))
                 {
-                    tResult.SetResult(FlagSubmissionResult.Duplicate);
+                    tResult.TrySetResult(FlagSubmissionResult.Duplicate);
                     entry += 1;
                     duplicateFlags += 1;
                 }
@@ -104,31 +104,20 @@
                 submittedFlagsStatement.Length--; // Pointers are fun!
                 submittedFlagsStatement.Append($"\non conflict (\"{nameof(SubmittedFlag.FlagServiceId)}\", \"{nameof(SubmittedFlag.FlagRoundId)}\", \"{nameof(SubmittedFlag.FlagOwnerId)}\", \"{nameof(SubmittedFlag.FlagRoundOffset)}\", \"{nameof(SubmittedFlag.AttackerTeamId)}\") do update set \"{nameof(SubmittedFlag.SubmissionsCount)}\" = \"{nameof(EnoDatabaseContext.SubmittedFlags)}\".\"{nameof(SubmittedFlag.SubmissionsCount)}\" + excluded.\"{nameof(SubmittedFlag.SubmissionsCount)}\" returning \"{nameof(SubmittedFlag.FlagServiceId)}\", \"{nameof(SubmittedFlag.FlagOwnerId)}\", \"{nameof(SubmittedFlag.FlagRoundId)}\", \"{nameof(SubmittedFlag.FlagRoundOffset)}\", \"{nameof(SubmittedFlag.AttackerTeamId)}\", \"{nameof(SubmittedFlag.RoundId)}\", \"{nameof(SubmittedFlag.SubmissionsCount)}\", \"{nameof(SubmittedFlag.Timestamp)}\";");
 
-                using var transaction = this.context.Database.BeginTransaction();
-                try
+                var newSubmissions = await this.context.SubmittedFlags.FromSqlRaw(submittedFlagsStatement.ToString()).ToArrayAsync();
+                foreach (var newSubmission in newSubmissions)
                 {
-                    var newSubmissions = await this.context.SubmittedFlags.FromSqlRaw(submittedFlagsStatement.ToString()).ToArrayAsync();
-                    foreach (var newSubmission in newSubmissions)
+                    var tResult = waitingTasks[(newSubmission.FlagServiceId, newSubmission.FlagRoundId, newSubmission.FlagOwnerId, newSubmission.FlagRoundOffset, newSubmission.AttackerTeamId)];
+                    if (newSubmission.SubmissionsCount == 1)
                     {
-                        var tResult = waitingTasks[(newSubmission.FlagServiceId, newSubmission.FlagRoundId, newSubmission.FlagOwnerId, newSubmission.FlagRoundOffset, newSubmission.AttackerTeamId)];
-                        if (newSubmission.SubmissionsCount == 1)
-                        {
-                            okFlags += 1;
-                            tResult.SetResult(FlagSubmissionResult.Ok);
-                        }
-                        else
-                        {
-                            duplicateFlags += 1;
-                            tResult.SetResult(FlagSubmissionResult.Duplicate);
-                        }
+                        okFlags += 1;
+                        tResult.TrySetResult(FlagSubmissionResult.Ok);
                     }
-
-                    await transaction.CommitAsync();
-                }
-                catch (Exception e)
-                {
-                    await transaction.RollbackAsync();
-                    throw new Exception($"Rollbacking Transaction in {nameof(this.ProcessSubmissionsBatch)}", e);
+                    else
+                    {
+                        duplicateFlags += 1;
+                        tResult.TrySetResult(FlagSubmissionResult.Duplicate);
+                    }
                 }
 
                 stopWatch.Stop();
