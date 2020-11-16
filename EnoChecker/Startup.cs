@@ -36,8 +36,8 @@
                 throw new Exception("Could not create ICheckerInitializer");
             }
 
-            services.AddSingleton(typeof(IChecker), checkerType);
-            services.AddSingleton(typeof(ICheckerInitializer), initializerInstance);
+            services.AddScoped(typeof(IChecker), checkerType);
+            services.AddScoped(typeof(ICheckerInitializer), checkerInitializerType);
             services.AddControllers()
                 .AddJsonOptions(jsonOptions =>
                 {
