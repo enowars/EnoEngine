@@ -18,12 +18,6 @@
             logger.LogInformation($"SampleChecker {sampleSingleton}");
         }
 
-        public int FlagsPerRound => 1;
-
-        public int NoisesPerRound => 1;
-
-        public int HavocsPerRound => 1;
-
         public Task HandleGetFlag(CheckerTaskMessage task, CancellationToken token)
         {
             this.logger.LogDebug($"{nameof(this.HandleGetFlag)}");

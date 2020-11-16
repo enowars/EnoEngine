@@ -92,7 +92,7 @@
         [Route("/service")]
         public IActionResult Service()
         {
-            var cim = new CheckerInfoMessage(this.checkerInitializer.ServiceName, this.checker.FlagsPerRound, this.checker.NoisesPerRound, this.checker.HavocsPerRound);
+            var cim = new CheckerInfoMessage(this.checkerInitializer.ServiceName, this.checkerInitializer.FlagsPerRound, this.checkerInitializer.NoisesPerRound, this.checkerInitializer.HavocsPerRound);
             return this.Json(cim, null);
         }
     }

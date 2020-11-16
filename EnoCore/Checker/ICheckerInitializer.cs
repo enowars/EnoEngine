@@ -9,6 +9,12 @@
 
     public interface ICheckerInitializer
     {
+        int FlagsPerRound { get; }
+
+        int NoisesPerRound { get; }
+
+        int HavocsPerRound { get; }
+
         public string ServiceName { get; }
 
         public void Initialize(IServiceCollection collection);

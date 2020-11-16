@@ -10,6 +10,12 @@
 
     public class SampleCheckerInitializer : ICheckerInitializer
     {
+        public int FlagsPerRound => 1;
+
+        public int NoisesPerRound => 1;
+
+        public int HavocsPerRound => 1;
+
         public string ServiceName => "Sample";
 
         public void Initialize(IServiceCollection collection)
