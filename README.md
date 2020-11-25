@@ -8,7 +8,7 @@ For performance reasons, it's written in C#.
 (0. Make sure the dependencies are installed: docker, docker-compose, dotnet sdk ...)
 1. Create a ctf.json (see below)
 2. Make sure the data folder exists (./../data/)
-3. Start up the Database (`docker-compose up -d`)
+3. Start up the Database (`docker-compose up -d`) (or run `tmux.sh`)
 4. Run EnoLauncher (`dotnet run -c Release -p EnoLauncher`)
 5. Run EnoFlagSink (`dotnet run -c Release -p EnoFlagSink`)
 6. Once you want to start the CTF (i.e. distribute flags): run EnoEngine (`dotnet run -c Release -p EnoEngine`)
