@@ -34,4 +34,4 @@ jobs:
           echo IMAGE_ID=$IMAGE_ID
           
           docker tag $IMAGE_NAME:nightly $IMAGE_ID:nightly
-          docker push $IMAGE_ID
+          docker push $IMAGE_ID:nightly
