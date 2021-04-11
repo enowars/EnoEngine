@@ -127,9 +127,9 @@
             try
             {
                 long i = 0;
-                if (sb != null && sb.CurrentRound != null && sb.CurrentRound > 0)
+                if (sb != null && sb.CurrentRound > 0)
                 {
-                    for (long r = sb.CurrentRound.Value; r > Math.Max(sb.CurrentRound.Value - this.configuration.FlagValidityInRounds, 0); r--)
+                    for (long r = sb.CurrentRound; r > Math.Max(sb.CurrentRound - this.configuration.FlagValidityInRounds, 0); r--)
                     {
                         for (int team = 0; team < this.configuration.Teams.Count; team++)
                         {

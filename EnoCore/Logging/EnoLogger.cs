@@ -14,12 +14,14 @@
         private readonly string categoryName;
         private readonly IEnoLogMessageProvider provider;
         private readonly string tool;
+        private readonly string? serviceName;
 
-        public EnoLogger(IEnoLogMessageProvider provider, string categoryName, string tool)
+        public EnoLogger(IEnoLogMessageProvider provider, string categoryName, string tool, string? serviceName = null)
         {
             this.provider = provider;
             this.categoryName = categoryName;
             this.tool = tool;
+            this.serviceName = serviceName;
         }
 
         public static string GetSeverity(LogLevel logLevel)
@@ -150,7 +152,7 @@
                         message,
                         null,
                         null,
-                        null,
+                        this.serviceName,
                         null);
                     this.provider.Log($"##ENOLOGMESSAGE {JsonSerializer.Serialize(enoLogMessage, EnoCoreUtil.CamelCaseEnumConverterOptions)}\n");
                 }

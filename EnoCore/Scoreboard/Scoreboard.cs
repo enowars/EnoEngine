@@ -8,7 +8,7 @@
     using EnoCore.Models;
 
     public record Scoreboard(
-        long? CurrentRound,
+        long CurrentRound,
         string? StartTimestamp,
         double? StartTimeEpoch,
         string? EndTimestamp,
