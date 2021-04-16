@@ -257,6 +257,8 @@
                 scoreboardTeams.Add(new ScoreboardTeam(
                     team.Name,
                     team.Id,
+                    team.LogoUrl,
+                    team.CountryCode,
                     team.TotalPoints,
                     team.AttackPoints,
                     team.DefensePoints,

@@ -219,8 +219,14 @@ namespace EnoDatabase.Migrations
                     b.Property<double>("AttackPoints")
                         .HasColumnType("double precision");
 
+                    b.Property<string>("CountryCode")
+                        .HasColumnType("text");
+
                     b.Property<double>("DefensePoints")
                         .HasColumnType("double precision");
+
+                    b.Property<string>("LogoUrl")
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .IsRequired()

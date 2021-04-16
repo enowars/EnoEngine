@@ -33,6 +33,8 @@
     public record ScoreboardTeam(
         string Name,
         long TeamId,
+        string? LogoUrl,
+        string? CountryCode,
         double TotalPoints,
         double AttackPoints,
         double LostDefensePoints,

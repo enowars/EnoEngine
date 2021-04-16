@@ -10,6 +10,8 @@
 #pragma warning disable SA1516 // Elements should be separated by blank line
         public long Id { get; set; }
         public string Name { get; set; }
+        public string? LogoUrl { get; set; }
+        public string? CountryCode { get; set; }
         public byte[] TeamSubnet { get; set; }
         public double TotalPoints { get; set; }
         public double AttackPoints { get; set; }
