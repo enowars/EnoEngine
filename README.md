@@ -114,7 +114,7 @@ interface ScoreboardInfoTeam {
     id: number;                                 // The id of the team.
     name: string;                               // The name of the team.
     logoUrl: string | null;                     // An URL with the team's logo, or null.
-    countryCode: string | null;                 // The ISO 3166-1 alpha-2 country code, or null.
+    countryCode: string | null;                 // The ISO 3166-1 alpha-2 country code (uppercase), or null.
 }
 
 interface Scoreboard {
