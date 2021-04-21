@@ -91,7 +91,7 @@ interface CheckerTaskMessage {
     variantId: number;                          // The variant id of the task. Used to support different flag and noise methods.
     timeout: number;                            // Timeout in milliseconds.
     roundLength: number;                        // Round length in milliseconds.
-    taskContextId: string;                      // The unique identifier of a set of related tasks (i.e. putflag and its getflags, and putnoise and its getnoises, and individual havocs.). Always composed in the following way: "{flag|noise|havoc_s{serviceId}_r{roundId}_t{teamId}_i{index}", and should be used as your database index.
+    taskChainId: string;                        // The unique identifier of a set of related tasks (i.e. putflag and its getflags, and putnoise and its getnoises, and individual havocs.). Always composed in the following way: "{flag|noise|havoc_s{serviceId}_r{roundId}_t{teamId}_i{index}", and should be used as your database index.
 }
 ```
 Response:
