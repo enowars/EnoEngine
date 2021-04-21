@@ -120,9 +120,7 @@ interface ScoreboardInfoTeam {
 interface Scoreboard {
     currentRoundId: number | null;
     startTimestamp: string | null;              // Start timestamp of the current round according to ISO-86-01 ("yyyy-MM-ddTHH:mm:ss.fffZ") in UTC.
-    startTimeEpoch: number | null;              // Start timestamp of the current round as unix time in seconds.
     endTimestamp: string | null;                // End timestamp of the current round according to ISO-86-01 ("yyyy-MM-ddTHH:mm:ss.fffZ") in UTC.
-    endTimeEpoch: number | null;                // End timestamp of the current round as unix time in seconds.
     dnsSuffix: string | null;                   // The DNS suffix (including the leading dot), if DNS is used. Example: ".bambi.ovh"
     services: Service[];
     teams: Team[];
@@ -158,7 +156,6 @@ interface FirstBlood {
     teamId: number;                             // The id of the team that scored the firstblood.
     teamName: number;                           // The name of the team that scored the firstblood.
     timestamp: string;                          // Timestamp according to ISO-86-01 ("yyyy-MM-ddTHH:mm:ss.fffZ") in UTC.
-    timeEpoch: number;                          // Timestamp as unix time in seconds.
     roundId: number;                            // The id of the round in which the firstblood was submitted.
     flagVariantId: number;                      // The id of the variant.
 }
