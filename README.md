@@ -44,7 +44,7 @@ interface Team {
     address: string | null;
     teamSubnet: string;
     logoUrl: string | null;
-    countryFlagUrl: string | null;
+    countryCode: string | null;
     active: string | null;
 }
 ```
@@ -80,25 +80,24 @@ interface CheckerInfoMessage {
 Parameter:
 ```ts
 interface CheckerTaskMessage {
-    runId: number;
-    method: string;
-    address: string;
-    serviceId: number;
-    serviceName: string;
-    teamId: number;
-    teamName: string;
-    roundId: number;
-    relatedRoundId: number;
-    flag: string | null;
-    flagIndex: number;
-    timeout: number;                            // Timeout in miliseconds
-    roundLength: number;                        // Round Length in seconds
+    taskId: number;                             // The per-ctf unique id of a task.
+    method: string;                             // "putflag", "getflag", "putnoise", "getnoise" or "havoc".
+    address: string;                            // The address of the target team's vulnbox. Can be either an IP address or a valid hostname.
+    teamId: number;                             // The id of the target team.
+    teamName: string;                           // The name of the target team.
+    currentRoundId: number;                     // The id of the current round.
+    relatedRoundId: number;                     // The id of the round in which the "putflag", "putnoise" or "havoc" happened.
+    flag: string | null;                        // The flag for putflag and getflag, otherwise null.
+    variantId: number;                          // The variant id of the task. Used to support different flag and noise methods.
+    timeout: number;                            // Timeout in milliseconds.
+    roundLength: number;                        // Round length in milliseconds.
+    taskContextId: string;                      // The unique identifier of a set of related tasks (i.e. putflag and its getflags, and putnoise and its getnoises, and individual havocs.). Always composed in the following way: "{flag|noise|havoc_s{serviceId}_r{roundId}_t{teamId}_i{index}".
 }
 ```
 Response:
 ```ts
 interface CheckerResultMessage {
-    result: string;                             // "INTERNAL_ERROR", "OK", MUMBLE", or "OFFLINE"
+    result: string;                             // "INTERNAL_ERROR", "OK", MUMBLE", or "OFFLINE".
     message: string | null;
 }
 ```
@@ -106,62 +105,61 @@ interface CheckerResultMessage {
 ## Scoreboard API
 ```ts
 interface ScoreboardInfo {
-    dnsSuffix: string | null;                   // ".bambi.ovh"
+    dnsSuffix: string | null;                   // The DNS suffix, if DNS is used. Example: ".bambi.ovh"
     services: Service[];
     teams: ScoreboardInfoTeam[];
 }
 
 interface ScoreboardInfoTeam {
-    id: number;                                 // 40
-    name: string;                               // "teamname40"
-    logoUrl: string | null;                     // "http://..."
-    flagUrl: string | null;                     // "http://..."
+    id: number;                                 // The id of the team.
+    name: string;                               // The name of the team.
+    logoUrl: string | null;                     // An URL with the team's logo, or null.
+    countryCode: string | null;                 // The ISO 3166-1 alpha-2 country code, or null.
 }
 
 interface Scoreboard {
-    currentRound: number | null;
-    startTimestamp: string | null;              // Timestamps according ISO-86-01 ("yyyy-MM-ddTHH:mm:ss.fffZ")
-    startTimeEpoch: number | null;              // Unix time in seconds
-    endTimestamp: string | null;                // Timestamps according ISO-86-01 ("yyyy-MM-ddTHH:mm:ss.fffZ")
-    endTimeEpoch: number | null;                // Unix time in seconds
-    dnsSuffix: string | null;                   // ".bambi.ovh"
+    currentRoundId: number | null;
+    startTimestamp: string | null;              // Start timestamp of the current round according to ISO-86-01 ("yyyy-MM-ddTHH:mm:ss.fffZ") in UTC.
+    startTimeEpoch: number | null;              // Start timestamp of the current round as unix time in seconds.
+    endTimestamp: string | null;                // End timestamp of the current round according to ISO-86-01 ("yyyy-MM-ddTHH:mm:ss.fffZ") in UTC.
+    endTimeEpoch: number | null;                // End timestamp of the current round as unix time in seconds.
+    dnsSuffix: string | null;                   // The DNS suffix, if DNS is used. Example: ".bambi.ovh"
     services: Service[];
     teams: Team[];
 }
 
 interface Team {
-    teamName: string;                           // "teamname40"
-    teamId: number;                             // 40
-    totalPoints: number;                        // 2692.662622758371
-    attackPoints: number;                       // 0.0
-    lostDefensePoints: number;                  // 0.0
-    serviceLevelAgreementPoints: number;        // 2692.662622758371
+    teamName: string;                           // The name of the team.
+    teamId: number;                             // The id of the team.
+    totalPoints: number;                        // The total points of the team.
+    attackPoints: number;                       // The attack points of the team.
+    defensePoints: number;                      // The defense points of the team.
+    serviceLevelAgreementPoints: number;        // The SLA points of the team.
     serviceDetails: ServiceDetail[];
 }
 
 interface ServiceDetail {
-    serviceId: number;                          // 0.0
-    attackPoints: number;                       // 0.0
-    lostDefensePoints: number;                  // 0.0
-    serviceLevelAgreementPoints: number;        // 0.0
-    serviceStatus: string;                      // INTERNAL_ERROR,OFFLINE,MUMBLE,RECOVERING,OK,INACTIVE
+    serviceId: number;                          // The id of the service.
+    attackPoints: number;                       // The attack points of the team in the service.
+    defensePoints: number;                      // The defense points of the team.
+    serviceLevelAgreementPoints: number;        // The SLA points of the team in the service.
+    serviceStatus: string;                      // "INTERNAL_ERROR", "OFFLINE", "MUMBLE", "RECOVERING", "OK", "INACTIVE"
     message: string | null;                     // Leave null for no message, otherwise the message is displayed
 }
 
 interface Service {
-    serviceId: number;
-    serviceName: string;
-    maxStores: number;
+    serviceId: number;                          // The id of the service.
+    serviceName: string;                        // The name of the service.
+    flagVariants: number;                       // The amount of different flag variants.
     firstBloods: FirstBlood[];
 }
 
 interface FirstBlood {
-    teamId: number;
-    timestamp: string;                          // Timestamps according ISO-86-01 ("yyyy-MM-ddTHH:mm:ss.fffZ")
-    timeEpoch: number;                          // Unix time in seconds
-    roundId: number;                            // 1
-    storeDescription: string | null;            // "Private user notes"
-    storeIndex: number;                         // 0
+    teamId: number;                             // The id of the team that scored the firstblood.
+    timestamp: string;                          // Timestamp according to ISO-86-01 ("yyyy-MM-ddTHH:mm:ss.fffZ") in UTC.
+    timeEpoch: number;                          // Timestamp as unix time in seconds.
+    roundId: number;                            // The id of the round in which the firstblood was submitted.
+    flagVariantId: number;                      // The id of the variant.
 }
 ```
 ## Flagsubmission Endpoint:
