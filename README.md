@@ -129,18 +129,18 @@ interface Scoreboard {
 interface Team {
     teamName: string;                           // The name of the team.
     teamId: number;                             // The id of the team.
-    totalPoints: number;                        // The total points of the team.
-    attackPoints: number;                       // The attack points of the team.
-    defensePoints: number;                      // The defense points of the team.
-    serviceLevelAgreementPoints: number;        // The SLA points of the team.
+    totalScore: number;                         // The total Score of the team.
+    attackScore: number;                        // The attack Score of the team.
+    defenseScore: number;                       // The defense Score of the team.
+    serviceLevelAgreementScore: number;         // The SLA Score of the team.
     serviceDetails: ServiceDetail[];
 }
 
 interface ServiceDetail {
     serviceId: number;                          // The id of the service.
-    attackPoints: number;                       // The attack points of the team in the service.
-    defensePoints: number;                      // The defense points of the team.
-    serviceLevelAgreementPoints: number;        // The SLA points of the team in the service.
+    attackScore: number;                        // The attack Score of the team in the service.
+    defenseScore: number;                       // The defense Score of the team.
+    serviceLevelAgreementScore: number;         // The SLA Score of the team in the service.
     serviceStatus: string;                      // "INTERNAL_ERROR", "OFFLINE", "MUMBLE", "RECOVERING", "OK", "INACTIVE"
     message: string | null;                     // Leave null for no message, otherwise the message is displayed
 }
