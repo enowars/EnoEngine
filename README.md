@@ -156,6 +156,7 @@ interface Service {
 
 interface FirstBlood {
     teamId: number;                             // The id of the team that scored the firstblood.
+    teamName: number;                           // The name of the team that scored the firstblood.
     timestamp: string;                          // Timestamp according to ISO-86-01 ("yyyy-MM-ddTHH:mm:ss.fffZ") in UTC.
     timeEpoch: number;                          // Timestamp as unix time in seconds.
     roundId: number;                            // The id of the round in which the firstblood was submitted.
