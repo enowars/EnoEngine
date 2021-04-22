@@ -62,7 +62,7 @@ rm -r Migrations
 dotnet ef migrations add InitialMigrations --startup-project ../EnoEngine
 ```
 
-## Checker API
+## Checker API v2
 Checkers are expected to respond to these requests, providing a HTTP Status Code 200:
 
 ### `GET /service`
@@ -70,9 +70,9 @@ Response:
 ```ts
 interface CheckerInfoMessage {
     serviceName: string;
-    flagCount: number;
-    havocCount: number;
-    noiseCount: number;
+    flagVariants: number;
+    havocVariants: number;
+    noiseVariants: number;
 }
 ```
 
@@ -88,10 +88,10 @@ interface CheckerTaskMessage {
     currentRoundId: number;                     // The id of the current round.
     relatedRoundId: number;                     // The id of the round in which the "putflag", "putnoise" or "havoc" happened.
     flag: string | null;                        // The flag for putflag and getflag, otherwise null.
-    variantId: number;                          // The variant id of the task. Used to support different flag and noise methods.
+    variantId: number;                          // The variant id of the task. Used to support different flag, noise and havoc methods. Starts at 0.
     timeout: number;                            // Timeout in milliseconds.
     roundLength: number;                        // Round length in milliseconds.
-    taskChainId: string;                        // The unique identifier of a set of related tasks (i.e. putflag and its getflags, and putnoise and its getnoises, and individual havocs.). Always composed in the following way: "{flag|noise|havoc_s{serviceId}_r{roundId}_t{teamId}_i{index}", and should be used as your database index.
+    taskChainId: string;                        // The unique identifier of a chain of tasks (i.e. putflag and its getflags, and putnoise and its getnoises, and individual havocs.). Always composed in the following way: "{flag|noise|havoc_s{serviceId}_r{roundId}_t{teamId}_i{uniqueVariantIndex}", and should be used as your database index.
 }
 ```
 Response:
@@ -111,8 +111,8 @@ interface ScoreboardInfo {
 }
 
 interface ScoreboardInfoTeam {
-    id: number;                                 // The id of the team.
-    name: string;                               // The name of the team.
+    teamId: number;                             // The id of the team.
+    teamName: string;                           // The name of the team.
     logoUrl: string | null;                     // An URL with the team's logo, or null.
     countryCode: string | null;                 // The ISO 3166-1 alpha-2 country code (uppercase), or null.
 }
@@ -122,21 +122,23 @@ interface Scoreboard {
     startTimestamp: string | null;              // Start timestamp of the current round according to ISO-86-01 ("yyyy-MM-ddTHH:mm:ss.fffZ") in UTC.
     endTimestamp: string | null;                // End timestamp of the current round according to ISO-86-01 ("yyyy-MM-ddTHH:mm:ss.fffZ") in UTC.
     dnsSuffix: string | null;                   // The DNS suffix (including the leading dot), if DNS is used. Example: ".bambi.ovh"
-    services: Service[];
-    teams: Team[];
+    services: ScoreboardService[];
+    teams: ScoreboardTeam[];
 }
 
-interface Team {
+interface ScoreboardTeam {
     teamName: string;                           // The name of the team.
     teamId: number;                             // The id of the team.
+    logoUrl: string | null;                     // An URL with the team's logo, or null.
+    countryCode: string | null;                 // The ISO 3166-1 alpha-2 country code (uppercase), or null.
     totalScore: number;                         // The total Score of the team.
     attackScore: number;                        // The attack Score of the team.
     defenseScore: number;                       // The defense Score of the team.
     serviceLevelAgreementScore: number;         // The SLA Score of the team.
-    serviceDetails: ServiceDetail[];
+    serviceDetails: ScoreboardTeamServiceDetails[];
 }
 
-interface ServiceDetail {
+interface ScoreboardTeamServiceDetails {
     serviceId: number;                          // The id of the service.
     attackScore: number;                        // The attack Score of the team in the service.
     defenseScore: number;                       // The defense Score of the team.
@@ -145,7 +147,7 @@ interface ServiceDetail {
     message: string | null;                     // Leave null for no message, otherwise the message is displayed
 }
 
-interface Service {
+interface ScoreboardService {
     serviceId: number;                          // The id of the service.
     serviceName: string;                        // The name of the service.
     flagVariants: number;                       // The amount of different flag variants.
