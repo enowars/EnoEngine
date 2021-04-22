@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EnoDatabase.Migrations
 {
     [DbContext(typeof(EnoDatabaseContext))]
-    [Migration("20210416170157_InitialMigrations")]
+    [Migration("20210422134349_InitialMigrations")]
     partial class InitialMigrations
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -73,15 +73,18 @@ namespace EnoDatabase.Migrations
                     b.Property<DateTime>("StartTime")
                         .HasColumnType("timestamp without time zone");
 
-                    b.Property<long>("TaskIndex")
-                        .HasColumnType("bigint");
-
                     b.Property<long>("TeamId")
                         .HasColumnType("bigint");
 
                     b.Property<string>("TeamName")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<long>("UniqueVariantId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("VariantId")
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
@@ -151,10 +154,13 @@ namespace EnoDatabase.Migrations
                     b.Property<bool>("Active")
                         .HasColumnType("boolean");
 
-                    b.Property<long>("FlagStores")
+                    b.Property<long>("FlagVariants")
                         .HasColumnType("bigint");
 
                     b.Property<long>("FlagsPerRound")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("HavocVariants")
                         .HasColumnType("bigint");
 
                     b.Property<long>("HavocsPerRound")
@@ -163,6 +169,9 @@ namespace EnoDatabase.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<long>("NoiseVariants")
+                        .HasColumnType("bigint");
 
                     b.Property<long>("NoisesPerRound")
                         .HasColumnType("bigint");

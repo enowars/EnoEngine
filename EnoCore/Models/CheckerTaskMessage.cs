@@ -26,7 +26,7 @@
             this.TeamName = teamName ?? throw new ArgumentNullException(nameof(teamName));
             this.CurrentRoundId = currentRoundId ?? throw new ArgumentNullException(nameof(currentRoundId));
             this.RelatedRoundId = relatedRoundId ?? throw new ArgumentNullException(nameof(relatedRoundId));
-            this.Flag = flag ?? throw new ArgumentNullException(nameof(flag));
+            this.Flag = flag;
             this.VariantId = variantId ?? throw new ArgumentNullException(nameof(variantId));
             this.Timeout = timeout ?? throw new ArgumentNullException(nameof(timeout));
             this.RoundLength = roundLength ?? throw new ArgumentNullException(nameof(roundLength));
@@ -54,7 +54,6 @@
         [NotNull]
         public long? RelatedRoundId { get; }
 
-        [NotNull]
         public string? Flag { get; }
 
         [NotNull]
@@ -68,5 +67,10 @@
 
         [NotNull]
         public string? TaskChainId { get; }
+
+        public override string ToString()
+        {
+            return $"CheckerTaskMessage(TaskId={this.TaskId}, Method={this.Method}, Address={this.Address}, TeamId={this.TeamId}, TeamName={this.TeamName}, CurrentRoundId={this.CurrentRoundId}, RelatedRoundId={this.RelatedRoundId}, Flag={this.Flag}, VariantId={this.VariantId}, Timeout={this.Timeout}, RoundLength={this.RoundLength}, TaskChainId={this.TaskChainId})";
+        }
     }
 }

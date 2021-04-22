@@ -28,7 +28,8 @@ namespace EnoDatabase.Migrations
                     StartTime = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     MaxRunningTime = table.Column<int>(type: "integer", nullable: false),
                     RoundLength = table.Column<long>(type: "bigint", nullable: false),
-                    TaskIndex = table.Column<long>(type: "bigint", nullable: false),
+                    UniqueVariantId = table.Column<long>(type: "bigint", nullable: false),
+                    VariantId = table.Column<long>(type: "bigint", nullable: false),
                     CheckerResult = table.Column<int>(type: "integer", nullable: false),
                     ErrorMessage = table.Column<string>(type: "text", nullable: true),
                     CheckerTaskLaunchStatus = table.Column<int>(type: "integer", nullable: false)
@@ -80,7 +81,9 @@ namespace EnoDatabase.Migrations
                     FlagsPerRound = table.Column<long>(type: "bigint", nullable: false),
                     NoisesPerRound = table.Column<long>(type: "bigint", nullable: false),
                     HavocsPerRound = table.Column<long>(type: "bigint", nullable: false),
-                    FlagStores = table.Column<long>(type: "bigint", nullable: false),
+                    FlagVariants = table.Column<long>(type: "bigint", nullable: false),
+                    NoiseVariants = table.Column<long>(type: "bigint", nullable: false),
+                    HavocVariants = table.Column<long>(type: "bigint", nullable: false),
                     Active = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
