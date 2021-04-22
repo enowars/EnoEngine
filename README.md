@@ -81,7 +81,7 @@ Parameter:
 ```ts
 interface CheckerTaskMessage {
     taskId: number;                             // The per-ctf unique id of a task.
-    method: string;                             // "putflag", "getflag", "putnoise", "getnoise" or "havoc".
+    method: "putflag" | "getflag" | "putnoise" | "getnoise" | "havoc";
     address: string;                            // The address of the target team's vulnbox. Can be either an IP address or a valid hostname.
     teamId: number;                             // The id of the target team.
     teamName: string;                           // The name of the target team.
