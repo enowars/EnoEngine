@@ -91,7 +91,7 @@ interface CheckerTaskMessage {
     variantId: number;                          // The variant id of the task. Used to support different flag, noise and havoc methods. Starts at 0.
     timeout: number;                            // Timeout for the task in milliseconds.
     roundLength: number;                        // Round length in milliseconds.
-    taskChainId: string;                        // The unique identifier of a chain of tasks (i.e. putflag and getflags or putnoise and getnoise for the same flag/noise share an Id, each havoc has its own Id). Should be used in the database to store e.g. credentials created during putlfag and required in getflag. Always composed in the following way: "{flag|noise|havoc_s{serviceId}_r{relatedRoundId}_t{teamId}_i{uniqueVariantIndex}". A checker may be called multiple times with the same method, serviceId, roundId, teamId and variantId, in which case the uniqueVariantIndex can be used to distinguish the taskChains.
+    taskChainId: string;                        // The unique identifier of a chain of tasks (i.e. putflag and getflags or putnoise and getnoise for the same flag/noise share an Id, each havoc has its own Id). Should be used in the database to store e.g. credentials created during putlfag and required in getflag. Always composed in the following way: "{flag|noise|havoc}_s{serviceId}_r{relatedRoundId}_t{teamId}_i{uniqueVariantIndex}". A checker may be called multiple times with the same method, serviceId, roundId, teamId and variantId, in which case the uniqueVariantIndex can be used to distinguish the taskChains.
 }
 ```
 Response:
