@@ -196,10 +196,12 @@
             return new(
                 this.Id,
                 this.Name,
-                this.FlagsPerRoundMultiplier * infoMessage.FlagCount,
-                this.NoisesPerRoundMultiplier * infoMessage.NoiseCount,
-                this.HavocsPerRoundMultiplier * infoMessage.HavocCount,
-                infoMessage.FlagCount,
+                this.FlagsPerRoundMultiplier * infoMessage.FlagVariants,
+                this.NoisesPerRoundMultiplier * infoMessage.NoiseVariants,
+                this.HavocsPerRoundMultiplier * infoMessage.HavocVariants,
+                infoMessage.FlagVariants,
+                infoMessage.NoiseVariants,
+                infoMessage.HavocVariants,
                 this.WeightFactor,
                 this.Active,
                 this.Checkers);

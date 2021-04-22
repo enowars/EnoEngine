@@ -4,7 +4,7 @@
 
     public sealed record CheckerInfoMessage(
         string ServiceName,
-        int FlagCount,
-        int NoiseCount,
-        int HavocCount);
+        int FlagVariants,
+        int NoiseVariants,
+        int HavocVariants);
 }

@@ -213,10 +213,10 @@
 
             foreach (var service in services)
             {
-                var firstBloods = new SubmittedFlag[service.FlagStores];
+                var firstBloods = new SubmittedFlag[service.FlagVariants];
                 for (int i = 0; i < service.FlagsPerRound; i++)
                 {
-                    var storeId = i % service.FlagStores;
+                    var storeId = i % service.FlagVariants;
                     var fb = await this.context.SubmittedFlags
                         .Where(sf => sf.FlagServiceId == service.Id)
                         .Where(sf => sf.FlagRoundOffset == i)
@@ -242,11 +242,10 @@
                         .Where(sf => sf != null)
                         .Select(sf => new ScoreboardFirstBlood(
                             sf.AttackerTeamId,
+                            string.Empty, // TODO
                             sf.Timestamp.ToString(EnoCoreUtil.DateTimeFormat),
-                            EnoCoreUtil.SecondsSinceEpoch(sf.Timestamp),
                             sf.RoundId,
-                            null,
-                            sf.FlagRoundOffset % service.FlagStores))
+                            sf.FlagRoundOffset % service.FlagVariants))
                         .ToArray()));
             }
 
@@ -264,7 +263,7 @@
                     team.DefensePoints,
                     team.ServiceLevelAgreementPoints,
                     team.TeamServicePoints.Select(
-                        tsp => new ScoreboardTeamDetails(
+                        tsp => new ScoreboardTeamServiceDetails(
                             tsp.ServiceId,
                             tsp.AttackPoints,
                             tsp.DefensePoints,
@@ -279,9 +278,8 @@
             var scoreboard = new Scoreboard(
                 roundId,
                 round?.Begin.ToString(EnoCoreUtil.DateTimeFormat),
-                round?.Begin.Subtract(DateTime.UnixEpoch).TotalSeconds,
                 round?.End.ToString(EnoCoreUtil.DateTimeFormat),
-                round?.End.Subtract(DateTime.UnixEpoch).TotalSeconds,
+                string.Empty, // TODO
                 scoreboardServices.ToArray(),
                 scoreboardTeams.ToArray());
             this.logger.LogInformation($"{nameof(this.GetCurrentScoreboard)} Finished after: {sw.ElapsedMilliseconds}ms");

@@ -37,7 +37,9 @@
         int FlagsPerRound,
         int NoisesPerRound,
         int HavocsPerRound,
-        int FlagStores,
+        int FlagVariants,
+        int HavocVariants,
+        int NoiseVariants,
         long WeightFactor,
         bool Active,
         string[] Checkers);

@@ -1,17 +1,16 @@
 ﻿namespace EnoCore.Models
 {
     public sealed record CheckerTaskMessage(
-        long RunId,
+        long TaskId,
         CheckerTaskMethod Method,
         string Address,
-        long ServiceId,
-        string ServiceName,
         long TeamId,
         string TeamName,
+        long CurrentRoundId,
         long RelatedRoundId,
-        long RoundId,
         string? Flag,
-        long FlagIndex,
+        long VariantId,
         long Timeout,
-        long RoundLength);
+        long RoundLength,
+        string TaskChainId);
 }

@@ -63,27 +63,27 @@
                     throw new Exception("invalid method");
                 }
 
-                this.logger.LogInformation($"Task {ctm.RunId} succeeded");
+                this.logger.LogInformation($"Task {ctm.TaskId} succeeded");
                 return this.Json(new CheckerResultMessage(CheckerResult.OK, null));
             }
             catch (OperationCanceledException)
             {
-                this.logger.LogWarning($"Task {ctm.RunId} was cancelled");
+                this.logger.LogWarning($"Task {ctm.TaskId} was cancelled");
                 return this.Json(new CheckerResultMessage(CheckerResult.OFFLINE, null));
             }
             catch (MumbleException e)
             {
-                this.logger.LogWarning($"Task {ctm.RunId} has failed: {e.ToFancyString()}");
+                this.logger.LogWarning($"Task {ctm.TaskId} has failed: {e.ToFancyString()}");
                 return this.Json(new CheckerResultMessage(CheckerResult.MUMBLE, e.Message));
             }
             catch (OfflineException e)
             {
-                this.logger.LogWarning($"Task {ctm.RunId} has failed: {e.ToFancyString()}");
+                this.logger.LogWarning($"Task {ctm.TaskId} has failed: {e.ToFancyString()}");
                 return this.Json(new CheckerResultMessage(CheckerResult.OFFLINE, e.Message));
             }
             catch (Exception e)
             {
-                this.logger.LogError($"Task {ctm.RunId} has failed: {e.ToFancyString()}");
+                this.logger.LogError($"Task {ctm.TaskId} has failed: {e.ToFancyString()}");
                 return this.Json(new CheckerResultMessage(CheckerResult.INTERNAL_ERROR, null));
             }
         }

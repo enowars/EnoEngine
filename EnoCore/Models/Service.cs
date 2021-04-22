@@ -12,7 +12,9 @@
             long flagsPerRound,
             long noisesPerRound,
             long havocsPerRound,
-            long flagStores,
+            long flagVariants,
+            long noiseVariants,
+            long havocVariants,
             bool active)
         {
             this.Id = id;
@@ -20,7 +22,9 @@
             this.FlagsPerRound = flagsPerRound;
             this.NoisesPerRound = noisesPerRound;
             this.HavocsPerRound = havocsPerRound;
-            this.FlagStores = flagStores;
+            this.FlagVariants = flagVariants;
+            this.NoiseVariants = noiseVariants;
+            this.HavocVariants = havocVariants;
             this.Active = active;
         }
 
@@ -30,7 +34,9 @@
         public long FlagsPerRound { get; set; }
         public long NoisesPerRound { get; set; }
         public long HavocsPerRound { get; set; }
-        public long FlagStores { get; set; }
+        public long FlagVariants { get; set; }
+        public long NoiseVariants { get; set; }
+        public long HavocVariants { get; set; }
         public bool Active { get; set; }
 #pragma warning restore SA1516 // Elements should be separated by blank line
     }

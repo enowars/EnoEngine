@@ -7,45 +7,54 @@
     using System.Text.Json;
     using EnoCore.Models;
 
+    public record ScoreboardInfo(
+        string? DnsSuffix,
+        ScoreboardService[] Services,
+        ScoreboardInfoTeam[] Teams);
+
+    public record ScoreboardInfoTeam(
+        long TeamId,
+        string TeamName,
+        string? LogoUrl,
+        string? CountryCode);
+
     public record Scoreboard(
         long CurrentRound,
         string? StartTimestamp,
-        double? StartTimeEpoch,
         string? EndTimestamp,
-        double? EndTimeEpoch,
+        string? DnsSuffix,
         ScoreboardService[] Services,
         ScoreboardTeam[] Teams);
+
+    public record ScoreboardTeam(
+        string TeamName,
+        long TeamId,
+        string? LogoUrl,
+        string? CountryCode,
+        double TotalScore,
+        double AttackScore,
+        double DefenseScore,
+        double ServiceLevelAgreementScore,
+        ScoreboardTeamServiceDetails[] ServiceDetails);
+
+    public record ScoreboardTeamServiceDetails(
+        long ServiceId,
+        double AttackScore,
+        double DefenseScore,
+        double ServiceLevelAgreementScore,
+        ServiceStatus ServiceStatus,
+        string? Message);
 
     public record ScoreboardService(
         long ServiceId,
         string ServiceName,
-        long MaxStores,
+        long FlagVariants,
         ScoreboardFirstBlood[] FirstBloods);
 
     public record ScoreboardFirstBlood(
         long TeamId,
+        string TeamName,
         string Timestamp,
-        double TimeEpoch,
         long RoundId,
-        string? StoreDescription,
-        long StoreIndex);
-
-    public record ScoreboardTeam(
-        string Name,
-        long TeamId,
-        string? LogoUrl,
-        string? CountryCode,
-        double TotalPoints,
-        double AttackPoints,
-        double LostDefensePoints,
-        double ServiceLevelAgreementPoints,
-        ScoreboardTeamDetails[] ServiceDetails);
-
-    public record ScoreboardTeamDetails(
-        long ServiceId,
-        double AttackPoints,
-        double LostDefensePoints,
-        double ServiceLevelAgreementPoints,
-        ServiceStatus ServiceStatus,
-        string? Message);
+        long FlagVariantId);
 }
