@@ -39,5 +39,10 @@
         public long HavocVariants { get; set; }
         public bool Active { get; set; }
 #pragma warning restore SA1516 // Elements should be separated by blank line
+
+        public override string ToString()
+        {
+            return $"Service(Id={this.Id}, Name={this.Name}, FlagsPerRound={this.FlagsPerRound}, NoisesPerRound={this.NoisesPerRound}, HavocsPerRound={this.HavocsPerRound}, FlagVariants={this.FlagVariants} NoiseVariants={this.FlagVariants}, HavocVariants={this.HavocVariants})";
+        }
     }
 }

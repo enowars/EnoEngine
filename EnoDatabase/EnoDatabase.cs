@@ -127,8 +127,7 @@
                 }
                 else
                 {
-                    this.logger.LogInformation($"Adding service {service.Name}");
-                    this.context.Services.Add(new Service(
+                    var newService = new Service(
                         service.Id,
                         service.Name,
                         service.FlagsPerRound,
@@ -137,7 +136,9 @@
                         service.FlagVariants,
                         service.NoiseVariants,
                         service.HavocVariants,
-                        service.Active));
+                        service.Active);
+                    this.logger.LogInformation($"Adding service {newService}");
+                    this.context.Services.Add(newService);
                 }
             }
 
