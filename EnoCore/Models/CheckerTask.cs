@@ -57,11 +57,11 @@
         {
             return this.Method switch
             {
-                CheckerTaskMethod.putflag => $"flag_{this.ServiceId}_r{this.RelatedRoundId}_t{this.TeamId}_i{this.UniqueVariantId}",
-                CheckerTaskMethod.getflag => $"flag_{this.ServiceId}_r{this.RelatedRoundId}_t{this.TeamId}_i{this.UniqueVariantId}",
-                CheckerTaskMethod.putnoise => $"noise_{this.ServiceId}_r{this.RelatedRoundId}_t{this.TeamId}_i{this.UniqueVariantId}",
-                CheckerTaskMethod.getnoise => $"noise_{this.ServiceId}_r{this.RelatedRoundId}_t{this.TeamId}_i{this.UniqueVariantId}",
-                CheckerTaskMethod.havoc => $"havoc_{this.ServiceId}_r{this.RelatedRoundId}_t{this.TeamId}_i{this.UniqueVariantId}",
+                CheckerTaskMethod.putflag => $"flag_s{this.ServiceId}_r{this.RelatedRoundId}_t{this.TeamId}_i{this.UniqueVariantId}",
+                CheckerTaskMethod.getflag => $"flag_s{this.ServiceId}_r{this.RelatedRoundId}_t{this.TeamId}_i{this.UniqueVariantId}",
+                CheckerTaskMethod.putnoise => $"noise_s{this.ServiceId}_r{this.RelatedRoundId}_t{this.TeamId}_i{this.UniqueVariantId}",
+                CheckerTaskMethod.getnoise => $"noise_s{this.ServiceId}_r{this.RelatedRoundId}_t{this.TeamId}_i{this.UniqueVariantId}",
+                CheckerTaskMethod.havoc => $"havoc_s{this.ServiceId}_r{this.RelatedRoundId}_t{this.TeamId}_i{this.UniqueVariantId}",
                 _ => throw new NotImplementedException(),
             };
         }
