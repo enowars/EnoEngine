@@ -95,5 +95,12 @@
             var cim = new CheckerInfoMessage(this.checkerInitializer.ServiceName, this.checkerInitializer.FlagsPerRound, this.checkerInitializer.NoisesPerRound, this.checkerInitializer.HavocsPerRound);
             return this.Json(cim, null);
         }
+
+        [HttpGet]
+        [Route("/")]
+        public IActionResult Index()
+        {
+            return this.File("./post.html", "text/html");
+        }
     }
 }

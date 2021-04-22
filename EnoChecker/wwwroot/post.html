@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+    <meta charset='UTF-8'/>
+    <title>$SERVICE-Checker</title>
+    <!-- <link rel='stylesheet' href='styles.css'/> -->
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0' />
+
+    <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      color: #5D6063;
+      background-color: #EAEDF0;
+      font-family: "Helvetica", "Arial", sans-serif;
+      font-size: 16px;
+      line-height: 1.3;
+    
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .checker-form-header {
+      text-align: center;
+      background-color: #F6F7F8;
+      border: 1px solid #D6D9DC;
+      border-radius: 3px;
+      
+      width: 100%;
+      margin: 40px 0;
+      padding: 30px;
+    }
+    
+    .checker-form-header h1 {
+      font-size: 30px;
+      margin-bottom: 20px;
+    }
+    
+    .responses-container,
+    .request-col {
+      width: 80%;
+    }
+
+    .responses-container,
+    .checker-form {
+      background-color: #F6F7F8;
+      border: 1px solid #D6D9DC;
+      border-radius: 3px;
+      
+      padding: 30px;
+      margin: 0 0 40px 0;
+    }
+    
+    .form-row {
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: flex-start;
+      flex-direction: column;
+      flex-wrap: wrap;
+    }
+    
+    .form-row input[type='number'],
+    .form-row input[type='text'] {
+      background-color: #FFFFFF;
+      border: 1px solid #D6D9DC;
+      border-radius: 3px;
+      width: 100%;
+      padding: 7px;
+      font-size: 14px;
+    }
+    
+    .form-row label {
+      margin-bottom: 5px;
+    }
+    .form-row input[type='email'] {
+      
+      background-color: #FFFFFF;
+      border: 1px solid #D6D9DC;
+      border-radius: 3px;
+      width: 100%;
+      padding: 7px;
+      font-size: 14px;
+    }
+    
+   .disabled {
+      color: #DCDAD1;
+    }
+    
+    .disabled * {
+      color: #DCDAD1;
+    }
+
+    .input[disabled] {
+      color: #DCDAD1;
+    }
+
+    .form-row input[type='text']:invalid,
+    .form-row input[type='email']:invalid {
+      border: 1px solid #D55C5F;
+      color: #D55C5F;
+      box-shadow: none; /* Remove default red glow in Firefox */
+    }
+    
+    .legacy-form-row {
+      border: none;
+      margin-bottom: 40px;
+    }
+    
+    .legacy-form-row legend {
+      margin-bottom: 15px;
+    }
+    
+    .legacy-form-row .radio-label {
+      display: block;
+      font-size: 14px;
+      padding: 0 20px 0 10px;
+    }
+    
+    .legacy-form-row input[type='radio'] {
+      margin-top: 2px;
+    }
+      
+    .legacy-form-row .radio-label,
+    .legacy-form-row input[type='radio'] {
+      float: left;
+    }
+    
+    .form-row select {
+      width: 100%;
+      font-family: "Helvetica", "Arial", sans-serif;
+      padding: 5px;
+      font-size: 14px;   /* This won't work in Chrome or Safari TM */
+    }
+    
+    .form-row textarea {
+      font-family: "Helvetica", "Arial", sans-serif;
+      font-size: 14px;
+    
+      border: 1px solid #D6D9DC;
+      border-radius: 3px;
+    
+      min-height: 200px;
+      margin-bottom: 10px;
+      padding: 7px;
+      resize: none;
+    }
+    
+    .form-row .instructions {
+      color: #999999;
+      font-size: 14px;
+      margin-bottom: 30px;
+    }
+    
+    .form-row .checkbox-label {
+      margin-bottom: 0;
+    }
+    
+    .form-row input[type='submit'],
+    .form-row button {
+      font-size: 16px;
+      font-weight: bold;
+    
+      color: #FFFFFF;
+      background-color: #5995DA;
+    
+      border: none;
+      border-radius: 3px;
+    
+      padding: 10px 40px;
+      cursor: pointer;
+    }
+    
+    .form-row input[type='submit'],
+    .form-row button:hover {
+      background-color: #76AEED;
+    }
+    
+    .form-row input[type='submit'],
+    .form-row button:active {
+      background-color: #407FC7;
+    }
+    
+    @media only screen and (min-width: 700px) {
+      .form-row {
+        flex-direction: row;
+        align-items: flex-start; /* To avoid stretching */
+        margin-bottom: 10px;
+      }
+      .form-row input[type='text'] {
+        width: 250px;
+        height: initial;
+      }
+      .form-row label {
+        text-align: right;
+        width: 10em;
+        margin-top: 7px;
+        padding-right: 20px;
+      }
+    
+      .form-row input[type='text'],
+      .form-row input[type='number'],
+      .form-row input[type='email'],    /* Add */
+      .form-row select,                 /* These */
+      .form-row textarea {              /* Selectors */
+        width: 250px;
+        height: initial;
+      }
+    
+      .legacy-form-row {
+        margin-bottom: 10px;
+      }
+      .legacy-form-row legend {
+        width: 120px;
+        text-align: right;
+        padding-right: 20px;
+      }
+      .legacy-form-row legend {
+        float: left;
+      }
+      .form-row .instructions {
+        margin-left: 120px;
+      }
+    
+      .form-row .checkbox-label {
+        margin-left: 120px;
+        width: auto;
+      }
+      
+      .form-row input[type='submit'],
+      .form-row button {
+        margin-left: 120px;
+      }
+    }
+
+    @media only screen and (min-width: 700px) and (max-width: 1400px) {
+      .responses-container {
+        width: 600px;
+      }
+
+      .request-col {
+        width: 600px;
+      }
+    } 
+
+    @media only screen and (min-width: 1400px) {
+      body {
+        flex-direction: row;
+        justify-content: space-evenly;
+        align-items: flex-start;
+      }
+      .responses-container {
+        margin: 40px 0;
+        width: 40%;
+      }
+
+      .request-col {
+        width: 600px;
+      }
+    } 
+    pre {
+      white-space: pre-wrap;
+    }
+  </style>
+
+  </head>
+  <body>
+    <div class='request-col'>
+      <header action="/" method="post" class='checker-form-header'>
+        <h1 id="checker-header">$SERVICE-Checker</h1>
+        <p><em>Try out your checker here!</em></p>
+      </header>
+      <div class="checker-form">
+        <form action="#" onsubmit="return checkertask_submit(event);">
+        <div class='form-row'>
+          <label for='method'>Method</label>
+          <select id='method' name='method'>
+            <option value='putflag'>putflag</option>
+            <option value='getflag'>getflag</option>
+            <option value='putnoise'>putnoise</option>
+            <option value='getnoise'>getnoise</option>
+            <option value='havoc'>havoc</option>
+            <option value='exploit'>exploit</option>
+          </select>
+        </div>
+
+        <div class='form-row'>
+          <label for='address'>Address</label>
+          <input id='address' name='address' type='text' value='localhost'/>
+        </div>
+
+        <div class='form-row'>
+          <label for='flag'>Flag</label>
+          <input id='flag' name='flag' type='text' value='ENOTESTFLAG'/>
+        </div>
+
+        <div class='form-row'>
+          <label for='variantId'>VariantId</label>
+          <input id='variantId' name='variantId' type='number' value='1'/>
+        </div>
+
+        <div class='form-row'>
+          <label for='uniqueVariantId'>UniqueVariantId</label>
+          <input id='uniqueVariantId' name='uniqueVariantId' type='number' value='1'/>
+        </div>
+
+        <div class='form-row'>
+          <label for='teamId'>TeamId</label>
+          <input id='teamId' name='teamId' type='number' value='1'/>
+        </div>
+
+        <div class='form-row'>
+          <label for='teamName'>Teamname</label>
+          <input id='teamName' name='teamName' type='text' value='TESTTEAM'/>
+        </div>
+
+        <div class='form-row'>
+          <label for='currentRoundId'>CurrentRoundId</label>
+          <input id='currentRoundId' name='currentRoundId' type='number' value='1'/>
+        </div>
+
+        <div class='form-row'>
+          <label for='relatedRoundId'>RelatedRoundId</label>
+          <input id='relatedRoundId' name='relatedRoundId' type='number' value='1'/>
+        </div>
+
+        <div class='form-row'>
+          <label for='timeout'>Timeout [ms]</label>
+          <input id='timeout' name='timeout' type='number' value='15000'/>
+        </div>
+
+        <div class='form-row'>
+          <label for='roundLength'>RoundLength [ms]</label>
+          <input id='roundLength' name='roundLength' type='number' value='60000'/>
+        </div>
+
+        <div class='form-row'>
+          <label for='taskId'>TaskId</label>
+          <input id='taskId' name='taskId' type='number' value='1'/>
+        </div>
+
+        <div class='form-row'>
+          <input type='Submit' value='Check!'/>
+        </div>
+        </form> 
+
+        <div class='form-row'>
+          <p class='pending-requests'>No request pending</p> 
+        </div>
+      </div>
+    </div>
+    <div id='responses-container' class='responses-container'>
+      <h3> Responses </h3>
+      <div id='responses' class='responses'>
+      </div>
+    </div>
+    <script>
+      var checker_request_count = 0
+      var checker_pending_requests = 0
+      var checker_results = []
+
+      var service_info;
+
+      //const service_info = await (await fetch("/service")).json()
+      var service_fut = fetch("/service")
+        .then(service_req => service_req.json())
+        .then(service_json => {
+          service_info = service_json
+          var header = document.getElementById("checker-header")
+          document.title = service_info["serviceName"] + "-Checker"
+          header.textContent = service_info["serviceName"] + "-Checker"
+        })
+
+      var method_selector = document.getElementById("method")
+
+      method_selector.onchange = function () {
+        if ( method_selector.selectedOptions[0].value === "putflag" 
+            || method_selector.selectedOptions[0].value === "getflag" ) {
+          
+          document.getElementById("flag").disabled = false
+          var flag_row = document.getElementById("flag").parentNode
+          flag_row.classList.remove("disabled")
+
+        } else {
+
+          document.getElementById("flag").disabled = true
+          var flag_row = document.getElementById("flag").parentNode
+          flag_row.classList.add("disabled")
+        }
+      }
+
+      function update_pending() {
+        for (var pending_container of document.getElementsByClassName('pending-requests')) {
+          if (checker_pending_requests == 0) {
+            pending_container.innerText = "No request pending"
+          } else {
+            pending_container.innerText = checker_pending_requests.toString() + " request(s) pending"
+          }
+        }
+      }
+
+      function checkertask_submit(e) {
+        var started = Date.now()
+        e.preventDefault()
+        let formElement = document.querySelector("form")
+        let data = new FormData(formElement)
+
+        var object = {};
+        data.forEach(function(value, key){
+            object[key] = value
+            let formfield = document.getElementById(key);
+            if (formfield instanceof HTMLInputElement) {
+              if (formfield.type == 'number') {
+                object[key] = parseInt(value)
+              }
+            }
+        })
+
+        let method_ident = {
+          "putflag": "flag",
+          "getflag": "flag",
+          "putnoise": "noise",
+          "getnoise": "noise",
+          "havoc": "havoc",
+          "exploit": "exploit",
+        }[object["method"]]
+
+        // We assume that we're the service with Id
+        object["taskChainId"] = `${method_ident}_s0_r${object["relatedRoundId"]}_t${object["teamId"]}_i${object["uniqueVariantId"]}`
+        delete object["uniqueVariantId"]
+        
+        var request_json = JSON.stringify(object)
+
+        var xhr = new XMLHttpRequest()
+        xhr.open("POST", "/")
+        xhr.setRequestHeader("Content-Type", "application/json")
+        xhr.onload = xhr.onerror = function () {
+          console.log(xhr.responseText)
+          try {
+            obj = JSON.parse(xhr.responseText)
+            json_indented = JSON.stringify(obj, undefined, 4)
+          } catch (e) {
+            // Print raw response is JSON-parsing failed
+            json_indented = xhr.responseText
+          }
+          var response_history = document.getElementById('responses')
+          var out_element = document.createElement('div')
+          out_element.classList.add('response-container')
+
+          var status_text = document.createElement('p')
+          status_text.append(
+            document.createTextNode(
+              "Request " + checker_request_count.toString() + " resulted after " + ((Date.now() - started)/1000) + " s in:"
+            )
+          )
+          
+          var response = document.createElement('pre')
+          response.append(
+            document.createTextNode(json_indented)
+          )
+          
+          out_element.append(status_text)
+          out_element.append(response)
+          
+          response_history.prepend(out_element)
+
+          checker_request_count++
+          checker_pending_requests--
+          update_pending()
+        }
+
+        xhr.send(request_json)
+        checker_pending_requests++
+        update_pending();
+        return false;
+      }
+    </script>
+  </body>
+</html>
