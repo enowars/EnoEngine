@@ -38,8 +38,8 @@
         int NoisesPerRound,
         int HavocsPerRound,
         int FlagVariants,
-        int HavocVariants,
         int NoiseVariants,
+        int HavocVariants,
         long WeightFactor,
         bool Active,
         string[] Checkers);
