@@ -69,10 +69,10 @@ Checkers are expected to respond to these requests, providing a HTTP Status Code
 Response:
 ```ts
 interface CheckerInfoMessage {
-    serviceName: string;
-    flagVariants: number;
-    havocVariants: number;
-    noiseVariants: number;
+    serviceName: string;                        // Name of the service
+    flagVariants: number;                       // Number of different variants supported for storing/retrieving flags. Each variant should correspond to a different location/flag store in the service.
+    noiseVariants: number;                      // Number of different variants supported for storing/retrieving noise. Different variants must not necessarily store the noise in different locations.
+    havocVariants: number;                      // Number of different variants supported for havoc.
 }
 ```
 
@@ -86,19 +86,19 @@ interface CheckerTaskMessage {
     teamId: number;                             // The id of the target team.
     teamName: string;                           // The name of the target team.
     currentRoundId: number;                     // The id of the current round.
-    relatedRoundId: number;                     // The id of the round in which the "putflag", "putnoise" or "havoc" happened.
+    relatedRoundId: number;                     // For "getflag" and "getnoise", this is the id of the round in which the corresponding "putflag" or "putnoise" happened. For "putflag", "putnoise" and "havoc", this is always identical to currentRoundId. Use the taskChainId to store/retrieve data related to the corresponding "putflag" or "putnoise" instead of using relatedRoundId directly.
     flag: string | null;                        // The flag for putflag and getflag, otherwise null.
     variantId: number;                          // The variant id of the task. Used to support different flag, noise and havoc methods. Starts at 0.
-    timeout: number;                            // Timeout in milliseconds.
+    timeout: number;                            // Timeout for the task in milliseconds.
     roundLength: number;                        // Round length in milliseconds.
-    taskChainId: string;                        // The unique identifier of a chain of tasks (i.e. putflag and its getflags, and putnoise and its getnoises, and individual havocs.). Always composed in the following way: "{flag|noise|havoc_s{serviceId}_r{roundId}_t{teamId}_i{uniqueVariantIndex}", and should be used as your database index.
+    taskChainId: string;                        // The unique identifier of a chain of tasks (i.e. putflag and getflags or putnoise and getnoise for the same flag/noise share an Id, each havoc has its own Id). Should be used in the database to store e.g. credentials created during putlfag and required in getflag. Always composed in the following way: "{flag|noise|havoc_s{serviceId}_r{roundId}_t{teamId}_i{uniqueVariantIndex}". A checker may be called multiple times with the same method, serviceId, roundId, teamId and variantId, in which case the uniqueVariantIndex can be used to distinguish the taskChains.
 }
 ```
 Response:
 ```ts
 interface CheckerResultMessage {
     result: string;                             // "INTERNAL_ERROR", "OK", MUMBLE", or "OFFLINE".
-    message: string | null;
+    message: string | null;                     // message describing the error, displayed on the public scoreboard if not null
 }
 ```
 
@@ -106,7 +106,7 @@ interface CheckerResultMessage {
 ```ts
 interface ScoreboardInfo {
     dnsSuffix: string | null;                   // The DNS suffix (including the leading dot), if DNS is used. Example: ".bambi.ovh"
-    services: Service[];
+    services: ScoreboardService[];
     teams: ScoreboardInfoTeam[];
 }
 
