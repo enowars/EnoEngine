@@ -134,7 +134,9 @@
                         service.FlagsPerRound,
                         service.NoisesPerRound,
                         service.HavocsPerRound,
-                        service.FlagStores,
+                        service.FlagVariants,
+                        service.NoiseVariants,
+                        service.HavocVariants,
                         service.Active));
                 }
             }
@@ -317,6 +319,7 @@
                             (int)(maxRunningTime * 1000),
                             config.RoundLengthInSeconds,
                             taskIndex,
+                            taskIndex % service.FlagVariants,
                             CheckerResult.INTERNAL_ERROR,
                             null,
                             CheckerTaskLaunchStatus.New);
@@ -374,6 +377,7 @@
                             (int)(maxRunningTime * 1000),
                             config.RoundLengthInSeconds,
                             taskIndex,
+                            taskIndex % service.NoiseVariants,
                             CheckerResult.INTERNAL_ERROR,
                             null,
                             CheckerTaskLaunchStatus.New);
@@ -431,6 +435,7 @@
                             (int)(maxRunningTime * 1000),
                             config.RoundLengthInSeconds,
                             taskIndex,
+                            taskIndex % service.HavocVariants,
                             CheckerResult.INTERNAL_ERROR,
                             null,
                             CheckerTaskLaunchStatus.New);
@@ -488,6 +493,7 @@
                             (int)(maxRunningTime * 1000),
                             config.RoundLengthInSeconds,
                             taskIndex,
+                            taskIndex % service.FlagVariants,
                             CheckerResult.INTERNAL_ERROR,
                             null,
                             CheckerTaskLaunchStatus.New);
@@ -550,6 +556,7 @@
                                 (int)(maxRunningTime * 1000),
                                 config.RoundLengthInSeconds,
                                 taskIndex,
+                                taskIndex % service.FlagVariants,
                                 CheckerResult.INTERNAL_ERROR,
                                 null,
                                 CheckerTaskLaunchStatus.New);
@@ -608,6 +615,7 @@
                             (int)(maxRunningTime * 1000),
                             config.RoundLengthInSeconds,
                             taskIndex,
+                            taskIndex % service.NoiseVariants,
                             CheckerResult.INTERNAL_ERROR,
                             null,
                             CheckerTaskLaunchStatus.New);

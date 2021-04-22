@@ -73,13 +73,13 @@ try
     try
     {
         var teams = configuration.Teams
-            .Select(s => new ScoreboardInfoTeam(s.Id, s.Name, s.LogoUrl, s.CountryFlagUrl, s.Active))
+            .Select(s => new ScoreboardInfoTeam(s.Id, s.Name, s.LogoUrl, s.CountryFlagUrl))
             .ToArray();
         var services = configuration.Services
-            .Select(s => new ScoreboardService(s.Id, s.Name, s.FlagStores, Array.Empty<ScoreboardFirstBlood>()))
+            .Select(s => new ScoreboardService(s.Id, s.Name, s.FlagVariants, Array.Empty<ScoreboardFirstBlood>()))
             .ToArray();
         var json = JsonSerializer.Serialize(
-            new ScoreboardInfo(configuration.Title, configuration.DnsSuffix, services, teams),
+            new ScoreboardInfo(configuration.DnsSuffix, services, teams),
             EnoCoreUtil.CamelCaseEnumConverterOptions);
         File.WriteAllText($"{EnoCoreUtil.DataDirectory}scoreboardInfo.json", json);
     }

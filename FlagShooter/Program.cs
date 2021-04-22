@@ -135,7 +135,7 @@
                         {
                             foreach (var s in sb.Services)
                             {
-                                for (int store = 0; store < s.MaxStores; store++)
+                                for (int store = 0; store < s.FlagVariants; store++)
                                 {
                                     if (i++ > flagCount)
                                     {

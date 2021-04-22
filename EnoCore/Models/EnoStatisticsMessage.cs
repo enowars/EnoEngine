@@ -31,7 +31,7 @@
                 task.CurrentRoundId,
                 task.ServiceName,
                 task.Method.ToString(),
-                task.TaskIndex);
+                task.UniqueVariantId);
         }
     }
 
@@ -50,7 +50,7 @@
                 task.CurrentRoundId,
                 task.ServiceName,
                 task.Method.ToString(),
-                task.TaskIndex,
+                task.UniqueVariantId,
                 (DateTime.UtcNow - task.StartTime).TotalSeconds,
                 task.CheckerResult.ToString());
         }

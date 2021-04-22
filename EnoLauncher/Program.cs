@@ -117,22 +117,31 @@
                     await Task.Delay(span);
                 }
 
+                string taskChainId = task.Method switch
+                {
+                    CheckerTaskMethod.putflag => $"flag_{task.ServiceId}_r{task.RelatedRoundId}_t{task.TeamId}_i{task.UniqueVariantId}",
+                    CheckerTaskMethod.getflag => $"flag_{task.ServiceId}_r{task.RelatedRoundId}_t{task.TeamId}_i{task.UniqueVariantId}",
+                    CheckerTaskMethod.putnoise => $"noise_{task.ServiceId}_r{task.RelatedRoundId}_t{task.TeamId}_i{task.UniqueVariantId}",
+                    CheckerTaskMethod.getnoise => $"noise_{task.ServiceId}_r{task.RelatedRoundId}_t{task.TeamId}_i{task.UniqueVariantId}",
+                    CheckerTaskMethod.havoc => $"havoc_{task.ServiceId}_r{task.RelatedRoundId}_t{task.TeamId}_i{task.UniqueVariantId}",
+                    _ => throw new NotImplementedException(),
+                };
+
                 var content = new StringContent(
                     JsonSerializer.Serialize(
                         new CheckerTaskMessage(
                             task.Id,
                             task.Method,
                             task.Address,
-                            task.ServiceId,
-                            task.ServiceName,
                             task.TeamId,
                             task.TeamName,
                             task.RelatedRoundId,
                             task.CurrentRoundId,
                             task.Payload,
-                            task.TaskIndex,
+                            task.UniqueVariantId,
                             task.MaxRunningTime,
-                            task.RoundLength),
+                            task.RoundLength,
+                            taskChainId),
                         EnoCoreUtil.CamelCaseEnumConverterOptions),
                     Encoding.UTF8,
                     "application/json");

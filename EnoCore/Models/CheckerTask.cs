@@ -47,8 +47,23 @@
         DateTime StartTime,
         int MaxRunningTime,
         long RoundLength,
-        long TaskIndex,
+        long UniqueVariantId,
+        long VariantId,
         CheckerResult CheckerResult,
         string? ErrorMessage,
-        CheckerTaskLaunchStatus CheckerTaskLaunchStatus);
+        CheckerTaskLaunchStatus CheckerTaskLaunchStatus)
+    {
+        public string GetTaskChainId()
+        {
+            return this.Method switch
+            {
+                CheckerTaskMethod.putflag => $"flag_{this.ServiceId}_r{this.RelatedRoundId}_t{this.TeamId}_i{this.UniqueVariantId}",
+                CheckerTaskMethod.getflag => $"flag_{this.ServiceId}_r{this.RelatedRoundId}_t{this.TeamId}_i{this.UniqueVariantId}",
+                CheckerTaskMethod.putnoise => $"noise_{this.ServiceId}_r{this.RelatedRoundId}_t{this.TeamId}_i{this.UniqueVariantId}",
+                CheckerTaskMethod.getnoise => $"noise_{this.ServiceId}_r{this.RelatedRoundId}_t{this.TeamId}_i{this.UniqueVariantId}",
+                CheckerTaskMethod.havoc => $"havoc_{this.ServiceId}_r{this.RelatedRoundId}_t{this.TeamId}_i{this.UniqueVariantId}",
+                _ => throw new NotImplementedException(),
+            };
+        }
+    }
 }
