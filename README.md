@@ -1,4 +1,4 @@
-# EnoEngine [![Build Status](https://dev.azure.com/ENOFLAG/ENOWARS/_apis/build/status/enowars.EnoEngine?branchName=master)](https://dev.azure.com/ENOFLAG/ENOWARS/_build) ![](https://tokei.rs/b1/github/enowars/EnoEngine)
+# EnoEngine [![Build Status](https://github.com/enowars/EnoEngine/actions/workflows/ci.yml/badge.svg)](https://github.com/enowars/EnoEngine/actions/workflows/ci.yml) ![](https://tokei.rs/b1/github/enowars/EnoEngine) ![](https://img.shields.io/nuget/v/enocore)
 
 This is the engine powering our CTFs.
 
