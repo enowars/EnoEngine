@@ -1,4 +1,4 @@
-# EnoEngine [![Build Status](https://dev.azure.com/ENOFLAG/ENOWARS/_apis/build/status/enowars.EnoEngine?branchName=master)](https://dev.azure.com/ENOFLAG/ENOWARS/_build) ![](https://tokei.rs/b1/github/enowars/EnoEngine)
+# EnoEngine [![Build Status](https://github.com/enowars/EnoEngine/actions/workflows/ci.yml/badge.svg)](https://github.com/enowars/EnoEngine/actions/workflows/ci.yml) ![](https://tokei.rs/b1/github/enowars/EnoEngine) ![](https://img.shields.io/nuget/v/enocore)
 
 This is the engine powering our CTFs.
 
@@ -50,9 +50,9 @@ interface Team {
 ```
 
 ## Development
-- Install the dotnet sdk
-- Use any IDE you like
-- If your IDE doesn't do it automatically, run `dotnet restore`
+1. Install the dotnet sdk-5. [Download](https://dotnet.microsoft.com/download/visual-studio-sdks)
+2. Use any IDE you like (Visual Studio or VSCode recommended)
+3. If your IDE doesn't do it automatically, run `dotnet restore`
 
 ## Database
 For creating a migration after changes, run this:
