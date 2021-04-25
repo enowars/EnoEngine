@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "EnoEngine": {
-      "commandName": "Project",
-      "commandLineArgs": "\"ctf.debug.json\""
-    }
-  }
-}
