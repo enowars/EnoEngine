@@ -35,8 +35,6 @@ You can find the schema under [`/ctf.schema.json`](./ctf.schema.json). To refere
 2. Use any IDE you like (Visual Studio or VSCode recommended)
 3. If your IDE doesn't do it automatically, run `dotnet restore`
 
-4. Run Example Checker
-5. Run EnoEngine `dotnet run -p EnoLauncher` (the `ctf-debug.json` is used automatically during development)
 
 ## Database
 
