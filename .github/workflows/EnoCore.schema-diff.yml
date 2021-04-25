@@ -1,4 +1,4 @@
-name: EnoCore Schema Detect differences
+name: CI Tests / EnoCore Schema Detect differences
 on:
   pull_request:
     branches:
