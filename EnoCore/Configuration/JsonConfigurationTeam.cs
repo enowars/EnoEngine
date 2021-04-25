@@ -25,7 +25,7 @@
         public long Id { get; init; }
 
         [Required]
-        [Description("The name of the service.")]
+        [Description("The name of the team.")]
         public string Name { get; init; }
 
         [Description("Whether the team is active or not.")]
