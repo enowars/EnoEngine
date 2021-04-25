@@ -41,23 +41,22 @@
         public string[] Checkers { get; init; }
 
         [Required]
-        [Description("The title of the event.")]
-        [Range(minimum: 0, long.MaxValue)]
-
+        [Description("Multiplier for flags send per Round.")]
+        [Range(minimum: 1, long.MaxValue)]
         public int FlagsPerRoundMultiplier { get; init; }
 
         [Required]
-        [Description("The title of the event.")]
-        [Range(minimum: 0, long.MaxValue)]
+        [Description("Multiplier for havocs send per Round.")]
+        [Range(minimum: 1, long.MaxValue)]
         public int HavocsPerRoundMultiplier { get; init; }
 
         [Required]
-        [Description("The title of the event.")]
-        [Range(minimum: 0, long.MaxValue)]
+        [Description("Multiplier for noise send per Round.")]
+        [Range(minimum: 1, long.MaxValue)]
         public int NoisesPerRoundMultiplier { get; init; }
 
         [Required]
-        [Description("The title of the event.")]
+        [Description("The weight for scoring this service.")]
         [Range(minimum: 0, long.MaxValue)]
         public long WeightFactor { get; init; }
 
