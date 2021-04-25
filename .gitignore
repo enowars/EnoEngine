@@ -5,7 +5,7 @@ ctf.json
 *.code-workspace
 
 # Only allow root Schema
-ctf.schema.json
+ctf.*.json
 !/ctf.schema.json
 
 
