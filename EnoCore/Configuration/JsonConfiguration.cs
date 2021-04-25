@@ -38,17 +38,17 @@
 
             if (this.DnsSuffix is null)
             {
-                throw new JsonConfigurationValidationException("dnsSuffix must not be  null.");
+                throw new JsonConfigurationValidationException("dnsSuffix must not be null.");
             }
 
             if (this.FlagSigningKey is null)
             {
-                throw new JsonConfigurationValidationException("flagSigningKey must not be  null.");
+                throw new JsonConfigurationValidationException("flagSigningKey must not be null.");
             }
 
             if (this.RoundLengthInSeconds <= 0)
             {
-                throw new JsonConfigurationValidationException("roundLengthInSeconds must not be  <= 0.");
+                throw new JsonConfigurationValidationException("roundLengthInSeconds must not be <= 0.");
             }
 
             if (this.CheckedRoundsPerRound <= 0)

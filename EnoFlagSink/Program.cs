@@ -1,5 +1,6 @@
 ﻿#pragma warning disable SA1200 // Using directives should be placed correctly
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using System.Threading;
@@ -26,14 +27,14 @@ try
     if (!mutex.WaitOne(10, false))
     {
         Console.WriteLine("Another Instance is already running.");
-        return;
+        return 1;
     }
 
     // Check if config exists
     if (!File.Exists("ctf.json"))
     {
         Console.WriteLine("Config (ctf.json) does not exist");
-        return;
+        return 1;
     }
 
     // Check if config is valid
@@ -45,7 +46,7 @@ try
         if (jsonConfiguration is null)
         {
             Console.WriteLine("Deserialization of config failed.");
-            return;
+            return 1;
         }
 
         configuration = await jsonConfiguration.ValidateAsync();
@@ -53,12 +54,14 @@ try
     catch (JsonException e)
     {
         Console.WriteLine($"Configuration could not be deserialized: {e.Message}");
-        return;
+        Debug.WriteLine($"{e.Message}\n{e.StackTrace}");
+        return 1;
     }
     catch (JsonConfigurationValidationException e)
     {
         Console.WriteLine($"Configuration is invalid: {e.Message}");
-        return;
+        Debug.WriteLine($"{e.Message}\n{e.StackTrace}");
+        return 1;
     }
 
     // Set up dependency injection tree
@@ -84,7 +87,6 @@ try
         })
         .BuildServiceProvider(validateScopes: true);
 
-    // Go!
     var submissionEndpoint = serviceProvider.GetRequiredService<FlagSubmissionEndpoint>();
     await submissionEndpoint.Start(configuration, cancelSource.Token);
 }
@@ -92,3 +94,5 @@ finally
 {
     mutex?.Close();
 }
+
+return 0;
