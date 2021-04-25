@@ -33,15 +33,15 @@ try
     // Check if another EnoEngine is already running
     if (!mutex.WaitOne(10, false))
     {
-        Console.WriteLine("Another Instance is already running.");
-        return;
+        Console.Error.WriteLine("Another Instance is already running.");
+        return 1;
     }
 
     // Check if config exists
     if (!File.Exists("ctf.json"))
     {
-        Console.WriteLine("Config (ctf.json) does not exist.");
-        return;
+        Console.Error.WriteLine("Config (ctf.json) does not exist.");
+        return 1;
     }
 
     // Check if config is valid
@@ -53,20 +53,22 @@ try
         if (jsonConfiguration is null)
         {
             Console.WriteLine("Deserialization of config failed.");
-            return;
+            return 1;
         }
 
         configuration = await jsonConfiguration.ValidateAsync();
     }
     catch (JsonException e)
     {
-        Console.WriteLine($"Configuration could not be deserialized: {e.Message}");
-        return;
+        Console.Error.WriteLine($"Configuration could not be deserialized: {e.Message}");
+        Debug.WriteLine($"{e.Message}\n{e.StackTrace}");
+        return 1;
     }
     catch (JsonConfigurationValidationException e)
     {
-        Console.WriteLine($"Configuration is invalid: {e.Message}");
-        return;
+        Console.Error.WriteLine($"Configuration is invalid: {e.Message}");
+        Debug.WriteLine($"{e.Message}\n{e.StackTrace}");
+        return 1;
     }
 
     // Generate scoreboardInfo.json
@@ -85,7 +87,8 @@ try
     }
     catch (Exception e)
     {
-        Console.WriteLine($"Failed to generate scoreboardInfo.json: {e.Message}");
+        Console.Error.WriteLine($"Failed to generate scoreboardInfo.json: {e.Message}");
+        Debug.WriteLine($"{e.Message}\n{e.StackTrace}");
     }
 
     // Set up dependency injection tree
@@ -126,10 +129,12 @@ try
     else
     {
         Console.WriteLine("Invalid arguments");
-        return;
+        return 1;
     }
 }
 finally
 {
     mutex?.Close();
 }
+
+return 0;
