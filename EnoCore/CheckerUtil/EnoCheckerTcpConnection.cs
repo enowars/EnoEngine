@@ -96,17 +96,23 @@
                 long i = 0;
                 while (i < destinationBuffer.Length)
                 {
+                    token.ThrowIfCancellationRequested();
                     ReadResult result = await this.pipe.Reader.ReadAsync(token);
                     ReadOnlySequence<byte> buffer = result.Buffer;
 
                     // Copy buffer to destination buffer
-                    var chunkSize = destinationBuffer.Length - i;
+                    var chunkSize = Math.Min(destinationBuffer.Length - i, result.Buffer.Length);
                     var chunk = buffer.Slice(0, chunkSize);
                     chunk.CopyTo(destinationBuffer[(int)i..].Span);
 
                     // Proclaim chunk consumed and nothing else examined
                     this.pipe.Reader.AdvanceTo(chunk.End, chunk.End);
                     i += chunkSize;
+
+                    if (result.IsCompleted && i < destinationBuffer.Length - 1)
+                    {
+                        throw new Exception("Pipe completed before all bytes were read");
+                    }
                 }
             }
             catch (Exception e)
@@ -126,7 +132,7 @@
         /// <param name="errorMessage">An optional error message which is put into all exceptions.</param>
         /// <returns>byte[] containing the received bytes, including the found delimiter.</returns>
         public async Task<byte[]> ReceiveUntilAsync(
-            byte delimiter,
+            ReadOnlyMemory<byte> delimiter,
             ILogger logger,
             CancellationToken token,
             string errorMessage = "Connection error")
@@ -135,24 +141,26 @@
             {
                 while (true)
                 {
+                    token.ThrowIfCancellationRequested();
                     ReadResult result = await this.pipe.Reader.ReadAsync(token);
                     ReadOnlySequence<byte> buffer = result.Buffer;
-                    SequencePosition? position = buffer.PositionOf(delimiter);
 
-                    if (position != null)
+                    if (new SequenceReader<byte>(buffer).TryReadTo(out ReadOnlySequence<byte> sequence, delimiter.Span))
                     {
-                        var returnBuffer = buffer.Slice(0, position.Value).ToArray();
-                        buffer = buffer.Slice(buffer.GetPosition(1, position.Value));
+                        var returnBuffer = sequence.ToArray();
 
                         // Proclaim portion consumed and nothing else examined
-                        this.pipe.Reader.AdvanceTo(buffer.Start, buffer.Start);
-
+                        this.pipe.Reader.AdvanceTo(buffer.GetPosition(sequence.Length + delimiter.Length, buffer.Start));
                         return returnBuffer;
                     }
                     else
                     {
                         // Proclaim everything examined
                         this.pipe.Reader.AdvanceTo(buffer.Start, buffer.End);
+                        if (result.IsCompleted)
+                        {
+                            throw new Exception("Pipe completed without delimiter");
+                        }
                     }
                 }
             }
