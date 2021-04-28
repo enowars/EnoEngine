@@ -9,11 +9,11 @@
 
     public interface ICheckerInitializer
     {
-        int FlagsPerRound { get; }
+        int FlagVariants { get; }
 
-        int NoisesPerRound { get; }
+        int NoiseVariants { get; }
 
-        int HavocsPerRound { get; }
+        int HavocVariants { get; }
 
         public string ServiceName { get; }
 
