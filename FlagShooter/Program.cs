@@ -54,7 +54,7 @@
                         SingleWriter = true,
                     });
                     int localI = i;
-                    int localJ = i;
+                    int localJ = j;
                     Task.Run(async () =>
                     {
                         try
@@ -64,7 +64,7 @@
                         }
                         catch (Exception e)
                         {
-                            Console.WriteLine($"Failed to create FlagSubmissionClient {j} for team {localI + this.teamStart}: {e.Message} ({e.GetType()})");
+                            Console.WriteLine($"Failed to create FlagSubmissionClient {localJ} for team {localI + this.teamStart}: {e.Message} ({e.GetType()})");
                         }
                     });
                     this.flagWriters.Add(channel.Writer);
