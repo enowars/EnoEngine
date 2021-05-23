@@ -156,7 +156,12 @@
                     var resultMessage = JsonSerializer.Deserialize<CheckerResultMessage>(responseString, EnoCoreUtil.CamelCaseEnumConverterOptions);
                     var checkerResult = resultMessage!.Result;
                     this.logger.LogDebug($"LaunchCheckerTask {task.Id} returned {checkerResult} with Message {resultMessage.Message}");
-                    CheckerTask updatedTask = task with { CheckerResult = checkerResult, ErrorMessage = resultMessage.Message, CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done };
+                    CheckerTask updatedTask = task with {
+                        CheckerResult = checkerResult,
+                        ErrorMessage = resultMessage.Message,
+                        AttackInfo = resultMessage.AttackInfo,
+                        CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done
+                    };
                     this.statistics.LogCheckerTaskFinishedMessage(updatedTask);
                     ResultsQueue.Enqueue(updatedTask);
                     return;

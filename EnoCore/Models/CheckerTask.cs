@@ -51,6 +51,7 @@
         long VariantId,
         CheckerResult CheckerResult,
         string? ErrorMessage,
+        string? AttackInfo,
         CheckerTaskLaunchStatus CheckerTaskLaunchStatus)
     {
         public string GetTaskChainId()
