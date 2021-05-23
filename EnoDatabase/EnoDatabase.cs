@@ -323,6 +323,7 @@
                             taskIndex % service.FlagVariants,
                             CheckerResult.INTERNAL_ERROR,
                             null,
+                            null,
                             CheckerTaskLaunchStatus.New);
                         tasks[i] = checkerTask;
                         taskStart = taskStart.AddSeconds(timeDiff);
@@ -380,6 +381,7 @@
                             taskIndex,
                             taskIndex % service.NoiseVariants,
                             CheckerResult.INTERNAL_ERROR,
+                            null,
                             null,
                             CheckerTaskLaunchStatus.New);
                         tasks[i] = checkerTask;
@@ -439,6 +441,7 @@
                             taskIndex % service.HavocVariants,
                             CheckerResult.INTERNAL_ERROR,
                             null,
+                            null,
                             CheckerTaskLaunchStatus.New);
                         tasks[i] = checkerTask;
                         taskStart = taskStart.AddSeconds(timeDiff);
@@ -496,6 +499,7 @@
                             taskIndex,
                             taskIndex % service.FlagVariants,
                             CheckerResult.INTERNAL_ERROR,
+                            null,
                             null,
                             CheckerTaskLaunchStatus.New);
                         tasks[i] = checkerTask;
@@ -560,6 +564,7 @@
                                 taskIndex % service.FlagVariants,
                                 CheckerResult.INTERNAL_ERROR,
                                 null,
+                                null,
                                 CheckerTaskLaunchStatus.New);
                             tasks[i] = task;
                             taskStart = taskStart.AddSeconds(timeDiff);
@@ -618,6 +623,7 @@
                             taskIndex,
                             taskIndex % service.NoiseVariants,
                             CheckerResult.INTERNAL_ERROR,
+                            null,
                             null,
                             CheckerTaskLaunchStatus.New);
 
