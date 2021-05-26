@@ -34,6 +34,9 @@ EOF
 )
 tmux select-pane -t "$session":"$window"."$enoflagsink_id" -T "$enoflagsink"
 
+# Sleep in order to not start a race condition between launcher and Engine
+sleep 3
+
 # EnoEngine (Bottom Left)
 enoengine_id=$(tmux split-pane -v -t "$session:$window.$enolauncher_id" "bash --rcfile <( cat << EOF
 . ~/.bashrc
