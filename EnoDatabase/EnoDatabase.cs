@@ -13,6 +13,7 @@
     using System.Text;
     using System.Threading.Tasks;
     using EnoCore;
+    using EnoCore.AttackInfo;
     using EnoCore.Configuration;
     using EnoCore.Logging;
     using EnoCore.Models;
@@ -46,6 +47,7 @@
         Task<(long NewLatestSnapshotRoundId, long OldSnapshotRoundId, Service[] Services, Team[] Teams)> GetPointCalculationFrame(long roundId, Configuration configuration);
         Task CalculateTeamServicePoints(Team[] teams, long roundId, Service service, long oldSnapshotRoundId, long newLatestSnapshotRoundId);
         Task<Round> PrepareRecalculation();
+        Task<AttackInfo> GetAttackInfo(long roundId, Configuration config);
 #pragma warning restore SA1516 // Elements should be separated by blank line
     }
 

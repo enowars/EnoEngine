@@ -85,6 +85,8 @@
                 await this.CalculateTotalPoints();
             }
 
+            await this.GenerateAttackInfo(roundId);
+
             var jsonStopWatch = new Stopwatch();
             jsonStopWatch.Start();
             var scoreboard = await this.databaseUtil.RetryScopedDatabaseAction(
@@ -178,6 +180,19 @@
                 // TODO EnoLogger.LogStatistics(RecordServiceStatesFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
                 this.logger.LogInformation($"RecordServiceStates took {stopWatch.ElapsedMilliseconds}ms");
             }
+        }
+
+        private async Task GenerateAttackInfo(long roundId)
+        {
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
+            var attackInfo = await this.databaseUtil.RetryScopedDatabaseAction(
+                this.serviceProvider,
+                db => db.GetAttackInfo(roundId, this.configuration));
+            var json = JsonSerializer.Serialize(attackInfo, EnoCoreUtil.CamelCaseEnumConverterOptions);
+            File.WriteAllText($"{EnoCoreUtil.DataDirectory}attack.json", json);
+            stopWatch.Stop();
+            this.logger.LogInformation($"Attack Info Generation Took {stopWatch.ElapsedMilliseconds} ms");
         }
     }
 }
