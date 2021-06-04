@@ -13,6 +13,7 @@
     using System.Text;
     using System.Threading.Tasks;
     using EnoCore;
+    using EnoCore.AttackInfo;
     using EnoCore.Configuration;
     using EnoCore.Logging;
     using EnoCore.Models;
@@ -46,6 +47,7 @@
         Task<(long NewLatestSnapshotRoundId, long OldSnapshotRoundId, Service[] Services, Team[] Teams)> GetPointCalculationFrame(long roundId, Configuration configuration);
         Task CalculateTeamServicePoints(Team[] teams, long roundId, Service service, long oldSnapshotRoundId, long newLatestSnapshotRoundId);
         Task<Round> PrepareRecalculation();
+        Task<AttackInfo> GetAttackInfo(long roundId, Configuration config);
 #pragma warning restore SA1516 // Elements should be separated by blank line
     }
 
@@ -323,6 +325,7 @@
                             taskIndex % service.FlagVariants,
                             CheckerResult.INTERNAL_ERROR,
                             null,
+                            null,
                             CheckerTaskLaunchStatus.New);
                         tasks[i] = checkerTask;
                         taskStart = taskStart.AddSeconds(timeDiff);
@@ -380,6 +383,7 @@
                             taskIndex,
                             taskIndex % service.NoiseVariants,
                             CheckerResult.INTERNAL_ERROR,
+                            null,
                             null,
                             CheckerTaskLaunchStatus.New);
                         tasks[i] = checkerTask;
@@ -439,6 +443,7 @@
                             taskIndex % service.HavocVariants,
                             CheckerResult.INTERNAL_ERROR,
                             null,
+                            null,
                             CheckerTaskLaunchStatus.New);
                         tasks[i] = checkerTask;
                         taskStart = taskStart.AddSeconds(timeDiff);
@@ -496,6 +501,7 @@
                             taskIndex,
                             taskIndex % service.FlagVariants,
                             CheckerResult.INTERNAL_ERROR,
+                            null,
                             null,
                             CheckerTaskLaunchStatus.New);
                         tasks[i] = checkerTask;
@@ -560,6 +566,7 @@
                                 taskIndex % service.FlagVariants,
                                 CheckerResult.INTERNAL_ERROR,
                                 null,
+                                null,
                                 CheckerTaskLaunchStatus.New);
                             tasks[i] = task;
                             taskStart = taskStart.AddSeconds(timeDiff);
@@ -618,6 +625,7 @@
                             taskIndex,
                             taskIndex % service.NoiseVariants,
                             CheckerResult.INTERNAL_ERROR,
+                            null,
                             null,
                             CheckerTaskLaunchStatus.New);
 

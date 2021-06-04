@@ -156,7 +156,25 @@
                     var resultMessage = JsonSerializer.Deserialize<CheckerResultMessage>(responseString, EnoCoreUtil.CamelCaseEnumConverterOptions);
                     var checkerResult = resultMessage!.Result;
                     this.logger.LogDebug($"LaunchCheckerTask {task.Id} returned {checkerResult} with Message {resultMessage.Message}");
-                    CheckerTask updatedTask = task with { CheckerResult = checkerResult, ErrorMessage = resultMessage.Message, CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done };
+                    var errorMessage = resultMessage.Message?.Replace("\0", string.Empty); // pgsql does NOT like 0 chars in utf8 strings
+                    var attackInfo = resultMessage.AttackInfo?.Replace("\0", string.Empty);
+
+                    if (resultMessage.Message != errorMessage)
+                    {
+                        this.logger.LogWarning("LaunchCheckerTask had message with 0 char in message");
+                    }
+
+                    if (resultMessage.AttackInfo != attackInfo)
+                    {
+                        this.logger.LogWarning("LaunchCheckerTask had attackInfo with 0 char in message");
+                    }
+
+                    CheckerTask updatedTask = task with {
+                        CheckerResult = checkerResult,
+                        ErrorMessage = errorMessage,
+                        AttackInfo = attackInfo,
+                        CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done
+                    };
                     this.statistics.LogCheckerTaskFinishedMessage(updatedTask);
                     ResultsQueue.Enqueue(updatedTask);
                     return;
@@ -231,7 +249,7 @@
             {
                 while (!LauncherCancelSource.IsCancellationRequested)
                 {
-                    CheckerTask[] results = new CheckerTask[TaskUpdateBatchSize];
+                    CheckerTask[]? results = new CheckerTask[TaskUpdateBatchSize];
                     int i = 0;
                     for (; i < TaskUpdateBatchSize; i++)
                     {
@@ -245,30 +263,32 @@
                         }
                     }
 
-                    while (!LauncherCancelSource.IsCancellationRequested)
+                    try
                     {
-                        try
+                        using (var scope = this.serviceProvider.CreateScope())
                         {
-                            using (var scope = this.serviceProvider.CreateScope())
-                            {
-                                var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                                await db.UpdateTaskCheckerTaskResults(results.AsMemory(0, i));
-                            }
-
-                            if (i != TaskUpdateBatchSize)
-                            {
-                                await Task.Delay(1);
-                            }
-
-                            break;
+                            var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
+                            await db.UpdateTaskCheckerTaskResults(results.AsMemory(0, i));
                         }
-                        catch (OperationCanceledException)
+
+                        if (i != TaskUpdateBatchSize)
                         {
-                            throw;
+                            await Task.Delay(1);
                         }
-                        catch (Exception e)
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        throw;
+                    }
+                    catch (Exception e)
+                    {
+                        this.logger.LogInformation($"UpdateDatabase dropping update because: {e.ToFancyStringWithCaller()}");
+                        if (results != null)
                         {
-                            this.logger.LogInformation($"UpdateDatabase retrying because: {e.ToFancyStringWithCaller()}");
+                            foreach (var task in results)
+                            {
+                                this.logger.LogCritical(task.ToString());
+                            }
                         }
                     }
                 }
@@ -278,7 +298,7 @@
             }
             catch (Exception e)
             {
-                this.logger.LogCritical($"UpdateDatabase failed: {e.ToFancyStringWithCaller()}");
+                this.logger.LogCritical($"UpdateDatabase failed : {e.ToFancyStringWithCaller()}");
             }
         }
     }

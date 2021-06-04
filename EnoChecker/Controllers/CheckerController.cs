@@ -64,27 +64,27 @@
                 }
 
                 this.logger.LogInformation($"Task {ctm.TaskId} succeeded");
-                return this.Json(new CheckerResultMessage(CheckerResult.OK, null));
+                return this.Json(new CheckerResultMessage(CheckerResult.OK, null, null));
             }
             catch (OperationCanceledException)
             {
                 this.logger.LogWarning($"Task {ctm.TaskId} was cancelled");
-                return this.Json(new CheckerResultMessage(CheckerResult.OFFLINE, null));
+                return this.Json(new CheckerResultMessage(CheckerResult.OFFLINE, null, null));
             }
             catch (MumbleException e)
             {
                 this.logger.LogWarning($"Task {ctm.TaskId} has failed: {e.ToFancyString()}");
-                return this.Json(new CheckerResultMessage(CheckerResult.MUMBLE, e.Message));
+                return this.Json(new CheckerResultMessage(CheckerResult.MUMBLE, e.Message, null));
             }
             catch (OfflineException e)
             {
                 this.logger.LogWarning($"Task {ctm.TaskId} has failed: {e.ToFancyString()}");
-                return this.Json(new CheckerResultMessage(CheckerResult.OFFLINE, e.Message));
+                return this.Json(new CheckerResultMessage(CheckerResult.OFFLINE, e.Message, null));
             }
             catch (Exception e)
             {
                 this.logger.LogError($"Task {ctm.TaskId} has failed: {e.ToFancyString()}");
-                return this.Json(new CheckerResultMessage(CheckerResult.INTERNAL_ERROR, null));
+                return this.Json(new CheckerResultMessage(CheckerResult.INTERNAL_ERROR, null, null));
             }
         }
 
@@ -92,7 +92,7 @@
         [Route("/service")]
         public IActionResult Service()
         {
-            var cim = new CheckerInfoMessage(this.checkerInitializer.ServiceName, this.checkerInitializer.FlagsPerRound, this.checkerInitializer.NoisesPerRound, this.checkerInitializer.HavocsPerRound);
+            var cim = new CheckerInfoMessage(this.checkerInitializer.ServiceName, this.checkerInitializer.FlagVariants, this.checkerInitializer.NoiseVariants, this.checkerInitializer.HavocVariants);
             return this.Json(cim, null);
         }
 

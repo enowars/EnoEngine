@@ -2,5 +2,6 @@
 {
     public sealed record CheckerResultMessage(
         CheckerResult Result,
-        string? Message);
+        string? Message,
+        string? AttackInfo);
 }

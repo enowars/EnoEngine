@@ -1,9 +1,9 @@
 #!/bin/sh
 tmux start-server
-tmux kill-session -t benni_session
+tmux kill-session -t enoengine_session
 
-session="benni_session"
-window="benni_window"
+session="enoengine_session"
+window="enoengine_window"
 enoengine="EnoEngine"
 enolauncher="EnoLauncher"
 enoflagsink="EnoFlagSink"
@@ -33,6 +33,9 @@ EOF
 )"
 )
 tmux select-pane -t "$session":"$window"."$enoflagsink_id" -T "$enoflagsink"
+
+# Sleep in order to not start a race condition between launcher and Engine
+sleep 3
 
 # EnoEngine (Bottom Left)
 enoengine_id=$(tmux split-pane -v -t "$session:$window.$enolauncher_id" "bash --rcfile <( cat << EOF

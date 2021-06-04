@@ -30,6 +30,9 @@ namespace EnoDatabase.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("AttackInfo")
+                        .HasColumnType("text");
+
                     b.Property<int>("CheckerResult")
                         .HasColumnType("integer");
 
