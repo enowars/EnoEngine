@@ -232,11 +232,12 @@
 
         internal async Task UpdateDatabaseLoop()
         {
+            CheckerTask[]? results = null;
             try
             {
                 while (!LauncherCancelSource.IsCancellationRequested)
                 {
-                    CheckerTask[] results = new CheckerTask[TaskUpdateBatchSize];
+                    results = new CheckerTask[TaskUpdateBatchSize];
                     int i = 0;
                     for (; i < TaskUpdateBatchSize; i++)
                     {
@@ -283,7 +284,14 @@
             }
             catch (Exception e)
             {
-                this.logger.LogCritical($"UpdateDatabase failed: {e.ToFancyStringWithCaller()}");
+                this.logger.LogCritical($"UpdateDatabase failed ({results}: {e.ToFancyStringWithCaller()}");
+                if (results != null)
+                {
+                    foreach (var task in results)
+                    {
+                        this.logger.LogCritical(task.ToString());
+                    }
+                }
             }
         }
     }
