@@ -232,12 +232,11 @@
 
         internal async Task UpdateDatabaseLoop()
         {
-            CheckerTask[]? results = null;
             try
             {
                 while (!LauncherCancelSource.IsCancellationRequested)
                 {
-                    results = new CheckerTask[TaskUpdateBatchSize];
+                    CheckerTask[]? results = new CheckerTask[TaskUpdateBatchSize];
                     int i = 0;
                     for (; i < TaskUpdateBatchSize; i++)
                     {
@@ -251,30 +250,32 @@
                         }
                     }
 
-                    while (!LauncherCancelSource.IsCancellationRequested)
+                    try
                     {
-                        try
+                        using (var scope = this.serviceProvider.CreateScope())
                         {
-                            using (var scope = this.serviceProvider.CreateScope())
-                            {
-                                var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                                await db.UpdateTaskCheckerTaskResults(results.AsMemory(0, i));
-                            }
-
-                            if (i != TaskUpdateBatchSize)
-                            {
-                                await Task.Delay(1);
-                            }
-
-                            break;
+                            var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
+                            await db.UpdateTaskCheckerTaskResults(results.AsMemory(0, i));
                         }
-                        catch (OperationCanceledException)
+
+                        if (i != TaskUpdateBatchSize)
                         {
-                            throw;
+                            await Task.Delay(1);
                         }
-                        catch (Exception e)
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        throw;
+                    }
+                    catch (Exception e)
+                    {
+                        this.logger.LogInformation($"UpdateDatabase dropping update because: {e.ToFancyStringWithCaller()}");
+                        if (results != null)
                         {
-                            this.logger.LogInformation($"UpdateDatabase retrying because: {e.ToFancyStringWithCaller()}");
+                            foreach (var task in results)
+                            {
+                                this.logger.LogCritical(task.ToString());
+                            }
                         }
                     }
                 }
@@ -284,14 +285,7 @@
             }
             catch (Exception e)
             {
-                this.logger.LogCritical($"UpdateDatabase failed ({results}: {e.ToFancyStringWithCaller()}");
-                if (results != null)
-                {
-                    foreach (var task in results)
-                    {
-                        this.logger.LogCritical(task.ToString());
-                    }
-                }
+                this.logger.LogCritical($"UpdateDatabase failed : {e.ToFancyStringWithCaller()}");
             }
         }
     }
