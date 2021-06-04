@@ -156,10 +156,23 @@
                     var resultMessage = JsonSerializer.Deserialize<CheckerResultMessage>(responseString, EnoCoreUtil.CamelCaseEnumConverterOptions);
                     var checkerResult = resultMessage!.Result;
                     this.logger.LogDebug($"LaunchCheckerTask {task.Id} returned {checkerResult} with Message {resultMessage.Message}");
+                    var errorMessage = resultMessage.Message?.Replace("\0", string.Empty); // pgsql does NOT like 0 chars in utf8 strings
+                    var attackInfo = resultMessage.AttackInfo?.Replace("\0", string.Empty);
+
+                    if (resultMessage.Message != errorMessage)
+                    {
+                        this.logger.LogWarning("LaunchCheckerTask had message with 0 char in message");
+                    }
+
+                    if (resultMessage.AttackInfo != attackInfo)
+                    {
+                        this.logger.LogWarning("LaunchCheckerTask had attackInfo with 0 char in message");
+                    }
+
                     CheckerTask updatedTask = task with {
                         CheckerResult = checkerResult,
-                        ErrorMessage = resultMessage.Message,
-                        AttackInfo = resultMessage.AttackInfo,
+                        ErrorMessage = errorMessage,
+                        AttackInfo = attackInfo,
                         CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done
                     };
                     this.statistics.LogCheckerTaskFinishedMessage(updatedTask);
