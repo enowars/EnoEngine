@@ -1,7 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace EnoCore.Scoreboard
+﻿namespace EnoCore.Scoreboard
 {
+    using System.ComponentModel.DataAnnotations;
+
     public class ScoreboardFirstBlood
     {
         public ScoreboardFirstBlood(long teamId, string teamName, string timestamp, long roundId, long flagVariantId)
@@ -42,7 +42,5 @@ namespace EnoCore.Scoreboard
         /// </summary>
         [Required]
         public long FlagVariantId { get; init; }
-
-
     }
 }

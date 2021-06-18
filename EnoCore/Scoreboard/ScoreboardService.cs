@@ -1,7 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace EnoCore.Scoreboard
+﻿namespace EnoCore.Scoreboard
 {
+    using System.ComponentModel.DataAnnotations;
+
     public class ScoreboardService
     {
         public ScoreboardService(long serviceId, string serviceName, long flagVariants, ScoreboardFirstBlood[] firstBloods)
@@ -34,7 +34,6 @@ namespace EnoCore.Scoreboard
         /// <summary>
         /// The amount of different flag variants.
         /// </summary>
-
         [Required]
         public ScoreboardFirstBlood[] FirstBloods { get; init; }
     }
