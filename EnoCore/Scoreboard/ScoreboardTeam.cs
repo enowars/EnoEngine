@@ -1,7 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace EnoCore.Scoreboard
+﻿namespace EnoCore.Scoreboard
 {
+    using System.ComponentModel.DataAnnotations;
+
     public class ScoreboardTeam
     {
         public ScoreboardTeam(string teamName, long teamId, string? logoUrl, string? countryCode, double totalScore, double attackScore, double defenseScore, double serviceLevelAgreementScore, ScoreboardTeamServiceDetails[] serviceDetails)

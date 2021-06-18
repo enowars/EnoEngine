@@ -1,8 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
-using EnoCore.Models;
-
-namespace EnoCore.Scoreboard
+﻿namespace EnoCore.Scoreboard
 {
+    using System.ComponentModel.DataAnnotations;
+    using EnoCore.Models;
+
     public class ScoreboardTeamServiceDetails
     {
         public ScoreboardTeamServiceDetails(long serviceId, double attackScore, double defenseScore, double serviceLevelAgreementScore, ServiceStatus serviceStatus, string? message)
@@ -42,7 +42,7 @@ namespace EnoCore.Scoreboard
         /// <summary>
         /// The Teams status for this service.
         /// </summary>
-        /// <example>"INTERNAL_ERROR", "OFFLINE", "MUMBLE", "RECOVERING", "OK", "INACTIVE"</example>
+        /// <example>"INTERNAL_ERROR", "OFFLINE", "MUMBLE", "RECOVERING", "OK", "INACTIVE".</example>
         [Required]
         public ServiceStatus ServiceStatus { get; init; }
 
@@ -50,6 +50,5 @@ namespace EnoCore.Scoreboard
         /// The message of the service, otherwise null.
         /// </summary>
         public string? Message { get; init; }
-
     }
 }
