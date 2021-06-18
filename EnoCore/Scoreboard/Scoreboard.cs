@@ -2,59 +2,49 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel.DataAnnotations;
     using System.Linq;
     using System.Text;
     using System.Text.Json;
     using EnoCore.Models;
 
-    public record ScoreboardInfo(
-        string? DnsSuffix,
-        ScoreboardService[] Services,
-        ScoreboardInfoTeam[] Teams);
+    public class Scoreboard
+    {
+        public Scoreboard(long currentRound, string? startTimestamp, string? endTimestamp, string? dnsSuffix, ScoreboardService[] services, ScoreboardTeam[] teams)
+        {
+            this.CurrentRound = currentRound;
+            this.StartTimestamp = startTimestamp;
+            this.EndTimestamp = endTimestamp;
+            this.DnsSuffix = dnsSuffix;
+            this.Services = services;
+            this.Teams = teams;
+        }
 
-    public record ScoreboardInfoTeam(
-        long TeamId,
-        string TeamName,
-        string? LogoUrl,
-        string? CountryCode);
+        /// <summary>
+        /// The ID of the current round.
+        /// </summary>
+        [Required]
+        public long CurrentRound { get; init; }
 
-    public record Scoreboard(
-        long CurrentRound,
-        string? StartTimestamp,
-        string? EndTimestamp,
-        string? DnsSuffix,
-        ScoreboardService[] Services,
-        ScoreboardTeam[] Teams);
+        /// <summary>
+        ///  Start timestamp of the current round according to ISO-86-01 ("yyyy-MM-ddTHH:mm:ss.fffZ") in UTC.
+        /// </summary>
+        public string? StartTimestamp { get; init; }
 
-    public record ScoreboardTeam(
-        string TeamName,
-        long TeamId,
-        string? LogoUrl,
-        string? CountryCode,
-        double TotalScore,
-        double AttackScore,
-        double DefenseScore,
-        double ServiceLevelAgreementScore,
-        ScoreboardTeamServiceDetails[] ServiceDetails);
+        /// <summary>
+        /// End timestamp of the current round according to ISO-86-01 ("yyyy-MM-ddTHH:mm:ss.fffZ") in UTC.
+        /// </summary>
+        public string? EndTimestamp { get; init; }
 
-    public record ScoreboardTeamServiceDetails(
-        long ServiceId,
-        double AttackScore,
-        double DefenseScore,
-        double ServiceLevelAgreementScore,
-        ServiceStatus ServiceStatus,
-        string? Message);
+        /// <summary>
+        /// The DNS suffix (including the leading dot), if DNS is used. Example: ".bambi.ovh".
+        /// </summary>
+        public string? DnsSuffix { get; init; }
 
-    public record ScoreboardService(
-        long ServiceId,
-        string ServiceName,
-        long FlagVariants,
-        ScoreboardFirstBlood[] FirstBloods);
+        [Required]
+        public ScoreboardService[] Services { get; init; }
 
-    public record ScoreboardFirstBlood(
-        long TeamId,
-        string TeamName,
-        string Timestamp,
-        long RoundId,
-        long FlagVariantId);
+        [Required]
+        public ScoreboardTeam[] Teams { get; init; }
+    }
 }
