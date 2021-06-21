@@ -88,19 +88,6 @@ interface CheckerResultMessage {
 
 ## Scoreboard API
 ```ts
-interface ScoreboardInfo {
-    dnsSuffix: string | null;                   // The DNS suffix (including the leading dot), if DNS is used. Example: ".bambi.ovh"
-    services: ScoreboardService[];
-    teams: ScoreboardInfoTeam[];
-}
-
-interface ScoreboardInfoTeam {
-    teamId: number;                             // The id of the team.
-    teamName: string;                           // The name of the team.
-    logoUrl: string | null;                     // An URL with the team's logo, or null.
-    countryCode: string | null;                 // The ISO 3166-1 alpha-2 country code (uppercase), or null.
-}
-
 interface Scoreboard {
     currentRoundId: number | null;
     startTimestamp: string | null;              // Start timestamp of the current round according to ISO-86-01 ("yyyy-MM-ddTHH:mm:ss.fffZ") in UTC.

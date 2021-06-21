@@ -71,26 +71,6 @@ try
         return 1;
     }
 
-    // Generate scoreboardInfo.json
-    try
-    {
-        var teams = configuration.Teams
-            .Select(s => new ScoreboardInfoTeam(s.Id, s.Name, s.LogoUrl, s.CountryFlagUrl))
-            .ToArray();
-        var services = configuration.Services
-            .Select(s => new ScoreboardService(s.Id, s.Name, s.FlagVariants, Array.Empty<ScoreboardFirstBlood>()))
-            .ToArray();
-        var json = JsonSerializer.Serialize(
-            new ScoreboardInfo(configuration.DnsSuffix, services, teams),
-            EnoCoreUtil.CamelCaseEnumConverterOptions);
-        File.WriteAllText($"{EnoCoreUtil.DataDirectory}scoreboardInfo.json", json);
-    }
-    catch (Exception e)
-    {
-        Console.Error.WriteLine($"Failed to generate scoreboardInfo.json: {e.Message}");
-        Debug.WriteLine($"{e.Message}\n{e.StackTrace}");
-    }
-
     // Set up dependency injection tree
     var serviceProvider = new ServiceCollection()
         .AddLogging()

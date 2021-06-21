@@ -1,8 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <OutputType>Exe</OutputType>
-    </PropertyGroup>
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- Documentation Comments don't have to start with "Gets" https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1623.md -->
+    <NoWarn>SA1623</NoWarn>
+  </PropertyGroup>
 
     <ItemGroup>
         <AdditionalFiles Include="..\stylecop.json" Link="stylecop.json" />
