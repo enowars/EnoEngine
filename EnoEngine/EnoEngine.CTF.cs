@@ -104,7 +104,7 @@
             var content = new StringContent(json, Encoding.UTF8, "application/json");
             content.Headers.ContentType.CharSet = string.Empty;
             var response = await Client.PostAsync("http://localhost:5000/api/scoreboardinfo/scoreboard?adminSecret=secret", content);
-            this.logger.LogInformation("EnoLandingPage returned:" + response.StatusCode + "\n" + response.Content);
+            this.logger.LogInformation("EnoLandingPage returned:" + response.StatusCode + "\n" + await response.Content.ReadAsStringAsync());
             return DateTime.UtcNow;
         }
 
