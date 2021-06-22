@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
+    using System.Net.Http;
     using System.Text;
     using System.Text.Json;
     using System.Threading;
@@ -16,6 +17,8 @@
 
     internal partial class EnoEngine
     {
+        private static readonly HttpClient Client = new HttpClient();
+
         public async Task<DateTime> StartNewRound()
         {
             var stopwatch = new Stopwatch();
@@ -95,8 +98,11 @@
             var json = JsonSerializer.Serialize(scoreboard, EnoCoreUtil.CamelCaseEnumConverterOptions);
             File.WriteAllText($"{EnoCoreUtil.DataDirectory}scoreboard{roundId}.json", json);
             File.WriteAllText($"{EnoCoreUtil.DataDirectory}scoreboard.json", json);
+
             jsonStopWatch.Stop();
             this.logger.LogInformation($"Scoreboard Generation Took {jsonStopWatch.ElapsedMilliseconds} ms");
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await Client.PostAsync("http://localhost:5000/api/scoreboardinfo/scoreboard?adminSecret=secret", content);
             return DateTime.UtcNow;
         }
 
