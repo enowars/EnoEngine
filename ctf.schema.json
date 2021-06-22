@@ -1,0 +1,193 @@
+{
+  "$id": "JsonConfiguration",
+  "type": "object",
+  "properties": {
+    "title": {
+      "description": "The title of the event.",
+      "type": "string"
+    },
+    "flagValidityInRounds": {
+      "description": "Validity of a flag in rounds.",
+      "type": "integer",
+      "minimum": 0.0,
+      "maximum": 9.223372036854776E+18
+    },
+    "checkedRoundsPerRound": {
+      "description": "Number of times a flag is checked per round.",
+      "type": "integer",
+      "minimum": 1.0,
+      "maximum": 9.223372036854776E+18
+    },
+    "roundLengthInSeconds": {
+      "description": "The length of one round in seconds.",
+      "type": "integer",
+      "minimum": 1.0,
+      "maximum": 9.223372036854776E+18
+    },
+    "dnsSuffix": {
+      "description": "The DNS Suffix.",
+      "type": "string"
+    },
+    "teamSubnetBytesLength": {
+      "description": "Team Subnet bye lenght.",
+      "type": "integer"
+    },
+    "flagSigningKey": {
+      "description": "The Signing Key for the flags.",
+      "type": "string"
+    },
+    "encoding": {
+      "description": "Encoding of the flags",
+      "type": "string",
+      "enum": [
+        "Legacy",
+        "UTF8"
+      ]
+    },
+    "teams": {
+      "$id": "List`1",
+      "description": "All Teams participating in the CTF.",
+      "type": "array",
+      "items": {
+        "$id": "JsonConfigurationTeam",
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "id": {
+            "description": "The id of the team.",
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 9.223372036854776E+18
+          },
+          "name": {
+            "description": "The name of the service.",
+            "type": "string"
+          },
+          "active": {
+            "description": "Whether the team is active or not.",
+            "type": "boolean"
+          },
+          "address": {
+            "description": "The IP address of the teams vulnbox.",
+            "type": "string"
+          },
+          "countryFlagUrl": {
+            "description": "The URL to the country flag of the team",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri"
+          },
+          "logoUrl": {
+            "description": "The URL to the logo of the team.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri"
+          },
+          "teamSubnet": {
+            "description": "The Teams Subnet.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "address",
+          "teamSubnet"
+        ]
+      },
+      "minItems": 1
+    },
+    "services": {
+      "$id": "List`1",
+      "description": "All Services used in this CTF.",
+      "type": "array",
+      "items": {
+        "$id": "JsonConfigurationService",
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "id": {
+            "description": "The id of the service.",
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 9.223372036854776E+18
+          },
+          "name": {
+            "description": "The title of the event.",
+            "type": "string"
+          },
+          "active": {
+            "description": "Whether the Service is active or not.",
+            "type": "boolean"
+          },
+          "checkers": {
+            "$id": "String[]",
+            "description": "The fully specified URL address for each checker",
+            "type": "array",
+            "items": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "flagsPerRoundMultiplier": {
+            "description": "Multiplier for flags send per Round.",
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 9.223372036854776E+18
+          },
+          "havocsPerRoundMultiplier": {
+            "description": "Multiplier for havocs send per Round.",
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 9.223372036854776E+18
+          },
+          "noisesPerRoundMultiplier": {
+            "description": "Multiplier for noise send per Round.",
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 9.223372036854776E+18
+          },
+          "weightFactor": {
+            "description": "The weight for scoring this service.",
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 9.223372036854776E+18
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "active",
+          "checkers",
+          "flagsPerRoundMultiplier",
+          "havocsPerRoundMultiplier",
+          "noisesPerRoundMultiplier",
+          "weightFactor"
+        ]
+      },
+      "minItems": 1
+    }
+  },
+  "required": [
+    "title",
+    "flagValidityInRounds",
+    "checkedRoundsPerRound",
+    "roundLengthInSeconds",
+    "dnsSuffix",
+    "teamSubnetBytesLength",
+    "flagSigningKey",
+    "encoding",
+    "teams",
+    "services"
+  ]
+}

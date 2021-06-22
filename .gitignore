@@ -5,6 +5,7 @@
 *.cfg
 ctf.json
 ctf.*.json
+!/ctf.schema.json
 *.code-workspace
 data
 obj

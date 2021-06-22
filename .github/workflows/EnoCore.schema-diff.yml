@@ -1,0 +1,35 @@
+name: CI Tests / EnoCore Schema Detect differences
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '5.0.x'
+      - name: Install dependencies
+        run: dotnet restore
+      - name: Pack
+        run: dotnet run -c Release -p EnoCore
+
+      - name: Git status
+        run: git status    
+
+      - name: Check if there are changes
+        id: changes
+        run: | 
+          git status --porcelain && echo 1 || echo 0
+
+      - name: Fail if changes detected
+        uses: actions/github-script@v3
+        if: steps.changes.outputs.changed == 1
+        with:
+          script: |
+            core.setFailed('The JSON schema differs from the EnoCore package. Run "dotnet run -c Release EnoCore" locally.')
