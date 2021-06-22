@@ -242,7 +242,7 @@
                         .Where(sf => sf != null)
                         .Select(sf => new ScoreboardFirstBlood(
                             sf.AttackerTeamId,
-                            string.Empty, // TODO
+                            teams.Where(t => t.Id == sf.AttackerTeamId).First().Name,
                             sf.Timestamp.ToString(EnoCoreUtil.DateTimeFormat),
                             sf.RoundId,
                             sf.FlagRoundOffset % service.FlagVariants))
