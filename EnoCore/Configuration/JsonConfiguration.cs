@@ -214,7 +214,7 @@
         string? Address,
         string? TeamSubnet,
         string? LogoUrl,
-        string? CountryFlagUrl,
+        string? CountryCode,
         bool Active = true)
     {
         public ConfigurationTeam Validate(int subnetBytesLength)
@@ -252,7 +252,7 @@
                 this.Address,
                 teamSubnet,
                 this.LogoUrl,
-                this.CountryFlagUrl,
+                this.CountryCode,
                 this.Active);
         }
     }

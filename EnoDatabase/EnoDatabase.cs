@@ -95,7 +95,7 @@
                         TeamSubnet = team.TeamSubnet,
                         Name = team.Name,
                         LogoUrl = team.LogoUrl,
-                        CountryCode = team.CountryFlagUrl,
+                        CountryCode = team.CountryCode,
                         Id = team.Id,
                         Active = team.Active,
                         Address = team.Address,

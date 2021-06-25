@@ -28,7 +28,7 @@
         string? Address,
         byte[] TeamSubnet,
         string? LogoUrl,
-        string? CountryFlagUrl,
+        string? CountryCode,
         bool Active);
 
     public sealed record ConfigurationService(
