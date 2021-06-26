@@ -9,7 +9,8 @@
     using EnoCore;
     using EnoCore.Configuration;
     using EnoCore.Models;
-    using EnoCore.Scoreboard;
+    using EnoCore.Models.Database;
+    using EnoCore.Models.Scoreboard;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Logging;
 

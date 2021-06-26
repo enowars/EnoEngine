@@ -7,6 +7,7 @@
     using System.Text.Json;
     using System.Threading;
     using EnoCore.Models;
+    using EnoCore.Models.Database;
 
     public sealed class EnoStatistics : IDisposable
     {

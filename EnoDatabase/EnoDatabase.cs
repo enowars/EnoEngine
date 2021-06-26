@@ -12,12 +12,13 @@
     using System.Runtime.InteropServices;
     using System.Text;
     using System.Threading.Tasks;
+    using EEnoCore.Models.AttackInfo;
     using EnoCore;
-    using EnoCore.AttackInfo;
     using EnoCore.Configuration;
     using EnoCore.Logging;
     using EnoCore.Models;
-    using EnoCore.Scoreboard;
+    using EnoCore.Models.Database;
+    using EnoCore.Models.Scoreboard;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;

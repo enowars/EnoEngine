@@ -6,10 +6,11 @@
     using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
+    using EEnoCore.Models.AttackInfo;
     using EnoCore;
-    using EnoCore.AttackInfo;
     using EnoCore.Configuration;
     using EnoCore.Models;
+    using EnoCore.Models.Database;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Logging;
 

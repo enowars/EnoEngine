@@ -7,6 +7,8 @@
     using System.Threading.Tasks;
     using EnoCore.Logging;
     using EnoCore.Models;
+    using EnoCore.Models.CheckerApi;
+    using EnoCore.Models.Database;
     using Microsoft.Extensions.Logging;
 
     public static class LoggerExtensions

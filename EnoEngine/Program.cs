@@ -11,7 +11,7 @@ using EnoCore;
 using EnoCore.Configuration;
 using EnoCore.Logging;
 using EnoCore.Models;
-using EnoCore.Scoreboard;
+using EnoCore.Models.JsonConfiguration;
 using EnoDatabase;
 using EnoEngine;
 using Microsoft.EntityFrameworkCore;
@@ -49,14 +49,14 @@ try
     try
     {
         string content = File.ReadAllText("ctf.json");
-        var jsonConfiguration = JsonConfiguration.Deserialize(content);
+        var jsonConfiguration = JsonSerializer.Deserialize<JsonConfiguration>(content, EnoCoreUtil.CamelCaseEnumConverterOptions);
         if (jsonConfiguration is null)
         {
             Console.WriteLine("Deserialization of config failed.");
             return 1;
         }
 
-        configuration = await jsonConfiguration.ValidateAsync();
+        configuration = await Configuration.Validate(jsonConfiguration);
     }
     catch (JsonException e)
     {

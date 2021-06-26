@@ -10,6 +10,7 @@
     using System.Threading.Tasks;
     using EnoCore;
     using EnoCore.Models;
+    using EnoCore.Models.Database;
     using EnoDatabase;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
