@@ -1,10 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <!-- Documentation Comments don't have to start with "Gets" https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1623.md -->
-    <NoWarn>SA1623</NoWarn>
-  </PropertyGroup>
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <!-- Documentation Comments don't have to start with "Gets" https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1623.md -->
+        <NoWarn>SA1623</NoWarn>
+    </PropertyGroup>
 
     <ItemGroup>
         <AdditionalFiles Include="..\stylecop.json" Link="stylecop.json" />
@@ -13,8 +13,6 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="5.0.0" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-        <PackageReference Include="Newtonsoft.Json.Schema" Version="3.0.14" />
         <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.261">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -22,4 +20,9 @@
         <PackageReference Include="System.IO.Pipelines" Version="5.0.0" />
         <PackageReference Include="System.Text.Json" Version="5.0.2" />
     </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\EnoCore.Models\EnoCore.Models.csproj" />
+    </ItemGroup>
+
 </Project>

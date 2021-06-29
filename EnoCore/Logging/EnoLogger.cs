@@ -7,6 +7,8 @@
     using System.Text.Json;
     using System.Threading.Tasks;
     using EnoCore.Models;
+    using EnoCore.Models.CheckerApi;
+    using EnoCore.Models.Database;
     using Microsoft.Extensions.Logging;
 
     public class EnoLogger : ILogger

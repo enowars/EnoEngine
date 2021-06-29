@@ -9,7 +9,8 @@
     using EnoCore;
     using EnoCore.Configuration;
     using EnoCore.Models;
-    using EnoCore.Scoreboard;
+    using EnoCore.Models.Database;
+    using EnoCore.Models.Scoreboard;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Logging;
 
@@ -242,7 +243,7 @@
                         .Where(sf => sf != null)
                         .Select(sf => new ScoreboardFirstBlood(
                             sf.AttackerTeamId,
-                            string.Empty, // TODO
+                            teams.Where(t => t.Id == sf.AttackerTeamId).First().Name,
                             sf.Timestamp.ToString(EnoCoreUtil.DateTimeFormat),
                             sf.RoundId,
                             sf.FlagRoundOffset % service.FlagVariants))
