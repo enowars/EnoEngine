@@ -113,6 +113,7 @@
             {
                 this.logger.LogError($"HTTP POST to Scoreboard failed because: {e}");
             }
+
             return DateTime.UtcNow;
         }
 
