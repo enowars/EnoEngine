@@ -105,6 +105,7 @@
             try
             {
                 var url = Environment.GetEnvironmentVariable("SCOREBOARD_ENDPOINT") ?? "http://localhost:5001/api/scoreboardinfo/scoreboard?adminSecret=secret";
+                this.logger.LogInformation("Sending Scoreboard to:" + url);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
                 var response = await Client.PostAsync(url, content);
                 this.logger.LogInformation("EnoLandingPage returned:" + response.StatusCode + "\n" + await response.Content.ReadAsStringAsync());
