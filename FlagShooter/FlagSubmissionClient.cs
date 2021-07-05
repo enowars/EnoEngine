@@ -8,6 +8,7 @@
     using System.Threading.Tasks;
     using EnoCore;
     using EnoCore.Models;
+    using EnoCore.Models.Database;
 
     internal class FlagSubmissionClient
     {

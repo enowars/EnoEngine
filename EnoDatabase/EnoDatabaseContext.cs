@@ -6,6 +6,7 @@
     using System.Text;
     using System.Threading.Tasks;
     using EnoCore.Models;
+    using EnoCore.Models.Database;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Design;
 

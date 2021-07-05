@@ -1,6 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Documentation Comments don't have to start with "Gets" https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1623.md -->
+    <NoWarn>SA1623</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,6 +18,10 @@
     </PackageReference>
     <PackageReference Include="System.IO.Pipelines" Version="5.0.0" />
     <PackageReference Include="System.Text.Json" Version="5.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EnoCore.Models\EnoCore.Models.csproj" />
   </ItemGroup>
 
 </Project>

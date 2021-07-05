@@ -11,7 +11,7 @@ using EnoCore;
 using EnoCore.Configuration;
 using EnoCore.Logging;
 using EnoCore.Models;
-using EnoCore.Scoreboard;
+using EnoCore.Models.JsonConfiguration;
 using EnoDatabase;
 using EnoEngine;
 using Microsoft.EntityFrameworkCore;
@@ -49,14 +49,14 @@ try
     try
     {
         string content = File.ReadAllText("ctf.json");
-        var jsonConfiguration = JsonConfiguration.Deserialize(content);
+        var jsonConfiguration = JsonSerializer.Deserialize<JsonConfiguration>(content, EnoCoreUtil.CamelCaseEnumConverterOptions);
         if (jsonConfiguration is null)
         {
             Console.WriteLine("Deserialization of config failed.");
             return 1;
         }
 
-        configuration = await jsonConfiguration.ValidateAsync();
+        configuration = await Configuration.Validate(jsonConfiguration);
     }
     catch (JsonException e)
     {
@@ -69,26 +69,6 @@ try
         Console.Error.WriteLine($"Configuration is invalid: {e.Message}");
         Debug.WriteLine($"{e.Message}\n{e.StackTrace}");
         return 1;
-    }
-
-    // Generate scoreboardInfo.json
-    try
-    {
-        var teams = configuration.Teams
-            .Select(s => new ScoreboardInfoTeam(s.Id, s.Name, s.LogoUrl, s.CountryFlagUrl))
-            .ToArray();
-        var services = configuration.Services
-            .Select(s => new ScoreboardService(s.Id, s.Name, s.FlagVariants, Array.Empty<ScoreboardFirstBlood>()))
-            .ToArray();
-        var json = JsonSerializer.Serialize(
-            new ScoreboardInfo(configuration.DnsSuffix, services, teams),
-            EnoCoreUtil.CamelCaseEnumConverterOptions);
-        File.WriteAllText($"{EnoCoreUtil.DataDirectory}scoreboardInfo.json", json);
-    }
-    catch (Exception e)
-    {
-        Console.Error.WriteLine($"Failed to generate scoreboardInfo.json: {e.Message}");
-        Debug.WriteLine($"{e.Message}\n{e.StackTrace}");
     }
 
     // Set up dependency injection tree

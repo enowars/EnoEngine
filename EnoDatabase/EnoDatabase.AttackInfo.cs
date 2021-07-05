@@ -6,10 +6,11 @@
     using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
+    using EEnoCore.Models.AttackInfo;
     using EnoCore;
-    using EnoCore.AttackInfo;
     using EnoCore.Configuration;
     using EnoCore.Models;
+    using EnoCore.Models.Database;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Logging;
 
@@ -73,10 +74,10 @@
                         team.Add(roundTasks.Key.CurrentRoundId, round);
                     }
 
-                    service.Add(teamAddresses[teamTasks.Key.TeamId] ?? teamTasks.Key.TeamId.ToString(), team);
+                    service.TryAdd(teamAddresses[teamTasks.Key.TeamId] ?? teamTasks.Key.TeamId.ToString(), team);
                 }
 
-                services.Add(serviceNames[serviceTasks.Key.ServiceId] ?? serviceTasks.Key.ServiceId.ToString(), service);
+                services.TryAdd(serviceNames[serviceTasks.Key.ServiceId] ?? serviceTasks.Key.ServiceId.ToString(), service);
             }
 
             var attackInfo = new AttackInfo(availableTeamAddresses, services);

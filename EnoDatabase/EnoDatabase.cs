@@ -12,12 +12,13 @@
     using System.Runtime.InteropServices;
     using System.Text;
     using System.Threading.Tasks;
+    using EEnoCore.Models.AttackInfo;
     using EnoCore;
-    using EnoCore.AttackInfo;
     using EnoCore.Configuration;
     using EnoCore.Logging;
     using EnoCore.Models;
-    using EnoCore.Scoreboard;
+    using EnoCore.Models.Database;
+    using EnoCore.Models.Scoreboard;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
@@ -95,7 +96,7 @@
                         TeamSubnet = team.TeamSubnet,
                         Name = team.Name,
                         LogoUrl = team.LogoUrl,
-                        CountryCode = team.CountryFlagUrl,
+                        CountryCode = team.CountryCode,
                         Id = team.Id,
                         Active = team.Active,
                         Address = team.Address,
@@ -299,11 +300,11 @@
             var tasks = new CheckerTask[tasksCount];
             int i = 0;
 
-            foreach (var service in config.ActiveServices)
+            foreach (var team in config.ActiveTeams)
             {
-                var checkers = config.Checkers[service.Id];
-                foreach (var team in config.ActiveTeams)
+                foreach (var service in config.ActiveServices)
                 {
+                    var checkers = config.Checkers[service.Id];
                     for (int taskIndex = 0; taskIndex < service.FlagsPerRound; taskIndex++)
                     {
                         var checkerTask = new CheckerTask(
@@ -358,11 +359,11 @@
             var tasks = new CheckerTask[tasksCount];
             int i = 0;
 
-            foreach (var service in config.ActiveServices)
+            foreach (var team in config.ActiveTeams)
             {
-                var checkers = config.Checkers[service.Id];
-                foreach (var team in config.ActiveTeams)
+                foreach (var service in config.ActiveServices)
                 {
+                    var checkers = config.Checkers[service.Id];
                     for (int taskIndex = 0; taskIndex < service.NoisesPerRound; taskIndex++)
                     {
                         var checkerTask = new CheckerTask(
@@ -417,11 +418,11 @@
             var tasks = new CheckerTask[tasksCount];
             int i = 0;
 
-            foreach (var service in config.ActiveServices)
+            foreach (var team in config.ActiveTeams)
             {
-                var checkers = config.Checkers[service.Id];
-                foreach (var team in config.ActiveTeams)
+                foreach (var service in config.ActiveServices)
                 {
+                    var checkers = config.Checkers[service.Id];
                     for (int taskIndex = 0; taskIndex < service.HavocsPerRound; taskIndex++)
                     {
                         var checkerTask = new CheckerTask(
@@ -476,11 +477,11 @@
             var tasks = new CheckerTask[tasksCount];
             int i = 0;
 
-            foreach (var service in config.ActiveServices)
+            foreach (var team in config.ActiveTeams)
             {
-                var checkers = config.Checkers[service.Id];
-                foreach (var team in config.ActiveTeams)
+                foreach (var service in config.ActiveServices)
                 {
+                    var checkers = config.Checkers[service.Id];
                     for (int taskIndex = 0; taskIndex < service.FlagsPerRound; taskIndex++)
                     {
                         var checkerTask = new CheckerTask(
@@ -540,11 +541,11 @@
 
             for (long oldRoundId = round.Id - 1; oldRoundId > (round.Id - config.CheckedRoundsPerRound) && oldRoundId > 0; oldRoundId--)
             {
-                foreach (var service in config.ActiveServices)
+                foreach (var team in config.ActiveTeams)
                 {
-                    var checkers = config.Checkers[service.Id];
-                    foreach (var team in config.ActiveTeams)
+                    foreach (var service in config.ActiveServices)
                     {
+                        var checkers = config.Checkers[service.Id];
                         for (int taskIndex = 0; taskIndex < service.FlagsPerRound; taskIndex++)
                         {
                             var task = new CheckerTask(
@@ -600,11 +601,11 @@
             var tasks = new CheckerTask[tasksCount];
             int i = 0;
 
-            foreach (var service in config.ActiveServices)
+            foreach (var team in config.ActiveTeams)
             {
-                var checkers = config.Checkers[service.Id];
-                foreach (var team in config.ActiveTeams)
+                foreach (var service in config.ActiveServices)
                 {
+                    var checkers = config.Checkers[service.Id];
                     for (int taskIndex = 0; taskIndex < service.NoisesPerRound; taskIndex++)
                     {
                         var checkerTask = new CheckerTask(

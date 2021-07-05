@@ -15,6 +15,7 @@
     using EnoCore.Configuration;
     using EnoCore.Logging;
     using EnoCore.Models;
+    using EnoCore.Models.Database;
     using EnoDatabase;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;

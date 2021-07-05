@@ -5,9 +5,11 @@ using System.IO;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using EnoCore;
 using EnoCore.Configuration;
 using EnoCore.Logging;
 using EnoCore.Models;
+using EnoCore.Models.JsonConfiguration;
 using EnoDatabase;
 using EnoFlagSink;
 using Microsoft.EntityFrameworkCore;
@@ -42,14 +44,14 @@ try
     try
     {
         var content = File.ReadAllText("ctf.json");
-        var jsonConfiguration = JsonConfiguration.Deserialize(content);
+        var jsonConfiguration = JsonSerializer.Deserialize<JsonConfiguration>(content, EnoCoreUtil.CamelCaseEnumConverterOptions);
         if (jsonConfiguration is null)
         {
             Console.WriteLine("Deserialization of config failed.");
             return 1;
         }
 
-        configuration = await jsonConfiguration.ValidateAsync();
+        configuration = await Configuration.Validate(jsonConfiguration);
     }
     catch (JsonException e)
     {
