@@ -102,9 +102,17 @@
 
             jsonStopWatch.Stop();
             this.logger.LogInformation($"Scoreboard Generation Took {jsonStopWatch.ElapsedMilliseconds} ms");
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var response = await Client.PostAsync("http://localhost:5000/api/scoreboardinfo/scoreboard?adminSecret=secret", content);
-            this.logger.LogInformation("EnoLandingPage returned:" + response.StatusCode + "\n" + await response.Content.ReadAsStringAsync());
+            try
+            {
+                var url = Environment.GetEnvironmentVariable("SCOREBOARD_ENDPOINT") ?? "http://localhost:5000/api/scoreboardinfo/scoreboard?adminSecret=secret";
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var response = await Client.PostAsync(url, content);
+                this.logger.LogInformation("EnoLandingPage returned:" + response.StatusCode + "\n" + await response.Content.ReadAsStringAsync());
+            }
+            catch (Exception e)
+            {
+                this.logger.LogError($"HTTP POST to Scoreboard failed because: {e}");
+            }
             return DateTime.UtcNow;
         }
 
