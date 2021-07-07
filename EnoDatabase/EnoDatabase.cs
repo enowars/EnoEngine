@@ -283,8 +283,7 @@
         public async Task InsertPutFlagsTasks(Round round, Configuration config)
         {
             // putflags are started in Q1
-            double maxRunningTime = config.RoundLengthInSeconds / 4;
-            var taskStart = round.Begin;
+            double quarterLength = config.RoundLengthInSeconds / 4;
             int tasksCount = 0;
             foreach (var service in config.ActiveServices)
             {
@@ -293,20 +292,30 @@
 
             if (tasksCount == 0)
             {
+                // TODO warn if not test mode
                 return;
             }
 
-            double timeDiff = (maxRunningTime - 2) / tasksCount;
-            var tasks = new CheckerTask[tasksCount];
-            int i = 0;
-
-            foreach (var team in config.ActiveTeams)
+            var tasks = new List<CheckerTask>(tasksCount);
+            var taskStart = round.Begin;
+            double teamStepLength = (quarterLength - 2) / config.ActiveTeams.Count;
+            double serviceStepLength = teamStepLength / config.ActiveServices.Count;
+            foreach (var service in config.ActiveServices)
             {
-                foreach (var service in config.ActiveServices)
+                double serviceOffset = (service.Id - 1) * serviceStepLength;
+                for (int variantIndex = 0; variantIndex < service.FlagsPerRound; variantIndex++)
                 {
+                    double variantOffset = variantIndex * (serviceStepLength / service.FlagsPerRound);
+
+                    // this.logger.LogDebug($"InsertPutFlagsTasks serviceId={service.Id} variantIndex={variantIndex} teamStepLength={teamStepLength}s serviceStepLength={serviceStepLength} variantOffset={variantOffset}s");
                     var checkers = config.Checkers[service.Id];
-                    for (int taskIndex = 0; taskIndex < service.FlagsPerRound; taskIndex++)
+                    int i = 0;
+                    var currentTasks = new List<CheckerTask>();
+                    foreach (var team in config.ActiveTeams)
                     {
+                        double taskOffset = (i * teamStepLength) + serviceOffset + variantOffset;
+
+                        // this.logger.LogDebug($"InsertPutFlagsTasks taskOffset={taskOffset}");
                         var checkerTask = new CheckerTask(
                             0,
                             checkers[i % checkers.Length],
@@ -318,20 +327,22 @@
                             team.Name,
                             round.Id,
                             round.Id,
-                            new Flag(team.Id, service.Id, taskIndex, round.Id, 0).ToString(Encoding.ASCII.GetBytes(config.FlagSigningKey), config.Encoding),
-                            taskStart,
-                            (int)(maxRunningTime * 1000),
+                            new Flag(team.Id, service.Id, variantIndex, round.Id, 0).ToString(Encoding.ASCII.GetBytes(config.FlagSigningKey), config.Encoding),
+                            taskStart.AddSeconds(taskOffset),
+                            (int)(quarterLength * 1000),
                             config.RoundLengthInSeconds,
-                            taskIndex,
-                            taskIndex % service.FlagVariants,
+                            variantIndex,
+                            variantIndex % service.FlagVariants,
                             CheckerResult.INTERNAL_ERROR,
                             null,
                             null,
                             CheckerTaskLaunchStatus.New);
-                        tasks[i] = checkerTask;
-                        taskStart = taskStart.AddSeconds(timeDiff);
+                        currentTasks.Add(checkerTask);
                         i += 1;
                     }
+
+                    this.FisherYatesShuffleTaskStarts(currentTasks);
+                    tasks.AddRange(currentTasks);
                 }
             }
 
@@ -342,8 +353,7 @@
         public async Task InsertPutNoisesTasks(Round round, Configuration config)
         {
             // putnoises are started in Q1
-            double maxRunningTime = config.RoundLengthInSeconds / 4;
-            var taskStart = round.Begin;
+            double quarterLength = config.RoundLengthInSeconds / 4;
             int tasksCount = 0;
             foreach (var service in config.ActiveServices)
             {
@@ -355,17 +365,26 @@
                 return;
             }
 
-            double timeDiff = (maxRunningTime - 2) / tasksCount;
-            var tasks = new CheckerTask[tasksCount];
-            int i = 0;
-
-            foreach (var team in config.ActiveTeams)
+            var tasks = new List<CheckerTask>(tasksCount);
+            var taskStart = round.Begin;
+            double teamStepLength = (quarterLength - 2) / config.ActiveTeams.Count;
+            double serviceStepLength = teamStepLength / config.ActiveServices.Count;
+            foreach (var service in config.ActiveServices)
             {
-                foreach (var service in config.ActiveServices)
+                double serviceOffset = (service.Id - 1) * serviceStepLength;
+                for (int variantIndex = 0; variantIndex < service.NoisesPerRound; variantIndex++)
                 {
+                    double variantOffset = variantIndex * (serviceStepLength / service.NoisesPerRound);
+
+                    // this.logger.LogDebug($"InsertPutNoisesTasks serviceId={service.Id} variantIndex={variantIndex} teamStepLength={teamStepLength}s serviceStepLength={serviceStepLength} variantOffset={variantOffset}s");
                     var checkers = config.Checkers[service.Id];
-                    for (int taskIndex = 0; taskIndex < service.NoisesPerRound; taskIndex++)
+                    int i = 0;
+                    var currentTasks = new List<CheckerTask>();
+                    foreach (var team in config.ActiveTeams)
                     {
+                        double taskOffset = (i * teamStepLength) + serviceOffset + variantOffset;
+
+                        // this.logger.LogDebug($"InsertPutNoisesTasks taskOffset={taskOffset}");
                         var checkerTask = new CheckerTask(
                             0,
                             checkers[i % checkers.Length],
@@ -378,31 +397,31 @@
                             round.Id,
                             round.Id,
                             null,
-                            taskStart,
-                            (int)(maxRunningTime * 1000),
+                            taskStart.AddSeconds(taskOffset),
+                            (int)(quarterLength * 1000),
                             config.RoundLengthInSeconds,
-                            taskIndex,
-                            taskIndex % service.NoiseVariants,
+                            variantIndex,
+                            variantIndex % service.NoiseVariants,
                             CheckerResult.INTERNAL_ERROR,
                             null,
                             null,
                             CheckerTaskLaunchStatus.New);
-                        tasks[i] = checkerTask;
-                        taskStart = taskStart.AddSeconds(timeDiff);
+                        currentTasks.Add(checkerTask);
                         i += 1;
                     }
+
+                    this.FisherYatesShuffleTaskStarts(currentTasks);
+                    tasks.AddRange(currentTasks);
                 }
             }
 
-            // TODO shuffle
             await this.InsertCheckerTasks(tasks);
         }
 
         public async Task InsertHavocsTasks(Round round, Configuration config)
         {
             // havocs are started in Q1, Q2 and Q3
-            double maxRunningTime = config.RoundLengthInSeconds / 4;
-            var taskStart = round.Begin;
+            double quarterLength = config.RoundLengthInSeconds / 4;
             int tasksCount = 0;
             foreach (var service in config.ActiveServices)
             {
@@ -414,17 +433,26 @@
                 return;
             }
 
-            double timeDiff = (double)((maxRunningTime * 3) - 2) / tasksCount;
-            var tasks = new CheckerTask[tasksCount];
-            int i = 0;
-
-            foreach (var team in config.ActiveTeams)
+            var tasks = new List<CheckerTask>(tasksCount);
+            var taskStart = round.Begin;
+            double teamStepLength = ((3 * quarterLength) - 2) / config.ActiveTeams.Count;
+            double serviceStepLength = teamStepLength / config.ActiveServices.Count;
+            foreach (var service in config.ActiveServices)
             {
-                foreach (var service in config.ActiveServices)
+                double serviceOffset = (service.Id - 1) * serviceStepLength;
+                for (int variantIndex = 0; variantIndex < service.HavocsPerRound; variantIndex++)
                 {
+                    double variantOffset = variantIndex * (serviceStepLength / service.HavocsPerRound);
+
+                    // this.logger.LogDebug($"InsertHavocsTasks serviceId={service.Id} variantIndex={variantIndex} teamStepLength={teamStepLength}s serviceStepLength={serviceStepLength} variantOffset={variantOffset}s");
                     var checkers = config.Checkers[service.Id];
-                    for (int taskIndex = 0; taskIndex < service.HavocsPerRound; taskIndex++)
+                    int i = 0;
+                    var currentTasks = new List<CheckerTask>();
+                    foreach (var team in config.ActiveTeams)
                     {
+                        double taskOffset = (i * teamStepLength) + serviceOffset + variantOffset;
+
+                        // this.logger.LogDebug($"InsertHavocsTasks taskOffset={taskOffset}");
                         var checkerTask = new CheckerTask(
                             0,
                             checkers[i % checkers.Length],
@@ -437,31 +465,31 @@
                             round.Id,
                             round.Id,
                             null,
-                            taskStart,
-                            (int)(maxRunningTime * 1000),
+                            taskStart.AddSeconds(taskOffset),
+                            (int)(quarterLength * 1000),
                             config.RoundLengthInSeconds,
-                            taskIndex,
-                            taskIndex % service.HavocVariants,
+                            variantIndex,
+                            variantIndex % service.HavocVariants,
                             CheckerResult.INTERNAL_ERROR,
                             null,
                             null,
                             CheckerTaskLaunchStatus.New);
-                        tasks[i] = checkerTask;
-                        taskStart = taskStart.AddSeconds(timeDiff);
+                        currentTasks.Add(checkerTask);
                         i += 1;
                     }
+
+                    this.FisherYatesShuffleTaskStarts(currentTasks);
+                    tasks.AddRange(currentTasks);
                 }
             }
 
-            // TODO shuffle
             await this.InsertCheckerTasks(tasks);
         }
 
         public async Task InsertRetrieveCurrentFlagsTasks(Round round, Configuration config)
         {
             // getflags for new flags are started in Q3
-            double maxRunningTime = config.RoundLengthInSeconds / 4;
-            var taskStart = round.Quarter3;
+            double quarterLength = config.RoundLengthInSeconds / 4;
             int tasksCount = 0;
             foreach (var service in config.ActiveServices)
             {
@@ -473,17 +501,26 @@
                 return;
             }
 
-            double timeDiff = (maxRunningTime - 2) / tasksCount;
-            var tasks = new CheckerTask[tasksCount];
-            int i = 0;
-
-            foreach (var team in config.ActiveTeams)
+            var tasks = new List<CheckerTask>(tasksCount);
+            var taskStart = round.Quarter3;
+            double teamStepLength = (quarterLength - 2) / config.ActiveTeams.Count;
+            double serviceStepLength = teamStepLength / config.ActiveServices.Count;
+            foreach (var service in config.ActiveServices)
             {
-                foreach (var service in config.ActiveServices)
+                double serviceOffset = (service.Id - 1) * serviceStepLength;
+                for (int variantIndex = 0; variantIndex < service.FlagsPerRound; variantIndex++)
                 {
+                    double variantOffset = variantIndex * (serviceStepLength / service.FlagsPerRound);
+
+                    // this.logger.LogDebug($"InsertRetrieveCurrentFlagsTasks serviceId={service.Id} variantIndex={variantIndex} teamStepLength={teamStepLength}s serviceStepLength={serviceStepLength} variantOffset={variantOffset}s");
                     var checkers = config.Checkers[service.Id];
-                    for (int taskIndex = 0; taskIndex < service.FlagsPerRound; taskIndex++)
+                    int i = 0;
+                    var currentTasks = new List<CheckerTask>();
+                    foreach (var team in config.ActiveTeams)
                     {
+                        double taskOffset = (i * teamStepLength) + serviceOffset + variantOffset;
+
+                        // this.logger.LogDebug($"InsertRetrieveCurrentFlagsTasks Q3 taskOffset={taskOffset}");
                         var checkerTask = new CheckerTask(
                             0,
                             checkers[i % checkers.Length],
@@ -495,32 +532,32 @@
                             team.Name,
                             round.Id,
                             round.Id,
-                            new Flag(team.Id, service.Id, taskIndex, round.Id, 0).ToString(Encoding.ASCII.GetBytes(config.FlagSigningKey), config.Encoding),
-                            taskStart,
-                            (int)(maxRunningTime * 1000),
+                            new Flag(team.Id, service.Id, variantIndex, round.Id, 0).ToString(Encoding.ASCII.GetBytes(config.FlagSigningKey), config.Encoding),
+                            taskStart.AddSeconds(taskOffset),
+                            (int)(quarterLength * 1000),
                             config.RoundLengthInSeconds,
-                            taskIndex,
-                            taskIndex % service.FlagVariants,
+                            variantIndex,
+                            variantIndex % service.FlagVariants,
                             CheckerResult.INTERNAL_ERROR,
                             null,
                             null,
                             CheckerTaskLaunchStatus.New);
-                        tasks[i] = checkerTask;
-                        taskStart = taskStart.AddSeconds(timeDiff);
+                        currentTasks.Add(checkerTask);
                         i += 1;
                     }
+
+                    this.FisherYatesShuffleTaskStarts(currentTasks);
+                    tasks.AddRange(currentTasks);
                 }
             }
 
-            // TODO shuffle
             await this.InsertCheckerTasks(tasks);
         }
 
         public async Task InsertRetrieveOldFlagsTasks(Round round, Configuration config)
         {
-            // getflags for old flags are started in Q2
-            double maxRunningTime = config.RoundLengthInSeconds / 4;
-            var taskStart = round.Quarter2;
+            // getflags for old flags are started in Q2 and Q3
+            double quarterLength = config.RoundLengthInSeconds / 4;
             int tasksCount = 0;
             int oldRoundsCount = (int)Math.Min(config.CheckedRoundsPerRound, round.Id) - 1;
             foreach (var service in config.ActiveServices)
@@ -535,20 +572,30 @@
                 return;
             }
 
-            double timeDiff = (maxRunningTime - 2) / tasksCount;
-            var tasks = new CheckerTask[tasksCount];
-            int i = 0;
+            var tasks = new List<CheckerTask>(tasksCount);
+            var taskStart = round.Quarter2;
 
             for (long oldRoundId = round.Id - 1; oldRoundId > (round.Id - config.CheckedRoundsPerRound) && oldRoundId > 0; oldRoundId--)
             {
-                foreach (var team in config.ActiveTeams)
+                double teamStepLength = ((2 * quarterLength) - 2) / config.ActiveTeams.Count;
+                double serviceStepLength = teamStepLength / config.ActiveServices.Count;
+                foreach (var service in config.ActiveServices)
                 {
-                    foreach (var service in config.ActiveServices)
+                    double serviceOffset = (service.Id - 1) * serviceStepLength;
+                    for (int variantIndex = 0; variantIndex < service.FlagsPerRound; variantIndex++)
                     {
+                        double variantOffset = variantIndex * (serviceStepLength / service.FlagsPerRound);
+
+                        // this.logger.LogDebug($"InsertRetrieveOldFlagsTasks serviceId={service.Id} variantIndex={variantIndex} teamStepLength={teamStepLength}s serviceStepLength={serviceStepLength} variantOffset={variantOffset}s");
                         var checkers = config.Checkers[service.Id];
-                        for (int taskIndex = 0; taskIndex < service.FlagsPerRound; taskIndex++)
+                        int i = 0;
+                        var currentTasks = new List<CheckerTask>();
+                        foreach (var team in config.ActiveTeams)
                         {
-                            var task = new CheckerTask(
+                            double taskOffset = (i * teamStepLength) + serviceOffset + variantOffset;
+
+                            // this.logger.LogDebug($"InsertRetrieveOldFlagsTasks Q2 taskOffset={taskOffset}");
+                            var checkerTask = new CheckerTask(
                                 0,
                                 checkers[i % checkers.Length],
                                 CheckerTaskMethod.getflag,
@@ -559,33 +606,33 @@
                                 team.Name,
                                 oldRoundId,
                                 round.Id,
-                                new Flag(team.Id, service.Id, taskIndex, oldRoundId, 0).ToString(Encoding.ASCII.GetBytes(config.FlagSigningKey), config.Encoding),
-                                taskStart,
-                                (int)(maxRunningTime * 1000),
+                                new Flag(team.Id, service.Id, variantIndex, round.Id, 0).ToString(Encoding.ASCII.GetBytes(config.FlagSigningKey), config.Encoding),
+                                taskStart.AddSeconds(taskOffset),
+                                (int)(quarterLength * 1000),
                                 config.RoundLengthInSeconds,
-                                taskIndex,
-                                taskIndex % service.FlagVariants,
+                                variantIndex,
+                                variantIndex % service.FlagVariants,
                                 CheckerResult.INTERNAL_ERROR,
                                 null,
                                 null,
                                 CheckerTaskLaunchStatus.New);
-                            tasks[i] = task;
-                            taskStart = taskStart.AddSeconds(timeDiff);
+                            currentTasks.Add(checkerTask);
                             i += 1;
                         }
+
+                        this.FisherYatesShuffleTaskStarts(currentTasks);
+                        tasks.AddRange(currentTasks);
                     }
                 }
             }
 
-            // TODO shuffle
             await this.InsertCheckerTasks(tasks);
         }
 
         public async Task InsertRetrieveCurrentNoisesTasks(Round round, Configuration config)
         {
-            // getnoises are started in Q1
-            double maxRunningTime = config.RoundLengthInSeconds / 4;
-            var taskStart = round.Quarter3;
+            // getnoises are started in Q3
+            double quarterLength = config.RoundLengthInSeconds / 4;
             int tasksCount = 0;
             foreach (var service in config.ActiveServices)
             {
@@ -597,17 +644,26 @@
                 return;
             }
 
-            double timeDiff = (maxRunningTime - 2) / tasksCount;
-            var tasks = new CheckerTask[tasksCount];
-            int i = 0;
-
-            foreach (var team in config.ActiveTeams)
+            var tasks = new List<CheckerTask>(tasksCount);
+            var taskStart = round.Quarter3;
+            double teamStepLength = (quarterLength - 2) / config.ActiveTeams.Count;
+            double serviceStepLength = teamStepLength / config.ActiveServices.Count;
+            foreach (var service in config.ActiveServices)
             {
-                foreach (var service in config.ActiveServices)
+                double serviceOffset = (service.Id - 1) * serviceStepLength;
+                for (int variantIndex = 0; variantIndex < service.NoisesPerRound; variantIndex++)
                 {
+                    double variantOffset = variantIndex * (serviceStepLength / service.NoisesPerRound);
+
+                    // this.logger.LogDebug($"InsertRetrieveCurrentNoisesTasks serviceId={service.Id} variantIndex={variantIndex} teamStepLength={teamStepLength}s serviceStepLength={serviceStepLength} variantOffset={variantOffset}s");
                     var checkers = config.Checkers[service.Id];
-                    for (int taskIndex = 0; taskIndex < service.NoisesPerRound; taskIndex++)
+                    int i = 0;
+                    var currentTasks = new List<CheckerTask>();
+                    foreach (var team in config.ActiveTeams)
                     {
+                        double taskOffset = (i * teamStepLength) + serviceOffset + variantOffset;
+
+                        // this.logger.LogDebug($"InsertRetrieveCurrentNoisesTasks Q3 taskOffset={taskOffset}");
                         var checkerTask = new CheckerTask(
                             0,
                             checkers[i % checkers.Length],
@@ -620,24 +676,24 @@
                             round.Id,
                             round.Id,
                             null,
-                            taskStart,
-                            (int)(maxRunningTime * 1000),
+                            taskStart.AddSeconds(taskOffset),
+                            (int)(quarterLength * 1000),
                             config.RoundLengthInSeconds,
-                            taskIndex,
-                            taskIndex % service.NoiseVariants,
+                            variantIndex,
+                            variantIndex % service.NoiseVariants,
                             CheckerResult.INTERNAL_ERROR,
                             null,
                             null,
                             CheckerTaskLaunchStatus.New);
-
-                        tasks[i] = checkerTask;
-                        taskStart = taskStart.AddSeconds(timeDiff);
+                        currentTasks.Add(checkerTask);
                         i += 1;
                     }
+
+                    this.FisherYatesShuffleTaskStarts(currentTasks);
+                    tasks.AddRange(currentTasks);
                 }
             }
 
-            // TODO shuffle
             await this.InsertCheckerTasks(tasks);
         }
 
@@ -749,6 +805,26 @@
             this.logger.LogDebug($"InsertCheckerTasks inserting {tasks.Count()} tasks");
             this.context.AddRange(tasks);
             await this.context.SaveChangesAsync();
+        }
+
+        private void FisherYatesShuffleTaskStarts(List<CheckerTask> tasks)
+        {
+            Random random = new Random();
+            for (int i = 0; i < (tasks.Count - 1); i++)
+            {
+                int r = i + random.Next(tasks.Count - i);
+                var task = tasks[r];
+
+                // TODO this shouldn't be a record, I guess
+                tasks[r] = tasks[r] with
+                {
+                    StartTime = tasks[i].StartTime
+                };
+                tasks[i] = tasks[i] with
+                {
+                    StartTime = task.StartTime
+                };
+            }
         }
     }
 }
