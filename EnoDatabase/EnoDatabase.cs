@@ -606,7 +606,7 @@
                                 team.Name,
                                 oldRoundId,
                                 round.Id,
-                                new Flag(team.Id, service.Id, variantIndex, round.Id, 0).ToString(Encoding.ASCII.GetBytes(config.FlagSigningKey), config.Encoding),
+                                new Flag(team.Id, service.Id, variantIndex, oldRoundId, 0).ToString(Encoding.ASCII.GetBytes(config.FlagSigningKey), config.Encoding),
                                 taskStart.AddSeconds(taskOffset),
                                 (int)(quarterLength * 1000),
                                 config.RoundLengthInSeconds,
