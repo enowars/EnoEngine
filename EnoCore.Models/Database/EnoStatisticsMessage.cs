@@ -38,7 +38,7 @@
     public record CheckerTaskFinishedMessage(
         long RoundId,
         string ServiceName,
-        string Metho,
+        string Method,
         long TaskIndex,
         double Duration,
         string Result)
