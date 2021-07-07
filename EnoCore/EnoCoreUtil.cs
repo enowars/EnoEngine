@@ -4,20 +4,21 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Net;
     using System.Text;
     using System.Text.Json;
     using System.Text.Json.Serialization;
     using System.Threading.Tasks;
     using EnoCore.Configuration;
-    using Newtonsoft.Json.Schema;
-    using Newtonsoft.Json.Schema.Generation;
-    using Newtonsoft.Json.Serialization;
+    using EnoCore.Models.JsonConfiguration;
+    using NJsonSchema;
+    using NJsonSchema.Generation.TypeMappers;
 
     public class EnoCoreUtil
     {
         public const string DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";
         public static readonly string DataDirectory = $"..{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}";
-        public static readonly JsonSerializerOptions CamelCaseEnumConverterOptions = new JsonSerializerOptions
+        public static readonly JsonSerializerOptions SerializerOptions = new JsonSerializerOptions
         {
             AllowTrailingCommas = true,
             ReadCommentHandling = JsonCommentHandling.Skip,
@@ -25,15 +26,15 @@
             Converters = { new JsonStringEnumConverter() },
         };
 
-        public static JSchema GenerateSchema()
+        public static JsonSchema GenerateSchema()
         {
-            JSchemaGenerator generator = new JSchemaGenerator();
-            generator.SchemaIdGenerationHandling = SchemaIdGenerationHandling.TypeName;
-            generator.GenerationProviders.Add(new StringEnumGenerationProvider());
-            generator.ContractResolver = new CamelCasePropertyNamesContractResolver();
-            generator.SchemaReferenceHandling = SchemaReferenceHandling.None;
-            generator.DefaultRequired = Newtonsoft.Json.Required.Default;
-            JSchema schema = generator.Generate(typeof(JsonConfiguration));
+            var schema = JsonSchema.FromType<JsonConfiguration>(
+                new NJsonSchema.Generation.JsonSchemaGeneratorSettings
+                {
+                    TypeMappers = {
+                        new PrimitiveTypeMapper(typeof(IPAddress), s => s.Type = JsonObjectType.String),
+                    },
+                });
             return schema;
         }
 

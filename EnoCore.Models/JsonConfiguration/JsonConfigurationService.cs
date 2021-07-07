@@ -1,4 +1,4 @@
-﻿namespace EnoCore.Configuration
+﻿namespace EnoCore.Models.JsonConfiguration
 {
     using System;
     using System.ComponentModel;
@@ -7,6 +7,7 @@
     using System.Threading;
     using System.Threading.Tasks;
     using EnoCore.Models;
+    using EnoCore.Models.CheckerApi;
 
     public class JsonConfigurationService
     {
@@ -60,40 +61,37 @@
         [Range(minimum: 0, long.MaxValue)]
         public long WeightFactor { get; init; }
 
-        public async Task<ConfigurationService> Validate()
-        {
-            // Ask the checker how many flags/noises/havocs the service wants
-            CheckerInfoMessage? infoMessage;
-            try
-            {
-                using var client = new HttpClient();
-                var cancelSource = new CancellationTokenSource();
-                cancelSource.CancelAfter(5 * 1000);
-                var responseString = await client.GetStringAsync($"{this.Checkers[0]}/service", cancelSource.Token);
-                infoMessage = System.Text.Json.JsonSerializer.Deserialize<CheckerInfoMessage>(responseString, EnoCoreUtil.CamelCaseEnumConverterOptions);
-            }
-            catch (Exception e)
-            {
-                throw new JsonConfigurationServiceValidationException($"Service checker failed to respond to info request (service {this.Id}).", e);
-            }
+        //public async Task<JsonConfigurationService> Validate()
+        //{
+        //    // Ask the checker how many flags/noises/havocs the service wants
+        //    CheckerInfoMessage? infoMessage;
+        //    try
+        //    {
+        //        using var client = new HttpClient();
+        //        var cancelSource = new CancellationTokenSource();
+        //        cancelSource.CancelAfter(5 * 1000);
+        //        var responseString = await client.GetStringAsync($"{this.Checkers[0]}/service", cancelSource.Token);
+        //        infoMessage = System.Text.Json.JsonSerializer.Deserialize<CheckerInfoMessage>(responseString, JsonOptions.SerializerOptions);
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        throw new JsonConfigurationServiceValidationException($"Service checker failed to respond to info request (service {this.Id}).", e);
+        //    }
 
-            if (infoMessage is null)
-            {
-                throw new JsonConfigurationServiceValidationException($"Service checker failed to respond to info request (service {this.Id}).");
-            }
+        //    if (infoMessage is null)
+        //    {
+        //        throw new JsonConfigurationServiceValidationException($"Service checker failed to respond to info request (service {this.Id}).");
+        //    }
 
-            return new(
-                this.Id,
-                this.Name,
-                this.FlagsPerRoundMultiplier * infoMessage.FlagVariants,
-                this.NoisesPerRoundMultiplier * infoMessage.NoiseVariants,
-                this.HavocsPerRoundMultiplier * infoMessage.HavocVariants,
-                infoMessage.FlagVariants,
-                infoMessage.NoiseVariants,
-                infoMessage.HavocVariants,
-                this.WeightFactor,
-                this.Active,
-                this.Checkers);
-        }
+        //    return new(
+        //        this.Id,
+        //        this.Name,
+        //        this.Active,
+        //        this.Checkers,
+        //        this.FlagsPerRoundMultiplier * infoMessage.FlagVariants,
+        //        this.NoisesPerRoundMultiplier * infoMessage.NoiseVariants,
+        //        this.HavocsPerRoundMultiplier * infoMessage.HavocVariants,
+        //        this.WeightFactor);
+        //}
     }
 }

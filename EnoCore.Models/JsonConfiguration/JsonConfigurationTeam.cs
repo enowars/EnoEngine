@@ -1,20 +1,19 @@
-﻿namespace EnoCore.Configuration
+﻿namespace EnoCore.Models.JsonConfiguration
 {
     using System;
     using System.ComponentModel;
     using System.ComponentModel.DataAnnotations;
     using System.Net;
-    using Newtonsoft.Json;
 
     public class JsonConfigurationTeam
     {
-        public JsonConfigurationTeam(long id, string name, bool? active, string address, string? countryFlagUrl, string? logoUrl, string teamSubnet)
+        public JsonConfigurationTeam(long id, string name, bool? active, IPAddress address, string? countryCode, string? logoUrl, string teamSubnet)
         {
             this.Id = id;
             this.Name = name;
             this.Active = active ?? true;
             this.Address = address;
-            this.CountryFlagUrl = countryFlagUrl;
+            this.CountryCode = countryCode;
             this.LogoUrl = logoUrl;
             this.TeamSubnet = teamSubnet;
         }
@@ -33,11 +32,10 @@
 
         [Required]
         [Description("The IP address of the teams vulnbox.")]
-        public string Address { get; init; }
+        public IPAddress Address { get; init; }
 
         [Description("The URL to the country flag of the team")]
-        [UrlAttribute]
-        public string? CountryFlagUrl { get; init; }
+        public string? CountryCode { get; init; }
 
         [Description("The URL to the logo of the team.")]
         [UrlAttribute]
@@ -47,28 +45,28 @@
         [Description("The Teams Subnet.")]
         public string TeamSubnet { get; init; }
 
-        public ConfigurationTeam Validate(int subnetBytesLength)
-        {
-            IPAddress ip;
-            try
-            {
-                ip = IPAddress.Parse(this.TeamSubnet);
-            }
-            catch (Exception e)
-            {
-                throw new JsonConfigurationTeamValidationException($"Team subnet is no valid IP address (team {this.Id}).", e);
-            }
+        //public JsonConfigurationTeam Validate(int subnetBytesLength)
+        //{
+        //    IPAddress ip;
+        //    try
+        //    {
+        //        ip = IPAddress.Parse(this.TeamSubnet);
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        throw new JsonConfigurationTeamValidationException($"Team subnet is no valid IP address (team {this.Id}).", e);
+        //    }
 
-            byte[] teamSubnet = new byte[subnetBytesLength];
-            Array.Copy(ip.GetAddressBytes(), teamSubnet, subnetBytesLength);
+        //    byte[] teamSubnet = new byte[subnetBytesLength];
+        //    Array.Copy(ip.GetAddressBytes(), teamSubnet, subnetBytesLength);
 
-            return new(this.Id,
-                this.Name,
-                this.Address,
-                teamSubnet,
-                this.LogoUrl,
-                this.CountryFlagUrl,
-                this.Active);
-        }
+        //    return new(this.Id,
+        //        this.Name,
+        //        this.Active,
+        //        this.Address,
+        //        this.CountryCode,
+        //        this.LogoUrl,
+        //        teamSubnet.ToString());
+        //}
     }
 }

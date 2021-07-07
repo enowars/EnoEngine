@@ -49,14 +49,14 @@ try
     try
     {
         string content = File.ReadAllText("ctf.json");
-        var jsonConfiguration = JsonSerializer.Deserialize<JsonConfiguration>(content, EnoCoreUtil.CamelCaseEnumConverterOptions);
+        var jsonConfiguration = JsonSerializer.Deserialize<JsonConfiguration>(content, EnoCoreUtil.SerializerOptions);
         if (jsonConfiguration is null)
         {
             Console.WriteLine("Deserialization of config failed.");
             return 1;
         }
 
-        configuration = await Configuration.Validate(jsonConfiguration);
+        configuration = await Configuration.LoadAndValidate(jsonConfiguration);
     }
     catch (JsonException e)
     {

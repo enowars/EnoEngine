@@ -13,6 +13,7 @@
     using EnoCore.Models.CheckerApi;
     using EnoCore.Models.Database;
     using EnoCore.Models.JsonConfiguration;
+    using NJsonSchema.Validation;
 
     public sealed record Configuration(
         string Title,
@@ -29,8 +30,79 @@
         List<ConfigurationService> ActiveServices,
         Dictionary<long, string[]> Checkers)
     {
-        public static async Task<Configuration> Validate(JsonConfiguration jsonConfiguration)
+        //public static async Task<Configuration> Load(JsonConfiguration jsonConfiguration)
+        //{
+
+        //}
+
+
+            //    List<JsonConfigurationTeam> teams = new();
+            //    List<JsonConfigurationTeam> activeTeams = new();
+            //    List<JsonConfigurationService> services = new();
+            //    List<JsonConfigurationService> activeServices = new();
+            //    Dictionary<long, string[]> checkers = new();
+
+            //    foreach (var team in jsonConfiguration.Teams)
+            //    {
+            //        if (teams.Where(t => t.Id == team.Id).Any())
+            //        {
+            //            throw new JsonConfigurationValidationException($"Duplicate teamId ({team.Id})");
+            //        }
+
+            //        var validatedTeam = team.Validate(jsonConfiguration.TeamSubnetBytesLength);
+            //        teams.Add(validatedTeam);
+
+            //        if (team.Active)
+            //        {
+            //            activeTeams.Add(validatedTeam);
+            //        }
+            //    }
+
+            //    foreach (var service in jsonConfiguration.Services)
+            //    {
+            //        if (services.Where(s => s.Id == service.Id).Any())
+            //        {
+            //            throw new JsonConfigurationValidationException($"Duplicate serviceId ({service.Id})");
+            //        }
+
+            //        var validatedService = await service.Validate();
+            //        services.Add(validatedService);
+            //        checkers.Add(service.Id, validatedService.Checkers);
+
+            //        if (service.Active)
+            //        {
+            //            activeServices.Add(validatedService);
+            //        }
+            //    }
+
+            //    return new(
+            //    jsonConfiguration.Title,
+            //    jsonConfiguration.FlagValidityInRounds,
+            //    jsonConfiguration.CheckedRoundsPerRound,
+            //    jsonConfiguration.RoundLengthInSeconds,
+            //    jsonConfiguration.DnsSuffix,
+            //    jsonConfiguration.TeamSubnetBytesLength,
+            //    jsonConfiguration.FlagSigningKey,
+            //    jsonConfiguration.Encoding,
+            //    teams,
+            //    activeTeams,
+            //    services,
+            //    activeServices,
+            //    checkers);
+            //}
+
+            public static async Task<Configuration> LoadAndValidate(JsonConfiguration jsonConfiguration)
         {
+            var schema = EnoCoreUtil.GenerateSchema();
+            var errors = schema.Validate(JsonSerializer.Serialize(jsonConfiguration));
+
+            var valid = errors.Count == 0;
+            if (!valid)
+            {
+                throw new AggregateException(errors.Select(e => new JsonConfigurationValidationException(e.Path + ": " + e.Kind)));
+            }
+
+
             if (jsonConfiguration.Title is null)
             {
                 throw new JsonConfigurationValidationException("title must not be null.");
@@ -145,7 +217,7 @@
     public sealed record ConfigurationTeam(
         long Id,
         string Name,
-        string? Address,
+        IPAddress? Address,
         byte[] TeamSubnet,
         string? LogoUrl,
         string? CountryCode,
@@ -234,7 +306,7 @@
                 var cancelSource = new CancellationTokenSource();
                 cancelSource.CancelAfter(5 * 1000);
                 var responseString = await client.GetStringAsync($"{jsonConfigurationService.Checkers[0]}/service", cancelSource.Token);
-                infoMessage = JsonSerializer.Deserialize<CheckerInfoMessage>(responseString, EnoCoreUtil.CamelCaseEnumConverterOptions);
+                infoMessage = JsonSerializer.Deserialize<CheckerInfoMessage>(responseString, EnoCoreUtil.SerializerOptions);
             }
             catch (Exception e)
             {
