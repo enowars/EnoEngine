@@ -119,16 +119,6 @@
                     await Task.Delay(span);
                 }
 
-                string taskChainId = task.Method switch
-                {
-                    CheckerTaskMethod.putflag => $"flag_s{task.ServiceId}_r{task.RelatedRoundId}_t{task.TeamId}_i{task.UniqueVariantId}",
-                    CheckerTaskMethod.getflag => $"flag_s{task.ServiceId}_r{task.RelatedRoundId}_t{task.TeamId}_i{task.UniqueVariantId}",
-                    CheckerTaskMethod.putnoise => $"noise_s{task.ServiceId}_r{task.RelatedRoundId}_t{task.TeamId}_i{task.UniqueVariantId}",
-                    CheckerTaskMethod.getnoise => $"noise_s{task.ServiceId}_r{task.RelatedRoundId}_t{task.TeamId}_i{task.UniqueVariantId}",
-                    CheckerTaskMethod.havoc => $"havoc_s{task.ServiceId}_r{task.RelatedRoundId}_t{task.TeamId}_i{task.UniqueVariantId}",
-                    _ => throw new NotImplementedException(),
-                };
-
                 var content = new StringContent(
                     JsonSerializer.Serialize(
                         new CheckerTaskMessage(
@@ -143,7 +133,7 @@
                             task.VariantId,
                             task.MaxRunningTime,
                             task.RoundLength,
-                            taskChainId),
+                            task.GetTaskChainId()),
                         EnoCoreUtil.CamelCaseEnumConverterOptions),
                     Encoding.UTF8,
                     "application/json");
