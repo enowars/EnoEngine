@@ -8,7 +8,10 @@
     {
         private static void Main(string[] args)
         {
-            File.WriteAllText("ctf.schema.json", JsonSerializer.Serialize(EnoCoreUtil.GenerateSchema()));
+            File.WriteAllText("ctf.schema.json", JsonSerializer.Serialize(EnoCoreUtil.GenerateSchema(), new JsonSerializerOptions
+            {
+                WriteIndented = true,
+            }));
         }
     }
 }

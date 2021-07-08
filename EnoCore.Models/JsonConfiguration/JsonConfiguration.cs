@@ -37,7 +37,7 @@
         [Description("The title of the event.")]
         public string Title { get; init; }
 
-        [Json.Schema.Generation.Required]
+        [Required]
         [Minimum(0)]
         [Maximum(uint.MaxValue)]
         [Description("Validity of a flag in rounds.")]

@@ -1,7 +1,9 @@
 {
   "type": "object",
   "properties": {
-    "title": { "$ref": "#/$defs/string" },
+    "title": {
+      "$ref": "#/$defs/string"
+    },
     "flagValidityInRounds": {
       "type": "integer",
       "minimum": 0,
@@ -20,29 +22,66 @@
       "maximum": 4294967295,
       "description": "The length of one round in seconds."
     },
-    "dnsSuffix": { "type": "string", "description": "The DNS Suffix." },
+    "dnsSuffix": {
+      "type": "string",
+      "description": "The DNS Suffix."
+    },
     "teamSubnetBytesLength": {
       "type": "integer",
       "description": "Team Subnet byte length.",
       "minimum": 0,
       "maximum": 4294967295
     },
-    "flagSigningKey": { "type": "string", "description": "The Signing Key for the flags." },
-    "encoding": { "enum": ["Legacy", "UTF8"], "description": "Encoding of the flags" },
+    "flagSigningKey": {
+      "type": "string",
+      "description": "The Signing Key for the flags."
+    },
+    "encoding": {
+      "enum": [
+        "Legacy",
+        "UTF8"
+      ],
+      "description": "Encoding of the flags"
+    },
     "teams": {
       "type": "array",
       "items": {
         "type": "object",
         "properties": {
-          "id": { "type": "integer", "minimum": 1, "maximum": 4294967295 },
-          "name": { "type": "string" },
-          "active": { "type": ["boolean", "null"] },
-          "address": { "type": "string" },
-          "countryCode": { "type": "string" },
-          "logoUrl": { "type": "string", "format": "uri" },
-          "teamSubnet": { "type": "string" }
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4294967295
+          },
+          "name": {
+            "type": "string"
+          },
+          "active": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "address": {
+            "type": "string"
+          },
+          "countryCode": {
+            "type": "string"
+          },
+          "logoUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "teamSubnet": {
+            "type": "string"
+          }
         },
-        "required": ["id", "name", "address", "teamSubnet"],
+        "required": [
+          "id",
+          "name",
+          "address",
+          "teamSubnet"
+        ],
         "description": "All Teams participating in the CTF."
       },
       "description": "All Teams participating in the CTF.",
@@ -54,9 +93,19 @@
       "items": {
         "type": "object",
         "properties": {
-          "id": { "type": "integer", "description": "The id of the service.", "minimum": 1, "maximum": 4294967295 },
-          "name": { "$ref": "#/$defs/string" },
-          "active": { "type": "boolean", "description": "Whether the Service is active or not." },
+          "id": {
+            "type": "integer",
+            "description": "The id of the service.",
+            "minimum": 1,
+            "maximum": 4294967295
+          },
+          "name": {
+            "$ref": "#/$defs/string"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Whether the Service is active or not."
+          },
           "checkers": {
             "type": "array",
             "items": {
@@ -119,5 +168,10 @@
     "teams",
     "services"
   ],
-  "$defs": { "string": { "type": "string", "description": "The title of the event." } }
+  "$defs": {
+    "string": {
+      "type": "string",
+      "description": "The title of the event."
+    }
+  }
 }
