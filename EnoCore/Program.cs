@@ -12,6 +12,7 @@
             {
                 WriteIndented = true,
             })
+
             // Yes, C# Serialization seems to be Environment dependent.
             .Replace("\r\n", "\n"));
         }
