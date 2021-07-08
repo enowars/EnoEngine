@@ -13,13 +13,11 @@
     using EnoCore.Models.JsonConfiguration;
     using Json.Schema;
     using Json.Schema.Generation;
-    //using NJsonSchema;
-    using NJsonSchema.Generation.TypeMappers;
 
     public class EnoCoreUtil
     {
         public const string DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";
-        public static readonly string DataDirectory = $"..{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}";
+
         public static readonly JsonSerializerOptions SerializerOptions = new JsonSerializerOptions
         {
             AllowTrailingCommas = true,
@@ -29,19 +27,31 @@
             Converters = { new JsonStringEnumConverter() },
         };
 
+        private static bool directoryCreated = false;
+
+        public static string DataDirectory
+        {
+            get
+            {
+                var path = $"..{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}";
+
+                // Auto create the directory if it does not exist
+                if (!directoryCreated)
+                {
+                    if (!Directory.Exists(path))
+                    {
+                        Directory.CreateDirectory(path);
+                    }
+
+                    directoryCreated = true;
+                }
+
+                return path;
+            }
+        }
+
         public static JsonSchema GenerateSchema()
         {
-            //var schema = JsonSchema.FromType<JsonConfiguration>(
-            //    new NJsonSchema.Generation.JsonSchemaGeneratorSettings
-            //    {
-            //        SerializerSettings = {
-            //        },
-            //        TypeMappers =
-            //        {
-            //            new PrimitiveTypeMapper(typeof(IPAddress), s => s.Type = JsonObjectType.String),
-            //        },
-            //    });
-
             var schemaBuilder = new JsonSchemaBuilder();
             var options = new SchemaGeneratorConfiguration
             {

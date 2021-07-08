@@ -61,6 +61,8 @@
 
         [Required]
         [Description("Team Subnet byte length.")]
+        [Minimum(0)]
+        [Maximum(uint.MaxValue)]
         public int TeamSubnetBytesLength { get; init; }
 
         [Required]
@@ -73,12 +75,14 @@
 
         [Required]
         [Description("All Teams participating in the CTF.")]
-        [MinLength(1)]
+        [MinItems(1)]
+        [UniqueItems(true)]
         public List<JsonConfigurationTeam> Teams { get; init; }
 
         [Required]
         [Description("All Services used in this CTF.")]
-        [MinLength(1)]
+        [MinItems(1)]
+        [UniqueItems(true)]
         public List<JsonConfigurationService> Services { get; init; }
     }
 }

@@ -50,7 +50,7 @@ try
     {
         string content = File.ReadAllText("ctf.json");
 
-        configuration = await Configuration.Load(content);
+        configuration = await Configuration.LoadAndValidate(content);
     }
     catch (JsonException e)
     {
@@ -58,7 +58,7 @@ try
         Debug.WriteLine($"{e.Message}\n{e.StackTrace}");
         return 1;
     }
-    catch(AggregateException e)
+    catch (AggregateException e)
     {
         Console.Error.WriteLine($"Configuration is invalid: {e.Message}");
         Debug.WriteLine($"{e.Message}\n{e.StackTrace}");

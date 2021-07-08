@@ -97,7 +97,7 @@
                         return;
                     }
 
-                    configuration = Task.Run(() => Configuration.LoadAndValidate(jsonConfiguration)).Result;
+                    configuration = Task.Run(() => Configuration.LiveValidate(jsonConfiguration)).Result;
                 }
                 catch (JsonException e)
                 {

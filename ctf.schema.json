@@ -21,7 +21,12 @@
       "description": "The length of one round in seconds."
     },
     "dnsSuffix": { "type": "string", "description": "The DNS Suffix." },
-    "teamSubnetBytesLength": { "type": "integer", "description": "Team Subnet byte length." },
+    "teamSubnetBytesLength": {
+      "type": "integer",
+      "description": "Team Subnet byte length.",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
     "flagSigningKey": { "type": "string", "description": "The Signing Key for the flags." },
     "encoding": { "enum": ["Legacy", "UTF8"], "description": "Encoding of the flags" },
     "teams": {
@@ -29,10 +34,13 @@
       "items": {
         "type": "object",
         "properties": {
-          "id": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+          "id": { "type": "integer", "minimum": 1, "maximum": 4294967295 },
           "name": { "type": "string" },
           "active": { "type": ["boolean", "null"] },
-          "address": { "type": "string" },
+          "address": {
+            "type": "object",
+            "properties": { "scopeId": { "type": "integer" }, "address": { "type": "integer", "deprecated": true } }
+          },
           "countryCode": { "type": "string" },
           "logoUrl": { "type": "string", "format": "uri" },
           "teamSubnet": { "type": "string" }
@@ -40,7 +48,9 @@
         "required": ["id", "name", "address", "teamSubnet"],
         "description": "All Teams participating in the CTF."
       },
-      "description": "All Teams participating in the CTF."
+      "description": "All Teams participating in the CTF.",
+      "minItems": 1,
+      "uniqueItems": true
     },
     "services": {
       "type": "array",
@@ -49,7 +59,7 @@
         "properties": {
           "id": { "type": "integer", "description": "The id of the service.", "minimum": 0, "maximum": 4294967295 },
           "name": { "$ref": "#/$defs/string" },
-          "active": { "type": ["boolean", "null"], "description": "Whether the Service is active or not." },
+          "active": { "type": "boolean", "description": "Whether the Service is active or not." },
           "checkers": {
             "type": "array",
             "items": {
@@ -86,7 +96,6 @@
         },
         "required": [
           "name",
-          "active",
           "checkers",
           "flagsPerRoundMultiplier",
           "havocsPerRoundMultiplier",
@@ -95,7 +104,9 @@
         ],
         "description": "All Services used in this CTF."
       },
-      "description": "All Services used in this CTF."
+      "description": "All Services used in this CTF.",
+      "minItems": 1,
+      "uniqueItems": true
     }
   },
   "required": [

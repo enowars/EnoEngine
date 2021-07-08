@@ -14,9 +14,8 @@
     using EnoCore.Models.Database;
     using EnoCore.Models.JsonConfiguration;
     using Json.Schema;
-    using NJsonSchema.Validation;
 
-    public sealed record Configuration(
+    public record Configuration(
         string Title,
         long FlagValidityInRounds,
         int CheckedRoundsPerRound,
@@ -31,13 +30,15 @@
         List<ConfigurationService> ActiveServices,
         Dictionary<long, string[]> Checkers)
     {
-        public static async Task<Configuration> Load(string config)
+        public static async Task<Configuration> LoadAndValidate(string config)
         {
+            // Statically validate based on the schema
             var schema = EnoCoreUtil.GenerateSchema();
-            var options = new ValidationOptions{
-                OutputFormat = OutputFormat.Basic
-            }
-                ;
+            var options = new ValidationOptions
+            {
+                OutputFormat = OutputFormat.Basic,
+                RequireFormatValidation = true,
+            };
             var validationResults = schema.Validate(
                 JsonDocument.Parse(config).RootElement, options);
 
@@ -49,69 +50,14 @@
             var jsonConfiguration = JsonSerializer.Deserialize<JsonConfiguration>(config, EnoCoreUtil.SerializerOptions);
             if (jsonConfiguration is null)
             {
-                Console.WriteLine("Deserialization of config failed.");
+                throw new JsonException("Could not be deserialized");
             }
-            return await LoadAndValidate(jsonConfiguration);
+
+            return await LiveValidate(jsonConfiguration);
         }
 
-
-        public static async Task<Configuration> LoadAndValidate(JsonConfiguration jsonConfiguration)
+        public static async Task<Configuration> LiveValidate(JsonConfiguration jsonConfiguration)
         {
-            if (jsonConfiguration.Title is null)
-            {
-                throw new JsonConfigurationValidationException("title must not be null.");
-            }
-
-            if (jsonConfiguration.DnsSuffix is null)
-            {
-                throw new JsonConfigurationValidationException("dnsSuffix must not be null.");
-            }
-
-            if (jsonConfiguration.FlagSigningKey is null)
-            {
-                throw new JsonConfigurationValidationException("flagSigningKey must not be null.");
-            }
-
-            if (jsonConfiguration.RoundLengthInSeconds <= 0)
-            {
-                throw new JsonConfigurationValidationException("roundLengthInSeconds must not be <= 0.");
-            }
-
-            if (jsonConfiguration.CheckedRoundsPerRound <= 0)
-            {
-                throw new JsonConfigurationValidationException("checkedRoundsPerRound must not be <= 0.");
-            }
-
-            if (jsonConfiguration.FlagValidityInRounds <= 0)
-            {
-                throw new JsonConfigurationValidationException("flagValidityInRounds must not be <= 0.");
-            }
-
-            if (jsonConfiguration.TeamSubnetBytesLength <= 0)
-            {
-                throw new JsonConfigurationValidationException("teamSubnetBytesLength must not be <= 0.");
-            }
-
-            if (jsonConfiguration.Teams is null)
-            {
-                throw new JsonConfigurationValidationException("teams must not null.");
-            }
-
-            if (jsonConfiguration.Services is null)
-            {
-                throw new JsonConfigurationValidationException("services must not null.");
-            }
-
-            if (jsonConfiguration.Teams.Count == 0)
-            {
-                throw new JsonConfigurationValidationException("teams must not be empty.");
-            }
-
-            if (jsonConfiguration.Services.Count == 0)
-            {
-                throw new JsonConfigurationValidationException("services must not be empty.");
-            }
-
             List<ConfigurationTeam> teams = new();
             List<ConfigurationTeam> activeTeams = new();
             List<ConfigurationService> services = new();
@@ -179,21 +125,6 @@
     {
         public static ConfigurationTeam Validate(JsonConfigurationTeam jsonConfigurationTeam, int subnetBytesLength)
         {
-            if (jsonConfigurationTeam.Id == 0)
-            {
-                throw new JsonConfigurationTeamValidationException("Team id must not be 0.");
-            }
-
-            if (jsonConfigurationTeam.Name is null)
-            {
-                throw new JsonConfigurationTeamValidationException($"Team name must not be null (team {jsonConfigurationTeam.Id}).");
-            }
-
-            if (jsonConfigurationTeam.TeamSubnet is null)
-            {
-                throw new JsonConfigurationTeamValidationException($"Team subnet must not be null (team {jsonConfigurationTeam.Id}).");
-            }
-
             IPAddress ip;
             try
             {
@@ -211,7 +142,7 @@
                 jsonConfigurationTeam.Name,
                 jsonConfigurationTeam.Address,
                 teamSubnet,
-                jsonConfigurationTeam.LogoUrl.ToString(),
+                jsonConfigurationTeam.LogoUrl != null ? jsonConfigurationTeam.LogoUrl.ToString() : null,
                 jsonConfigurationTeam.CountryCode,
                 jsonConfigurationTeam.Active ?? false);
         }
@@ -232,26 +163,6 @@
     {
         public static async Task<ConfigurationService> Validate(JsonConfigurationService jsonConfigurationService)
         {
-            if (jsonConfigurationService.Id == 0)
-            {
-                throw new JsonConfigurationServiceValidationException("Service id must not be 0.");
-            }
-
-            if (jsonConfigurationService.Name is null)
-            {
-                throw new JsonConfigurationServiceValidationException($"Service name must not be null (service {jsonConfigurationService.Id}).");
-            }
-
-            if (jsonConfigurationService.Checkers is null)
-            {
-                throw new JsonConfigurationServiceValidationException($"Service checkers must not be null (service {jsonConfigurationService.Id}).");
-            }
-
-            if (jsonConfigurationService.Checkers.Length == 0)
-            {
-                throw new JsonConfigurationServiceValidationException($"Service checkers must not be empty (service {jsonConfigurationService.Id}).");
-            }
-
             // Ask the checker how many flags/noises/havocs the service wants
             CheckerInfoMessage? infoMessage;
             try

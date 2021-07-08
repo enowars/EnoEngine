@@ -8,6 +8,7 @@ using Json.Schema.Generation;
 
 namespace EnoCore.Models.Schema
 {
+    // Can be removed after https://github.com/gregsdennis/json-everything/issues/141
     [AttributeUsage(AttributeTargets.Property)]
     public class Description : Attribute, IAttributeHandler
     {
@@ -18,7 +19,7 @@ namespace EnoCore.Models.Schema
             Value = value;
         }
 
-        void IAttributeHandler.AddConstraints(SchemaGeneratorContext context)
+        public void AddConstraints(SchemaGeneratorContext context)
         {
             var attribute = context.Attributes.OfType<Description>().FirstOrDefault();
             if (attribute == null) return;

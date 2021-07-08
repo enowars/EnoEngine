@@ -9,11 +9,12 @@
     using EnoCore.Models.CheckerApi;
     using EnoCore.Models.Schema;
 
-    public class JsonConfigurationService
+    public record JsonConfigurationService
     {
 
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         [Description("The id of the service.")]
-        [Minimum(0)]
+        [Minimum(1)]
         [Maximum(uint.MaxValue)]
         public long Id { get; init; }
 
@@ -26,6 +27,7 @@
 
         [Required]
         [Description("The fully specified URL address for each checker")]
+        [MinItems(1)]
         public Uri[] Checkers { get; init; }
 
         [Required]
@@ -51,38 +53,6 @@
         [Minimum(0)]
         [Maximum(uint.MaxValue)]
         public long WeightFactor { get; init; }
-
-        //public async Task<JsonConfigurationService> Validate()
-        //{
-        //    // Ask the checker how many flags/noises/havocs the service wants
-        //    CheckerInfoMessage? infoMessage;
-        //    try
-        //    {
-        //        using var client = new HttpClient();
-        //        var cancelSource = new CancellationTokenSource();
-        //        cancelSource.CancelAfter(5 * 1000);
-        //        var responseString = await client.GetStringAsync($"{this.Checkers[0]}/service", cancelSource.Token);
-        //        infoMessage = System.Text.Json.JsonSerializer.Deserialize<CheckerInfoMessage>(responseString, JsonOptions.SerializerOptions);
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        throw new JsonConfigurationServiceValidationException($"Service checker failed to respond to info request (service {this.Id}).", e);
-        //    }
-
-        //    if (infoMessage is null)
-        //    {
-        //        throw new JsonConfigurationServiceValidationException($"Service checker failed to respond to info request (service {this.Id}).");
-        //    }
-
-        //    return new(
-        //        this.Id,
-        //        this.Name,
-        //        this.Active,
-        //        this.Checkers,
-        //        this.FlagsPerRoundMultiplier * infoMessage.FlagVariants,
-        //        this.NoisesPerRoundMultiplier * infoMessage.NoiseVariants,
-        //        this.HavocsPerRoundMultiplier * infoMessage.HavocVariants,
-        //        this.WeightFactor);
-        //}
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     }
 }
