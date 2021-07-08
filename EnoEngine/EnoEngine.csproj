@@ -23,7 +23,7 @@
 
     <ItemGroup>
         <!-- Copy the debug.ctf.json during debugging -->
-        <None Include="ctf.debug.json">
+        <None Include="ctf.debug.json" Condition="'$(Configuration)'=='DEBUG'">
             <Link>ctf.json</Link>
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
