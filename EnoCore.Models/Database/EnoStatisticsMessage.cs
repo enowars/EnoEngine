@@ -21,6 +21,7 @@
     public record CheckerTaskLaunchMessage(
         long RoundId,
         string ServiceName,
+        long TeamId,
         string Method,
         long TaskIndex)
         : EnoStatisticsMessage(nameof(CheckerTaskLaunchMessage), DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))
@@ -30,6 +31,7 @@
             return new(
                 task.CurrentRoundId,
                 task.ServiceName,
+                task.TeamId,
                 task.Method.ToString(),
                 task.UniqueVariantId);
         }
@@ -38,6 +40,7 @@
     public record CheckerTaskFinishedMessage(
         long RoundId,
         string ServiceName,
+        long TeamId,
         string Method,
         long TaskIndex,
         double Duration,
@@ -49,6 +52,7 @@
             return new(
                 task.CurrentRoundId,
                 task.ServiceName,
+                task.TeamId,
                 task.Method.ToString(),
                 task.UniqueVariantId,
                 (DateTime.UtcNow - task.StartTime).TotalSeconds,
