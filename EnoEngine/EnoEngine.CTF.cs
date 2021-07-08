@@ -4,10 +4,12 @@
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
+    using System.Net.Http;
     using System.Text;
     using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
+    using EEnoCore.Models.AttackInfo;
     using EnoCore;
     using EnoCore.Models;
     using EnoCore.Models.Database;
@@ -17,6 +19,8 @@
 
     internal partial class EnoEngine
     {
+        private static readonly HttpClient Client = new HttpClient();
+
         public async Task<DateTime> StartNewRound()
         {
             var stopwatch = new Stopwatch();
@@ -86,7 +90,7 @@
                 await this.CalculateTotalPoints();
             }
 
-            await this.GenerateAttackInfo(roundId);
+            var attackInfo = await this.GenerateAttackInfo(roundId);
 
             var jsonStopWatch = new Stopwatch();
             jsonStopWatch.Start();
@@ -96,8 +100,31 @@
             var json = JsonSerializer.Serialize(scoreboard, EnoCoreUtil.CamelCaseEnumConverterOptions);
             File.WriteAllText($"{EnoCoreUtil.DataDirectory}scoreboard{roundId}.json", json);
             File.WriteAllText($"{EnoCoreUtil.DataDirectory}scoreboard.json", json);
+
             jsonStopWatch.Stop();
             this.logger.LogInformation($"Scoreboard Generation Took {jsonStopWatch.ElapsedMilliseconds} ms");
+            try
+            {
+                var baseUrl = new Uri(Environment.GetEnvironmentVariable("SCOREBOARD_ENDPOINT") ?? "http://localhost:5001/?adminSecret=secret");
+                UriBuilder scoreboardUrlBuilder = new UriBuilder(baseUrl);
+                scoreboardUrlBuilder.Path = "/api/scoreboardinfo/scoreboard";
+                this.logger.LogInformation("Sending Scoreboard to:" + scoreboardUrlBuilder.Uri);
+                var scoreboardContent = new StringContent(json, Encoding.UTF8, "application/json");
+                var scoreboardResponse = await Client.PostAsync(scoreboardUrlBuilder.Uri, scoreboardContent);
+                this.logger.LogInformation("EnoLandingPage returned:" + scoreboardResponse.StatusCode + "\n" + await scoreboardResponse.Content.ReadAsStringAsync());
+
+                UriBuilder attackUrlBuilder = new UriBuilder(baseUrl);
+                attackUrlBuilder.Path = "/api/attackinfo";
+                this.logger.LogInformation("Sending AttackInfo to:" + attackUrlBuilder.Uri);
+                var content = new StringContent(attackInfo, Encoding.UTF8, "application/json");
+                var attackResponse = await Client.PostAsync(attackUrlBuilder.Uri, content);
+                this.logger.LogInformation("EnoLandingPage returned:" + attackResponse.StatusCode + "\n" + await attackResponse.Content.ReadAsStringAsync());
+            }
+            catch (Exception e)
+            {
+                this.logger.LogError($"HTTP POST to Scoreboard failed because: {e}");
+            }
+
             return DateTime.UtcNow;
         }
 
@@ -183,7 +210,7 @@
             }
         }
 
-        private async Task GenerateAttackInfo(long roundId)
+        private async Task<string> GenerateAttackInfo(long roundId)
         {
             var stopWatch = new Stopwatch();
             stopWatch.Start();
@@ -194,6 +221,7 @@
             File.WriteAllText($"{EnoCoreUtil.DataDirectory}attack.json", json);
             stopWatch.Stop();
             this.logger.LogInformation($"Attack Info Generation Took {stopWatch.ElapsedMilliseconds} ms");
+            return json;
         }
     }
 }
