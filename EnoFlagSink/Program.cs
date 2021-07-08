@@ -45,8 +45,7 @@ try
     {
         var content = File.ReadAllText("ctf.json");
 
-
-        configuration = await Configuration.Load(content);
+        configuration = await Configuration.LoadAndValidate(content);
     }
     catch (JsonException e)
     {
