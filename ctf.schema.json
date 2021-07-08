@@ -37,10 +37,7 @@
           "id": { "type": "integer", "minimum": 1, "maximum": 4294967295 },
           "name": { "type": "string" },
           "active": { "type": ["boolean", "null"] },
-          "address": {
-            "type": "object",
-            "properties": { "scopeId": { "type": "integer" }, "address": { "type": "integer", "deprecated": true } }
-          },
+          "address": { "type": "string" },
           "countryCode": { "type": "string" },
           "logoUrl": { "type": "string", "format": "uri" },
           "teamSubnet": { "type": "string" }
@@ -57,7 +54,7 @@
       "items": {
         "type": "object",
         "properties": {
-          "id": { "type": "integer", "description": "The id of the service.", "minimum": 0, "maximum": 4294967295 },
+          "id": { "type": "integer", "description": "The id of the service.", "minimum": 1, "maximum": 4294967295 },
           "name": { "$ref": "#/$defs/string" },
           "active": { "type": "boolean", "description": "Whether the Service is active or not." },
           "checkers": {
@@ -67,7 +64,8 @@
               "format": "uri",
               "description": "The fully specified URL address for each checker"
             },
-            "description": "The fully specified URL address for each checker"
+            "description": "The fully specified URL address for each checker",
+            "minItems": 1
           },
           "flagsPerRoundMultiplier": {
             "type": "integer",
