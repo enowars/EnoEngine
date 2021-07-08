@@ -13,8 +13,9 @@
     using EnoCore.Models.CheckerApi;
     using EnoCore.Models.Database;
     using EnoCore.Models.JsonConfiguration;
+    using Json.Schema;
 
-    public sealed record Configuration(
+    public record Configuration(
         string Title,
         long FlagValidityInRounds,
         int CheckedRoundsPerRound,
@@ -29,63 +30,34 @@
         List<ConfigurationService> ActiveServices,
         Dictionary<long, string[]> Checkers)
     {
-        public static async Task<Configuration> Validate(JsonConfiguration jsonConfiguration)
+        public static async Task<Configuration> LoadAndValidate(string config)
         {
-            if (jsonConfiguration.Title is null)
+            // Statically validate based on the schema
+            var schema = EnoCoreUtil.GenerateSchema();
+            var options = new ValidationOptions
             {
-                throw new JsonConfigurationValidationException("title must not be null.");
+                OutputFormat = OutputFormat.Basic,
+                RequireFormatValidation = true,
+            };
+            var validationResults = schema.Validate(
+                JsonDocument.Parse(config).RootElement, options);
+
+            if (!validationResults.IsValid)
+            {
+                throw new AggregateException(validationResults.NestedResults.Append(validationResults).Select(e => new JsonConfigurationValidationException(e.SchemaLocation + ": " + e.Message)));
             }
 
-            if (jsonConfiguration.DnsSuffix is null)
+            var jsonConfiguration = JsonSerializer.Deserialize<JsonConfiguration>(config, EnoCoreUtil.SerializerOptions);
+            if (jsonConfiguration is null)
             {
-                throw new JsonConfigurationValidationException("dnsSuffix must not be null.");
+                throw new JsonException("Could not be deserialized");
             }
 
-            if (jsonConfiguration.FlagSigningKey is null)
-            {
-                throw new JsonConfigurationValidationException("flagSigningKey must not be null.");
-            }
+            return await LiveValidate(jsonConfiguration);
+        }
 
-            if (jsonConfiguration.RoundLengthInSeconds <= 0)
-            {
-                throw new JsonConfigurationValidationException("roundLengthInSeconds must not be <= 0.");
-            }
-
-            if (jsonConfiguration.CheckedRoundsPerRound <= 0)
-            {
-                throw new JsonConfigurationValidationException("checkedRoundsPerRound must not be <= 0.");
-            }
-
-            if (jsonConfiguration.FlagValidityInRounds <= 0)
-            {
-                throw new JsonConfigurationValidationException("flagValidityInRounds must not be <= 0.");
-            }
-
-            if (jsonConfiguration.TeamSubnetBytesLength <= 0)
-            {
-                throw new JsonConfigurationValidationException("teamSubnetBytesLength must not be <= 0.");
-            }
-
-            if (jsonConfiguration.Teams is null)
-            {
-                throw new JsonConfigurationValidationException("teams must not null.");
-            }
-
-            if (jsonConfiguration.Services is null)
-            {
-                throw new JsonConfigurationValidationException("services must not null.");
-            }
-
-            if (jsonConfiguration.Teams.Count == 0)
-            {
-                throw new JsonConfigurationValidationException("teams must not be empty.");
-            }
-
-            if (jsonConfiguration.Services.Count == 0)
-            {
-                throw new JsonConfigurationValidationException("services must not be empty.");
-            }
-
+        public static async Task<Configuration> LiveValidate(JsonConfiguration jsonConfiguration)
+        {
             List<ConfigurationTeam> teams = new();
             List<ConfigurationTeam> activeTeams = new();
             List<ConfigurationService> services = new();
@@ -102,7 +74,7 @@
                 var validatedTeam = ConfigurationTeam.Validate(team, jsonConfiguration.TeamSubnetBytesLength);
                 teams.Add(validatedTeam);
 
-                if (team.Active)
+                if (team.Active ?? false)
                 {
                     activeTeams.Add(validatedTeam);
                 }
@@ -119,7 +91,7 @@
                 services.Add(validatedService);
                 checkers.Add(service.Id, validatedService.Checkers);
 
-                if (service.Active)
+                if (service.Active ?? false)
                 {
                     activeServices.Add(validatedService);
                 }
@@ -153,21 +125,6 @@
     {
         public static ConfigurationTeam Validate(JsonConfigurationTeam jsonConfigurationTeam, int subnetBytesLength)
         {
-            if (jsonConfigurationTeam.Id == 0)
-            {
-                throw new JsonConfigurationTeamValidationException("Team id must not be 0.");
-            }
-
-            if (jsonConfigurationTeam.Name is null)
-            {
-                throw new JsonConfigurationTeamValidationException($"Team name must not be null (team {jsonConfigurationTeam.Id}).");
-            }
-
-            if (jsonConfigurationTeam.TeamSubnet is null)
-            {
-                throw new JsonConfigurationTeamValidationException($"Team subnet must not be null (team {jsonConfigurationTeam.Id}).");
-            }
-
             IPAddress ip;
             try
             {
@@ -185,9 +142,9 @@
                 jsonConfigurationTeam.Name,
                 jsonConfigurationTeam.Address,
                 teamSubnet,
-                jsonConfigurationTeam.LogoUrl,
+                jsonConfigurationTeam.LogoUrl != null ? jsonConfigurationTeam.LogoUrl.ToString() : null,
                 jsonConfigurationTeam.CountryCode,
-                jsonConfigurationTeam.Active);
+                jsonConfigurationTeam.Active ?? false);
         }
     }
 
@@ -206,26 +163,6 @@
     {
         public static async Task<ConfigurationService> Validate(JsonConfigurationService jsonConfigurationService)
         {
-            if (jsonConfigurationService.Id == 0)
-            {
-                throw new JsonConfigurationServiceValidationException("Service id must not be 0.");
-            }
-
-            if (jsonConfigurationService.Name is null)
-            {
-                throw new JsonConfigurationServiceValidationException($"Service name must not be null (service {jsonConfigurationService.Id}).");
-            }
-
-            if (jsonConfigurationService.Checkers is null)
-            {
-                throw new JsonConfigurationServiceValidationException($"Service checkers must not be null (service {jsonConfigurationService.Id}).");
-            }
-
-            if (jsonConfigurationService.Checkers.Length == 0)
-            {
-                throw new JsonConfigurationServiceValidationException($"Service checkers must not be empty (service {jsonConfigurationService.Id}).");
-            }
-
             // Ask the checker how many flags/noises/havocs the service wants
             CheckerInfoMessage? infoMessage;
             try
@@ -234,7 +171,7 @@
                 var cancelSource = new CancellationTokenSource();
                 cancelSource.CancelAfter(5 * 1000);
                 var responseString = await client.GetStringAsync($"{jsonConfigurationService.Checkers[0]}/service", cancelSource.Token);
-                infoMessage = JsonSerializer.Deserialize<CheckerInfoMessage>(responseString, EnoCoreUtil.CamelCaseEnumConverterOptions);
+                infoMessage = JsonSerializer.Deserialize<CheckerInfoMessage>(responseString, EnoCoreUtil.SerializerOptions);
             }
             catch (Exception e)
             {
@@ -256,8 +193,8 @@
                 infoMessage.NoiseVariants,
                 infoMessage.HavocVariants,
                 jsonConfigurationService.WeightFactor,
-                jsonConfigurationService.Active,
-                jsonConfigurationService.Checkers);
+                jsonConfigurationService.Active ?? false,
+                jsonConfigurationService.Checkers.Select(x => x.ToString()).ToArray());
         }
     }
 }
