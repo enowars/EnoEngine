@@ -2,25 +2,15 @@
 {
     using System;
     using System.ComponentModel;
-    using System.ComponentModel.DataAnnotations;
-    using System.Net;
+    using Json.Schema.Generation;
 
     public class JsonConfigurationTeam
     {
-        public JsonConfigurationTeam(long id, string name, bool? active, IPAddress address, string? countryCode, string? logoUrl, string teamSubnet)
-        {
-            this.Id = id;
-            this.Name = name;
-            this.Active = active ?? true;
-            this.Address = address;
-            this.CountryCode = countryCode;
-            this.LogoUrl = logoUrl;
-            this.TeamSubnet = teamSubnet;
-        }
 
         [Required]
         [Description("The id of the team.")]
-        [Range(minimum: 0, long.MaxValue)]
+        [Minimum(0)]
+        [Maximum(uint.MaxValue)]
         public long Id { get; init; }
 
         [Required]
@@ -28,18 +18,19 @@
         public string Name { get; init; }
 
         [Description("Whether the team is active or not.")]
-        public bool Active { get; init; }
+        [Nullable(true)]
+        public bool? Active { get; init; }
 
         [Required]
         [Description("The IP address of the teams vulnbox.")]
-        public IPAddress Address { get; init; }
+        public string Address { get; init; }
 
         [Description("The URL to the country flag of the team")]
+
         public string? CountryCode { get; init; }
 
         [Description("The URL to the logo of the team.")]
-        [UrlAttribute]
-        public string? LogoUrl { get; init; }
+        public Uri? LogoUrl { get; init; }
 
         [Required]
         [Description("The Teams Subnet.")]

@@ -90,7 +90,7 @@
                 try
                 {
                     var content = File.ReadAllText("ctf.json");
-                    var jsonConfiguration = JsonSerializer.Deserialize<JsonConfiguration>(content, EnoCoreUtil.CamelCaseEnumConverterOptions);
+                    var jsonConfiguration = JsonSerializer.Deserialize<JsonConfiguration>(content, EnoCoreUtil.SerializerOptions);
                     if (jsonConfiguration is null)
                     {
                         Console.WriteLine("Deserialization of config failed.");

@@ -44,14 +44,9 @@ try
     try
     {
         var content = File.ReadAllText("ctf.json");
-        var jsonConfiguration = JsonSerializer.Deserialize<JsonConfiguration>(content, EnoCoreUtil.SerializerOptions);
-        if (jsonConfiguration is null)
-        {
-            Console.WriteLine("Deserialization of config failed.");
-            return 1;
-        }
 
-        configuration = await Configuration.LoadAndValidate(jsonConfiguration);
+
+        configuration = await Configuration.Load(content);
     }
     catch (JsonException e)
     {

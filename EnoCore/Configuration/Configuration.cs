@@ -13,6 +13,7 @@
     using EnoCore.Models.CheckerApi;
     using EnoCore.Models.Database;
     using EnoCore.Models.JsonConfiguration;
+    using Json.Schema;
     using NJsonSchema.Validation;
 
     public sealed record Configuration(
@@ -30,79 +31,32 @@
         List<ConfigurationService> ActiveServices,
         Dictionary<long, string[]> Checkers)
     {
-        //public static async Task<Configuration> Load(JsonConfiguration jsonConfiguration)
-        //{
-
-        //}
-
-
-            //    List<JsonConfigurationTeam> teams = new();
-            //    List<JsonConfigurationTeam> activeTeams = new();
-            //    List<JsonConfigurationService> services = new();
-            //    List<JsonConfigurationService> activeServices = new();
-            //    Dictionary<long, string[]> checkers = new();
-
-            //    foreach (var team in jsonConfiguration.Teams)
-            //    {
-            //        if (teams.Where(t => t.Id == team.Id).Any())
-            //        {
-            //            throw new JsonConfigurationValidationException($"Duplicate teamId ({team.Id})");
-            //        }
-
-            //        var validatedTeam = team.Validate(jsonConfiguration.TeamSubnetBytesLength);
-            //        teams.Add(validatedTeam);
-
-            //        if (team.Active)
-            //        {
-            //            activeTeams.Add(validatedTeam);
-            //        }
-            //    }
-
-            //    foreach (var service in jsonConfiguration.Services)
-            //    {
-            //        if (services.Where(s => s.Id == service.Id).Any())
-            //        {
-            //            throw new JsonConfigurationValidationException($"Duplicate serviceId ({service.Id})");
-            //        }
-
-            //        var validatedService = await service.Validate();
-            //        services.Add(validatedService);
-            //        checkers.Add(service.Id, validatedService.Checkers);
-
-            //        if (service.Active)
-            //        {
-            //            activeServices.Add(validatedService);
-            //        }
-            //    }
-
-            //    return new(
-            //    jsonConfiguration.Title,
-            //    jsonConfiguration.FlagValidityInRounds,
-            //    jsonConfiguration.CheckedRoundsPerRound,
-            //    jsonConfiguration.RoundLengthInSeconds,
-            //    jsonConfiguration.DnsSuffix,
-            //    jsonConfiguration.TeamSubnetBytesLength,
-            //    jsonConfiguration.FlagSigningKey,
-            //    jsonConfiguration.Encoding,
-            //    teams,
-            //    activeTeams,
-            //    services,
-            //    activeServices,
-            //    checkers);
-            //}
-
-            public static async Task<Configuration> LoadAndValidate(JsonConfiguration jsonConfiguration)
+        public static async Task<Configuration> Load(string config)
         {
             var schema = EnoCoreUtil.GenerateSchema();
-            var errors = schema.Validate(JsonSerializer.Serialize(jsonConfiguration));
+            var options = new ValidationOptions{
+                OutputFormat = OutputFormat.Basic
+            }
+                ;
+            var validationResults = schema.Validate(
+                JsonDocument.Parse(config).RootElement, options);
 
-            var valid = errors.Count == 0;
-            if (!valid)
+            if (!validationResults.IsValid)
             {
-                throw new AggregateException(errors.Select(e => new JsonConfigurationValidationException(e.Path + ": " + e.Kind)));
+                throw new AggregateException(validationResults.NestedResults.Append(validationResults).Select(e => new JsonConfigurationValidationException(e.SchemaLocation + ": " + e.Message)));
             }
 
+            var jsonConfiguration = JsonSerializer.Deserialize<JsonConfiguration>(config, EnoCoreUtil.SerializerOptions);
+            if (jsonConfiguration is null)
+            {
+                Console.WriteLine("Deserialization of config failed.");
+            }
+            return await LoadAndValidate(jsonConfiguration);
+        }
 
+
+        public static async Task<Configuration> LoadAndValidate(JsonConfiguration jsonConfiguration)
+        {
             if (jsonConfiguration.Title is null)
             {
                 throw new JsonConfigurationValidationException("title must not be null.");
@@ -174,7 +128,7 @@
                 var validatedTeam = ConfigurationTeam.Validate(team, jsonConfiguration.TeamSubnetBytesLength);
                 teams.Add(validatedTeam);
 
-                if (team.Active)
+                if (team.Active ?? false)
                 {
                     activeTeams.Add(validatedTeam);
                 }
@@ -191,7 +145,7 @@
                 services.Add(validatedService);
                 checkers.Add(service.Id, validatedService.Checkers);
 
-                if (service.Active)
+                if (service.Active ?? false)
                 {
                     activeServices.Add(validatedService);
                 }
@@ -217,7 +171,7 @@
     public sealed record ConfigurationTeam(
         long Id,
         string Name,
-        IPAddress? Address,
+        string? Address,
         byte[] TeamSubnet,
         string? LogoUrl,
         string? CountryCode,
@@ -257,9 +211,9 @@
                 jsonConfigurationTeam.Name,
                 jsonConfigurationTeam.Address,
                 teamSubnet,
-                jsonConfigurationTeam.LogoUrl,
+                jsonConfigurationTeam.LogoUrl.ToString(),
                 jsonConfigurationTeam.CountryCode,
-                jsonConfigurationTeam.Active);
+                jsonConfigurationTeam.Active ?? false);
         }
     }
 
@@ -328,8 +282,8 @@
                 infoMessage.NoiseVariants,
                 infoMessage.HavocVariants,
                 jsonConfigurationService.WeightFactor,
-                jsonConfigurationService.Active,
-                jsonConfigurationService.Checkers);
+                jsonConfigurationService.Active ?? false,
+                jsonConfigurationService.Checkers.Select(x => x.ToString()).ToArray());
         }
     }
 }

@@ -2,8 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.ComponentModel;
-    using System.ComponentModel.DataAnnotations;
     using System.IO;
     using System.Linq;
     using System.Reflection;
@@ -12,6 +10,9 @@
     using System.Text.Json.Serialization;
     using System.Threading.Tasks;
     using EnoCore.Models;
+    using EnoCore.Models.Schema;
+    using Json.Schema.Generation;
+
 
     /// <summary>
     /// The Configuration read from ctf.json.
@@ -36,18 +37,21 @@
         [Description("The title of the event.")]
         public string Title { get; init; }
 
-        [Required]
-        [Range(minimum: 0, long.MaxValue)]
+        [Json.Schema.Generation.Required]
+        [Minimum(0)]
+        [Maximum(uint.MaxValue)]
         [Description("Validity of a flag in rounds.")]
         public long FlagValidityInRounds { get; init; }
 
         [Required]
-        [Range(minimum: 1, long.MaxValue)]
+        [Minimum(1)]
+        [Maximum(uint.MaxValue)]
         [Description("Number of times a flag is checked per round.")]
         public int CheckedRoundsPerRound { get; init; }
 
         [Required]
-        [Range(minimum: 1, long.MaxValue)]
+        [Minimum(1)]
+        [Maximum(uint.MaxValue)]
         [Description("The length of one round in seconds.")]
         public int RoundLengthInSeconds { get; init; }
 
@@ -65,7 +69,6 @@
 
         [Required]
         [Description("Encoding of the flags")]
-        [EnumDataType(typeof(FlagEncoding))]
         public FlagEncoding Encoding { get; init; }
 
         [Required]
