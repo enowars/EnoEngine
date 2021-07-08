@@ -114,7 +114,7 @@
                 this.logger.LogInformation("EnoLandingPage returned:" + scoreboardResponse.StatusCode + "\n" + await scoreboardResponse.Content.ReadAsStringAsync());
 
                 UriBuilder attackUrlBuilder = new UriBuilder(baseUrl);
-                scoreboardUrlBuilder.Path = "/api/attackinfo";
+                attackUrlBuilder.Path = "/api/attackinfo";
                 this.logger.LogInformation("Sending AttackInfo to:" + attackUrlBuilder.Uri);
                 var content = new StringContent(attackInfo, Encoding.UTF8, "application/json");
                 var attackResponse = await Client.PostAsync(attackUrlBuilder.Uri, content);
