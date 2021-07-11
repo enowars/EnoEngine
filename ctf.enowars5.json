@@ -1,0 +1,698 @@
+{
+  "title": "ENOWARS 5",
+  "flagValidityInRounds": 10,
+  "checkedRoundsPerRound": 3,
+  "roundLengthInSeconds": 60,
+  "dnsSuffix": ".bambi.ovh",
+  "teamSubnetBytesLength": 15,
+  "flagSigningKey": "flagsigningkeyasdkjnaskjdbasjkdhbasjkhdbasjkbhdSECRETTTTTTTTT",
+  "encoding": "Legacy",
+  "teams": [
+    {
+      "id": 1,
+      "name": "ENOOPFLAG",
+      "address": "10.1.1.1",
+      "teamSubnet": "::ffff:10.1.1.0",
+      "logoUrl": "https://ctftime.org//media/team/8d84bb4b84096a94d06833378fa2a9f2.gif",
+      "countryFlagUrl": "DE",
+      "active": true
+    },
+    {
+      "id": 2,
+      "name": "HgbSec",
+      "address": "10.1.2.1",
+      "teamSubnet": "::ffff:10.1.2.0",
+      "logoUrl": "https://ctftime.org//media/team/HgbSec_150_1.png",
+      "countryFlagUrl": "AT",
+      "active": true
+    },
+    {
+      "id": 3,
+      "name": "aDream",
+      "address": "10.1.3.1",
+      "teamSubnet": "::ffff:10.1.3.0",
+      "logoUrl": "https://ctftime.org//media/team/iconfinder_cat_285654.png",
+      "countryFlagUrl": "DE",
+      "active": true
+    },
+    {
+      "id": 4,
+      "name": "BTZH",
+      "address": "10.1.4.1",
+      "teamSubnet": "::ffff:10.1.4.0",
+      "logoUrl": "https://ctftime.org//media/team/c8e69666fd94ac71",
+      "countryFlagUrl": "",
+      "active": true
+    },
+    {
+      "id": 5,
+      "name": "saarsec",
+      "address": "10.1.5.1",
+      "teamSubnet": "::ffff:10.1.5.0",
+      "logoUrl": "https://ctftime.org//media/team/saarsec_1.png",
+      "countryFlagUrl": "DE",
+      "active": true
+    },
+    {
+      "id": 6,
+      "name": "Red Cadets",
+      "address": "10.1.6.1",
+      "teamSubnet": "::ffff:10.1.6.0",
+      "logoUrl": "https://ctftime.org//media/team/logo_vampir.jpg",
+      "countryFlagUrl": "RU",
+      "active": true
+    },
+    {
+      "id": 8,
+      "name": "bsempir0x65",
+      "address": "10.1.8.1",
+      "teamSubnet": "::ffff:10.1.8.0",
+      "logoUrl": "",
+      "countryFlagUrl": "AT",
+      "active": true
+    },
+    {
+      "id": 9,
+      "name": "vubar",
+      "address": "10.1.9.1",
+      "teamSubnet": "::ffff:10.1.9.0",
+      "logoUrl": "https://ctftime.org//media/team/vusec-logo_small-768x768.png",
+      "countryFlagUrl": "NL",
+      "active": true
+    },
+    {
+      "id": 10,
+      "name": "jsutset",
+      "address": "10.1.10.1",
+      "teamSubnet": "::ffff:10.1.10.0",
+      "logoUrl": "",
+      "countryFlagUrl": "",
+      "active": true
+    },
+    {
+      "id": 15,
+      "name": "KuK Hofhackerei",
+      "address": "10.1.15.1",
+      "teamSubnet": "::ffff:10.1.15.0",
+      "logoUrl": "https://ctftime.org//media/team/hofhackerei.jpg",
+      "countryFlagUrl": "AT",
+      "active": true
+    },
+    {
+      "id": 16,
+      "name": "NVTFT",
+      "address": "10.1.16.1",
+      "teamSubnet": "::ffff:10.1.16.0",
+      "logoUrl": "",
+      "countryFlagUrl": "VN",
+      "active": true
+    },
+    {
+      "id": 18,
+      "name": "xtal",
+      "address": "10.1.18.1",
+      "teamSubnet": "::ffff:10.1.18.0",
+      "logoUrl": "https://ctftime.org//media/team/19_notalpha_1.png",
+      "countryFlagUrl": "",
+      "active": true
+    },
+    {
+      "id": 21,
+      "name": "SiBears",
+      "address": "10.1.21.1",
+      "teamSubnet": "::ffff:10.1.21.0",
+      "logoUrl": "https://ctftime.org//media/team/sibears.jpg",
+      "countryFlagUrl": "RU",
+      "active": true
+    },
+    {
+      "id": 28,
+      "name": "\u0425\u043E\u043B\u043E\u0434\u043D\u044B\u0435 \u043C\u0443\u0445\u0438",
+      "address": "10.1.28.1",
+      "teamSubnet": "::ffff:10.1.28.0",
+      "logoUrl": "",
+      "countryFlagUrl": "RU",
+      "active": true
+    },
+    {
+      "id": 29,
+      "name": "de_dust2",
+      "address": "10.1.29.1",
+      "teamSubnet": "::ffff:10.1.29.0",
+      "logoUrl": "",
+      "countryFlagUrl": "DE",
+      "active": true
+    },
+    {
+      "id": 34,
+      "name": "Bushwhackers",
+      "address": "10.1.34.1",
+      "teamSubnet": "::ffff:10.1.34.0",
+      "logoUrl": "https://ctftime.org//media/team/bushwhackers128.jpeg",
+      "countryFlagUrl": "RU",
+      "active": true
+    },
+    {
+      "id": 35,
+      "name": "NorseCode",
+      "address": "10.1.35.1",
+      "teamSubnet": "::ffff:10.1.35.0",
+      "logoUrl": "https://ctftime.org//media/team/norsecode-twitter.png",
+      "countryFlagUrl": "SE",
+      "active": true
+    },
+    {
+      "id": 36,
+      "name": "Daemon Summoners",
+      "address": "10.1.36.1",
+      "teamSubnet": "::ffff:10.1.36.0",
+      "logoUrl": "",
+      "countryFlagUrl": "CA",
+      "active": true
+    },
+    {
+      "id": 37,
+      "name": "5upernova",
+      "address": "10.1.37.1",
+      "teamSubnet": "::ffff:10.1.37.0",
+      "logoUrl": "https://ctftime.org//media/team/5UPERNOVA-SW.png",
+      "countryFlagUrl": "CN",
+      "active": true
+    },
+    {
+      "id": 38,
+      "name": "Cryptonite",
+      "address": "10.1.38.1",
+      "teamSubnet": "::ffff:10.1.38.0",
+      "logoUrl": "https://ctftime.org//media/team/WhatsApp_Image_2020-06-21_at_6.54.40_PM.jpeg",
+      "countryFlagUrl": "IN",
+      "active": true
+    },
+    {
+      "id": 39,
+      "name": "Wani Hackase",
+      "address": "10.1.39.1",
+      "teamSubnet": "::ffff:10.1.39.0",
+      "logoUrl": "https://ctftime.org//media/team/wani_futura.png",
+      "countryFlagUrl": "JP",
+      "active": true
+    },
+    {
+      "id": 40,
+      "name": "FAUST",
+      "address": "10.1.40.1",
+      "teamSubnet": "::ffff:10.1.40.0",
+      "logoUrl": "https://ctftime.org//media/team/logo-ohne-text-quadratisch-small.png",
+      "countryFlagUrl": "DE",
+      "active": true
+    },
+    {
+      "id": 41,
+      "name": "r00timentary",
+      "address": "10.1.41.1",
+      "teamSubnet": "::ffff:10.1.41.0",
+      "logoUrl": "",
+      "countryFlagUrl": "US",
+      "active": true
+    },
+    {
+      "id": 42,
+      "name": "Pixels",
+      "address": "10.1.42.1",
+      "teamSubnet": "::ffff:10.1.42.0",
+      "logoUrl": "https://ctftime.org//media/team/Pixels.jpg",
+      "countryFlagUrl": "RU",
+      "active": true
+    },
+    {
+      "id": 45,
+      "name": "cyberwehr",
+      "address": "10.1.45.1",
+      "teamSubnet": "::ffff:10.1.45.0",
+      "logoUrl": "https://ctftime.org//media/team/fire-engine_1.png",
+      "countryFlagUrl": "AT",
+      "active": true
+    },
+    {
+      "id": 46,
+      "name": "meow_solo",
+      "address": "10.1.46.1",
+      "teamSubnet": "::ffff:10.1.46.0",
+      "logoUrl": "https://ctftime.org//media/team/kucBB1sFDTk.jpg",
+      "countryFlagUrl": "",
+      "active": true
+    },
+    {
+      "id": 48,
+      "name": "The Flat Network Society",
+      "address": "10.1.48.1",
+      "teamSubnet": "::ffff:10.1.48.0",
+      "logoUrl": "https://ctftime.org//media/team/logo_279.png",
+      "countryFlagUrl": "FR",
+      "active": true
+    },
+    {
+      "id": 51,
+      "name": "thi3nl1d0ch4nh",
+      "address": "10.1.51.1",
+      "teamSubnet": "::ffff:10.1.51.0",
+      "logoUrl": "",
+      "countryFlagUrl": "VN",
+      "active": true
+    },
+    {
+      "id": 52,
+      "name": "BYU Cyberia",
+      "address": "10.1.52.1",
+      "teamSubnet": "::ffff:10.1.52.0",
+      "logoUrl": "https://ctftime.org//media/team/cyber_Coug.png",
+      "countryFlagUrl": "US",
+      "active": true
+    },
+    {
+      "id": 56,
+      "name": "HAZ\u0026E",
+      "address": "10.1.56.1",
+      "teamSubnet": "::ffff:10.1.56.0",
+      "logoUrl": "",
+      "countryFlagUrl": "CN",
+      "active": true
+    },
+    {
+      "id": 58,
+      "name": "bi0s",
+      "address": "10.1.58.1",
+      "teamSubnet": "::ffff:10.1.58.0",
+      "logoUrl": "https://ctftime.org//media/team/bi0s_black_logo.png",
+      "countryFlagUrl": "IN",
+      "active": true
+    },
+    {
+      "id": 59,
+      "name": "Omaviat",
+      "address": "10.1.59.1",
+      "teamSubnet": "::ffff:10.1.59.0",
+      "logoUrl": "https://ctftime.org//media/team/logo_303.png",
+      "countryFlagUrl": "RU",
+      "active": true
+    },
+    {
+      "id": 60,
+      "name": "RedRocket",
+      "address": "10.1.60.1",
+      "teamSubnet": "::ffff:10.1.60.0",
+      "logoUrl": "https://ctftime.org//media/team/webung_muskeln_brdr.png",
+      "countryFlagUrl": "DE",
+      "active": true
+    },
+    {
+      "id": 61,
+      "name": "TeamLurchis",
+      "address": "10.1.61.1",
+      "teamSubnet": "::ffff:10.1.61.0",
+      "logoUrl": "https://ctftime.org//media/team/lurchis.jpg",
+      "countryFlagUrl": "DE",
+      "active": true
+    },
+    {
+      "id": 62,
+      "name": "bitb4ng",
+      "address": "10.1.62.1",
+      "teamSubnet": "::ffff:10.1.62.0",
+      "logoUrl": "",
+      "countryFlagUrl": "IT",
+      "active": true
+    },
+    {
+      "id": 63,
+      "name": "Zh3r0_0ffici4l",
+      "address": "10.1.63.1",
+      "teamSubnet": "::ffff:10.1.63.0",
+      "logoUrl": "https://ctftime.org//media/team/photo_2020-01-26_01-06-33.jpg",
+      "countryFlagUrl": "IN",
+      "active": true
+    },
+    {
+      "id": 65,
+      "name": "born2scan",
+      "address": "10.1.65.1",
+      "teamSubnet": "::ffff:10.1.65.0",
+      "logoUrl": "https://ctftime.org//media/team/helmet_texture_text.png",
+      "countryFlagUrl": "IT",
+      "active": true
+    },
+    {
+      "id": 66,
+      "name": "organizers",
+      "address": "10.1.66.1",
+      "teamSubnet": "::ffff:10.1.66.0",
+      "logoUrl": "https://ctftime.org//media/team/organizers19.png",
+      "countryFlagUrl": "",
+      "active": true
+    },
+    {
+      "id": 67,
+      "name": "STT",
+      "address": "10.1.67.1",
+      "teamSubnet": "::ffff:10.1.67.0",
+      "logoUrl": "https://ctftime.org//media/team/stt_logo_twitter.png",
+      "countryFlagUrl": "PT",
+      "active": true
+    },
+    {
+      "id": 68,
+      "name": "NoPwnIntended",
+      "address": "10.1.68.1",
+      "teamSubnet": "::ffff:10.1.68.0",
+      "logoUrl": "",
+      "countryFlagUrl": "IT",
+      "active": true
+    },
+    {
+      "id": 69,
+      "name": "SharLike",
+      "address": "10.1.69.1",
+      "teamSubnet": "::ffff:10.1.69.0",
+      "logoUrl": "https://ctftime.org//media/team/logo_square.png",
+      "countryFlagUrl": "RU",
+      "active": true
+    },
+    {
+      "id": 71,
+      "name": "Dr4gonfly",
+      "address": "10.1.71.1",
+      "teamSubnet": "::ffff:10.1.71.0",
+      "logoUrl": "https://ctftime.org//media/team/image_2020-12-11_08-34_1.png",
+      "countryFlagUrl": "BD",
+      "active": true
+    },
+    {
+      "id": 72,
+      "name": "pwnthem0le",
+      "address": "10.1.72.1",
+      "teamSubnet": "::ffff:10.1.72.0",
+      "logoUrl": "https://ctftime.org//media/team/pwnthem0le3.png",
+      "countryFlagUrl": "IT",
+      "active": true
+    },
+    {
+      "id": 75,
+      "name": "Ret2Cringe",
+      "address": "10.1.75.1",
+      "teamSubnet": "::ffff:10.1.75.0",
+      "logoUrl": "https://ctftime.org//media/team/20210704_003120.jpg",
+      "countryFlagUrl": "AT",
+      "active": true
+    },
+    {
+      "id": 76,
+      "name": "ONO",
+      "address": "10.1.76.1",
+      "teamSubnet": "::ffff:10.1.76.0",
+      "logoUrl": "",
+      "countryFlagUrl": "RU",
+      "active": true
+    },
+    {
+      "id": 77,
+      "name": "IrisSec",
+      "address": "10.1.77.1",
+      "teamSubnet": "::ffff:10.1.77.0",
+      "logoUrl": "https://ctftime.org//media/team/iris-zoomed.jpg",
+      "countryFlagUrl": "US",
+      "active": true
+    },
+    {
+      "id": 82,
+      "name": "K0TN",
+      "address": "10.1.82.1",
+      "teamSubnet": "::ffff:10.1.82.0",
+      "logoUrl": "https://ctftime.org//media/team/%D0%91%D0%B5%D0%B7-%D0%B8%D0%BC%D0%B5%D0%BD%D0%B8-1.png",
+      "countryFlagUrl": "RU",
+      "active": true
+    },
+    {
+      "id": 83,
+      "name": "Xai Tr\u00EDnh T\u00E3",
+      "address": "10.1.83.1",
+      "teamSubnet": "::ffff:10.1.83.0",
+      "logoUrl": "https://ctftime.org//media/team/30420308_218083182114760_6916245681970367252_o.jpg",
+      "countryFlagUrl": "VN",
+      "active": true
+    },
+    {
+      "id": 84,
+      "name": "KUDoS",
+      "address": "10.1.84.1",
+      "teamSubnet": "::ffff:10.1.84.0",
+      "logoUrl": "https://ctftime.org//media/team/KUDoS_square.png",
+      "countryFlagUrl": "JP",
+      "active": true
+    },
+    {
+      "id": 85,
+      "name": "_-WZM-_",
+      "address": "10.1.85.1",
+      "teamSubnet": "::ffff:10.1.85.0",
+      "logoUrl": "https://ctftime.org//media/team/IMG.JPG",
+      "countryFlagUrl": "CN",
+      "active": true
+    },
+    {
+      "id": 86,
+      "name": "kitcat",
+      "address": "10.1.86.1",
+      "teamSubnet": "::ffff:10.1.86.0",
+      "logoUrl": "https://ctftime.org//media/team/kitctf.png",
+      "countryFlagUrl": "DE",
+      "active": true
+    },
+    {
+      "id": 87,
+      "name": "InfoSecIITR",
+      "address": "10.1.87.1",
+      "teamSubnet": "::ffff:10.1.87.0",
+      "logoUrl": "https://ctftime.org//media/team/logo_297.png",
+      "countryFlagUrl": "IN",
+      "active": true
+    },
+    {
+      "id": 89,
+      "name": "CYberMouflons",
+      "address": "10.1.89.1",
+      "teamSubnet": "::ffff:10.1.89.0",
+      "logoUrl": "https://ctftime.org//media/team/CYMouflonsLogo_Rounded_BlackCircle_NoBorder.png",
+      "countryFlagUrl": "CY",
+      "active": true
+    },
+    {
+      "id": 93,
+      "name": "darkside000001",
+      "address": "10.1.93.1",
+      "teamSubnet": "::ffff:10.1.93.0",
+      "logoUrl": "",
+      "countryFlagUrl": "GB",
+      "active": true
+    },
+    {
+      "id": 94,
+      "name": "$hell",
+      "address": "10.1.94.1",
+      "teamSubnet": "::ffff:10.1.94.0",
+      "logoUrl": "",
+      "countryFlagUrl": "IN",
+      "active": true
+    },
+    {
+      "id": 95,
+      "name": "PWr Synt@x Err0r",
+      "address": "10.1.95.1",
+      "teamSubnet": "::ffff:10.1.95.0",
+      "logoUrl": "https://ctftime.org//media/team/White-Hats.png",
+      "countryFlagUrl": "PL",
+      "active": true
+    },
+    {
+      "id": 96,
+      "name": "burner_herz0g",
+      "address": "10.1.96.1",
+      "teamSubnet": "::ffff:10.1.96.0",
+      "logoUrl": "https://ctftime.org//media/team/burner_herz0g.png",
+      "countryFlagUrl": "US",
+      "active": true
+    },
+    {
+      "id": 98,
+      "name": "semcwang",
+      "address": "10.1.98.1",
+      "teamSubnet": "::ffff:10.1.98.0",
+      "logoUrl": "https://ctftime.org//media/team/qiang1-256.jpeg",
+      "countryFlagUrl": "CN",
+      "active": true
+    },
+    {
+      "id": 99,
+      "name": "she",
+      "address": "10.1.99.1",
+      "teamSubnet": "::ffff:10.1.99.0",
+      "logoUrl": "",
+      "countryFlagUrl": "BY",
+      "active": true
+    },
+    {
+      "id": 100,
+      "name": "Hand of Fate",
+      "address": "10.1.100.1",
+      "teamSubnet": "::ffff:10.1.100.0",
+      "logoUrl": "",
+      "countryFlagUrl": "",
+      "active": true
+    },
+    {
+      "id": 101,
+      "name": "Essoleh4ck",
+      "address": "10.1.101.1",
+      "teamSubnet": "::ffff:10.1.101.0",
+      "logoUrl": "",
+      "countryFlagUrl": "MA",
+      "active": true
+    },
+    {
+      "id": 102,
+      "name": "UniVPN",
+      "address": "10.1.102.1",
+      "teamSubnet": "::ffff:10.1.102.0",
+      "logoUrl": "",
+      "countryFlagUrl": "IT",
+      "active": true
+    },
+    {
+      "id": 103,
+      "name": "milano007",
+      "address": "10.1.103.1",
+      "teamSubnet": "::ffff:10.1.103.0",
+      "logoUrl": "",
+      "countryFlagUrl": "IT",
+      "active": true
+    },
+    {
+      "id": 104,
+      "name": "CarpeDien",
+      "address": "10.1.104.1",
+      "teamSubnet": "::ffff:10.1.104.0",
+      "logoUrl": "",
+      "countryFlagUrl": "PT",
+      "active": true
+    },
+    {
+      "id": 107,
+      "name": "uniCTf_Team",
+      "address": "10.1.107.1",
+      "teamSubnet": "::ffff:10.1.107.0",
+      "logoUrl": "https://ctftime.org//media/team/Logo_UniCTF.jpg",
+      "countryFlagUrl": "IT",
+      "active": true
+    },
+    {
+      "id": 108,
+      "name": "Squareroots-Lite",
+      "address": "10.1.108.1",
+      "teamSubnet": "::ffff:10.1.108.0",
+      "logoUrl": "https://ctftime.org//media/team/squareroots_bigger.png",
+      "countryFlagUrl": "DE",
+      "active": true
+    },
+    {
+      "id": 109,
+      "name": "DragonSec SI",
+      "address": "10.1.109.1",
+      "teamSubnet": "::ffff:10.1.109.0",
+      "logoUrl": "https://ctftime.org//media/team/dsec_logo.png",
+      "countryFlagUrl": "SI",
+      "active": true
+    },
+    {
+      "id": 110,
+      "name": "d4rkc0de",
+      "address": "10.1.110.1",
+      "teamSubnet": "::ffff:10.1.110.0",
+      "logoUrl": "https://ctftime.org//media/team/d4.png",
+      "countryFlagUrl": "IN",
+      "active": true
+    },
+    {
+      "id": 112,
+      "name": "Newborns",
+      "address": "10.1.112.1",
+      "teamSubnet": "::ffff:10.1.112.0",
+      "logoUrl": "",
+      "countryFlagUrl": "IR",
+      "active": true
+    }
+  ],
+  "services": [{
+        "id": 1,
+        "name": "3xam",
+        "flagsPerRoundMultiplier": 1,
+        "noisesPerRoundMultiplier": 1,
+        "havocsPerRoundMultiplier": 1,
+        "weightFactor": 1,
+        "checkers": ["http://192.168.1.1:2345"]
+    },{
+        "id": 2,
+        "name": "activitytracker",
+        "flagsPerRoundMultiplier": 1,
+        "noisesPerRoundMultiplier": 1,
+        "havocsPerRoundMultiplier": 1,
+        "weightFactor": 1,
+        "checkers": ["http://192.168.1.2:2424"]
+    },{
+        "id": 3,
+        "name": "file-share",
+        "flagsPerRoundMultiplier": 1,
+        "noisesPerRoundMultiplier": 1,
+        "havocsPerRoundMultiplier": 1,
+        "weightFactor": 1,
+        "checkers": ["http://192.168.1.3:2000"]
+    },{
+        "id": 4,
+        "name": "gosship",
+        "flagsPerRoundMultiplier": 1,
+        "noisesPerRoundMultiplier": 1,
+        "havocsPerRoundMultiplier": 1,
+        "weightFactor": 1,
+        "checkers": ["http://192.168.1.4:2002"]
+    },{
+        "id": 5,
+        "name": "medchat",
+        "flagsPerRoundMultiplier": 1,
+        "noisesPerRoundMultiplier": 1,
+        "havocsPerRoundMultiplier": 1,
+        "weightFactor": 1,
+        "checkers": ["http://192.168.1.5:2021"]
+    },{
+        "id": 6,
+        "name": "orcano",
+        "flagsPerRoundMultiplier": 1,
+        "noisesPerRoundMultiplier": 1,
+        "havocsPerRoundMultiplier": 1,
+        "weightFactor": 1,
+        "checkers": ["http://192.168.1.6:8010"]
+    },{
+        "id": 7,
+        "name": "shatranj",
+        "flagsPerRoundMultiplier": 1,
+        "noisesPerRoundMultiplier": 1,
+        "HavocsPerRoundMultiplier": 1,
+        "weightFactor": 1,
+        "checkers": ["http://192.168.1.7:2023"]
+    },{
+        "id": 8,
+        "name": "stldoctor",
+        "flagsPerRoundMultiplier": 1,
+        "noisesPerRoundMultiplier": 1,
+        "havocsPerRoundMultiplier": 1,
+        "weightFactor": 1,
+        "checkers": ["http://192.168.1.8:9091"]
+    }]
+}
