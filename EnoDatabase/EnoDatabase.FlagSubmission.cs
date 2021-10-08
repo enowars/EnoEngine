@@ -5,6 +5,7 @@
     using System.Diagnostics;
     using System.Linq;
     using System.Text;
+    using System.Threading.Channels;
     using System.Threading.Tasks;
     using EnoCore;
     using EnoCore.Logging;
@@ -16,7 +17,11 @@
     public partial class EnoDatabase : IEnoDatabase
     {
         public async Task ProcessSubmissionsBatch(
-            List<(Flag Flag, long AttackerTeamId, TaskCompletionSource<FlagSubmissionResult> Result)> submissions,
+            List<(
+                string FlagString,
+                Flag Flag,
+                long AttackerTeamId,
+                ChannelWriter<(string Flag, FlagSubmissionResult Result)> Writer)> submissions,
             long flagValidityInRounds,
             EnoStatistics statistics)
         {
@@ -27,7 +32,8 @@
             long oldFlags = 0;
             var submittedFlagsStatement = new StringBuilder();
 
-            var waitingTasks = new Dictionary<(long, long, long, long, long), TaskCompletionSource<FlagSubmissionResult>>();
+            List<(string FlagString,
+                ChannelWriter<(string Flag, FlagSubmissionResult Result)> responseChannelWriter)> insertOrUpdateInput = new();
             long currentRoundId = await this.context.Rounds
                 .OrderByDescending(r => r.Id)
                 .Select(r => r.Id)
@@ -36,12 +42,11 @@
 
             // Filter for duplicates within this batch
             var updates = new Dictionary<(long, long, long, long, long), long>(submissions.Count);
-            foreach (var (flag, attackerTeamId, result) in submissions)
+            foreach (var (flagString, flag, attackerTeamId, writer) in submissions)
             {
-                var tResult = result;
                 if (flag.RoundId + flagValidityInRounds < currentRoundId)
                 {
-                    tResult.TrySetResult(FlagSubmissionResult.Old);
+                    writer.TrySendOrClose((flagString, FlagSubmissionResult.Old));
                     oldFlags += 1;
                     continue;
                 }
@@ -53,13 +58,13 @@
 
                 if (updates.TryGetValue((flag.ServiceId, flag.RoundId, flag.OwnerId, flag.RoundOffset, attackerTeamId), out var entry))
                 {
-                    tResult.TrySetResult(FlagSubmissionResult.Duplicate);
+                    writer.TrySendOrClose((flagString, FlagSubmissionResult.Duplicate));
                     entry += 1;
                     duplicateFlags += 1;
                 }
                 else
                 {
-                    waitingTasks.Add((flag.ServiceId, flag.RoundId, flag.OwnerId, flag.RoundOffset, attackerTeamId), result);
+                    insertOrUpdateInput.Add((flagString, writer));
                     updates.Add((flag.ServiceId, flag.RoundId, flag.OwnerId, flag.RoundOffset, attackerTeamId), 1);
                 }
             }
@@ -105,19 +110,20 @@
                 submittedFlagsStatement.Length--; // Pointers are fun!
                 submittedFlagsStatement.Append($"\non conflict (\"{nameof(SubmittedFlag.FlagServiceId)}\", \"{nameof(SubmittedFlag.FlagRoundId)}\", \"{nameof(SubmittedFlag.FlagOwnerId)}\", \"{nameof(SubmittedFlag.FlagRoundOffset)}\", \"{nameof(SubmittedFlag.AttackerTeamId)}\") do update set \"{nameof(SubmittedFlag.SubmissionsCount)}\" = \"{nameof(EnoDatabaseContext.SubmittedFlags)}\".\"{nameof(SubmittedFlag.SubmissionsCount)}\" + excluded.\"{nameof(SubmittedFlag.SubmissionsCount)}\" returning \"{nameof(SubmittedFlag.FlagServiceId)}\", \"{nameof(SubmittedFlag.FlagOwnerId)}\", \"{nameof(SubmittedFlag.FlagRoundId)}\", \"{nameof(SubmittedFlag.FlagRoundOffset)}\", \"{nameof(SubmittedFlag.AttackerTeamId)}\", \"{nameof(SubmittedFlag.RoundId)}\", \"{nameof(SubmittedFlag.SubmissionsCount)}\", \"{nameof(SubmittedFlag.Timestamp)}\";");
 
-                var newSubmissions = await this.context.SubmittedFlags.FromSqlRaw(submittedFlagsStatement.ToString()).ToArrayAsync();
-                foreach (var newSubmission in newSubmissions)
+                var insertOrUpdateResults = await this.context.SubmittedFlags.FromSqlRaw(submittedFlagsStatement.ToString()).ToArrayAsync();
+                for (int i = 0; i < insertOrUpdateResults.Length; i++)
                 {
-                    var tResult = waitingTasks[(newSubmission.FlagServiceId, newSubmission.FlagRoundId, newSubmission.FlagOwnerId, newSubmission.FlagRoundOffset, newSubmission.AttackerTeamId)];
-                    if (newSubmission.SubmissionsCount == 1)
+                    var insertOrUpdateResult = insertOrUpdateResults[i];
+                    var submissionInput = insertOrUpdateInput[i];
+                    if (insertOrUpdateResult.SubmissionsCount == 1)
                     {
                         okFlags += 1;
-                        tResult.TrySetResult(FlagSubmissionResult.Ok);
+                        submissionInput.responseChannelWriter.TrySendOrClose((submissionInput.FlagString, FlagSubmissionResult.Ok));
                     }
                     else
                     {
                         duplicateFlags += 1;
-                        tResult.TrySetResult(FlagSubmissionResult.Duplicate);
+                        submissionInput.responseChannelWriter.TrySendOrClose((submissionInput.FlagString, FlagSubmissionResult.Duplicate));
                     }
                 }
 
