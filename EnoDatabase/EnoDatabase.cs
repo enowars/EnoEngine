@@ -11,6 +11,7 @@
     using System.Net.Sockets;
     using System.Runtime.InteropServices;
     using System.Text;
+    using System.Threading.Channels;
     using System.Threading.Tasks;
     using EEnoCore.Models.AttackInfo;
     using EnoCore;
@@ -27,7 +28,14 @@
     {
 #pragma warning disable SA1516 // Elements should be separated by blank line
         void ApplyConfig(Configuration configuration);
-        Task ProcessSubmissionsBatch(List<(Flag Flag, long AttackerTeamId, TaskCompletionSource<FlagSubmissionResult> Result)> submissions, long flagValidityInRounds, EnoStatistics statistics);
+        Task ProcessSubmissionsBatch(
+            List<(
+                string FlagString,
+                Flag Flag,
+                long AttackerTeamId,
+                ChannelWriter<(string Flag, FlagSubmissionResult Result)> Writer)> submissions,
+            long flagValidityInRounds,
+            EnoStatistics statistics);
         Task<Team[]> RetrieveTeams();
         Task<Service[]> RetrieveServices();
         Task<Round> CreateNewRound(DateTime begin, DateTime q2, DateTime q3, DateTime q4, DateTime end);

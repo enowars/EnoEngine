@@ -25,8 +25,8 @@
         private const int MaxLineLength = 200;
         private const int SubmissionBatchSize = 500;
         private const int SubmissionTasks = 4;
-        private readonly Dictionary<long, Channel<(Flag Flag, TaskCompletionSource<FlagSubmissionResult> FeedbackSource)>> channels = new Dictionary<long, Channel<(Flag, TaskCompletionSource<FlagSubmissionResult>)>>();
-        private readonly Dictionary<long, TeamFlagSubmissionStatistic> submissionStatistics = new Dictionary<long, TeamFlagSubmissionStatistic>();
+        private readonly Dictionary<long, Channel<(string FlagString, Flag Flag, ChannelWriter<(string, FlagSubmissionResult)> ResultWriter)>> channels = new();
+        private readonly Dictionary<long, TeamFlagSubmissionStatistic> submissionStatistics = new();
         private readonly TcpListener productionListener = new TcpListener(IPAddress.IPv6Any, 1337);
         private readonly TcpListener debugListener = new TcpListener(IPAddress.IPv6Any, 1338);
         private readonly ILogger logger;
@@ -47,7 +47,8 @@
 
             foreach (var team in configuration.Teams)
             {
-                this.channels[team.Id] = Channel.CreateBounded<(Flag, TaskCompletionSource<FlagSubmissionResult>)>(new BoundedChannelOptions(100) { SingleReader = false, SingleWriter = false });
+                this.channels[team.Id] = Channel.CreateBounded<(string FlagString, Flag Flag, ChannelWriter<(string, FlagSubmissionResult)> ResultWriter)>(
+                    new BoundedChannelOptions(100) { SingleReader = false, SingleWriter = false });
                 this.submissionStatistics[team.Id] = new TeamFlagSubmissionStatistic(team.Id);
             }
         }
@@ -158,7 +159,7 @@
         private async Task ProcessLinesAsync(Socket socket, long? teamId, Configuration config, CancellationToken token)
         {
             var pipe = new Pipe();
-            Channel<Task<FlagSubmissionResult>> feedbackChannel = Channel.CreateUnbounded<Task<FlagSubmissionResult>>(new UnboundedChannelOptions() { SingleReader = true, SingleWriter = false });
+            var feedbackChannel = Channel.CreateBounded<(string Input, FlagSubmissionResult Result)>(new BoundedChannelOptions(10000) { SingleReader = true, SingleWriter = false });
             Task writing = FillPipeAsync(socket, pipe.Writer, token);
             Task reading = this.ReadPipeAsync(pipe.Reader, feedbackChannel.Writer, teamId, config, token);
             Task responding = this.RespondAsync(socket, teamId, feedbackChannel.Reader, token);
@@ -166,7 +167,7 @@
             socket.Close();
         }
 
-        private async Task ReadPipeAsync(PipeReader reader, ChannelWriter<Task<FlagSubmissionResult>> feedbackWriter, long? teamId, Configuration config, CancellationToken token)
+        private async Task ReadPipeAsync(PipeReader reader, ChannelWriter<(string Input, FlagSubmissionResult Result)> feedbackWriter, long? teamId, Configuration config, CancellationToken token)
         {
             while (true)
             {
@@ -181,17 +182,16 @@
                         var tcs = new TaskCompletionSource<FlagSubmissionResult>();
                         if (flag == null)
                         {
-                            await feedbackWriter.WriteAsync(Task.FromResult(FlagSubmissionResult.Invalid), token);
+                            await feedbackWriter.WriteAsync((line.ToString(), FlagSubmissionResult.Invalid), token);
                         }
                         else if (flag.OwnerId == teamId.Value)
                         {
-                            await feedbackWriter.WriteAsync(Task.FromResult(FlagSubmissionResult.Own), token);
+                            await feedbackWriter.WriteAsync((line.ToString(), FlagSubmissionResult.Own), token);
                         }
                         else
                         {
                             var channel = this.channels[teamId.Value];
-                            await channel.Writer.WriteAsync((flag, tcs), token);
-                            await feedbackWriter.WriteAsync(tcs.Task, token);
+                            await channel.Writer.WriteAsync((line.ToString(), flag, feedbackWriter), token);
                         }
                     }
                     else
@@ -213,7 +213,7 @@
                 // If the length is longer than a flag, somebody is sending bullshit!
                 if (buffer.Length > MaxLineLength)
                 {
-                    await feedbackWriter.WriteAsync(Task.FromResult(FlagSubmissionResult.SpamError), token);
+                    await feedbackWriter.WriteAsync((string.Empty, FlagSubmissionResult.SpamError), token);
                     break;
                 }
             }
@@ -223,7 +223,7 @@
             feedbackWriter.Complete();
         }
 
-        private async Task RespondAsync(Socket socket, long? teamId, ChannelReader<Task<FlagSubmissionResult>> feedbackReader, CancellationToken token)
+        private async Task RespondAsync(Socket socket, long? teamId, ChannelReader<(string Input, FlagSubmissionResult Result)> feedbackReader, CancellationToken token)
         {
             TeamFlagSubmissionStatistic? statistic = null;
             if (teamId != null)
@@ -231,42 +231,39 @@
                 statistic = this.submissionStatistics[teamId.Value];
             }
 
-            while (await feedbackReader.WaitToReadAsync(token))
+            while (true)
             {
-                while (feedbackReader.TryRead(out var itemTask))
+                (var input, var result) = await feedbackReader.ReadAsync(token);
+                if (statistic != null)
                 {
-                    var item = await itemTask;
-                    if (statistic != null)
+                    switch (result)
                     {
-                        switch (item)
-                        {
-                            case FlagSubmissionResult.Ok:
-                                Interlocked.Increment(ref statistic.OkFlags);
-                                break;
-                            case FlagSubmissionResult.Duplicate:
-                                Interlocked.Increment(ref statistic.DuplicateFlags);
-                                break;
-                            case FlagSubmissionResult.Invalid:
-                                Interlocked.Increment(ref statistic.InvalidFlags);
-                                break;
-                            case FlagSubmissionResult.Old:
-                                Interlocked.Increment(ref statistic.OldFlags);
-                                break;
-                            case FlagSubmissionResult.Own:
-                                Interlocked.Increment(ref statistic.OwnFlags);
-                                break;
-                        }
-                    }
-
-                    var itemBytes = Encoding.ASCII.GetBytes(item.ToUserFriendlyString());       // TODO don't serialize every time
-                    await socket.SendAsync(itemBytes, SocketFlags.None, token);                 // TODO enforce batching if necessary
-                    if (item == FlagSubmissionResult.SpamError)
-                    {
-                        // https://blog.netherlabs.nl/articles/2009/01/18/the-ultimate-so_linger-page-or-why-is-my-tcp-not-reliable
-                        await Task.Delay(1000, token);
-                        socket.Close();
+                    case FlagSubmissionResult.Ok:
+                        Interlocked.Increment(ref statistic.OkFlags);
+                        break;
+                    case FlagSubmissionResult.Duplicate:
+                        Interlocked.Increment(ref statistic.DuplicateFlags);
+                        break;
+                    case FlagSubmissionResult.Invalid:
+                        Interlocked.Increment(ref statistic.InvalidFlags);
+                        break;
+                    case FlagSubmissionResult.Old:
+                        Interlocked.Increment(ref statistic.OldFlags);
+                        break;
+                    case FlagSubmissionResult.Own:
+                        Interlocked.Increment(ref statistic.OwnFlags);
                         break;
                     }
+                }
+
+                var itemBytes = Encoding.ASCII.GetBytes(result.ToUserFriendlyString());       // TODO don't serialize every time
+                await socket.SendAsync(itemBytes, SocketFlags.None, token);                 // TODO enforce batching if necessary
+                if (result == FlagSubmissionResult.SpamError)
+                {
+                    // https://blog.netherlabs.nl/articles/2009/01/18/the-ultimate-so_linger-page-or-why-is-my-tcp-not-reliable
+                    await Task.Delay(1000, token);
+                    socket.Close();
+                    break;
                 }
             }
         }
@@ -362,7 +359,7 @@
                 while (!token.IsCancellationRequested)
                 {
                     bool isEmpty = true;
-                    List<(Flag Flag, long AttackerTeamId, TaskCompletionSource<FlagSubmissionResult> Result)> submissions = new List<(Flag Flag, long AttackerTeamId, TaskCompletionSource<FlagSubmissionResult>)>();
+                    List<(string FlagString, Flag Flag, long AttackerTeamId, ChannelWriter<(string, FlagSubmissionResult Result)>)> submissions = new();
                     foreach (var (teamid, channel) in this.channels)
                     {
                         int submissionsPerTeam = 0;
@@ -371,7 +368,7 @@
                         {
                             isEmpty = false;
                             submissionsPerTeam++;
-                            submissions.Add((item.Flag, teamid, item.FeedbackSource));
+                            submissions.Add((item.FlagString, item.Flag, teamid, item.ResultWriter));
                             if (submissions.Count > SubmissionBatchSize)
                             {
                                 try
@@ -383,11 +380,6 @@
                                 catch (Exception e)
                                 {
                                     this.logger.LogError($"InsertSubmissionsLoop dropping batch because: {e.ToFancyString()}");
-                                    foreach (var (flag, attackerTeamId, tcs) in submissions)
-                                    {
-                                        // The tcs might already be completed in ProcessSubmissionsBatch, so we TrySetResult
-                                        tcs.TrySetResult(FlagSubmissionResult.UnknownError);
-                                    }
                                 }
                                 finally
                                 {
@@ -412,11 +404,6 @@
                         catch (Exception e)
                         {
                             this.logger.LogError($"InsertSubmissionsLoop dropping batch because: {e.ToFancyString()}");
-                            foreach (var (flag, attackerTeamId, tcs) in submissions)
-                            {
-                                // The tcs might already be completed in ProcessSubmissionsBatch, so we TrySetResult
-                                tcs.TrySetResult(FlagSubmissionResult.UnknownError);
-                            }
                         }
                     }
                 }
