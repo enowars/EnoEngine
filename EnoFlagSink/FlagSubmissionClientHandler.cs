@@ -190,15 +190,15 @@
                         var flag = Flag.Parse(line, this.flagSigningKeyBytes, this.flagEncoding, this.logger);
                         if (flag == null)
                         {
-                            await this.feedbackChannel.Writer.WriteAsync((line.ToString(), FlagSubmissionResult.Invalid), this.token);
+                            await this.feedbackChannel.Writer.WriteAsync((EncodingExtensions.GetString(Encoding.ASCII, line), FlagSubmissionResult.Invalid), this.token);
                         }
                         else if (flag.OwnerId == this.teamId)
                         {
-                            await this.feedbackChannel.Writer.WriteAsync((line.ToString(), FlagSubmissionResult.Own), this.token);
+                            await this.feedbackChannel.Writer.WriteAsync((EncodingExtensions.GetString(Encoding.ASCII, line), FlagSubmissionResult.Own), this.token);
                         }
                         else
                         {
-                            await this.teamChannel.Writer.WriteAsync((line.ToString(), flag, this.feedbackChannel.Writer), this.token);
+                            await this.teamChannel.Writer.WriteAsync((EncodingExtensions.GetString(Encoding.ASCII, line), flag, this.feedbackChannel.Writer), this.token);
                         }
 
                         return true;
