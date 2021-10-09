@@ -13,24 +13,19 @@
         Duplicate,
         Own,
         Old,
-        UnknownError,
-        InvalidSenderError,
         SpamError,
     }
 
     public static class FlagSubmissionResultExtensions
     {
-        public const string SubmissionResultOk = "VALID: Flag accepted!\n";
-        public const string SubmissionResultInvalid = "INVALID: You have submitted an invalid string!\n";
-        public const string SubmissionResultDuplicate = "RESUBMIT: You have already sent this flag!\n";
-        public const string SubmissionResultOwn = "OWNFLAG: This flag belongs to you!\n";
-        public const string SubmissionResultOld = "OLD: You have submitted an old flag!\n";
-        public const string SubmissionResultUnknownError = "ERROR: An unexpected error occured :(\n";
-        public const string SubmissionResultInvalidSenderError = "ILLEGAL: Your IP address does not belong to any team's subnet!\n";
-        public const string SubmissionResultSpamError = "SPAM: You should send 1 flag per line!\n";
-        public const string SubmissionResultReallyUnknownError = "ERROR: An even more unexpected error occured :(\n";
+        private static readonly byte[] SubmissionResultOk = Encoding.ASCII.GetBytes(" OK\n");
+        private static readonly byte[] SubmissionResultInvalid = Encoding.ASCII.GetBytes(" INV\n");
+        private static readonly byte[] SubmissionResultDuplicate = Encoding.ASCII.GetBytes(" DUP\n");
+        private static readonly byte[] SubmissionResultOwn = Encoding.ASCII.GetBytes(" OWN\n");
+        private static readonly byte[] SubmissionResultOld = Encoding.ASCII.GetBytes(" OLD\n");
+        private static readonly byte[] SubmissionResultSpamError = Encoding.ASCII.GetBytes(" INV\n");
 
-        public static string ToUserFriendlyString(this FlagSubmissionResult fsr)
+        public static byte[] ToFeedbackBytes(this FlagSubmissionResult fsr)
         {
             return fsr switch
             {
@@ -39,10 +34,8 @@
                 FlagSubmissionResult.Duplicate => SubmissionResultDuplicate,
                 FlagSubmissionResult.Own => SubmissionResultOwn,
                 FlagSubmissionResult.Old => SubmissionResultOld,
-                FlagSubmissionResult.UnknownError => SubmissionResultUnknownError,
-                FlagSubmissionResult.InvalidSenderError => SubmissionResultInvalidSenderError,
                 FlagSubmissionResult.SpamError => SubmissionResultSpamError,
-                _ => SubmissionResultReallyUnknownError,
+                _ => throw new InvalidOperationException(),
             };
         }
     }

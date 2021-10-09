@@ -18,10 +18,10 @@
     {
         public async Task ProcessSubmissionsBatch(
             List<(
-                string FlagString,
+                byte[] FlagString,
                 Flag Flag,
                 long AttackerTeamId,
-                ChannelWriter<(string Flag, FlagSubmissionResult Result)> Writer)> submissions,
+                ChannelWriter<(byte[] Flag, FlagSubmissionResult Result)> Writer)> submissions,
             long flagValidityInRounds,
             EnoStatistics statistics)
         {
@@ -32,8 +32,8 @@
             long oldFlags = 0;
             var submittedFlagsStatement = new StringBuilder();
 
-            List<(string FlagString,
-                ChannelWriter<(string Flag, FlagSubmissionResult Result)> responseChannelWriter)> insertOrUpdateInput = new();
+            List<(byte[] FlagString,
+                ChannelWriter<(byte[] Flag, FlagSubmissionResult Result)> ResponseChannelWriter)> insertOrUpdateInput = new();
             long currentRoundId = await this.context.Rounds
                 .OrderByDescending(r => r.Id)
                 .Select(r => r.Id)
@@ -118,12 +118,12 @@
                     if (insertOrUpdateResult.SubmissionsCount == 1)
                     {
                         okFlags += 1;
-                        submissionInput.responseChannelWriter.TrySendOrClose((submissionInput.FlagString, FlagSubmissionResult.Ok));
+                        submissionInput.ResponseChannelWriter.TrySendOrClose((submissionInput.FlagString, FlagSubmissionResult.Ok));
                     }
                     else
                     {
                         duplicateFlags += 1;
-                        submissionInput.responseChannelWriter.TrySendOrClose((submissionInput.FlagString, FlagSubmissionResult.Duplicate));
+                        submissionInput.ResponseChannelWriter.TrySendOrClose((submissionInput.FlagString, FlagSubmissionResult.Duplicate));
                     }
                 }
 

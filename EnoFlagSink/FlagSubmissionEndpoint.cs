@@ -26,7 +26,7 @@
         private const int MaxLineLength = 200;
         private const int SubmissionBatchSize = 500;
         private const int SubmissionTasks = 4;
-        private readonly ImmutableDictionary<long, Channel<(string FlagString, Flag Flag, ChannelWriter<(string, FlagSubmissionResult)> ResultWriter)>> channels;
+        private readonly ImmutableDictionary<long, Channel<(byte[] FlagString, Flag Flag, ChannelWriter<(byte[], FlagSubmissionResult)> ResultWriter)>> channels;
         private readonly ImmutableDictionary<long, TeamFlagSubmissionStatistic> submissionStatistics;
         private readonly TcpListener productionListener = new TcpListener(IPAddress.IPv6Any, 1337);
         private readonly TcpListener debugListener = new TcpListener(IPAddress.IPv6Any, 1338);
@@ -46,11 +46,11 @@
             this.productionListener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
             this.debugListener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
 
-            var channels = new Dictionary<long, Channel<(string FlagString, Flag Flag, ChannelWriter<(string, FlagSubmissionResult)> ResultWriter)>>();
+            var channels = new Dictionary<long, Channel<(byte[] FlagString, Flag Flag, ChannelWriter<(byte[], FlagSubmissionResult)> ResultWriter)>>();
             var submissionStatistics = new Dictionary<long, TeamFlagSubmissionStatistic>();
             foreach (var team in configuration.Teams)
             {
-                channels[team.Id] = Channel.CreateBounded<(string FlagString, Flag Flag, ChannelWriter<(string, FlagSubmissionResult)> ResultWriter)>(
+                channels[team.Id] = Channel.CreateBounded<(byte[] FlagString, Flag Flag, ChannelWriter<(byte[], FlagSubmissionResult)> ResultWriter)>(
                     new BoundedChannelOptions(100) { SingleReader = false, SingleWriter = false });
                 submissionStatistics[team.Id] = new TeamFlagSubmissionStatistic(team.Id);
             }
@@ -178,7 +178,7 @@
                                 }
                                 else
                                 {
-                                    var itemBytes = Encoding.ASCII.GetBytes(FlagSubmissionResult.InvalidSenderError.ToUserFriendlyString());
+                                    var itemBytes = FlagSubmissionResult.Invalid.ToFeedbackBytes();
                                     await client.Client.SendAsync(itemBytes, SocketFlags.None, token);
                                     client.Close();
                                 }
@@ -215,7 +215,7 @@
                 while (!token.IsCancellationRequested)
                 {
                     bool isEmpty = true;
-                    List<(string FlagString, Flag Flag, long AttackerTeamId, ChannelWriter<(string, FlagSubmissionResult Result)>)> submissions = new();
+                    List<(byte[] FlagString, Flag Flag, long AttackerTeamId, ChannelWriter<(byte[], FlagSubmissionResult Result)>)> submissions = new();
                     foreach (var (teamid, channel) in this.channels)
                     {
                         int submissionsPerTeam = 0;

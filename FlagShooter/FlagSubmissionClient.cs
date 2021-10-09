@@ -45,13 +45,7 @@
                         throw new Exception($"result empty (connected={this.client.Client.Connected})");
                     }
 
-                    if (!(result + "\n" == FlagSubmissionResultExtensions.SubmissionResultOk ||
-                        result + "\n" == FlagSubmissionResultExtensions.SubmissionResultOld ||
-                        result + "\n" == FlagSubmissionResultExtensions.SubmissionResultDuplicate ||
-                        result + "\n" == FlagSubmissionResultExtensions.SubmissionResultOwn))
-                    {
-                        Console.WriteLine($"received unexpected {result} ({result.Length} bytes)");
-                    }
+                    throw new NotImplementedException("TODO adapt new reponses");
                 }
             }
             catch (Exception e)
