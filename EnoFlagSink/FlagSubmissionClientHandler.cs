@@ -71,16 +71,19 @@
             var inputPipe = new Pipe();
             var t1 = Task.Run(() => ReadFromSocket(socket, inputPipe.Writer, token));
             long readTeamId = 0;
-            if (!await EnoFlagSinkUtils.ReadLine(
+            if (!await EnoFlagSinkUtil.ReadLines(
                 inputPipe.Reader,
-                async (ros) =>
+                async (line) =>
                 {
-                    if (!long.TryParse(ros.ToString(), out readTeamId))
+                    var lineString = EncodingExtensions.GetString(Encoding.ASCII, line);
+                    if (!long.TryParse(lineString, out readTeamId))
                     {
                         socket.Close();
                         await inputPipe.Reader.CompleteAsync();
-                        throw new InvalidOperationException();
+                        throw new InvalidOperationException($"{lineString} was no valid teamId");
                     }
+
+                    return false;
                 },
                 token))
             {
@@ -180,7 +183,7 @@
         {
             while (true)
             {
-                if (!await EnoFlagSinkUtils.ReadLine(
+                if (!await EnoFlagSinkUtil.ReadLines(
                     this.inputPipe.Reader,
                     async (line) =>
                     {
@@ -197,6 +200,8 @@
                         {
                             await this.teamChannel.Writer.WriteAsync((line.ToString(), flag, this.feedbackChannel.Writer), this.token);
                         }
+
+                        return true;
                     },
                     this.token))
                 {
