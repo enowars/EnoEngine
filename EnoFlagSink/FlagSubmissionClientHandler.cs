@@ -25,8 +25,8 @@
         private readonly long teamId;
         private readonly Socket socket;
         private readonly Pipe inputPipe;
-        private readonly Channel<(string Input, FlagSubmissionResult Result)> feedbackChannel;
-        private readonly Channel<(string FlagString, Flag Flag, ChannelWriter<(string, FlagSubmissionResult)> ResultWriter)> teamChannel;
+        private readonly Channel<(byte[] Input, FlagSubmissionResult Result)> feedbackChannel;
+        private readonly Channel<(byte[] FlagString, Flag Flag, ChannelWriter<(byte[], FlagSubmissionResult)> ResultWriter)> teamChannel;
         private readonly TeamFlagSubmissionStatistic teamFlagSubmissionStatistic;
         private readonly ILogger<FlagSubmissionClientHandler> logger;
         private readonly CancellationToken token;
@@ -36,7 +36,7 @@
             byte[] flagSigningKeyBytes,
             FlagEncoding flagEncoding,
             long teamId,
-            Channel<(string FlagString, Flag Flag, ChannelWriter<(string Input, FlagSubmissionResult Result)> FeedbackChannelWriter)> teamChannel,
+            Channel<(byte[] FlagString, Flag Flag, ChannelWriter<(byte[] Input, FlagSubmissionResult Result)> FeedbackChannelWriter)> teamChannel,
             TeamFlagSubmissionStatistic teamFlagSubmissionStatistic,
             Socket socket,
             Pipe inputPipe,
@@ -47,7 +47,7 @@
             this.teamId = teamId;
             this.socket = socket;
             this.inputPipe = inputPipe;
-            this.feedbackChannel = Channel.CreateBounded<(string Input, FlagSubmissionResult Result)>(
+            this.feedbackChannel = Channel.CreateBounded<(byte[] Input, FlagSubmissionResult Result)>(
                 new BoundedChannelOptions(10000)
                 {
                     SingleReader = true,
@@ -63,7 +63,7 @@
             IServiceProvider serviceProvider,
             byte[] flagSigningKeyBytes,
             FlagEncoding flagEncoding,
-            ImmutableDictionary<long, Channel<(string FlagString, Flag Flag, ChannelWriter<(string Input, FlagSubmissionResult Result)> FeedbackChannelWriter)>> teamChannels,
+            ImmutableDictionary<long, Channel<(byte[] FlagString, Flag Flag, ChannelWriter<(byte[] Input, FlagSubmissionResult Result)> FeedbackChannelWriter)>> teamChannels,
             ImmutableDictionary<long, TeamFlagSubmissionStatistic> teamFlagSubmissionStatistics,
             Socket socket,
             CancellationToken token)
@@ -111,7 +111,7 @@
             byte[] flagSigningKeyBytes,
             FlagEncoding flagEncoding,
             long teamId,
-            Channel<(string FlagString, Flag Flag, ChannelWriter<(string Input, FlagSubmissionResult Result)> FeedbackChannelWriter)> teamChannel,
+            Channel<(byte[] FlagString, Flag Flag, ChannelWriter<(byte[] Input, FlagSubmissionResult Result)> FeedbackChannelWriter)> teamChannel,
             TeamFlagSubmissionStatistic teamFlagSubmissionStatistic,
             Socket socket,
             CancellationToken token)
@@ -190,22 +190,22 @@
                         var flag = Flag.Parse(line, this.flagSigningKeyBytes, this.flagEncoding, this.logger);
                         if (flag == null)
                         {
-                            await this.feedbackChannel.Writer.WriteAsync((EncodingExtensions.GetString(Encoding.ASCII, line), FlagSubmissionResult.Invalid), this.token);
+                            await this.feedbackChannel.Writer.WriteAsync((line.ToArray(), FlagSubmissionResult.Invalid), this.token);
                         }
                         else if (flag.OwnerId == this.teamId)
                         {
-                            await this.feedbackChannel.Writer.WriteAsync((EncodingExtensions.GetString(Encoding.ASCII, line), FlagSubmissionResult.Own), this.token);
+                            await this.feedbackChannel.Writer.WriteAsync((line.ToArray(), FlagSubmissionResult.Own), this.token);
                         }
                         else
                         {
-                            await this.teamChannel.Writer.WriteAsync((EncodingExtensions.GetString(Encoding.ASCII, line), flag, this.feedbackChannel.Writer), this.token);
+                            await this.teamChannel.Writer.WriteAsync((line.ToArray(), flag, this.feedbackChannel.Writer), this.token);
                         }
 
                         return true;
                     },
                     this.token))
                 {
-                    await this.feedbackChannel.Writer.WriteAsync((string.Empty, FlagSubmissionResult.SpamError), this.token);
+                    await this.feedbackChannel.Writer.WriteAsync((new byte[0], FlagSubmissionResult.SpamError), this.token);
                     break;
                 }
             }
@@ -245,8 +245,7 @@
                     break;
                 }
 
-                var itemBytes = Encoding.ASCII.GetBytes(result.ToUserFriendlyString()); // TODO don't serialize every time
-                await this.socket.SendAsync(itemBytes, SocketFlags.None, this.token);
+                await this.socket.SendAsync(input.Concat(result.ToFeedbackBytes()).ToArray(), SocketFlags.None, this.token);
                 if (result == FlagSubmissionResult.SpamError)
                 {
                     // Wait for the send to have a chance to complete
@@ -256,6 +255,8 @@
                     break;
                 }
             }
+
+            this.feedbackChannel.Writer.Complete();
         }
     }
 }

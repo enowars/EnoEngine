@@ -30,10 +30,10 @@
         void ApplyConfig(Configuration configuration);
         Task ProcessSubmissionsBatch(
             List<(
-                string FlagString,
+                byte[] FlagString,
                 Flag Flag,
                 long AttackerTeamId,
-                ChannelWriter<(string Flag, FlagSubmissionResult Result)> Writer)> submissions,
+                ChannelWriter<(byte[] Flag, FlagSubmissionResult Result)> Writer)> submissions,
             long flagValidityInRounds,
             EnoStatistics statistics);
         Task<Team[]> RetrieveTeams();
