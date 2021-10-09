@@ -15,9 +15,7 @@
     /// <summary>
     /// PK: ServiceId, RoundId, OwnerId, RoundOffset
     /// </summary>
-#pragma warning disable SA1201 // Elements should appear in the correct order
     public sealed record Flag(long OwnerId,
-#pragma warning restore SA1201 // Elements should appear in the correct order
         long ServiceId,
         int RoundOffset,
         long RoundId,

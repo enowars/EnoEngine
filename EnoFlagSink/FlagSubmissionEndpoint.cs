@@ -3,6 +3,7 @@
     using System;
     using System.Buffers;
     using System.Collections.Generic;
+    using System.Collections.Immutable;
     using System.IO.Pipelines;
     using System.Linq;
     using System.Net;
@@ -20,13 +21,13 @@
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
 
-    internal class FlagSubmissionEndpoint
+    public class FlagSubmissionEndpoint
     {
         private const int MaxLineLength = 200;
         private const int SubmissionBatchSize = 500;
         private const int SubmissionTasks = 4;
-        private readonly Dictionary<long, Channel<(string FlagString, Flag Flag, ChannelWriter<(string, FlagSubmissionResult)> ResultWriter)>> channels = new();
-        private readonly Dictionary<long, TeamFlagSubmissionStatistic> submissionStatistics = new();
+        private readonly ImmutableDictionary<long, Channel<(string FlagString, Flag Flag, ChannelWriter<(string, FlagSubmissionResult)> ResultWriter)>> channels;
+        private readonly ImmutableDictionary<long, TeamFlagSubmissionStatistic> submissionStatistics;
         private readonly TcpListener productionListener = new TcpListener(IPAddress.IPv6Any, 1337);
         private readonly TcpListener debugListener = new TcpListener(IPAddress.IPv6Any, 1338);
         private readonly ILogger logger;
@@ -45,12 +46,17 @@
             this.productionListener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
             this.debugListener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
 
+            var channels = new Dictionary<long, Channel<(string FlagString, Flag Flag, ChannelWriter<(string, FlagSubmissionResult)> ResultWriter)>>();
+            var submissionStatistics = new Dictionary<long, TeamFlagSubmissionStatistic>();
             foreach (var team in configuration.Teams)
             {
-                this.channels[team.Id] = Channel.CreateBounded<(string FlagString, Flag Flag, ChannelWriter<(string, FlagSubmissionResult)> ResultWriter)>(
+                channels[team.Id] = Channel.CreateBounded<(string FlagString, Flag Flag, ChannelWriter<(string, FlagSubmissionResult)> ResultWriter)>(
                     new BoundedChannelOptions(100) { SingleReader = false, SingleWriter = false });
-                this.submissionStatistics[team.Id] = new TeamFlagSubmissionStatistic(team.Id);
+                submissionStatistics[team.Id] = new TeamFlagSubmissionStatistic(team.Id);
             }
+
+            this.channels = channels.ToImmutableDictionary();
+            this.submissionStatistics = submissionStatistics.ToImmutableDictionary();
         }
 
         public async Task LogSubmissionStatistics(long teamId, string teamName, CancellationToken token)
@@ -103,171 +109,6 @@
             await Task.WhenAny(tasks);
         }
 
-        private static bool TryReadLine(ref ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> line)
-        {
-            // Look for a EOL in the buffer.
-            SequencePosition? position = buffer.PositionOf((byte)'\n');
-
-            if (position == null)
-            {
-                line = default;
-                return false;
-            }
-
-            // Skip the line + the \n.
-            line = buffer.Slice(0, position.Value);
-            buffer = buffer.Slice(buffer.GetPosition(1, position.Value));
-            return true;
-        }
-
-        private static async Task FillPipeAsync(Socket socket, PipeWriter writer, CancellationToken token)
-        {
-            const int minimumBufferSize = 512;
-            while (true)
-            {
-                // Allocate at least 512 bytes from the PipeWriter.
-                Memory<byte> memory = writer.GetMemory(minimumBufferSize);
-                try
-                {
-                    int bytesRead = await socket.ReceiveAsync(memory, SocketFlags.None, token);
-                    if (bytesRead == 0)
-                    {
-                        break;
-                    }
-
-                    // Tell the PipeWriter how much was read from the Socket.
-                    writer.Advance(bytesRead);
-                }
-                catch
-                {
-                    break;
-                }
-
-                // Make the data available to the PipeReader.
-                FlushResult result = await writer.FlushAsync(token);
-
-                if (result.IsCompleted)
-                {
-                    break;
-                }
-            }
-
-            // By completing PipeWriter, tell the PipeReader that there's no more data coming.
-            await writer.CompleteAsync();
-        }
-
-        private async Task ProcessLinesAsync(Socket socket, long? teamId, Configuration config, CancellationToken token)
-        {
-            var pipe = new Pipe();
-            var feedbackChannel = Channel.CreateBounded<(string Input, FlagSubmissionResult Result)>(new BoundedChannelOptions(10000) { SingleReader = true, SingleWriter = false });
-            Task writing = FillPipeAsync(socket, pipe.Writer, token);
-            Task reading = this.ReadPipeAsync(pipe.Reader, feedbackChannel.Writer, teamId, config, token);
-            Task responding = this.RespondAsync(socket, teamId, feedbackChannel.Reader, token);
-            await Task.WhenAll(reading, writing, responding);
-            socket.Close();
-        }
-
-        private async Task ReadPipeAsync(PipeReader reader, ChannelWriter<(string Input, FlagSubmissionResult Result)> feedbackWriter, long? teamId, Configuration config, CancellationToken token)
-        {
-            while (true)
-            {
-                ReadResult result = await reader.ReadAsync(token);
-                ReadOnlySequence<byte> buffer = result.Buffer;
-                while (TryReadLine(ref buffer, out ReadOnlySequence<byte> line))
-                {
-                    // Process the line.
-                    if (teamId != null)
-                    {
-                        var flag = Flag.Parse(line, Encoding.ASCII.GetBytes(config.FlagSigningKey), config.Encoding, this.logger);
-                        var tcs = new TaskCompletionSource<FlagSubmissionResult>();
-                        if (flag == null)
-                        {
-                            await feedbackWriter.WriteAsync((line.ToString(), FlagSubmissionResult.Invalid), token);
-                        }
-                        else if (flag.OwnerId == teamId.Value)
-                        {
-                            await feedbackWriter.WriteAsync((line.ToString(), FlagSubmissionResult.Own), token);
-                        }
-                        else
-                        {
-                            var channel = this.channels[teamId.Value];
-                            await channel.Writer.WriteAsync((line.ToString(), flag, feedbackWriter), token);
-                        }
-                    }
-                    else
-                    {
-                        teamId = int.Parse(Encoding.ASCII.GetString(line.ToArray()));
-                    }
-                }
-
-                // Tell the PipeReader how much of the buffer has been consumed.
-                reader.AdvanceTo(buffer.Start, buffer.End);
-
-                // Stop reading if there's no more data coming.
-                if (result.IsCompleted)
-                {
-                    break;
-                }
-
-                // TryReadLine has returned false, so the remaining buffer does not contain a \n.
-                // If the length is longer than a flag, somebody is sending bullshit!
-                if (buffer.Length > MaxLineLength)
-                {
-                    await feedbackWriter.WriteAsync((string.Empty, FlagSubmissionResult.SpamError), token);
-                    break;
-                }
-            }
-
-            // Mark the PipeReader and channel as complete.
-            await reader.CompleteAsync();
-            feedbackWriter.Complete();
-        }
-
-        private async Task RespondAsync(Socket socket, long? teamId, ChannelReader<(string Input, FlagSubmissionResult Result)> feedbackReader, CancellationToken token)
-        {
-            TeamFlagSubmissionStatistic? statistic = null;
-            if (teamId != null)
-            {
-                statistic = this.submissionStatistics[teamId.Value];
-            }
-
-            while (true)
-            {
-                (var input, var result) = await feedbackReader.ReadAsync(token);
-                if (statistic != null)
-                {
-                    switch (result)
-                    {
-                    case FlagSubmissionResult.Ok:
-                        Interlocked.Increment(ref statistic.OkFlags);
-                        break;
-                    case FlagSubmissionResult.Duplicate:
-                        Interlocked.Increment(ref statistic.DuplicateFlags);
-                        break;
-                    case FlagSubmissionResult.Invalid:
-                        Interlocked.Increment(ref statistic.InvalidFlags);
-                        break;
-                    case FlagSubmissionResult.Old:
-                        Interlocked.Increment(ref statistic.OldFlags);
-                        break;
-                    case FlagSubmissionResult.Own:
-                        Interlocked.Increment(ref statistic.OwnFlags);
-                        break;
-                    }
-                }
-
-                var itemBytes = Encoding.ASCII.GetBytes(result.ToUserFriendlyString());       // TODO don't serialize every time
-                await socket.SendAsync(itemBytes, SocketFlags.None, token);                 // TODO enforce batching if necessary
-                if (result == FlagSubmissionResult.SpamError)
-                {
-                    // https://blog.netherlabs.nl/articles/2009/01/18/the-ultimate-so_linger-page-or-why-is-my-tcp-not-reliable
-                    await Task.Delay(1000, token);
-                    socket.Close();
-                    break;
-                }
-            }
-        }
-
         private async Task RunDebugEndpoint(Configuration config, CancellationToken token)
         {
             this.logger.LogInformation($"{nameof(this.RunDebugEndpoint)} started");
@@ -277,7 +118,14 @@
                 while (!token.IsCancellationRequested)
                 {
                     var client = await this.debugListener.AcceptTcpClientAsync();
-                    var task = this.ProcessLinesAsync(client.Client, null, config, token);
+                    await FlagSubmissionClientHandler.HandleDevConnection(
+                        this.serviceProvider,
+                        Encoding.ASCII.GetBytes(config.FlagSigningKey),
+                        config.Encoding,
+                        this.channels,
+                        this.submissionStatistics,
+                        client.Client,
+                        token);
                 }
             }
             catch (Exception e)
@@ -318,11 +166,19 @@
                                     db => db.GetTeamIdByPrefix(attackerPrefix));
                                 if (team != null)
                                 {
-                                    await this.ProcessLinesAsync(client.Client, team.Id, config, token);
+                                    FlagSubmissionClientHandler.HandleProdConnection(
+                                        this.serviceProvider,
+                                        Encoding.ASCII.GetBytes(this.configuration.FlagSigningKey),
+                                        this.configuration.Encoding,
+                                        team.Id,
+                                        this.channels[team.Id],
+                                        this.submissionStatistics[team.Id],
+                                        client.Client,
+                                        token);
                                 }
                                 else
                                 {
-                                    var itemBytes = Encoding.ASCII.GetBytes(FlagSubmissionResult.InvalidSenderError.ToUserFriendlyString());    // TODO don't serialize every time
+                                    var itemBytes = Encoding.ASCII.GetBytes(FlagSubmissionResult.InvalidSenderError.ToUserFriendlyString());
                                     await client.Client.SendAsync(itemBytes, SocketFlags.None, token);
                                     client.Close();
                                 }
@@ -418,7 +274,7 @@
             }
         }
 
-        internal class TeamFlagSubmissionStatistic
+        public class TeamFlagSubmissionStatistic
         {
 #pragma warning disable SA1401 // Fields should be private
             public long TeamId;
