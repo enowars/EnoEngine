@@ -71,7 +71,7 @@
             var inputPipe = new Pipe();
             var t1 = Task.Run(() => ReadFromSocket(socket, inputPipe.Writer, token));
             long readTeamId = 0;
-            if (!await EnoFlagSinkUtil.ReadLines(
+            var result = await EnoFlagSinkUtil.ReadLines(
                 inputPipe.Reader,
                 async (line) =>
                 {
@@ -85,7 +85,8 @@
 
                     return false;
                 },
-                token))
+                token);
+            if (result != EnoFlagSinkUtil.ReadLinesResult.Success)
             {
                 socket.Close();
                 throw new InvalidOperationException("DebugEndpoint received bad teamid");
@@ -183,7 +184,7 @@
         {
             while (true)
             {
-                if (!await EnoFlagSinkUtil.ReadLines(
+                var result = await EnoFlagSinkUtil.ReadLines(
                     this.inputPipe.Reader,
                     async (line) =>
                     {
@@ -203,9 +204,14 @@
 
                         return true;
                     },
-                    this.token))
+                    this.token);
+                if (result == EnoFlagSinkUtil.ReadLinesResult.TooLong)
                 {
                     await this.feedbackChannel.Writer.WriteAsync((new byte[0], FlagSubmissionResult.SpamError), this.token);
+                    break;
+                }
+                else if (result == EnoFlagSinkUtil.ReadLinesResult.PipeComplete)
+                {
                     break;
                 }
             }
@@ -223,40 +229,52 @@
         /// </remarks>
         private async void ReadFromFeedbackChannel()
         {
-            while (true)
+            try
             {
-                (var input, var result) = await this.feedbackChannel.Reader.ReadAsync(this.token);
-                switch (result)
+                while (true)
                 {
-                case FlagSubmissionResult.Ok:
-                    Interlocked.Increment(ref this.teamFlagSubmissionStatistic.OkFlags);
-                    break;
-                case FlagSubmissionResult.Duplicate:
-                    Interlocked.Increment(ref this.teamFlagSubmissionStatistic.DuplicateFlags);
-                    break;
-                case FlagSubmissionResult.Invalid:
-                    Interlocked.Increment(ref this.teamFlagSubmissionStatistic.InvalidFlags);
-                    break;
-                case FlagSubmissionResult.Old:
-                    Interlocked.Increment(ref this.teamFlagSubmissionStatistic.OldFlags);
-                    break;
-                case FlagSubmissionResult.Own:
-                    Interlocked.Increment(ref this.teamFlagSubmissionStatistic.OwnFlags);
-                    break;
-                }
+                    (var input, var result) = await this.feedbackChannel.Reader.ReadAsync(this.token);
+                    switch (result)
+                    {
+                    case FlagSubmissionResult.Ok:
+                        Interlocked.Increment(ref this.teamFlagSubmissionStatistic.OkFlags);
+                        break;
+                    case FlagSubmissionResult.Duplicate:
+                        Interlocked.Increment(ref this.teamFlagSubmissionStatistic.DuplicateFlags);
+                        break;
+                    case FlagSubmissionResult.Invalid:
+                        Interlocked.Increment(ref this.teamFlagSubmissionStatistic.InvalidFlags);
+                        break;
+                    case FlagSubmissionResult.Old:
+                        Interlocked.Increment(ref this.teamFlagSubmissionStatistic.OldFlags);
+                        break;
+                    case FlagSubmissionResult.Own:
+                        Interlocked.Increment(ref this.teamFlagSubmissionStatistic.OwnFlags);
+                        break;
+                    }
 
-                await this.socket.SendAsync(input.Concat(result.ToFeedbackBytes()).ToArray(), SocketFlags.None, this.token);
-                if (result == FlagSubmissionResult.SpamError)
-                {
-                    // Wait for the send to have a chance to complete
-                    // https://blog.netherlabs.nl/articles/2009/01/18/the-ultimate-so_linger-page-or-why-is-my-tcp-not-reliable
-                    await Task.Delay(1000, this.token);
-                    this.socket.Close();
-                    break;
+                    await this.socket.SendAsync(input.Concat(result.ToFeedbackBytes()).ToArray(), SocketFlags.None, this.token);
+                    if (result == FlagSubmissionResult.SpamError)
+                    {
+                        // Wait for the send to have a chance to complete
+                        // https://blog.netherlabs.nl/articles/2009/01/18/the-ultimate-so_linger-page-or-why-is-my-tcp-not-reliable
+                        await Task.Delay(1000, this.token);
+                        this.socket.Close();
+                        break;
+                    }
                 }
             }
-
-            this.feedbackChannel.Writer.Complete();
+            catch (Exception e)
+            {
+                if (e is not ChannelClosedException)
+                {
+                    this.logger.LogError($"{e.Message}\n{e.StackTrace}");
+                }
+            }
+            finally
+            {
+                this.feedbackChannel.Writer.TryComplete();
+            }
         }
     }
 }
