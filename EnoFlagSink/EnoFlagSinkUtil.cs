@@ -13,7 +13,14 @@
     {
         private const int MaxLineLength = 200;
 
-        public static async Task<bool> ReadLines(
+        public enum ReadLinesResult
+        {
+            Success,
+            TooLong,
+            PipeComplete,
+        }
+
+        public static async Task<ReadLinesResult> ReadLines(
             PipeReader pipeReader,
             Func<ReadOnlySequence<byte>, Task<bool>> handler,
             CancellationToken token)
@@ -34,7 +41,7 @@
                 // Stop reading if there's no more data coming.
                 if (result.IsCompleted)
                 {
-                    break;
+                    return ReadLinesResult.PipeComplete;
                 }
 
                 // TryReadLine has returned false, so the remaining buffer does not contain a \n.
@@ -43,11 +50,11 @@
                 // and thus yield strings longer than this check.
                 if (buffer.Length > MaxLineLength)
                 {
-                    return false;
+                    return ReadLinesResult.TooLong;
                 }
             }
 
-            return true;
+            return ReadLinesResult.Success;
         }
 
         private static bool TryReadLine(ref ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> line)
