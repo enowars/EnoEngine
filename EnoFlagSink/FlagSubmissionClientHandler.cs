@@ -20,6 +20,16 @@
 
     public class FlagSubmissionClientHandler
     {
+        private const string ProdWelcomeBanner = @"Welcome to the EnoEngine's EnoFlagSink™!
+Please submit one flag per line. Responses are NOT guaranteed to be in chronological order.
+
+";
+
+        private const string DevWelcomeBanner = @"Welcome to the EnoEngine's EnoFlagSink™!
+Please submit your team id first, and then one flag per line. Responses are NOT guaranteed to be in chronological order.
+
+";
+
         private readonly byte[] flagSigningKeyBytes;
         private readonly FlagEncoding flagEncoding;
         private readonly long teamId;
@@ -68,6 +78,7 @@
             Socket socket,
             CancellationToken token)
         {
+            await socket.SendAsync(Encoding.UTF8.GetBytes(DevWelcomeBanner), SocketFlags.None, token);
             var inputPipe = new Pipe();
             var t1 = Task.Run(() => ReadFromSocket(socket, inputPipe.Writer, token));
             long readTeamId = 0;
@@ -107,7 +118,7 @@
             return handler;
         }
 
-        public static FlagSubmissionClientHandler HandleProdConnection(
+        public static async Task<FlagSubmissionClientHandler> HandleProdConnection(
             IServiceProvider serviceProvider,
             byte[] flagSigningKeyBytes,
             FlagEncoding flagEncoding,
@@ -117,8 +128,9 @@
             Socket socket,
             CancellationToken token)
         {
+            await socket.SendAsync(Encoding.UTF8.GetBytes(ProdWelcomeBanner), SocketFlags.None, token);
             var inputPipe = new Pipe();
-            Task.Run(() => ReadFromSocket(socket, inputPipe.Writer, token));
+            var readFromSocketTask = Task.Run(() => ReadFromSocket(socket, inputPipe.Writer, token));
             var handler = new FlagSubmissionClientHandler(
                 serviceProvider,
                 flagSigningKeyBytes,
@@ -129,15 +141,15 @@
                 socket,
                 inputPipe,
                 token);
-            Task.Run(handler.ReadFromFeedbackChannel);
-            Task.Run(handler.ReadFromInputPipe);
+            var readFromFeedbackChannelTask = Task.Run(handler.ReadFromFeedbackChannel);
+            var readFromInputPipeTask = Task.Run(handler.ReadFromInputPipe);
             return handler;
         }
 
         /// <summary>
         /// Reads from the tcp socket into the input pipe until the handler is cancelled, or the connection is closed.
         /// </summary>
-        private static async void ReadFromSocket(Socket socket, PipeWriter inputPipeWriter, CancellationToken token)
+        private static async Task ReadFromSocket(Socket socket, PipeWriter inputPipeWriter, CancellationToken token)
         {
             const int minimumBufferSize = 512;
             while (true)
@@ -180,54 +192,64 @@
         /// Invalid flag submissions responses are enqueued without involving the team's channel.
         /// When no more input can be read from the input pipe the connection was closed, so the pipe reader and feedback channel writer are closed.
         /// </remarks>
-        private async void ReadFromInputPipe()
+        private async Task ReadFromInputPipe()
         {
-            while (true)
+            try
             {
-                var result = await EnoFlagSinkUtil.ReadLines(
-                    this.inputPipe.Reader,
-                    async (line) =>
-                    {
-                        var flag = Flag.Parse(line, this.flagSigningKeyBytes, this.flagEncoding, this.logger);
-                        if (flag == null)
+                while (true)
+                {
+                    var result = await EnoFlagSinkUtil.ReadLines(
+                        this.inputPipe.Reader,
+                        async (line) =>
                         {
-                            await this.feedbackChannel.Writer.WriteAsync((line.ToArray(), FlagSubmissionResult.Invalid), this.token);
-                        }
-                        else if (flag.OwnerId == this.teamId)
-                        {
-                            await this.feedbackChannel.Writer.WriteAsync((line.ToArray(), FlagSubmissionResult.Own), this.token);
-                        }
-                        else
-                        {
-                            await this.teamChannel.Writer.WriteAsync((line.ToArray(), flag, this.feedbackChannel.Writer), this.token);
-                        }
+                            var flag = Flag.Parse(line, this.flagSigningKeyBytes, this.flagEncoding, this.logger);
+                            if (flag == null)
+                            {
+                                await this.feedbackChannel.Writer.WriteAsync((line.ToArray(), FlagSubmissionResult.Invalid), this.token);
+                            }
+                            else if (flag.OwnerId == this.teamId)
+                            {
+                                await this.feedbackChannel.Writer.WriteAsync((line.ToArray(), FlagSubmissionResult.Own), this.token);
+                            }
+                            else
+                            {
+                                await this.teamChannel.Writer.WriteAsync((line.ToArray(), flag, this.feedbackChannel.Writer), this.token);
+                            }
 
-                        return true;
-                    },
-                    this.token);
-                if (result == EnoFlagSinkUtil.ReadLinesResult.TooLong)
-                {
-                    await this.feedbackChannel.Writer.WriteAsync((new byte[0], FlagSubmissionResult.SpamError), this.token);
-                    break;
-                }
-                else if (result == EnoFlagSinkUtil.ReadLinesResult.PipeComplete)
-                {
-                    break;
+                            return true;
+                        },
+                        this.token);
+                    if (result == EnoFlagSinkUtil.ReadLinesResult.TooLong)
+                    {
+                        await this.feedbackChannel.Writer.WriteAsync((new byte[0], FlagSubmissionResult.SpamError), this.token);
+                        break;
+                    }
+                    else if (result == EnoFlagSinkUtil.ReadLinesResult.PipeComplete)
+                    {
+                        break;
+                    }
                 }
             }
-
-            // Mark the PipeReader and channel as complete.
-            await this.inputPipe.Reader.CompleteAsync();
-            this.feedbackChannel.Writer.Complete();
+            catch (Exception e)
+            {
+                this.logger.LogError($"{e.Message}\n{e.StackTrace}");
+            }
+            finally
+            {
+                // Mark the PipeReader and channel as complete.
+                await this.inputPipe.Reader.CompleteAsync();
+                this.feedbackChannel.Writer.Complete();
+            }
         }
 
         /// <summary>
         /// Reads submission results from the feedback channel and sends them to the client.
         /// </summary>
         /// <remarks>
+        /// TODO Implement while (await channelReader.WaitToReadAsync()) while (channelReader.TryRead(out T item)) pattern.
         /// TODO Statistics are being tracked here, so we are actually losing statistics if clients disconnect while flags are on the wire.
         /// </remarks>
-        private async void ReadFromFeedbackChannel()
+        private async Task ReadFromFeedbackChannel()
         {
             try
             {
@@ -273,7 +295,7 @@
             }
             finally
             {
-                this.feedbackChannel.Writer.TryComplete();
+                this.socket.Close();
             }
         }
     }

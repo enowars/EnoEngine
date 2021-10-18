@@ -118,14 +118,14 @@
                 while (!token.IsCancellationRequested)
                 {
                     var client = await this.debugListener.AcceptTcpClientAsync();
-                    await FlagSubmissionClientHandler.HandleDevConnection(
+                    var handlerTask = Task.Run(async () => await FlagSubmissionClientHandler.HandleDevConnection(
                         this.serviceProvider,
                         Encoding.ASCII.GetBytes(config.FlagSigningKey),
                         config.Encoding,
                         this.channels,
                         this.submissionStatistics,
                         client.Client,
-                        token);
+                        token));
                 }
             }
             catch (Exception e)
@@ -166,7 +166,7 @@
                                     db => db.GetTeamIdByPrefix(attackerPrefix));
                                 if (team != null)
                                 {
-                                    FlagSubmissionClientHandler.HandleProdConnection(
+                                    await FlagSubmissionClientHandler.HandleProdConnection(
                                         this.serviceProvider,
                                         Encoding.ASCII.GetBytes(this.configuration.FlagSigningKey),
                                         this.configuration.Encoding,
