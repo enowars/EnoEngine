@@ -94,6 +94,8 @@
                     dbTeam.Id = team.Id;
                     dbTeam.Active = team.Active;
                     dbTeam.Address = team.Address;
+                    dbTeam.CountryCode = team.CountryCode;
+                    dbTeam.LogoUrl = team.LogoUrl;
                     dbTeams.Remove(team.Id);
                 }
                 else
