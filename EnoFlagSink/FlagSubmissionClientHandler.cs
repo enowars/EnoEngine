@@ -275,7 +275,8 @@ Please submit your team id first, and then one flag per line. Responses are NOT 
                         break;
                     }
 
-                    await this.socket.SendAsync(input.Concat(result.ToFeedbackBytes()).ToArray(), SocketFlags.None, this.token);
+                    var response = input.Concat(result.ToFeedbackBytes()).ToArray();
+                    await this.socket.SendAsync(response, SocketFlags.None, this.token);
                     if (result == FlagSubmissionResult.SpamError)
                     {
                         // Wait for the send to have a chance to complete

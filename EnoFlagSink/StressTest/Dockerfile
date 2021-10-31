@@ -1,4 +1,5 @@
 FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
+RUN apt-get update && apt-get install -y --no-install-recommends netcat nano less tcpdump
 
 WORKDIR /stresstest
 COPY . .
@@ -9,4 +10,4 @@ COPY EnoFlagSink/StressTest/ctf.json .
 
 ENV DATABASE_DOMAIN enopostgres
 
-ENTRYPOINT dotnet run -c Release --project EnoFlagSink
+ENTRYPOINT EnoFlagSink/StressTest/submit.sh
