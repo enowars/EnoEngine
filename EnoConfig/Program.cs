@@ -269,7 +269,7 @@
                 {
                     for (int i = 0; i < service.FlagsPerRound; i++)
                     {
-                        var flag = new Flag(team.Id, service.Id, i, round, 0);
+                        var flag = new Flag(team.Id, service.Id, i, round);
                         Console.WriteLine(flag.ToString(key, encoding));
                     }
                 }

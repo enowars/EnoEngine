@@ -25,7 +25,7 @@
         private const int MaxLineLength = 200;
         private const int SubmissionBatchSize = 500;
         private const int SubmissionTasks = 4;
-        private readonly Dictionary<long, Channel<(byte[] FlagString, Flag Flag, ChannelWriter<(byte[], FlagSubmissionResult)> ResultWriter)>> channels = new();
+        private readonly Dictionary<long, Channel<FlagSubmissionRequest>> channels = new();
         private readonly Dictionary<long, TeamFlagSubmissionStatistic> submissionStatistics = new();
         private readonly TcpListener productionListener = new(IPAddress.IPv6Any, 1337);
         private readonly TcpListener debugListener = new(IPAddress.IPv6Any, 1338);
@@ -82,11 +82,7 @@
                 foreach (var activeTeam in activeTeams)
                 {
                     this.submissionStatistics[activeTeam.Id] = new();
-                    this.channels[activeTeam.Id] = Channel.CreateBounded<
-                        (byte[] FlagString,
-                        Flag Flag,
-                        ChannelWriter<(byte[],
-                        FlagSubmissionResult)> ResultWriter)>(
+                    this.channels[activeTeam.Id] = Channel.CreateBounded<FlagSubmissionRequest>(
                         new BoundedChannelOptions(100)
                         {
                             SingleReader = false,
@@ -215,48 +211,53 @@
         private async Task InsertSubmissionsLoop(int number, Configuration configuration, CancellationToken token)
         {
             this.logger.LogInformation($"{nameof(this.InsertSubmissionsLoop)} {number} started");
+            List<FlagSubmissionRequest> submissions = new();
             try
             {
                 while (!token.IsCancellationRequested)
                 {
-                    bool isEmpty = true;
-                    List<(byte[] FlagString, Flag Flag, long AttackerTeamId, ChannelWriter<(byte[], FlagSubmissionResult Result)>)> submissions = new();
                     foreach (var (teamid, channel) in this.channels)
                     {
                         int submissionsPerTeam = 0;
                         var reader = channel.Reader;
                         while (submissionsPerTeam < 100 && reader.TryRead(out var item))
                         {
-                            isEmpty = false;
                             submissionsPerTeam++;
-                            submissions.Add((item.FlagString, item.Flag, teamid, item.ResultWriter));
+                            submissions.Add(item);
                             if (submissions.Count > SubmissionBatchSize)
                             {
-                                try
+                                var orderedSubReqs = submissions.OrderBy(e => e).ToArray();
+                                using var scope = this.serviceProvider.CreateScope();
+                                var db = scope.ServiceProvider.GetRequiredService<EnoDb>();
+                                var results = await db.TryProcessSubmissionsBatch(orderedSubReqs, configuration.FlagValidityInRounds, this.enoStatistics);
+                                for (int i = 0; i < orderedSubReqs.Length; i++)
                                 {
-                                    await this.databaseUtil.RetryScopedDatabaseAction(
-                                        db => db.ProcessSubmissionsBatch(submissions, configuration.FlagValidityInRounds, this.enoStatistics));
+                                    var subReq = orderedSubReqs[i];
+                                    await subReq.Writer.WriteAsync((subReq.FlagString, results[i]), token);
                                 }
-                                catch (Exception e)
-                                {
-                                    this.logger.LogError($"InsertSubmissionsLoop dropping batch because: {e.ToFancyString()}");
-                                }
-                                finally
-                                {
-                                    submissions.Clear();
-                                }
+
+                                submissions.Clear();
                             }
                         }
                     }
 
-                    if (isEmpty)
+                    if (submissions.Count == 0)
                     {
                         await Task.Delay(10, token);
                     }
-                    else if (submissions.Count != 0)
+                    else
                     {
-                        await this.databaseUtil.ExecuteScopedDatabaseActionIgnoreErrors(
-                            db => db.ProcessSubmissionsBatch(submissions, configuration.FlagValidityInRounds, this.enoStatistics));
+                        var orderedSubReqs = submissions.OrderBy(e => e).ToArray();
+                        using var scope = this.serviceProvider.CreateScope();
+                        var db = scope.ServiceProvider.GetRequiredService<EnoDb>();
+                        var results = await db.TryProcessSubmissionsBatch(orderedSubReqs, configuration.FlagValidityInRounds, this.enoStatistics);
+                        for (int i = 0; i < orderedSubReqs.Length; i++)
+                        {
+                            var subReq = orderedSubReqs[i];
+                            await subReq.Writer.WriteAsync((subReq.FlagString, results[i]), token);
+                        }
+
+                        submissions.Clear();
                     }
                 }
             }

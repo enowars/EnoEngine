@@ -1,4 +1,5 @@
 #!/bin/bash
+# TODO make enoconfig wait gracefully
 sleep 4
 dotnet EnoConfig/bin/Release/net5.0/EnoConfig.dll apply --assume_variants 8
 dotnet EnoConfig/bin/Release/net5.0/EnoConfig.dll newround

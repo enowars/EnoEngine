@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Data;
     using System.Diagnostics;
     using System.Linq;
     using System.Text;
@@ -16,126 +17,146 @@
 
     public partial class EnoDb
     {
-        public async Task ProcessSubmissionsBatch(
-            List<(
-                byte[] FlagString,
-                Flag Flag,
-                long AttackerTeamId,
-                ChannelWriter<(byte[] Flag, FlagSubmissionResult Result)> Writer)> submissions,
+        public async Task<FlagSubmissionResult[]> TryProcessSubmissionsBatch(
+            FlagSubmissionRequest[] submissions,
             long flagValidityInRounds,
             EnoStatistics statistics)
         {
             var stopWatch = new Stopwatch();
             stopWatch.Start();
+
+            var results = new FlagSubmissionResult?[submissions.Length];
+            bool empty = true;
             long okFlags = 0;
             long duplicateFlags = 0;
             long oldFlags = 0;
-            var submittedFlagsStatement = new StringBuilder();
-
-            List<(byte[] FlagString,
-                ChannelWriter<(byte[] Flag, FlagSubmissionResult Result)> ResponseChannelWriter)> insertOrUpdateInput = new();
-            long currentRoundId = await this.context.Rounds
-                .OrderByDescending(r => r.Id)
-                .Select(r => r.Id)
-                .FirstAsync();
-            submittedFlagsStatement.Append($"insert into \"{nameof(EnoDbContext.SubmittedFlags)}\" (\"{nameof(SubmittedFlag.FlagServiceId)}\", \"{nameof(SubmittedFlag.FlagRoundId)}\", \"{nameof(SubmittedFlag.FlagOwnerId)}\", \"{nameof(SubmittedFlag.FlagRoundOffset)}\", \"{nameof(SubmittedFlag.AttackerTeamId)}\", \"{nameof(SubmittedFlag.RoundId)}\", \"{nameof(SubmittedFlag.SubmissionsCount)}\", \"{nameof(SubmittedFlag.Timestamp)}\")\nvalues ");
-
-            // Filter for duplicates within this batch
-            var updates = new Dictionary<(long, long, long, long, long), long>(submissions.Count);
-            foreach (var (flagString, flag, attackerTeamId, writer) in submissions)
+            long currentRoundId;
+            try
             {
-                if (flag.RoundId + flagValidityInRounds < currentRoundId)
+                currentRoundId = (await this.GetLastRound()).Id;
+            }
+            catch (Exception e)
+            {
+                this.logger.LogError($"TryProcessSubmissionsBatch could not get latest round: {e}");
+                return Array.ConvertAll(results, x => x ?? FlagSubmissionResult.Error);
+            }
+
+            var upsertStatement = new StringBuilder();
+            upsertStatement.Append(
+@$"INSERT INTO ""{nameof(EnoDbContext.SubmittedFlags)}""
+(
+    ""{nameof(SubmittedFlag.FlagServiceId)}"",
+    ""{nameof(SubmittedFlag.FlagRoundId)}"",
+    ""{nameof(SubmittedFlag.FlagOwnerId)}"",
+    ""{nameof(SubmittedFlag.FlagRoundOffset)}"",
+    ""{nameof(SubmittedFlag.AttackerTeamId)}"",
+    ""{nameof(SubmittedFlag.RoundId)}"",
+    ""{nameof(SubmittedFlag.SubmissionsCount)}"",
+    ""{nameof(SubmittedFlag.Timestamp)}""
+)
+VALUES");
+
+            for (int i = 0; i < submissions.Length; i++)
+            {
+                var submission = submissions[i];
+                if (submission.Flag.RoundId + flagValidityInRounds < currentRoundId)
                 {
-                    writer.TrySendOrClose((flagString, FlagSubmissionResult.Old));
+                    results[i] = FlagSubmissionResult.Old;
                     oldFlags += 1;
-                    continue;
-                }
-
-                if (flag.RoundId > currentRoundId)
-                {
-                    this.logger.LogError($"A Future Flag was submitted: Round is {currentRoundId}, Flag's round is {flag.RoundId}");
-                }
-
-                if (updates.TryGetValue((flag.ServiceId, flag.RoundId, flag.OwnerId, flag.RoundOffset, attackerTeamId), out var entry))
-                {
-                    writer.TrySendOrClose((flagString, FlagSubmissionResult.Duplicate));
-                    entry += 1;
-                    duplicateFlags += 1;
                 }
                 else
                 {
-                    insertOrUpdateInput.Add((flagString, writer));
-                    updates.Add((flag.ServiceId, flag.RoundId, flag.OwnerId, flag.RoundOffset, attackerTeamId), 1);
+                    empty = false;
+                    upsertStatement.Append($@"
+(
+    {submission.Flag.ServiceId},
+    {submission.Flag.RoundId},
+    {submission.Flag.OwnerId},
+    {submission.Flag.RoundOffset},
+    {submission.AttackerTeamId},
+    {currentRoundId},
+    1,
+    NOW()
+),");
                 }
             }
 
-            if (updates.Count > 0)
+            if (empty)
             {
-                // Sort the elements to prevent deadlocks from conflicting row lock orderings
-                var updatesArray = updates.ToArray();
-                Array.Sort(updatesArray, (a, b) =>
+                // TODO statistics
+                return Array.ConvertAll(results, x => x ?? throw new InvalidOperationException());
+            }
+
+            upsertStatement.Length--; // Strip the final comma
+            upsertStatement.Append($@"
+ON CONFLICT
+(
+    ""{nameof(SubmittedFlag.FlagServiceId)}"",
+    ""{nameof(SubmittedFlag.FlagRoundId)}"",
+    ""{nameof(SubmittedFlag.FlagOwnerId)}"",
+    ""{nameof(SubmittedFlag.FlagRoundOffset)}"",
+    ""{nameof(SubmittedFlag.AttackerTeamId)}""
+)
+DO NOTHING
+RETURNING
+    ""{nameof(SubmittedFlag.FlagServiceId)}"",
+    ""{nameof(SubmittedFlag.FlagOwnerId)}"",
+    ""{nameof(SubmittedFlag.FlagRoundId)}"",
+    ""{nameof(SubmittedFlag.FlagRoundOffset)}"",
+    ""{nameof(SubmittedFlag.AttackerTeamId)}"",
+    ""{nameof(SubmittedFlag.RoundId)}"",
+    ""{nameof(SubmittedFlag.SubmissionsCount)}"",
+    ""{nameof(SubmittedFlag.Timestamp)}""
+;");
+
+            List<SubmittedFlag> insertOrUpdateResults;
+            try
+            {
+                insertOrUpdateResults = await this.context.SubmittedFlags.FromSqlRaw(upsertStatement.ToString()).ToListAsync();
+            }
+            catch (Exception e)
+            {
+                // TODO statistics
+                this.logger.LogError($"{nameof(this.TryProcessSubmissionsBatch)} failed to execute: {e}");
+                return Array.ConvertAll(results, x => x ?? FlagSubmissionResult.Error);
+            }
+
+            for (int i = 0; i < submissions.Length; i++)
+            {
+                if (results[i] == null)
                 {
-#pragma warning disable SA1503 // Braces should not be omitted
-                    if (a.Key.Item1 < b.Key.Item1)
-                        return 1;
-
-                    if (a.Key.Item1 > b.Key.Item1)
-                        return -1;
-                    if (a.Key.Item2 < b.Key.Item2)
-                        return 1;
-                    if (a.Key.Item2 > b.Key.Item2)
-                        return -1;
-                    if (a.Key.Item3 < b.Key.Item3)
-                        return 1;
-                    if (a.Key.Item3 > b.Key.Item3)
-                        return -1;
-                    if (a.Key.Item4 < b.Key.Item4)
-                        return 1;
-                    if (a.Key.Item4 > b.Key.Item4)
-                        return -1;
-                    if (a.Key.Item5 < b.Key.Item5)
-                        return 1;
-                    if (a.Key.Item5 > b.Key.Item5)
-                        return -1;
-#pragma warning restore SA1503 // Braces should not be omitted
-                    return 0;
-                });
-
-                // Build the statements
-                foreach (var ((serviceId, roundId, ownerId, roundOffset, attackerTeamId), count) in updatesArray)
-                {
-                    submittedFlagsStatement.Append($"({serviceId}, {roundId}, {ownerId}, {roundOffset}, {attackerTeamId}, {currentRoundId}, {count}, NOW()),");
-                }
-
-                submittedFlagsStatement.Length--; // Pointers are fun!
-                submittedFlagsStatement.Append($"\non conflict (\"{nameof(SubmittedFlag.FlagServiceId)}\", \"{nameof(SubmittedFlag.FlagRoundId)}\", \"{nameof(SubmittedFlag.FlagOwnerId)}\", \"{nameof(SubmittedFlag.FlagRoundOffset)}\", \"{nameof(SubmittedFlag.AttackerTeamId)}\") do update set \"{nameof(SubmittedFlag.SubmissionsCount)}\" = \"{nameof(EnoDbContext.SubmittedFlags)}\".\"{nameof(SubmittedFlag.SubmissionsCount)}\" + excluded.\"{nameof(SubmittedFlag.SubmissionsCount)}\" returning \"{nameof(SubmittedFlag.FlagServiceId)}\", \"{nameof(SubmittedFlag.FlagOwnerId)}\", \"{nameof(SubmittedFlag.FlagRoundId)}\", \"{nameof(SubmittedFlag.FlagRoundOffset)}\", \"{nameof(SubmittedFlag.AttackerTeamId)}\", \"{nameof(SubmittedFlag.RoundId)}\", \"{nameof(SubmittedFlag.SubmissionsCount)}\", \"{nameof(SubmittedFlag.Timestamp)}\";");
-
-                var insertOrUpdateResults = await this.context.SubmittedFlags.FromSqlRaw(submittedFlagsStatement.ToString()).ToArrayAsync();
-                for (int i = 0; i < insertOrUpdateResults.Length; i++)
-                {
-                    var insertOrUpdateResult = insertOrUpdateResults[i];
-                    var submissionInput = insertOrUpdateInput[i];
-                    if (insertOrUpdateResult.SubmissionsCount == 1)
+                    // The result entry has not been set to FlagSubmissionResult.Old, so it could be present in the upsert results
+                    var submissionRequest = submissions[i];
+                    if (insertOrUpdateResults.Count > 0 &&
+                        submissionRequest.AttackerTeamId == insertOrUpdateResults[0].AttackerTeamId &&
+                        submissionRequest.Flag.OwnerId == insertOrUpdateResults[0].FlagOwnerId &&
+                        submissionRequest.Flag.ServiceId == insertOrUpdateResults[0].FlagServiceId &&
+                        submissionRequest.Flag.RoundOffset == insertOrUpdateResults[0].FlagRoundOffset &&
+                        submissionRequest.Flag.RoundId == insertOrUpdateResults[0].FlagRoundId)
                     {
+                        results[i] = FlagSubmissionResult.Ok;
+                        insertOrUpdateResults.RemoveAt(0);
                         okFlags += 1;
-                        submissionInput.ResponseChannelWriter.TrySendOrClose((submissionInput.FlagString, FlagSubmissionResult.Ok));
                     }
                     else
                     {
+                        // It is not, so it was a duplicate
+                        results[i] = FlagSubmissionResult.Duplicate;
                         duplicateFlags += 1;
-                        submissionInput.ResponseChannelWriter.TrySendOrClose((submissionInput.FlagString, FlagSubmissionResult.Duplicate));
                     }
                 }
-
-                stopWatch.Stop();
             }
 
+            stopWatch.Stop();
+
             statistics.LogSubmissionBatchMessage(
-                submissions.Count,
+                submissions.Length,
                 okFlags,
                 duplicateFlags,
                 oldFlags,
                 stopWatch.ElapsedMilliseconds);
+
+            return Array.ConvertAll(results, x => x ?? FlagSubmissionResult.Error);
         }
     }
 }

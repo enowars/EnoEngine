@@ -6,9 +6,9 @@
 
     /// <summary>
     /// PK: FlagServiceId, sf.FlagRoundId, sf.FlagOwnerId, sf.FlagRoundOffset, sf.AttackerTeamId
-    /// Flag FK: FlagServiceId, FlagRoundId, FlagOwnerId, FlagRoundOffset
     /// </summary>
-    public sealed record SubmittedFlag(long FlagServiceId,
+    public sealed record SubmittedFlag(
+        long FlagServiceId,
         long FlagOwnerId,
         long FlagRoundId,
         int FlagRoundOffset,

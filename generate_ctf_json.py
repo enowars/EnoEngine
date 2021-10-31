@@ -1,14 +1,14 @@
 config = '''{
-    "title": "Bambi CTF #6",
-    "flagValidityInRounds": 2,
+    "title": "TestCTF",
+    "flagValidityInRounds": 10,
     "checkedRoundsPerRound": 3,
     "roundLengthInSeconds": 60,
     "dnsSuffix": "eno.host",
     "teamSubnetBytesLength": 15,
-    "flagSigningKey": "ir7PRm0SzqzA0lmFyBfUv68E6Yb7cjbJDp6dummqwr0Od70Sar7P27HVY6oc8PuW",
+    "flagSigningKey": "testkey",
     "teams": ['''
 
-for i in range(16):
+for i in range(128):
     config += '''{
         "id": '''+str(i+1)+''',
         "name": "teamname'''+str(i+1)+'''",
