@@ -10,12 +10,12 @@
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Design;
 
-    public class EnoDatabaseContext : DbContext
+    public class EnoDbContext : DbContext
     {
 #pragma warning disable SA1516 // Elements should be separated by blank line
         public const int DatabaseRetries = 500;
 #pragma warning disable CS8618
-        public EnoDatabaseContext(DbContextOptions<EnoDatabaseContext> options)
+        public EnoDbContext(DbContextOptions<EnoDbContext> options)
             : base(options)
         {
         }
@@ -30,6 +30,7 @@
         public DbSet<SubmittedFlag> SubmittedFlags { get; set; }
         public DbSet<TeamServicePoints> TeamServicePoints { get; set; }
         public DbSet<TeamServicePointsSnapshot> TeamServicePointsSnapshot { get; set; }
+        public DbSet<Configuration> Configurations { get; set; }
 #pragma warning restore SA1516 // Elements should be separated by blank line
 #pragma warning restore CS8618
 

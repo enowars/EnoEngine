@@ -8,8 +8,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace EnoDatabase.Migrations
 {
-    [DbContext(typeof(EnoDatabaseContext))]
-    partial class EnoDatabaseContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(EnoDbContext))]
+    partial class EnoDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
@@ -19,7 +19,7 @@ namespace EnoDatabase.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63)
                 .HasAnnotation("ProductVersion", "5.0.0");
 
-            modelBuilder.Entity("EnoCore.Models.CheckerTask", b =>
+            modelBuilder.Entity("EnoCore.Models.Database.CheckerTask", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -96,7 +96,46 @@ namespace EnoDatabase.Migrations
                     b.ToTable("CheckerTasks");
                 });
 
-            modelBuilder.Entity("EnoCore.Models.Round", b =>
+            modelBuilder.Entity("EnoCore.Models.Database.Configuration", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .UseIdentityByDefaultColumn();
+
+                    b.Property<int>("CheckedRoundsPerRound")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("DnsSuffix")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Encoding")
+                        .HasColumnType("integer");
+
+                    b.Property<byte[]>("FlagSigningKey")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.Property<long>("FlagValidityInRounds")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("RoundLengthInSeconds")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TeamSubnetBytesLength")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Configurations");
+                });
+
+            modelBuilder.Entity("EnoCore.Models.Database.Round", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -123,7 +162,7 @@ namespace EnoDatabase.Migrations
                     b.ToTable("Rounds");
                 });
 
-            modelBuilder.Entity("EnoCore.Models.RoundTeamServiceStatus", b =>
+            modelBuilder.Entity("EnoCore.Models.Database.RoundTeamServiceStatus", b =>
                 {
                     b.Property<long>("ServiceId")
                         .HasColumnType("bigint");
@@ -145,7 +184,7 @@ namespace EnoDatabase.Migrations
                     b.ToTable("RoundTeamServiceStatus");
                 });
 
-            modelBuilder.Entity("EnoCore.Models.Service", b =>
+            modelBuilder.Entity("EnoCore.Models.Database.Service", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -154,6 +193,10 @@ namespace EnoDatabase.Migrations
 
                     b.Property<bool>("Active")
                         .HasColumnType("boolean");
+
+                    b.Property<string[]>("Checkers")
+                        .IsRequired()
+                        .HasColumnType("text[]");
 
                     b.Property<long>("FlagVariants")
                         .HasColumnType("bigint");
@@ -182,7 +225,7 @@ namespace EnoDatabase.Migrations
                     b.ToTable("Services");
                 });
 
-            modelBuilder.Entity("EnoCore.Models.SubmittedFlag", b =>
+            modelBuilder.Entity("EnoCore.Models.Database.SubmittedFlag", b =>
                 {
                     b.Property<long>("FlagServiceId")
                         .HasColumnType("bigint");
@@ -215,7 +258,7 @@ namespace EnoDatabase.Migrations
                     b.ToTable("SubmittedFlags");
                 });
 
-            modelBuilder.Entity("EnoCore.Models.Team", b =>
+            modelBuilder.Entity("EnoCore.Models.Database.Team", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -262,7 +305,7 @@ namespace EnoDatabase.Migrations
                     b.ToTable("Teams");
                 });
 
-            modelBuilder.Entity("EnoCore.Models.TeamServicePoints", b =>
+            modelBuilder.Entity("EnoCore.Models.Database.TeamServicePoints", b =>
                 {
                     b.Property<long>("TeamId")
                         .HasColumnType("bigint");
@@ -290,7 +333,7 @@ namespace EnoDatabase.Migrations
                     b.ToTable("TeamServicePoints");
                 });
 
-            modelBuilder.Entity("EnoCore.Models.TeamServicePointsSnapshot", b =>
+            modelBuilder.Entity("EnoCore.Models.Database.TeamServicePointsSnapshot", b =>
                 {
                     b.Property<long>("ServiceId")
                         .HasColumnType("bigint");
@@ -315,16 +358,16 @@ namespace EnoDatabase.Migrations
                     b.ToTable("TeamServicePointsSnapshot");
                 });
 
-            modelBuilder.Entity("EnoCore.Models.TeamServicePoints", b =>
+            modelBuilder.Entity("EnoCore.Models.Database.TeamServicePoints", b =>
                 {
-                    b.HasOne("EnoCore.Models.Team", null)
+                    b.HasOne("EnoCore.Models.Database.Team", null)
                         .WithMany("TeamServicePoints")
                         .HasForeignKey("TeamId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("EnoCore.Models.Team", b =>
+            modelBuilder.Entity("EnoCore.Models.Database.Team", b =>
                 {
                     b.Navigation("TeamServicePoints");
                 });

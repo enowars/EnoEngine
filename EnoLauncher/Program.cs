@@ -63,19 +63,13 @@
 
         public async Task LauncherLoop()
         {
-            using (var scope = this.serviceProvider.CreateScope())
-            {
-                var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                db.Migrate();
-            }
-
             this.logger.LogInformation($"LauncherLoop starting");
             while (!LauncherCancelSource.IsCancellationRequested)
             {
                 try
                 {
                     using var scope = this.serviceProvider.CreateScope();
-                    var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
+                    var db = scope.ServiceProvider.GetRequiredService<EnoDb>();
                     var tasks = await db.RetrievePendingCheckerTasks(500);
                     if (tasks.Count > 0)
                     {
@@ -205,13 +199,11 @@
                 if (mutex.WaitOne(10, false))
                 {
                     var serviceProvider = new ServiceCollection()
-                        .AddScoped<IEnoDatabase, EnoDatabase>()
-                        .AddDbContextPool<EnoDatabaseContext>(
+                        .AddScoped<EnoDb>()
+                        .AddDbContextPool<EnoDbContext>(
                             options =>
                             {
-                                options.UseNpgsql(
-                                    EnoDatabaseContext.PostgresConnectionString,
-                                    pgoptions => pgoptions.EnableRetryOnFailure());
+                                options.UseNpgsql(EnoDbContext.PostgresConnectionString);
                             },
                             90)
                         .AddLogging(loggingBuilder =>
@@ -259,7 +251,7 @@
                     {
                         using (var scope = this.serviceProvider.CreateScope())
                         {
-                            var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
+                            var db = scope.ServiceProvider.GetRequiredService<EnoDb>();
                             await db.UpdateTaskCheckerTaskResults(results.AsMemory(0, i));
                         }
 

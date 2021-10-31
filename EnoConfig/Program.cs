@@ -12,7 +12,6 @@
     using System.Threading;
     using System.Threading.Tasks;
     using EnoCore;
-    using EnoCore.Configuration;
     using EnoCore.Logging;
     using EnoCore.Models;
     using EnoCore.Models.CheckerApi;
@@ -41,8 +40,39 @@
             }
 
             using var scope = this.serviceProvider.CreateScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<EnoDatabaseContext>();
+            var dbContext = scope.ServiceProvider.GetRequiredService<EnoDbContext>();
             await dbContext.Database.MigrateAsync();
+
+
+            var dbConfiguration = await dbContext.Configurations
+                .SingleOrDefaultAsync();
+
+            if (dbConfiguration != null)
+            {
+                dbConfiguration.Title = jsonConfiguration.Title!;
+                dbConfiguration.FlagValidityInRounds = jsonConfiguration.FlagValidityInRounds;
+                dbConfiguration.CheckedRoundsPerRound = jsonConfiguration.CheckedRoundsPerRound;
+                dbConfiguration.RoundLengthInSeconds = jsonConfiguration.RoundLengthInSeconds;
+                dbConfiguration.DnsSuffix = jsonConfiguration.DnsSuffix!;
+                dbConfiguration.FlagSigningKey = Encoding.ASCII.GetBytes(jsonConfiguration.FlagSigningKey!); ;
+                dbConfiguration.Encoding = jsonConfiguration.Encoding;
+                Console.WriteLine($"Updating configuration {dbConfiguration}");
+            }
+            else
+            {
+                var configuration = new Configuration(
+                    1,
+                    jsonConfiguration.Title!,
+                    jsonConfiguration.FlagValidityInRounds,
+                    jsonConfiguration.CheckedRoundsPerRound,
+                    jsonConfiguration.RoundLengthInSeconds,
+                    jsonConfiguration.DnsSuffix!,
+                    jsonConfiguration.TeamSubnetBytesLength,
+                    Encoding.ASCII.GetBytes(jsonConfiguration.FlagSigningKey!),
+                    jsonConfiguration.Encoding);
+                Console.WriteLine($"Adding configuration {configuration}");
+                dbContext.Add(configuration);
+            }
 
             var dbTeams = dbContext.Teams
                 .ToList()
@@ -191,6 +221,7 @@
                     dbService.NoiseVariants = noiseVariants;
                     dbService.HavocVariants = havocVariants;
                     dbService.Active = jsonConfigurationService.Active;
+                    dbService.Checkers = jsonConfigurationService.Checkers;
                     Console.WriteLine($"Updating service {dbService}");
                     dbServices.Remove(dbService.Id);
                 }
@@ -205,6 +236,7 @@
                         flagVariants,
                         noiseVariants,
                         havocVariants,
+                        jsonConfigurationService.Checkers,
                         jsonConfigurationService.Active);
                     Console.WriteLine($"Adding service {newService}");
                     dbContext.Services.Add(newService);
@@ -226,7 +258,7 @@
         {
             var key = Encoding.ASCII.GetBytes(signing_key);
             using var scope = this.serviceProvider.CreateScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<EnoDatabaseContext>();
+            var dbContext = scope.ServiceProvider.GetRequiredService<EnoDbContext>();
 
             var teams = await dbContext.Teams.ToArrayAsync();
             var services = await dbContext.Services.ToArrayAsync();
@@ -245,16 +277,50 @@
             return 0;
         }
 
+        public async Task<int> NewRound()
+        {
+            using var scope = this.serviceProvider.CreateScope();
+            using var dbContext = scope.ServiceProvider.GetRequiredService<EnoDbContext>();
+            var lastRound = await dbContext.Rounds
+                .OrderByDescending(r => r.Id)
+                .FirstOrDefaultAsync();
+
+            if (lastRound != null)
+            {
+                dbContext.Add(new Round(
+                    lastRound.Id,
+                    new DateTime(),
+                    new DateTime(),
+                    new DateTime(),
+                    new DateTime(),
+                    new DateTime()));
+            }
+            else
+            {
+                dbContext.Add(new Round(
+                    1,
+                    new DateTime(),
+                    new DateTime(),
+                    new DateTime(),
+                    new DateTime(),
+                    new DateTime()));
+            }
+
+            await dbContext.SaveChangesAsync();
+
+            return 0;
+        }
+
         public static int Main(string[] args)
         {
             var cancelSource = new CancellationTokenSource();
             var serviceProvider = new ServiceCollection()
                 .AddSingleton<Program>()
-                .AddDbContextPool<EnoDatabaseContext>(
+                .AddDbContextPool<EnoDbContext>(
                     options =>
                     {
                         options.UseNpgsql(
-                            EnoDatabaseContext.PostgresConnectionString,
+                            EnoDbContext.PostgresConnectionString,
                             pgoptions => pgoptions.EnableRetryOnFailure());
                     },
                     90)
@@ -279,12 +345,19 @@
             applyCommand.Handler = CommandHandler.Create<FileInfo, int?>(async (input, assume_variants) => await program.Apply(input, assume_variants));
             rootCommand.AddCommand(applyCommand);
 
-            var debugFlagsCommand = new Command("flags", "Generate debug flags");
+            var debugFlagsCommand = new Command("flags", "Generate flags");
             debugFlagsCommand.AddArgument(new Argument<int>("round"));
             debugFlagsCommand.AddArgument(new Argument<FlagEncoding>("encoding"));
             debugFlagsCommand.AddArgument(new Argument<string>("signing_key"));
             debugFlagsCommand.Handler = CommandHandler.Create<int, FlagEncoding, string>(async (round, encoding, signing_key) => await program.Flags(round, encoding, signing_key));
             rootCommand.AddCommand(debugFlagsCommand);
+
+            var roundWarpCommand = new Command("newround", "Start new round");
+            roundWarpCommand.Handler = CommandHandler.Create(program.NewRound);
+            rootCommand.AddCommand(roundWarpCommand);
+
+
+
 
             return rootCommand.InvokeAsync(args).Result;
         }

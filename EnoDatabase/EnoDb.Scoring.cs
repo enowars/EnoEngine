@@ -7,14 +7,13 @@
     using System.Text;
     using System.Threading.Tasks;
     using EnoCore;
-    using EnoCore.Configuration;
     using EnoCore.Models;
     using EnoCore.Models.Database;
     using EnoCore.Models.Scoreboard;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Logging;
 
-    public partial class EnoDatabase : IEnoDatabase
+    public partial class EnoDb
     {
         public async Task<(long NewLatestSnapshotRoundId, long OldSnapshotRoundId, Service[] Services, Team[] Teams)> GetPointCalculationFrame(long roundId, Configuration config)
         {

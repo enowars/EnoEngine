@@ -8,7 +8,6 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using EnoCore;
-using EnoCore.Configuration;
 using EnoCore.Logging;
 using EnoCore.Models;
 using EnoCore.Models.JsonConfiguration;
@@ -37,54 +36,17 @@ try
         return 1;
     }
 
-    // Check if config exists
-    if (!File.Exists("ctf.json"))
-    {
-        Console.Error.WriteLine("Config (ctf.json) does not exist.");
-        return 1;
-    }
-
-    // Check if config is valid
-    Configuration configuration;
-    try
-    {
-        string content = File.ReadAllText("ctf.json");
-        var jsonConfiguration = JsonSerializer.Deserialize<JsonConfiguration>(content, EnoCoreUtil.CamelCaseEnumConverterOptions);
-        if (jsonConfiguration is null)
-        {
-            Console.WriteLine("Deserialization of config failed.");
-            return 1;
-        }
-
-        configuration = await Configuration.Validate(jsonConfiguration);
-    }
-    catch (JsonException e)
-    {
-        Console.Error.WriteLine($"Configuration could not be deserialized: {e.Message}");
-        Debug.WriteLine($"{e.Message}\n{e.StackTrace}");
-        return 1;
-    }
-    catch (JsonConfigurationValidationException e)
-    {
-        Console.Error.WriteLine($"Configuration is invalid: {e.Message}");
-        Debug.WriteLine($"{e.Message}\n{e.StackTrace}");
-        return 1;
-    }
-
     // Set up dependency injection tree
     var serviceProvider = new ServiceCollection()
         .AddLogging()
-        .AddSingleton(configuration)
-        .AddSingleton(typeof(EnoDatabaseUtil))
+        .AddSingleton(typeof(EnoDbUtil))
         .AddSingleton(new EnoStatistics(nameof(EnoEngine)))
-        .AddScoped<IEnoDatabase, EnoDatabase.EnoDatabase>()
+        .AddScoped<EnoDatabase.EnoDb>()
         .AddSingleton<EnoEngine.EnoEngine>()
-        .AddDbContextPool<EnoDatabaseContext>(
+        .AddDbContextPool<EnoDbContext>(
             options =>
             {
-                options.UseNpgsql(
-                    EnoDatabaseContext.PostgresConnectionString,
-                    pgoptions => pgoptions.EnableRetryOnFailure());
+                options.UseNpgsql(EnoDbContext.PostgresConnectionString);
             },
             90)
         .AddLogging(loggingBuilder =>

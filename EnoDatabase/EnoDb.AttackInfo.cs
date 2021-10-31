@@ -8,15 +8,14 @@
     using System.Threading.Tasks;
     using EEnoCore.Models.AttackInfo;
     using EnoCore;
-    using EnoCore.Configuration;
     using EnoCore.Models;
     using EnoCore.Models.Database;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Logging;
 
-    public partial class EnoDatabase : IEnoDatabase
+    public partial class EnoDb
     {
-        public async Task<AttackInfo> GetAttackInfo(long roundId, Configuration config)
+        public async Task<AttackInfo> GetAttackInfo(long roundId, long flagValidityInRounds)
         {
             var teamAddresses = await this.context.Teams
                 .AsNoTracking()
@@ -39,7 +38,7 @@
 
             var relevantTasks = await this.context.CheckerTasks
                 .AsNoTracking()
-                .Where(ct => ct.CurrentRoundId > roundId - config.FlagValidityInRounds)
+                .Where(ct => ct.CurrentRoundId > roundId - flagValidityInRounds)
                 .Where(ct => ct.CurrentRoundId <= roundId)
                 .Where(ct => ct.Method == CheckerTaskMethod.putflag)
                 .Where(ct => ct.AttackInfo != null)
