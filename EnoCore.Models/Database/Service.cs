@@ -15,6 +15,7 @@
             long flagVariants,
             long noiseVariants,
             long havocVariants,
+            string[] checkers,
             bool active)
         {
             this.Id = id;
@@ -25,6 +26,7 @@
             this.FlagVariants = flagVariants;
             this.NoiseVariants = noiseVariants;
             this.HavocVariants = havocVariants;
+            this.Checkers = checkers;
             this.Active = active;
         }
 
@@ -37,6 +39,7 @@
         public long FlagVariants { get; set; }
         public long NoiseVariants { get; set; }
         public long HavocVariants { get; set; }
+        public string[] Checkers { get; set; }
         public bool Active { get; set; }
 #pragma warning restore SA1516 // Elements should be separated by blank line
 

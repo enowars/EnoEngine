@@ -11,7 +11,6 @@
     using System.Threading;
     using System.Threading.Tasks;
     using EnoCore;
-    using EnoCore.Configuration;
     using EnoCore.Logging;
     using EnoCore.Models;
     using EnoDatabase;
@@ -25,15 +24,13 @@
         private static readonly CancellationTokenSource EngineCancelSource = new CancellationTokenSource();
 
         private readonly ILogger logger;
-        private readonly Configuration configuration;
         private readonly IServiceProvider serviceProvider;
-        private readonly EnoDatabaseUtil databaseUtil;
+        private readonly EnoDbUtil databaseUtil;
         private readonly EnoStatistics statistics;
 
-        public EnoEngine(ILogger<EnoEngine> logger, Configuration configuration, IServiceProvider serviceProvider, EnoDatabaseUtil databaseUtil, EnoStatistics enoStatistics)
+        public EnoEngine(ILogger<EnoEngine> logger, IServiceProvider serviceProvider, EnoDbUtil databaseUtil, EnoStatistics enoStatistics)
         {
             this.logger = logger;
-            this.configuration = configuration;
             this.serviceProvider = serviceProvider;
             this.databaseUtil = databaseUtil;
             this.statistics = enoStatistics;
@@ -48,8 +45,7 @@
                 e.Cancel = true;
                 EngineCancelSource.Cancel();
             };
-            var db = this.serviceProvider.CreateScope().ServiceProvider.GetRequiredService<IEnoDatabase>();
-            db.ApplyConfig(this.configuration);
+            var db = this.serviceProvider.CreateScope().ServiceProvider.GetRequiredService<EnoDb>();
             await this.GameLoop();
         }
 
@@ -60,9 +56,13 @@
                 this.serviceProvider,
                 db => db.PrepareRecalculation());
 
+            var config = await this.databaseUtil.ExecuteScopedDatabaseAction(
+                this.serviceProvider,
+                db => db.RetrieveConfiguration());
+
             for (int i = 1; i <= lastFinishedRound.Id; i++)
             {
-                await this.HandleRoundEnd(i, true);
+                await this.HandleRoundEnd(i, config, true);
             }
         }
 

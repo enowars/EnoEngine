@@ -15,8 +15,8 @@
     using System.Threading.Channels;
     using System.Threading.Tasks;
     using EnoCore;
-    using EnoCore.Configuration;
     using EnoCore.Models;
+    using EnoCore.Models.Database;
     using EnoCore.Models.JsonConfiguration;
     using EnoCore.Models.Scoreboard;
     using EnoDatabase;
@@ -24,6 +24,7 @@
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
 
+    /*
     internal class Program
     {
         private static readonly CancellationTokenSource FlagShooterCancelSource = new CancellationTokenSource();
@@ -232,4 +233,5 @@
             return tasks;
         }
     }
+    */
 }

@@ -19,61 +19,59 @@
     {
         public async Task<DateTime> StartNewRound()
         {
+            DateTime end;
             var stopwatch = new Stopwatch();
             stopwatch.Start();
             this.logger.LogDebug("Starting new Round");
-            double quatherLength = this.configuration.RoundLengthInSeconds / 4;
             DateTime begin = DateTime.UtcNow;
-            DateTime q2 = begin.AddSeconds(quatherLength);
-            DateTime q3 = begin.AddSeconds(quatherLength * 2);
-            DateTime q4 = begin.AddSeconds(quatherLength * 3);
-            DateTime end = begin.AddSeconds(quatherLength * 4);
-            try
+            Round newRound;
+            Configuration configuration;
+            Team[] teams;
+            Service[] services;
+
+            // start the next round
+            using (var scope = this.serviceProvider.CreateScope())
             {
-                Round newRound;
-
-                // start the next round
-                using (var scope = this.serviceProvider.CreateScope())
-                {
-                    var db = scope.ServiceProvider.GetRequiredService<IEnoDatabase>();
-                    newRound = await db.CreateNewRound(begin, q2, q3, q4, end);
-                }
-
-                this.logger.LogInformation($"CreateNewRound for {newRound.Id} finished ({stopwatch.ElapsedMilliseconds}ms)");
-
-                // insert put tasks
-                var insertPutNewFlagsTask = this.databaseUtil.RetryScopedDatabaseAction(this.serviceProvider, db => db.InsertPutFlagsTasks(newRound, this.configuration));
-                var insertPutNewNoisesTask = this.databaseUtil.RetryScopedDatabaseAction(this.serviceProvider, db => db.InsertPutNoisesTasks(newRound, this.configuration));
-                var insertHavocsTask = this.databaseUtil.RetryScopedDatabaseAction(this.serviceProvider, db => db.InsertHavocsTasks(newRound, this.configuration));
-
-                await insertPutNewFlagsTask;
-                await insertPutNewNoisesTask;
-                await insertHavocsTask;
-
-                // insert get tasks
-                var insertRetrieveCurrentFlagsTask = this.databaseUtil.RetryScopedDatabaseAction(this.serviceProvider, db => db.InsertRetrieveCurrentFlagsTasks(newRound, this.configuration));
-                var insertRetrieveOldFlagsTask = this.databaseUtil.RetryScopedDatabaseAction(this.serviceProvider, db => db.InsertRetrieveOldFlagsTasks(newRound, this.configuration));
-                var insertGetCurrentNoisesTask = this.databaseUtil.RetryScopedDatabaseAction(this.serviceProvider, db => db.InsertRetrieveCurrentNoisesTasks(newRound, this.configuration));
-
-                await insertRetrieveCurrentFlagsTask;
-                await insertRetrieveOldFlagsTask;
-                await insertGetCurrentNoisesTask;
-
-                this.logger.LogInformation($"All checker tasks for round {newRound.Id} are created ({stopwatch.ElapsedMilliseconds}ms)");
-                await this.HandleRoundEnd(newRound.Id - 1);
-                this.logger.LogInformation($"HandleRoundEnd for round {newRound.Id - 1} finished ({stopwatch.ElapsedMilliseconds}ms)");
-
-                // TODO EnoLogger.LogStatistics(StartNewRoundFinishedMessage.Create(oldRound?.Id ?? 0, stopwatch.ElapsedMilliseconds));
+                var db = scope.ServiceProvider.GetRequiredService<EnoDb>();
+                configuration = await db.RetrieveConfiguration();
+                double quatherLength = configuration.RoundLengthInSeconds / 4;
+                DateTime q2 = begin.AddSeconds(quatherLength);
+                DateTime q3 = begin.AddSeconds(quatherLength * 2);
+                DateTime q4 = begin.AddSeconds(quatherLength * 3);
+                end = begin.AddSeconds(quatherLength * 4);
+                newRound = await db.CreateNewRound(begin, q2, q3, q4, end);
+                teams = await db.RetrieveActiveTeams();
+                services = await db.RetrieveActiveServices();
             }
-            catch (Exception e)
-            {
-                this.logger.LogError($"StartNewRound failed: {e.ToFancyStringWithCaller()}");
-            }
+
+            this.logger.LogInformation($"CreateNewRound for {newRound.Id} finished ({stopwatch.ElapsedMilliseconds}ms)");
+
+            // insert put tasks
+            var insertPutNewFlagsTask = this.databaseUtil.ExecuteScopedDatabaseActionIgnoreErrors(this.serviceProvider, db => db.InsertPutFlagsTasks(newRound, teams, services, configuration));
+            var insertPutNewNoisesTask = this.databaseUtil.ExecuteScopedDatabaseActionIgnoreErrors(this.serviceProvider, db => db.InsertPutNoisesTasks(newRound, teams, services, configuration));
+            var insertHavocsTask = this.databaseUtil.ExecuteScopedDatabaseActionIgnoreErrors(this.serviceProvider, db => db.InsertHavocsTasks(newRound, teams, services, configuration));
+
+            await insertPutNewFlagsTask;
+            await insertPutNewNoisesTask;
+            await insertHavocsTask;
+
+            // insert get tasks
+            var insertRetrieveCurrentFlagsTask = this.databaseUtil.ExecuteScopedDatabaseActionIgnoreErrors(this.serviceProvider, db => db.InsertRetrieveCurrentFlagsTasks(newRound, teams, services, configuration));
+            var insertRetrieveOldFlagsTask = this.databaseUtil.ExecuteScopedDatabaseActionIgnoreErrors(this.serviceProvider, db => db.InsertRetrieveOldFlagsTasks(newRound, teams, services, configuration));
+            var insertGetCurrentNoisesTask = this.databaseUtil.ExecuteScopedDatabaseActionIgnoreErrors(this.serviceProvider, db => db.InsertRetrieveCurrentNoisesTasks(newRound, teams, services, configuration));
+
+            await insertRetrieveCurrentFlagsTask;
+            await insertRetrieveOldFlagsTask;
+            await insertGetCurrentNoisesTask;
+
+            this.logger.LogInformation($"Checker tasks for round {newRound.Id} created ({stopwatch.ElapsedMilliseconds}ms)");
+            await this.HandleRoundEnd(newRound.Id - 1, configuration);
+            this.logger.LogInformation($"HandleRoundEnd for round {newRound.Id - 1} finished ({stopwatch.ElapsedMilliseconds}ms)");
 
             return end;
         }
 
-        public async Task<DateTime> HandleRoundEnd(long roundId, bool recalculating = false)
+        public async Task<DateTime> HandleRoundEnd(long roundId, Configuration configuration, bool recalculating = false)
         {
             if (roundId > 0)
             {
@@ -82,11 +80,11 @@
                     await this.RecordServiceStates(roundId);
                 }
 
-                await this.CalculateServicePoints(roundId);
+                await this.CalculateServicePoints(roundId, configuration);
                 await this.CalculateTotalPoints();
             }
 
-            await this.GenerateAttackInfo(roundId);
+            await this.GenerateAttackInfo(roundId, configuration);
 
             var jsonStopWatch = new Stopwatch();
             jsonStopWatch.Start();
@@ -124,7 +122,7 @@
             }
         }
 
-        private async Task CalculateServicePoints(long roundId)
+        private async Task CalculateServicePoints(long roundId, Configuration configuration)
         {
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
@@ -132,7 +130,7 @@
             {
                 var (newLatestSnapshotRoundId, oldSnapshotRoundId, services, teams) = await this.databaseUtil.RetryScopedDatabaseAction(
                     this.serviceProvider,
-                    db => db.GetPointCalculationFrame(roundId, this.configuration));
+                    db => db.GetPointCalculationFrame(roundId, configuration));
 
                 var servicePointsTasks = new List<Task>(services.Length);
                 foreach (var service in services)
@@ -183,13 +181,13 @@
             }
         }
 
-        private async Task GenerateAttackInfo(long roundId)
+        private async Task GenerateAttackInfo(long roundId, Configuration configuration)
         {
             var stopWatch = new Stopwatch();
             stopWatch.Start();
             var attackInfo = await this.databaseUtil.RetryScopedDatabaseAction(
                 this.serviceProvider,
-                db => db.GetAttackInfo(roundId, this.configuration));
+                db => db.GetAttackInfo(roundId, configuration.FlagValidityInRounds));
             var json = JsonSerializer.Serialize(attackInfo, EnoCoreUtil.CamelCaseEnumConverterOptions);
             File.WriteAllText($"{EnoCoreUtil.DataDirectory}attack.json", json);
             stopWatch.Stop();

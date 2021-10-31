@@ -13,7 +13,6 @@
     using System.Threading.Channels;
     using System.Threading.Tasks;
     using EnoCore;
-    using EnoCore.Configuration;
     using EnoCore.Logging;
     using EnoCore.Models;
     using EnoCore.Models.Database;
@@ -26,37 +25,27 @@
         private const int MaxLineLength = 200;
         private const int SubmissionBatchSize = 500;
         private const int SubmissionTasks = 4;
-        private readonly ImmutableDictionary<long, Channel<(byte[] FlagString, Flag Flag, ChannelWriter<(byte[], FlagSubmissionResult)> ResultWriter)>> channels;
-        private readonly ImmutableDictionary<long, TeamFlagSubmissionStatistic> submissionStatistics;
-        private readonly TcpListener productionListener = new TcpListener(IPAddress.IPv6Any, 1337);
-        private readonly TcpListener debugListener = new TcpListener(IPAddress.IPv6Any, 1338);
+        private readonly Dictionary<long, Channel<(byte[] FlagString, Flag Flag, ChannelWriter<(byte[], FlagSubmissionResult)> ResultWriter)>> channels = new();
+        private readonly Dictionary<long, TeamFlagSubmissionStatistic> submissionStatistics = new();
+        private readonly TcpListener productionListener = new(IPAddress.IPv6Any, 1337);
+        private readonly TcpListener debugListener = new(IPAddress.IPv6Any, 1338);
         private readonly ILogger logger;
-        private readonly Configuration configuration;
-        private readonly EnoDatabaseUtil databaseUtil;
+        private readonly EnoDbUtil databaseUtil;
         private readonly IServiceProvider serviceProvider;
         private readonly EnoStatistics enoStatistics;
 
-        public FlagSubmissionEndpoint(IServiceProvider serviceProvider, ILogger<FlagSubmissionEndpoint> logger, Configuration configuration, EnoDatabaseUtil databaseUtil, EnoStatistics enoStatistics)
+        public FlagSubmissionEndpoint(
+            IServiceProvider serviceProvider,
+            ILogger<FlagSubmissionEndpoint> logger,
+            EnoDbUtil databaseUtil,
+            EnoStatistics enoStatistics)
         {
             this.serviceProvider = serviceProvider;
             this.logger = logger;
-            this.configuration = configuration;
             this.databaseUtil = databaseUtil;
             this.enoStatistics = enoStatistics;
             this.productionListener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
             this.debugListener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
-
-            var channels = new Dictionary<long, Channel<(byte[] FlagString, Flag Flag, ChannelWriter<(byte[], FlagSubmissionResult)> ResultWriter)>>();
-            var submissionStatistics = new Dictionary<long, TeamFlagSubmissionStatistic>();
-            foreach (var team in configuration.Teams)
-            {
-                channels[team.Id] = Channel.CreateBounded<(byte[] FlagString, Flag Flag, ChannelWriter<(byte[], FlagSubmissionResult)> ResultWriter)>(
-                    new BoundedChannelOptions(100) { SingleReader = false, SingleWriter = false });
-                submissionStatistics[team.Id] = new TeamFlagSubmissionStatistic(team.Id);
-            }
-
-            this.channels = channels.ToImmutableDictionary();
-            this.submissionStatistics = submissionStatistics.ToImmutableDictionary();
         }
 
         public async Task LogSubmissionStatistics(long teamId, string teamName, CancellationToken token)
@@ -80,36 +69,53 @@
             token.Register(() => this.productionListener.Stop());
             token.Register(() => this.debugListener.Stop());
 
-            // Start a log submission statistics task for every team
-            foreach (var team in this.submissionStatistics)
+            // Setup statistics for every active team
+            Team[] activeTeams;
+            Configuration configuration;
             {
-                var name = this.configuration.Teams
-                        .Where(t => t.Id == team.Key)
-                        .First()
-                        .Name;
-                var t = Task.Run(
-                    async () =>
-                    await this.LogSubmissionStatistics(
-                        team.Key,
-                        name,
-                        token),
-                    token);
+                using var scope = this.serviceProvider.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<EnoDb>();
+                activeTeams = await db.RetrieveActiveTeams();
+                configuration = await db.RetrieveConfiguration();
+
+                // Start a log submission statistics task for every team
+                foreach (var activeTeam in activeTeams)
+                {
+                    this.submissionStatistics[activeTeam.Id] = new();
+                    this.channels[activeTeam.Id] = Channel.CreateBounded<
+                        (byte[] FlagString,
+                        Flag Flag,
+                        ChannelWriter<(byte[],
+                        FlagSubmissionResult)> ResultWriter)>(
+                        new BoundedChannelOptions(100)
+                        {
+                            SingleReader = false,
+                            SingleWriter = false,
+                        });
+
+                    var logTask = Task.Run(
+                        async () => await this.LogSubmissionStatistics(
+                            activeTeam.Id,
+                            activeTeam.Name,
+                            token),
+                        token);
+                }
             }
 
             // Start n insert tasks
             var tasks = new List<Task>();
             for (int i = 0; i < SubmissionTasks; i++)
             {
-                tasks.Add(await Task.Factory.StartNew(async () => await this.InsertSubmissionsLoop(i, token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default));
+                tasks.Add(await Task.Factory.StartNew(async () => await this.InsertSubmissionsLoop(i, configuration, token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default));
             }
 
             // Start production and debug listeners
-            tasks.Add(await Task.Factory.StartNew(async () => await this.RunProductionEndpoint(token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default));
-            tasks.Add(await Task.Factory.StartNew(async () => await this.RunDebugEndpoint(token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default));
+            tasks.Add(await Task.Factory.StartNew(async () => await this.RunProductionEndpoint(configuration, token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default));
+            tasks.Add(await Task.Factory.StartNew(async () => await this.RunDebugEndpoint(configuration, token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default));
             await Task.WhenAny(tasks);
         }
 
-        private async Task RunDebugEndpoint(CancellationToken token)
+        private async Task RunDebugEndpoint(Configuration configuration, CancellationToken token)
         {
             this.logger.LogInformation($"{nameof(this.RunDebugEndpoint)} started");
             try
@@ -120,8 +126,8 @@
                     var client = await this.debugListener.AcceptTcpClientAsync();
                     var handlerTask = Task.Run(async () => await FlagSubmissionClientHandler.HandleDevConnection(
                         this.serviceProvider,
-                        Encoding.ASCII.GetBytes(this.configuration.FlagSigningKey),
-                        this.configuration.Encoding,
+                        configuration.FlagSigningKey,
+                        configuration.Encoding,
                         this.channels,
                         this.submissionStatistics,
                         client.Client,
@@ -139,7 +145,7 @@
             this.logger.LogInformation("RunDebugEndpoint finished");
         }
 
-        private async Task RunProductionEndpoint(CancellationToken token)
+        private async Task RunProductionEndpoint(Configuration configuration, CancellationToken token)
         {
             this.logger.LogInformation($"{nameof(this.RunProductionEndpoint)} started");
             try
@@ -159,8 +165,8 @@
                             async () =>
                             {
                                 var attackerAddress = ((IPEndPoint)client.Client.RemoteEndPoint!).Address.GetAddressBytes();
-                                var attackerPrefix = new byte[this.configuration.TeamSubnetBytesLength];
-                                Array.Copy(attackerAddress, attackerPrefix, this.configuration.TeamSubnetBytesLength);
+                                var attackerPrefix = new byte[configuration.TeamSubnetBytesLength];
+                                Array.Copy(attackerAddress, attackerPrefix, configuration.TeamSubnetBytesLength);
                                 var team = await this.databaseUtil.RetryScopedDatabaseAction(
                                     this.serviceProvider,
                                     db => db.GetTeamIdByPrefix(attackerPrefix));
@@ -168,8 +174,8 @@
                                 {
                                     await FlagSubmissionClientHandler.HandleProdConnection(
                                         this.serviceProvider,
-                                        Encoding.ASCII.GetBytes(this.configuration.FlagSigningKey),
-                                        this.configuration.Encoding,
+                                        configuration.FlagSigningKey,
+                                        configuration.Encoding,
                                         team.Id,
                                         this.channels[team.Id],
                                         this.submissionStatistics[team.Id],
@@ -207,7 +213,7 @@
             this.logger.LogInformation("RunProductionEndpoint finished");
         }
 
-        private async Task InsertSubmissionsLoop(int number, CancellationToken token)
+        private async Task InsertSubmissionsLoop(int number, Configuration configuration, CancellationToken token)
         {
             this.logger.LogInformation($"{nameof(this.InsertSubmissionsLoop)} {number} started");
             try
@@ -231,7 +237,7 @@
                                 {
                                     await this.databaseUtil.RetryScopedDatabaseAction(
                                         this.serviceProvider,
-                                        db => db.ProcessSubmissionsBatch(submissions, this.configuration.FlagValidityInRounds, this.enoStatistics));
+                                        db => db.ProcessSubmissionsBatch(submissions, configuration.FlagValidityInRounds, this.enoStatistics));
                                 }
                                 catch (Exception e)
                                 {
@@ -253,9 +259,9 @@
                     {
                         try
                         {
-                            await this.databaseUtil.RetryScopedDatabaseAction(
-                                this.serviceProvider,
-                                db => db.ProcessSubmissionsBatch(submissions, this.configuration.FlagValidityInRounds, this.enoStatistics));
+                            using var scope = this.serviceProvider.CreateScope();
+                            var db = scope.ServiceProvider.GetRequiredService<EnoDb>();
+                            await db.ProcessSubmissionsBatch(submissions, configuration.FlagValidityInRounds, this.enoStatistics);
                         }
                         catch (Exception e)
                         {
@@ -277,7 +283,6 @@
         public class TeamFlagSubmissionStatistic
         {
 #pragma warning disable SA1401 // Fields should be private
-            public long TeamId;
             public long OkFlags;
             public long DuplicateFlags;
             public long OldFlags;
@@ -285,9 +290,8 @@
             public long OwnFlags;
 #pragma warning restore SA1401 // Fields should be private
 
-            internal TeamFlagSubmissionStatistic(long teamId)
+            internal TeamFlagSubmissionStatistic()
             {
-                this.TeamId = teamId;
                 this.OkFlags = 0;
                 this.DuplicateFlags = 0;
                 this.OldFlags = 0;

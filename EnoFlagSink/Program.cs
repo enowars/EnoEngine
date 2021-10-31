@@ -7,7 +7,6 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using EnoCore;
-using EnoCore.Configuration;
 using EnoCore.Logging;
 using EnoCore.Models;
 using EnoCore.Models.JsonConfiguration;
@@ -33,67 +32,17 @@ try
         return 1;
     }
 
-    // Check if config exists
-    if (!File.Exists("ctf.json"))
-    {
-        Console.WriteLine("Config (ctf.json) does not exist");
-        return 1;
-    }
-
-    /*
-    // Check if config is valid
-    Configuration configuration;
-    try
-    {
-        var content = File.ReadAllText("ctf.json");
-        var jsonConfiguration = JsonSerializer.Deserialize<JsonConfiguration>(content, EnoCoreUtil.CamelCaseEnumConverterOptions);
-        if (jsonConfiguration is null)
-        {
-            Console.WriteLine("Deserialization of config failed.");
-            return 1;
-        }
-
-        configuration = await Configuration.Validate(jsonConfiguration);
-    }
-    catch (JsonException e)
-    {
-        Console.WriteLine($"Configuration could not be deserialized: {e.Message}");
-        Debug.WriteLine($"{e.Message}\n{e.StackTrace}");
-        return 1;
-    }
-    catch (JsonConfigurationValidationException e)
-    {
-        Console.WriteLine($"Configuration is invalid: {e.Message}");
-        Debug.WriteLine($"{e.Message}\n{e.StackTrace}");
-        return 1;
-    }
-    */
-
     // Set up dependency injection tree
     var serviceProvider = new ServiceCollection()
         .AddLogging()
-        .AddSingleton(new Configuration(
-            string.Empty,
-            10,
-            2,
-            60,
-            string.Empty,
-            15,
-            string.Empty,
-            FlagEncoding.Legacy,
-            new List<ConfigurationTeam>(),
-            new List<ConfigurationTeam>(),
-            new List<ConfigurationService>(),
-            new List<ConfigurationService>(),
-            new Dictionary<long, string[]>()))
-        .AddSingleton(typeof(EnoDatabaseUtil))
+        .AddSingleton(typeof(EnoDbUtil))
         .AddSingleton<FlagSubmissionEndpoint>()
         .AddSingleton(new EnoStatistics("EnoFlagSink"))
-        .AddScoped<IEnoDatabase, EnoDatabase.EnoDatabase>()
-        .AddDbContextPool<EnoDatabaseContext>(
+        .AddScoped<EnoDatabase.EnoDb>()
+        .AddDbContextPool<EnoDbContext>(
             options =>
             {
-                options.UseNpgsql(EnoDatabaseContext.PostgresConnectionString);
+                options.UseNpgsql(EnoDbContext.PostgresConnectionString);
             },
             10)
         .AddLogging(loggingBuilder =>

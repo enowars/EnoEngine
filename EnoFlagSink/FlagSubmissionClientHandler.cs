@@ -73,8 +73,8 @@ Please submit your team id first, and then one flag per line. Responses are NOT 
             IServiceProvider serviceProvider,
             byte[] flagSigningKeyBytes,
             FlagEncoding flagEncoding,
-            ImmutableDictionary<long, Channel<(byte[] FlagString, Flag Flag, ChannelWriter<(byte[] Input, FlagSubmissionResult Result)> FeedbackChannelWriter)>> teamChannels,
-            ImmutableDictionary<long, TeamFlagSubmissionStatistic> teamFlagSubmissionStatistics,
+            Dictionary<long, Channel<(byte[] FlagString, Flag Flag, ChannelWriter<(byte[] Input, FlagSubmissionResult Result)> FeedbackChannelWriter)>> teamChannels,
+            Dictionary<long, TeamFlagSubmissionStatistic> teamFlagSubmissionStatistics,
             Socket socket,
             CancellationToken token)
         {
@@ -288,7 +288,7 @@ Please submit your team id first, and then one flag per line. Responses are NOT 
             }
             catch (Exception e)
             {
-                if (e is not ChannelClosedException)
+                if (e is not ChannelClosedException && e is not SocketException)
                 {
                     this.logger.LogError($"{e.Message}\n{e.StackTrace}");
                 }
