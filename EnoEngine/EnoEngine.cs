@@ -52,13 +52,8 @@
         internal async Task RunRecalculation()
         {
             this.logger.LogInformation("RunRecalculation()");
-            var lastFinishedRound = await this.databaseUtil.RetryScopedDatabaseAction(
-                this.serviceProvider,
-                db => db.PrepareRecalculation());
-
-            var config = await this.databaseUtil.ExecuteScopedDatabaseAction(
-                this.serviceProvider,
-                db => db.RetrieveConfiguration());
+            var lastFinishedRound = await this.databaseUtil.RetryScopedDatabaseAction(db => db.PrepareRecalculation());
+            var config = await this.databaseUtil.ExecuteScopedDatabaseAction(db => db.RetrieveConfiguration());
 
             for (int i = 1; i <= lastFinishedRound.Id; i++)
             {
@@ -103,9 +98,7 @@
 
         private async Task AwaitOldRound()
         {
-            var lastRound = await this.databaseUtil.RetryScopedDatabaseAction(
-                this.serviceProvider,
-                db => db.GetLastRound());
+            var lastRound = await this.databaseUtil.RetryScopedDatabaseAction(db => db.GetLastRound());
 
             if (lastRound != null)
             {

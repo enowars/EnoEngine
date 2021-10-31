@@ -285,27 +285,30 @@
                 .OrderByDescending(r => r.Id)
                 .FirstOrDefaultAsync();
 
+            Round round;
             if (lastRound != null)
             {
-                dbContext.Add(new Round(
-                    lastRound.Id,
+                round = new Round(
+                    lastRound.Id + 1,
                     new DateTime(),
                     new DateTime(),
                     new DateTime(),
                     new DateTime(),
-                    new DateTime()));
+                    new DateTime());
             }
             else
             {
-                dbContext.Add(new Round(
+                round = new Round(
                     1,
                     new DateTime(),
                     new DateTime(),
                     new DateTime(),
                     new DateTime(),
-                    new DateTime()));
+                    new DateTime());
             }
 
+            Console.WriteLine($"Adding round {round}");
+            dbContext.Add(round);
             await dbContext.SaveChangesAsync();
 
             return 0;

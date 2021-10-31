@@ -23,34 +23,43 @@
     public class EnoDbUtil
     {
         private readonly ILogger<EnoDbUtil> logger;
+        private readonly IServiceProvider serviceProvider;
 
-        public EnoDbUtil(ILogger<EnoDbUtil> logger)
+        public EnoDbUtil(IServiceProvider serviceProvider, ILogger<EnoDbUtil> logger)
         {
             this.logger = logger;
+            this.serviceProvider = serviceProvider;
         }
 
-        public async Task ExecuteScopedDatabaseActionIgnoreErrors(IServiceProvider serviceProvider, Func<EnoDb, Task> function)
+        public async Task ExecuteScopedDatabaseActionIgnoreErrors(Func<EnoDb, Task> function)
         {
-            using var scope = serviceProvider.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<EnoDb>();
-            await function(db);
+            try
+            {
+                using var scope = this.serviceProvider.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<EnoDb>();
+                await function(db);
+            }
+            catch (Exception e)
+            {
+                this.logger.LogError($"ExecuteScopedDatabaseActionIgnoreErrors ignoring Exception:\n{e}");
+            }
         }
 
-        public async Task<T> ExecuteScopedDatabaseAction<T>(IServiceProvider serviceProvider, Func<EnoDb, Task<T>> function)
+        public async Task<T> ExecuteScopedDatabaseAction<T>(Func<EnoDb, Task<T>> function)
         {
-            using var scope = serviceProvider.CreateScope();
+            using var scope = this.serviceProvider.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<EnoDb>();
             return await function(db);
         }
 
-        public async Task RetryScopedDatabaseAction(IServiceProvider serviceProvider, Func<EnoDb, Task> function)
+        public async Task RetryScopedDatabaseAction(Func<EnoDb, Task> function)
         {
             Exception? lastException = null;
             for (int i = 0; i < EnoDbContext.DatabaseRetries; i++)
             {
                 try
                 {
-                    using var scope = serviceProvider.CreateScope();
+                    using var scope = this.serviceProvider.CreateScope();
                     var db = scope.ServiceProvider.GetRequiredService<EnoDb>();
                     await function(db);
                     return;
@@ -70,14 +79,14 @@
             throw new Exception($"{nameof(this.RetryScopedDatabaseAction)} giving up after {EnoDbContext.DatabaseRetries} retries", lastException);
         }
 
-        public async Task<T> RetryScopedDatabaseAction<T>(IServiceProvider serviceProvider, Func<EnoDb, Task<T>> function)
+        public async Task<T> RetryScopedDatabaseAction<T>(Func<EnoDb, Task<T>> function)
         {
             Exception? lastException = null;
             for (int i = 0; i < EnoDbContext.DatabaseRetries; i++)
             {
                 try
                 {
-                    using var scope = serviceProvider.CreateScope();
+                    using var scope = this.serviceProvider.CreateScope();
                     var db = scope.ServiceProvider.GetRequiredService<EnoDb>();
                     return await function(db);
                 }

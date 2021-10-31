@@ -168,7 +168,6 @@
                                 var attackerPrefix = new byte[configuration.TeamSubnetBytesLength];
                                 Array.Copy(attackerAddress, attackerPrefix, configuration.TeamSubnetBytesLength);
                                 var team = await this.databaseUtil.RetryScopedDatabaseAction(
-                                    this.serviceProvider,
                                     db => db.GetTeamIdByPrefix(attackerPrefix));
                                 if (team != null)
                                 {
@@ -236,7 +235,6 @@
                                 try
                                 {
                                     await this.databaseUtil.RetryScopedDatabaseAction(
-                                        this.serviceProvider,
                                         db => db.ProcessSubmissionsBatch(submissions, configuration.FlagValidityInRounds, this.enoStatistics));
                                 }
                                 catch (Exception e)
@@ -257,16 +255,8 @@
                     }
                     else if (submissions.Count != 0)
                     {
-                        try
-                        {
-                            using var scope = this.serviceProvider.CreateScope();
-                            var db = scope.ServiceProvider.GetRequiredService<EnoDb>();
-                            await db.ProcessSubmissionsBatch(submissions, configuration.FlagValidityInRounds, this.enoStatistics);
-                        }
-                        catch (Exception e)
-                        {
-                            this.logger.LogError($"InsertSubmissionsLoop dropping batch because: {e.ToFancyString()}");
-                        }
+                        await this.databaseUtil.ExecuteScopedDatabaseActionIgnoreErrors(
+                            db => db.ProcessSubmissionsBatch(submissions, configuration.FlagValidityInRounds, this.enoStatistics));
                     }
                 }
             }
