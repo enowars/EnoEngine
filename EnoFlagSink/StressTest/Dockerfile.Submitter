@@ -1,5 +1,0 @@
-from python
-
-COPY submitter.py submitter.py
-
-ENTRYPOINT python3 submitter.py

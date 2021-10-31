@@ -33,6 +33,11 @@
                 while (TryReadLine(ref buffer, out ReadOnlySequence<byte> line))
                 {
                     running = await handler(line);
+                    if (!running)
+                    {
+                        pipeReader.AdvanceTo(buffer.Start, buffer.End);
+                        return ReadLinesResult.Success;
+                    }
                 }
 
                 // Tell the PipeReader how much of the buffer has been consumed.
