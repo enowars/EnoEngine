@@ -13,7 +13,7 @@
         Duplicate,
         Own,
         Old,
-        SpamError,
+        Error,
     }
 
     public static class FlagSubmissionResultExtensions
@@ -23,7 +23,7 @@
         private static readonly byte[] SubmissionResultDuplicate = Encoding.ASCII.GetBytes(" DUP\n");
         private static readonly byte[] SubmissionResultOwn = Encoding.ASCII.GetBytes(" OWN\n");
         private static readonly byte[] SubmissionResultOld = Encoding.ASCII.GetBytes(" OLD\n");
-        private static readonly byte[] SubmissionResultSpamError = Encoding.ASCII.GetBytes(" INV\n");
+        private static readonly byte[] SubmissionResultSpamError = Array.Empty<byte>();
 
         public static byte[] ToFeedbackBytes(this FlagSubmissionResult fsr)
         {
@@ -34,7 +34,7 @@
                 FlagSubmissionResult.Duplicate => SubmissionResultDuplicate,
                 FlagSubmissionResult.Own => SubmissionResultOwn,
                 FlagSubmissionResult.Old => SubmissionResultOld,
-                FlagSubmissionResult.SpamError => SubmissionResultSpamError,
+                FlagSubmissionResult.Error => SubmissionResultSpamError,
                 _ => throw new InvalidOperationException(),
             };
         }

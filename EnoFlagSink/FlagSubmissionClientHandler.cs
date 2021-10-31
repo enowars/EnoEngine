@@ -14,6 +14,7 @@
     using EnoCore;
     using EnoCore.Models;
     using EnoCore.Models.Database;
+    using EnoDatabase;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using static EnoFlagSink.FlagSubmissionEndpoint;
@@ -36,7 +37,7 @@ Please submit your team id first, and then one flag per line. Responses are NOT 
         private readonly Socket socket;
         private readonly Pipe inputPipe;
         private readonly Channel<(byte[] Input, FlagSubmissionResult Result)> feedbackChannel;
-        private readonly Channel<(byte[] FlagString, Flag Flag, ChannelWriter<(byte[], FlagSubmissionResult)> ResultWriter)> teamChannel;
+        private readonly Channel<FlagSubmissionRequest> teamChannel;
         private readonly TeamFlagSubmissionStatistic teamFlagSubmissionStatistic;
         private readonly ILogger<FlagSubmissionClientHandler> logger;
         private readonly CancellationToken token;
@@ -46,7 +47,7 @@ Please submit your team id first, and then one flag per line. Responses are NOT 
             byte[] flagSigningKeyBytes,
             FlagEncoding flagEncoding,
             long teamId,
-            Channel<(byte[] FlagString, Flag Flag, ChannelWriter<(byte[] Input, FlagSubmissionResult Result)> FeedbackChannelWriter)> teamChannel,
+            Channel<FlagSubmissionRequest> teamChannel,
             TeamFlagSubmissionStatistic teamFlagSubmissionStatistic,
             Socket socket,
             Pipe inputPipe,
@@ -73,7 +74,7 @@ Please submit your team id first, and then one flag per line. Responses are NOT 
             IServiceProvider serviceProvider,
             byte[] flagSigningKeyBytes,
             FlagEncoding flagEncoding,
-            Dictionary<long, Channel<(byte[] FlagString, Flag Flag, ChannelWriter<(byte[] Input, FlagSubmissionResult Result)> FeedbackChannelWriter)>> teamChannels,
+            Dictionary<long, Channel<FlagSubmissionRequest>> teamChannels,
             Dictionary<long, TeamFlagSubmissionStatistic> teamFlagSubmissionStatistics,
             Socket socket,
             CancellationToken token)
@@ -123,7 +124,7 @@ Please submit your team id first, and then one flag per line. Responses are NOT 
             byte[] flagSigningKeyBytes,
             FlagEncoding flagEncoding,
             long teamId,
-            Channel<(byte[] FlagString, Flag Flag, ChannelWriter<(byte[] Input, FlagSubmissionResult Result)> FeedbackChannelWriter)> teamChannel,
+            Channel<FlagSubmissionRequest> teamChannel,
             TeamFlagSubmissionStatistic teamFlagSubmissionStatistic,
             Socket socket,
             CancellationToken token)
@@ -213,7 +214,10 @@ Please submit your team id first, and then one flag per line. Responses are NOT 
                             }
                             else
                             {
-                                await this.teamChannel.Writer.WriteAsync((line.ToArray(), flag, this.feedbackChannel.Writer), this.token);
+                                await this.teamChannel.Writer.WriteAsync(
+                                    new FlagSubmissionRequest(
+                                        line.ToArray(), flag, this.teamId, this.feedbackChannel.Writer),
+                                    this.token);
                             }
 
                             return true;
@@ -221,7 +225,7 @@ Please submit your team id first, and then one flag per line. Responses are NOT 
                         this.token);
                     if (result == EnoFlagSinkUtil.ReadLinesResult.TooLong)
                     {
-                        await this.feedbackChannel.Writer.WriteAsync((new byte[0], FlagSubmissionResult.SpamError), this.token);
+                        await this.feedbackChannel.Writer.WriteAsync((new byte[0], FlagSubmissionResult.Error), this.token);
                         break;
                     }
                     else if (result == EnoFlagSinkUtil.ReadLinesResult.PipeComplete)
@@ -277,11 +281,8 @@ Please submit your team id first, and then one flag per line. Responses are NOT 
 
                     var response = input.Concat(result.ToFeedbackBytes()).ToArray();
                     await this.socket.SendAsync(response, SocketFlags.None, this.token);
-                    if (result == FlagSubmissionResult.SpamError)
+                    if (result == FlagSubmissionResult.Error)
                     {
-                        // Wait for the send to have a chance to complete
-                        // https://blog.netherlabs.nl/articles/2009/01/18/the-ultimate-so_linger-page-or-why-is-my-tcp-not-reliable
-                        await Task.Delay(1000, this.token);
                         this.socket.Close();
                         break;
                     }

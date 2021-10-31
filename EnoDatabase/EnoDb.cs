@@ -124,6 +124,7 @@
         {
             var round = await this.context.Rounds
                 .OrderByDescending(f => f.Id)
+                .AsNoTracking()
                 .FirstOrDefaultAsync();
             return round;
         }
@@ -176,7 +177,7 @@
                             team.Name,
                             round.Id,
                             round.Id,
-                            new Flag(team.Id, service.Id, variantIndex, round.Id, 0).ToString(configuration.FlagSigningKey, configuration.Encoding),
+                            new Flag(team.Id, service.Id, variantIndex, round.Id).ToString(configuration.FlagSigningKey, configuration.Encoding),
                             taskStart.AddSeconds(taskOffset),
                             (int)(quarterLength * 1000),
                             configuration.RoundLengthInSeconds,
@@ -383,7 +384,7 @@
                             team.Name,
                             round.Id,
                             round.Id,
-                            new Flag(team.Id, service.Id, variantIndex, round.Id, 0).ToString(configuration.FlagSigningKey, configuration.Encoding),
+                            new Flag(team.Id, service.Id, variantIndex, round.Id).ToString(configuration.FlagSigningKey, configuration.Encoding),
                             taskStart.AddSeconds(taskOffset),
                             (int)(quarterLength * 1000),
                             configuration.RoundLengthInSeconds,
@@ -456,7 +457,7 @@
                                 team.Name,
                                 oldRoundId,
                                 round.Id,
-                                new Flag(team.Id, service.Id, variantIndex, oldRoundId, 0).ToString(configuration.FlagSigningKey, configuration.Encoding),
+                                new Flag(team.Id, service.Id, variantIndex, oldRoundId).ToString(configuration.FlagSigningKey, configuration.Encoding),
                                 taskStart.AddSeconds(taskOffset),
                                 (int)(quarterLength * 1000),
                                 configuration.RoundLengthInSeconds,
