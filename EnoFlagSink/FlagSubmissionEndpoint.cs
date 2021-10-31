@@ -74,7 +74,7 @@
             }
         }
 
-        public async Task Start(Configuration config, CancellationToken token)
+        public async Task Start(CancellationToken token)
         {
             // Close the listening sockets if the token is cancelled
             token.Register(() => this.productionListener.Stop());
@@ -83,7 +83,7 @@
             // Start a log submission statistics task for every team
             foreach (var team in this.submissionStatistics)
             {
-                var name = config.Teams
+                var name = this.configuration.Teams
                         .Where(t => t.Id == team.Key)
                         .First()
                         .Name;
@@ -104,12 +104,12 @@
             }
 
             // Start production and debug listeners
-            tasks.Add(await Task.Factory.StartNew(async () => await this.RunProductionEndpoint(config, token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default));
-            tasks.Add(await Task.Factory.StartNew(async () => await this.RunDebugEndpoint(config, token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default));
+            tasks.Add(await Task.Factory.StartNew(async () => await this.RunProductionEndpoint(token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default));
+            tasks.Add(await Task.Factory.StartNew(async () => await this.RunDebugEndpoint(token), token, TaskCreationOptions.RunContinuationsAsynchronously, TaskScheduler.Default));
             await Task.WhenAny(tasks);
         }
 
-        private async Task RunDebugEndpoint(Configuration config, CancellationToken token)
+        private async Task RunDebugEndpoint(CancellationToken token)
         {
             this.logger.LogInformation($"{nameof(this.RunDebugEndpoint)} started");
             try
@@ -120,8 +120,8 @@
                     var client = await this.debugListener.AcceptTcpClientAsync();
                     var handlerTask = Task.Run(async () => await FlagSubmissionClientHandler.HandleDevConnection(
                         this.serviceProvider,
-                        Encoding.ASCII.GetBytes(config.FlagSigningKey),
-                        config.Encoding,
+                        Encoding.ASCII.GetBytes(this.configuration.FlagSigningKey),
+                        this.configuration.Encoding,
                         this.channels,
                         this.submissionStatistics,
                         client.Client,
@@ -139,7 +139,7 @@
             this.logger.LogInformation("RunDebugEndpoint finished");
         }
 
-        private async Task RunProductionEndpoint(Configuration config, CancellationToken token)
+        private async Task RunProductionEndpoint(CancellationToken token)
         {
             this.logger.LogInformation($"{nameof(this.RunProductionEndpoint)} started");
             try

@@ -1,0 +1,18 @@
+version: "3.9"
+services:
+  enoflagsink:
+    build:
+      context: ../..
+      dockerfile: EnoFlagSink/StressTest/Dockerfile
+  enopostgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: docker
+      POSTGRES_PASSWORD: docker
+    ports:
+      - "127.0.0.1:5432:5432"
+    shm_size: 256MB
+  submitter:
+    build:
+      context: .
+      dockerfile: Dockerfile.Submitter
