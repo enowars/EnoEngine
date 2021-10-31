@@ -1,5 +1,6 @@
 ﻿#pragma warning disable SA1200 // Using directives should be placed correctly
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
@@ -39,6 +40,7 @@ try
         return 1;
     }
 
+    /*
     // Check if config is valid
     Configuration configuration;
     try
@@ -65,11 +67,25 @@ try
         Debug.WriteLine($"{e.Message}\n{e.StackTrace}");
         return 1;
     }
+    */
 
     // Set up dependency injection tree
     var serviceProvider = new ServiceCollection()
         .AddLogging()
-        .AddSingleton(configuration)
+        .AddSingleton(new Configuration(
+            string.Empty,
+            10,
+            2,
+            60,
+            string.Empty,
+            15,
+            string.Empty,
+            FlagEncoding.Legacy,
+            new List<ConfigurationTeam>(),
+            new List<ConfigurationTeam>(),
+            new List<ConfigurationService>(),
+            new List<ConfigurationService>(),
+            new Dictionary<long, string[]>()))
         .AddSingleton(typeof(EnoDatabaseUtil))
         .AddSingleton<FlagSubmissionEndpoint>()
         .AddSingleton(new EnoStatistics("EnoFlagSink"))
@@ -90,7 +106,7 @@ try
         .BuildServiceProvider(validateScopes: true);
 
     var submissionEndpoint = serviceProvider.GetRequiredService<FlagSubmissionEndpoint>();
-    await submissionEndpoint.Start(configuration, cancelSource.Token);
+    await submissionEndpoint.Start(cancelSource.Token);
 }
 finally
 {

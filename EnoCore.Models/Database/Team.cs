@@ -23,5 +23,10 @@
         public bool Active { get; set; }
 #pragma warning restore SA1516 // Elements should be separated by blank line
 #pragma warning restore CS8618
+
+        public override string ToString()
+        {
+            return $"Team(Id={this.Id}, Name={this.Name}, Address={this.Address}, Active={this.Active})";
+        }
     }
 }

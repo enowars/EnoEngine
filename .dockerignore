@@ -6,4 +6,11 @@
 ctf.json
 ctf.*.json
 *.code-workspace
+data
+obj
 *.binlog
+*.md
+.git
+.github
+/EnoFlagSink/StressTest/docker-compose.yml
+/EnoFlagSink/StressTest/Dockerfile
