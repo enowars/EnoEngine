@@ -72,5 +72,6 @@
     <Rule Id="SA1623" Action="None" />
     <Rule Id="SA1633" Action="None" />
     <Rule Id="SA1649" Action="None" />
+    <Rule Id="SA1200" Action="None" /> <!-- https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/3404 -->
   </Rules>
 </RuleSet>
