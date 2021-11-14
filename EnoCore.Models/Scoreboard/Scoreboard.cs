@@ -1,5 +1,4 @@
 ﻿namespace EnoCore.Models.Scoreboard;
-using System.ComponentModel.DataAnnotations;
 
 public class Scoreboard
 {

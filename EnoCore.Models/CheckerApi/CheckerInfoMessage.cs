@@ -1,10 +1,7 @@
-﻿namespace EnoCore.Models.CheckerApi
-{
-    using System;
+﻿namespace EnoCore.Models.CheckerApi;
 
-    public sealed record CheckerInfoMessage(
-        string ServiceName,
-        int FlagVariants,
-        int NoiseVariants,
-        int HavocVariants);
-}
+public sealed record CheckerInfoMessage(
+    string ServiceName,
+    int FlagVariants,
+    int NoiseVariants,
+    int HavocVariants);
