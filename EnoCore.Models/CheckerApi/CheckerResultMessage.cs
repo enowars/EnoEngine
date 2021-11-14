@@ -1,9 +1,8 @@
-﻿using EnoCore.Models.Database;
+﻿namespace EnoCore.Models.CheckerApi;
 
-namespace EnoCore.Models.CheckerApi
-{
-    public sealed record CheckerResultMessage(
-        CheckerResult Result,
-        string? Message,
-        string? AttackInfo);
-}
+using EnoCore.Models.Database;
+
+public sealed record CheckerResultMessage(
+    CheckerResult Result,
+    string? Message,
+    string? AttackInfo);

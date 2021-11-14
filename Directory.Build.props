@@ -1,6 +1,6 @@
 ﻿<Project>
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
     <PackageProjectUrl>https://github.com/enowars/EnoEngine</PackageProjectUrl>
     <RepositoryUrl>https://github.com/enowars/EnoEngine</RepositoryUrl>
@@ -14,5 +14,10 @@
     <AssemblyVersion>0.3.0.0</AssemblyVersion>
     <FileVersion>0.3.0.0</FileVersion>
     <Version>0.3.0</Version>
+	<CodeAnalysisRuleSet>../ENOWARS.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="..\stylecop.json" Link="stylecop.json" />
+  </ItemGroup>
 </Project>
