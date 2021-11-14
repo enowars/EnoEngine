@@ -159,7 +159,7 @@
                         CheckerResult = checkerResult,
                         ErrorMessage = errorMessage,
                         AttackInfo = attackInfo,
-                        CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done
+                        CheckerTaskLaunchStatus = CheckerTaskLaunchStatus.Done,
                     };
                     this.statistics.LogCheckerTaskFinishedMessage(updatedTask);
                     ResultsQueue.Enqueue(updatedTask);

@@ -22,13 +22,59 @@
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
 
-    class Program
+    public class Program
     {
         private readonly IServiceProvider serviceProvider;
 
         public Program(IServiceProvider serviceProvider)
         {
             this.serviceProvider = serviceProvider;
+        }
+
+        public static int Main(string[] args)
+        {
+            var cancelSource = new CancellationTokenSource();
+            var serviceProvider = new ServiceCollection()
+                .AddSingleton<Program>()
+                .AddDbContextPool<EnoDbContext>(
+                    options =>
+                    {
+                        options.UseNpgsql(
+                            EnoDbContext.PostgresConnectionString,
+                            pgoptions => pgoptions.EnableRetryOnFailure());
+                    },
+                    90)
+                .AddLogging(loggingBuilder =>
+                {
+                    loggingBuilder.SetMinimumLevel(LogLevel.Debug);
+                    loggingBuilder.AddFilter(DbLoggerCategory.Name, LogLevel.Warning);
+                    loggingBuilder.AddProvider(new EnoLogMessageFileLoggerProvider("EnoConfig", cancelSource.Token));
+                })
+                .BuildServiceProvider(validateScopes: true);
+
+            // Go!
+            var program = serviceProvider.GetRequiredService<Program>();
+
+            var rootCommand = new RootCommand();
+
+            var applyCommand = new Command("apply", "Apply configuration to database");
+            applyCommand.AddOption(new Option<FileInfo>("--input", () => new FileInfo("ctf.json"), "Path to configuration file"));
+            applyCommand.AddOption(new Option<int?>("--assume_variants", "Use the given value as the amount of variants instead of contacting the checkers"));
+            applyCommand.Handler = CommandHandler.Create<FileInfo, int?>(async (input, assume_variants) => await program.Apply(input, assume_variants));
+            rootCommand.AddCommand(applyCommand);
+
+            var debugFlagsCommand = new Command("flags", "Generate flags");
+            debugFlagsCommand.AddArgument(new Argument<int>("round"));
+            debugFlagsCommand.AddArgument(new Argument<FlagEncoding>("encoding"));
+            debugFlagsCommand.AddArgument(new Argument<string>("signing_key"));
+            debugFlagsCommand.Handler = CommandHandler.Create<int, FlagEncoding, string>(async (round, encoding, signing_key) => await program.Flags(round, encoding, signing_key));
+            rootCommand.AddCommand(debugFlagsCommand);
+
+            var roundWarpCommand = new Command("newround", "Start new round");
+            roundWarpCommand.Handler = CommandHandler.Create(program.NewRound);
+            rootCommand.AddCommand(roundWarpCommand);
+
+            return rootCommand.InvokeAsync(args).Result;
         }
 
         public async Task<int> Apply(FileInfo input, int? assume_variants)
@@ -43,7 +89,6 @@
             var dbContext = scope.ServiceProvider.GetRequiredService<EnoDbContext>();
             await dbContext.Database.MigrateAsync();
 
-
             var dbConfiguration = await dbContext.Configurations
                 .SingleOrDefaultAsync();
 
@@ -54,7 +99,7 @@
                 dbConfiguration.CheckedRoundsPerRound = jsonConfiguration.CheckedRoundsPerRound;
                 dbConfiguration.RoundLengthInSeconds = jsonConfiguration.RoundLengthInSeconds;
                 dbConfiguration.DnsSuffix = jsonConfiguration.DnsSuffix!;
-                dbConfiguration.FlagSigningKey = Encoding.ASCII.GetBytes(jsonConfiguration.FlagSigningKey!); ;
+                dbConfiguration.FlagSigningKey = Encoding.ASCII.GetBytes(jsonConfiguration.FlagSigningKey!);
                 dbConfiguration.Encoding = jsonConfiguration.Encoding;
                 Console.WriteLine($"Updating configuration {dbConfiguration}");
             }
@@ -274,6 +319,7 @@
                     }
                 }
             }
+
             return 0;
         }
 
@@ -290,21 +336,21 @@
             {
                 round = new Round(
                     lastRound.Id + 1,
-                    new DateTime(),
-                    new DateTime(),
-                    new DateTime(),
-                    new DateTime(),
-                    new DateTime());
+                    DateTime.UtcNow,
+                    DateTime.UtcNow,
+                    DateTime.UtcNow,
+                    DateTime.UtcNow,
+                    DateTime.UtcNow);
             }
             else
             {
                 round = new Round(
                     1,
-                    new DateTime(),
-                    new DateTime(),
-                    new DateTime(),
-                    new DateTime(),
-                    new DateTime());
+                    DateTime.UtcNow,
+                    DateTime.UtcNow,
+                    DateTime.UtcNow,
+                    DateTime.UtcNow,
+                    DateTime.UtcNow);
             }
 
             Console.WriteLine($"Adding round {round}");
@@ -312,57 +358,6 @@
             await dbContext.SaveChangesAsync();
 
             return 0;
-        }
-
-        public static int Main(string[] args)
-        {
-            var cancelSource = new CancellationTokenSource();
-            var serviceProvider = new ServiceCollection()
-                .AddSingleton<Program>()
-                .AddDbContextPool<EnoDbContext>(
-                    options =>
-                    {
-                        options.UseNpgsql(
-                            EnoDbContext.PostgresConnectionString,
-                            pgoptions => pgoptions.EnableRetryOnFailure());
-                    },
-                    90)
-                .AddLogging(loggingBuilder =>
-                {
-                    loggingBuilder.SetMinimumLevel(LogLevel.Debug);
-                    loggingBuilder.AddFilter(DbLoggerCategory.Name, LogLevel.Warning);
-                    // loggingBuilder.AddConsole();
-                    loggingBuilder.AddProvider(new EnoLogMessageFileLoggerProvider("EnoConfig", cancelSource.Token));
-                })
-                .BuildServiceProvider(validateScopes: true);
-
-            // Go!
-            var program = serviceProvider.GetRequiredService<Program>();
-
-            var rootCommand = new RootCommand();
-            
-
-            var applyCommand = new Command("apply", "Apply configuration to database");
-            applyCommand.AddOption(new Option<FileInfo>("--input", () => new FileInfo("ctf.json"), "Path to configuration file"));
-            applyCommand.AddOption(new Option<int?>("--assume_variants", "Use the given value as the amount of variants instead of contacting the checkers"));
-            applyCommand.Handler = CommandHandler.Create<FileInfo, int?>(async (input, assume_variants) => await program.Apply(input, assume_variants));
-            rootCommand.AddCommand(applyCommand);
-
-            var debugFlagsCommand = new Command("flags", "Generate flags");
-            debugFlagsCommand.AddArgument(new Argument<int>("round"));
-            debugFlagsCommand.AddArgument(new Argument<FlagEncoding>("encoding"));
-            debugFlagsCommand.AddArgument(new Argument<string>("signing_key"));
-            debugFlagsCommand.Handler = CommandHandler.Create<int, FlagEncoding, string>(async (round, encoding, signing_key) => await program.Flags(round, encoding, signing_key));
-            rootCommand.AddCommand(debugFlagsCommand);
-
-            var roundWarpCommand = new Command("newround", "Start new round");
-            roundWarpCommand.Handler = CommandHandler.Create(program.NewRound);
-            rootCommand.AddCommand(roundWarpCommand);
-
-
-
-
-            return rootCommand.InvokeAsync(args).Result;
         }
 
         private static JsonConfiguration? LoadConfig(FileInfo input)

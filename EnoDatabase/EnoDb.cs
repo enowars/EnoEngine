@@ -670,11 +670,11 @@
                 // TODO this shouldn't be a record, I guess
                 tasks[r] = tasks[r] with
                 {
-                    StartTime = tasks[i].StartTime
+                    StartTime = tasks[i].StartTime,
                 };
                 tasks[i] = tasks[i] with
                 {
-                    StartTime = task.StartTime
+                    StartTime = task.StartTime,
                 };
             }
         }
