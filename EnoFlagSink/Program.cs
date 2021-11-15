@@ -1,23 +1,4 @@
-﻿#pragma warning disable SA1200 // Using directives should be placed correctly
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
-using EnoCore;
-using EnoCore.Logging;
-using EnoCore.Models;
-using EnoCore.Models.JsonConfiguration;
-using EnoDatabase;
-using EnoFlagSink;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-#pragma warning restore SA1200 // Using directives should be placed correctly
-
-const string mutexId = @"Global\EnoFlagSink";
+﻿const string mutexId = @"Global\EnoFlagSink";
 
 CancellationTokenSource cancelSource = new CancellationTokenSource();
 
