@@ -1,0 +1,14 @@
+﻿global using System;
+global using System.Collections.Generic;
+global using System.Diagnostics;
+global using System.IO;
+global using System.Text.Json;
+global using System.Threading;
+global using System.Threading.Tasks;
+global using EnoCore;
+global using EnoCore.Logging;
+global using EnoCore.Models.Database;
+global using EnoDatabase;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Logging;
