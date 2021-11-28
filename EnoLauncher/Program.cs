@@ -134,7 +134,7 @@
                             task.MaxRunningTime,
                             task.RoundLength,
                             task.GetTaskChainId()),
-                        EnoCoreUtil.CamelCaseEnumConverterOptions),
+                        EnoCoreUtil.SerializerOptions),
                     Encoding.UTF8,
                     "application/json");
                 cancelSource.CancelAfter(task.MaxRunningTime);
@@ -145,7 +145,7 @@
                 {
                     var responseString = (await response.Content.ReadAsStringAsync()).TrimEnd(Environment.NewLine.ToCharArray());
                     this.logger.LogDebug($"LaunchCheckerTask received {responseString}");
-                    var resultMessage = JsonSerializer.Deserialize<CheckerResultMessage>(responseString, EnoCoreUtil.CamelCaseEnumConverterOptions);
+                    var resultMessage = JsonSerializer.Deserialize<CheckerResultMessage>(responseString, EnoCoreUtil.SerializerOptions);
                     var checkerResult = resultMessage!.Result;
                     this.logger.LogDebug($"LaunchCheckerTask {task.Id} returned {checkerResult} with Message {resultMessage.Message}");
                     var errorMessage = resultMessage.Message?.Replace("\0", string.Empty); // pgsql does NOT like 0 chars in utf8 strings

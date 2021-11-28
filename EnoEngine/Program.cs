@@ -40,7 +40,7 @@ try
     // Check if config exists
     if (!File.Exists("ctf.json"))
     {
-        Console.Error.WriteLine("Config (ctf.json) does not exist.");
+        Console.Error.WriteLine($"Config (ctf.json) does not exist in {Directory.GetCurrentDirectory()}.");
         return 1;
     }
 
@@ -49,18 +49,18 @@ try
     try
     {
         string content = File.ReadAllText("ctf.json");
-        var jsonConfiguration = JsonSerializer.Deserialize<JsonConfiguration>(content, EnoCoreUtil.CamelCaseEnumConverterOptions);
-        if (jsonConfiguration is null)
-        {
-            Console.WriteLine("Deserialization of config failed.");
-            return 1;
-        }
 
-        configuration = await Configuration.Validate(jsonConfiguration);
+        configuration = await Configuration.LoadAndValidate(content);
     }
     catch (JsonException e)
     {
         Console.Error.WriteLine($"Configuration could not be deserialized: {e.Message}");
+        Debug.WriteLine($"{e.Message}\n{e.StackTrace}");
+        return 1;
+    }
+    catch (AggregateException e)
+    {
+        Console.Error.WriteLine($"Configuration is invalid: {e.Message}");
         Debug.WriteLine($"{e.Message}\n{e.StackTrace}");
         return 1;
     }

@@ -107,7 +107,7 @@
                                             task.TeamId,
                                             task.ServiceName,
                                             Enum.GetName(typeof(CheckerTaskMethod), task.Method));
-                                        this.provider.Log($"##ENOLOGMESSAGE {JsonSerializer.Serialize(enoLogMessage, EnoCoreUtil.CamelCaseEnumConverterOptions)}\n");
+                                        this.provider.Log($"##ENOLOGMESSAGE {JsonSerializer.Serialize(enoLogMessage, EnoCoreUtil.SerializerOptions)}\n");
                                         hadScope = true;
                                     }
                                     else if (pair.Value is CheckerTaskMessage taskMessage)
@@ -130,7 +130,7 @@
                                             taskMessage.TeamId,
                                             this.serviceName,
                                             Enum.GetName(typeof(CheckerTaskMethod), taskMessage.Method));
-                                        this.provider.Log($"##ENOLOGMESSAGE {JsonSerializer.Serialize(enoLogMessage, EnoCoreUtil.CamelCaseEnumConverterOptions)}\n");
+                                        this.provider.Log($"##ENOLOGMESSAGE {JsonSerializer.Serialize(enoLogMessage, EnoCoreUtil.SerializerOptions)}\n");
                                         hadScope = true;
                                     }
                                 }
@@ -159,7 +159,7 @@
                         null,
                         this.serviceName,
                         null);
-                    this.provider.Log($"##ENOLOGMESSAGE {JsonSerializer.Serialize(enoLogMessage, EnoCoreUtil.CamelCaseEnumConverterOptions)}\n");
+                    this.provider.Log($"##ENOLOGMESSAGE {JsonSerializer.Serialize(enoLogMessage, EnoCoreUtil.SerializerOptions)}\n");
                 }
             }
         }

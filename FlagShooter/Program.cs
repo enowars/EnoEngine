@@ -90,14 +90,14 @@
                 try
                 {
                     var content = File.ReadAllText("ctf.json");
-                    var jsonConfiguration = JsonSerializer.Deserialize<JsonConfiguration>(content, EnoCoreUtil.CamelCaseEnumConverterOptions);
+                    var jsonConfiguration = JsonSerializer.Deserialize<JsonConfiguration>(content, EnoCoreUtil.SerializerOptions);
                     if (jsonConfiguration is null)
                     {
                         Console.WriteLine("Deserialization of config failed.");
                         return;
                     }
 
-                    configuration = Task.Run(() => Configuration.Validate(jsonConfiguration)).Result;
+                    configuration = Task.Run(() => Configuration.LiveValidate(jsonConfiguration)).Result;
                 }
                 catch (JsonException e)
                 {

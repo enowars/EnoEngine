@@ -5,7 +5,9 @@ This is the engine powering our CTFs.
 For performance reasons, it's written in C#.
 
 ## Usage
+
 (0. Make sure the dependencies are installed: docker, docker-compose, dotnet sdk ...)
+
 1. Create a ctf.json (see below)
 2. Make sure the data folder exists (./../data/)
 3. Start up the Database (`docker-compose up -d`) (or run `tmux.sh`)
@@ -14,48 +16,30 @@ For performance reasons, it's written in C#.
 6. Once you want to start the CTF (i.e. distribute flags): run EnoEngine (`dotnet run -c Release -p EnoEngine`)
 
 ## ctf.json Format
-```ts
-interface ctfjson {
-    title: string;
-    flagValidityInRounds: number;
-    checkedRoundsPerRound: number;
-    roundLengthInSeconds: number;
-    dnsSuffix: string;
-    teamSubnetBytesLength: number;
-    flagSigningKey: string;
-    encoding: string | null;
-    services: Service[];
-    teams: Team[];
-}
-interface Service {
-    id: number;
-    name: string;
-    flagsPerRoundMultiplier: number;
-    noisesPerRoundMultiplier: number;
-    havocsPerRoundMultiplier: number;
-    weightFactor: number;
-    active: string | null;
-    checkers: string[];
-}
 
-interface Team {
-    id: number;
-    name: string;
-    address: string | null;
-    teamSubnet: string;
-    logoUrl: string | null;
-    countryCode: string | null;
-    active: string | null;
+You can find the schema under [`/ctf.schema.json`](./ctf.schema.json). To reference it in your json use the following snippet:
+
+```jsonc
+{
+  "$schema": "https://raw.githubusercontent.com/enowars/EnoEngine/master/ctf.schema.json",
+  "title": "Your CTF Name"
+  // ...
 }
 ```
 
+> To generate the newest Schema execute `dotnet run -c Release -p EnoCore`.
+
 ## Development
+
 1. Install the dotnet sdk-5. [Download](https://dotnet.microsoft.com/download/visual-studio-sdks)
 2. Use any IDE you like (Visual Studio or VSCode recommended)
 3. If your IDE doesn't do it automatically, run `dotnet restore`
 
+
 ## Database
+
 For creating a migration after changes, run this:
+
 ```
 cd ./EnoDatabase
 rm -r Migrations

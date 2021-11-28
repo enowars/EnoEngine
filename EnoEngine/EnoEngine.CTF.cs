@@ -93,7 +93,7 @@
             var scoreboard = await this.databaseUtil.RetryScopedDatabaseAction(
                 this.serviceProvider,
                 db => db.GetCurrentScoreboard(roundId));
-            var json = JsonSerializer.Serialize(scoreboard, EnoCoreUtil.CamelCaseEnumConverterOptions);
+            var json = JsonSerializer.Serialize(scoreboard, EnoCoreUtil.SerializerOptions);
             File.WriteAllText($"{EnoCoreUtil.DataDirectory}scoreboard{roundId}.json", json);
             File.WriteAllText($"{EnoCoreUtil.DataDirectory}scoreboard.json", json);
             jsonStopWatch.Stop();
@@ -190,7 +190,7 @@
             var attackInfo = await this.databaseUtil.RetryScopedDatabaseAction(
                 this.serviceProvider,
                 db => db.GetAttackInfo(roundId, this.configuration));
-            var json = JsonSerializer.Serialize(attackInfo, EnoCoreUtil.CamelCaseEnumConverterOptions);
+            var json = JsonSerializer.Serialize(attackInfo, EnoCoreUtil.SerializerOptions);
             File.WriteAllText($"{EnoCoreUtil.DataDirectory}attack.json", json);
             stopWatch.Stop();
             this.logger.LogInformation($"Attack Info Generation Took {stopWatch.ElapsedMilliseconds} ms");
