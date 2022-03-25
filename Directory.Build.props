@@ -14,7 +14,7 @@
     <AssemblyVersion>0.3.1.0</AssemblyVersion>
     <FileVersion>0.3.1.0</FileVersion>
     <Version>0.3.1</Version>
-	<CodeAnalysisRuleSet>../ENOWARS.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>../ENOWARS.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 
   <ItemGroup>
