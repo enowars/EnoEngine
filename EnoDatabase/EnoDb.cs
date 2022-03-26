@@ -97,12 +97,12 @@ public partial class EnoDb
         });
     }
 
-    public async Task<Round> GetLastRound()
+    public async Task<Round?> GetLastRound()
     {
         var round = await this.context.Rounds
             .OrderByDescending(f => f.Id)
             .AsNoTracking()
-            .FirstAsync();
+            .FirstOrDefaultAsync();
         return round;
     }
 
