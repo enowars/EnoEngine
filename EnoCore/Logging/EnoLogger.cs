@@ -56,9 +56,9 @@
             };
         }
 
-        public IDisposable? BeginScope<TState>(TState state)
+        public IDisposable BeginScope<TState>(TState state)
         {
-            return this.provider.ScopeProvider?.Push(state);
+            return this.provider.ScopeProvider!.Push(state);
         }
 
         public bool IsEnabled(LogLevel logLevel)
@@ -66,7 +66,7 @@
             return true;
         }
 
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception, string> formatter)
         {
             if (this.IsEnabled(logLevel))
             {
