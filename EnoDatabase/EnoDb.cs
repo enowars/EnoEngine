@@ -30,7 +30,7 @@ public partial class EnoDb
     public async Task<Configuration> RetrieveConfiguration()
     {
         return await this.context.Configurations
-            .SingleOrDefaultAsync();
+            .SingleAsync();
     }
 
     public async Task<Round> CreateNewRound(DateTime begin, DateTime q2, DateTime q3, DateTime q4, DateTime end)
@@ -102,7 +102,7 @@ public partial class EnoDb
         var round = await this.context.Rounds
             .OrderByDescending(f => f.Id)
             .AsNoTracking()
-            .FirstOrDefaultAsync();
+            .FirstAsync();
         return round;
     }
 
@@ -626,7 +626,7 @@ public partial class EnoDb
         return await this.context.Rounds
             .OrderByDescending(r => r.Id)
             .Skip(1)
-            .FirstOrDefaultAsync();
+            .FirstAsync();
     }
 
     private async Task InsertCheckerTasks(IEnumerable<CheckerTask> tasks)

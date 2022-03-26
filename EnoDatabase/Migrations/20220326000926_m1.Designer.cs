@@ -7,26 +7,30 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
+#nullable disable
+
 namespace EnoDatabase.Migrations
 {
     [DbContext(typeof(EnoDbContext))]
-    [Migration("20211031161552_m1")]
+    [Migration("20220326000926_m1")]
     partial class m1
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .UseIdentityByDefaultColumns()
-                .HasAnnotation("Relational:MaxIdentifierLength", 63)
-                .HasAnnotation("ProductVersion", "5.0.0");
+                .HasAnnotation("ProductVersion", "6.0.3")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("EnoCore.Models.Database.CheckerTask", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .UseIdentityByDefaultColumn();
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("Address")
                         .IsRequired()
@@ -73,8 +77,8 @@ namespace EnoDatabase.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("StartTime")
-                        .HasColumnType("timestamp without time zone");
+                    b.Property<DateTimeOffset>("StartTime")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<long>("TeamId")
                         .HasColumnType("bigint");
@@ -102,8 +106,9 @@ namespace EnoDatabase.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .UseIdentityByDefaultColumn();
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<int>("CheckedRoundsPerRound")
                         .HasColumnType("integer");
@@ -141,23 +146,24 @@ namespace EnoDatabase.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .UseIdentityByDefaultColumn();
+                        .HasColumnType("bigint");
 
-                    b.Property<DateTime>("Begin")
-                        .HasColumnType("timestamp without time zone");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
-                    b.Property<DateTime>("End")
-                        .HasColumnType("timestamp without time zone");
+                    b.Property<DateTimeOffset>("Begin")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("Quarter2")
-                        .HasColumnType("timestamp without time zone");
+                    b.Property<DateTimeOffset>("End")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("Quarter3")
-                        .HasColumnType("timestamp without time zone");
+                    b.Property<DateTimeOffset>("Quarter2")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("Quarter4")
-                        .HasColumnType("timestamp without time zone");
+                    b.Property<DateTimeOffset>("Quarter3")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("Quarter4")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -190,8 +196,9 @@ namespace EnoDatabase.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .UseIdentityByDefaultColumn();
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<bool>("Active")
                         .HasColumnType("boolean");
@@ -250,8 +257,8 @@ namespace EnoDatabase.Migrations
                     b.Property<long>("SubmissionsCount")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("timestamp without time zone");
+                    b.Property<DateTimeOffset>("Timestamp")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("FlagServiceId", "FlagRoundId", "FlagOwnerId", "FlagRoundOffset", "AttackerTeamId");
 
@@ -264,8 +271,9 @@ namespace EnoDatabase.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .UseIdentityByDefaultColumn();
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<bool>("Active")
                         .HasColumnType("boolean");

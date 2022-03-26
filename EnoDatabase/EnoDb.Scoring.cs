@@ -161,7 +161,8 @@ public partial class EnoDb
             }
 
             latestRoundTeamServiceStatus.TryGetValue(team.Id, out var status_rtss);
-            this.context.TeamServicePoints.Update(new(team.Id,
+            this.context.TeamServicePoints.Update(new(
+                team.Id,
                 service.Id,
                 attackPoints,
                 defPoints,
@@ -356,7 +357,8 @@ public partial class EnoDb
                 }
             }
 
-            newServiceSnapshots[team.Id] = new(team.Id,
+            newServiceSnapshots[team.Id] = new(
+                team.Id,
                 serviceId,
                 attackPoints,
                 defPoints,
