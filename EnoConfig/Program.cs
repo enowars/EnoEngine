@@ -286,6 +286,25 @@ public class Program
                 Console.WriteLine($"Adding service {newService}");
                 dbContext.Services.Add(newService);
             }
+
+            foreach (var jsonConfigurationTeam in jsonConfiguration.Teams!)
+            {
+                if (dbContext.TeamServicePoints
+                    .Where(e => e.TeamId == jsonConfigurationTeam.Id)
+                    .Where(e => e.ServiceId == jsonConfigurationService.Id)
+                    .Count() != 1)
+                {
+                    dbContext.TeamServicePoints.Add(
+                        new TeamServicePoints(
+                            jsonConfigurationTeam.Id,
+                            jsonConfigurationService.Id,
+                            0,
+                            0,
+                            0,
+                            ServiceStatus.OK,
+                            null));
+                }
+            }
         }
 
         foreach (var (serviceId, service) in dbServices)

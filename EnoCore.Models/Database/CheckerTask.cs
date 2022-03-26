@@ -40,7 +40,7 @@ public sealed record CheckerTask(
     long RelatedRoundId,
     long CurrentRoundId,
     string? Payload,
-    DateTime StartTime,
+    DateTimeOffset StartTime,
     int MaxRunningTime,
     long RoundLength,
     long UniqueVariantId,

@@ -15,4 +15,4 @@ public sealed record SubmittedFlag(
     long AttackerTeamId,
     long RoundId,
     long SubmissionsCount,
-    DateTime Timestamp);
+    DateTimeOffset Timestamp);
