@@ -18,7 +18,7 @@ public partial class EnoDb
         long currentRoundId;
         try
         {
-            currentRoundId = (await this.GetLastRound()).Id;
+            currentRoundId = (await this.GetLastRound())!.Id;
         }
         catch (Exception e)
         {
