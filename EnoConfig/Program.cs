@@ -268,7 +268,7 @@ public class Program
                 dbService.HavocVariants = havocVariants;
                 dbService.Active = jsonConfigurationService.Active;
                 dbService.Checkers = jsonConfigurationService.Checkers;
-                Console.WriteLine($"Updating service {dbService}");
+                Console.WriteLine($"Updating service {dbService} ### {noiseVariants}");
                 dbServices.Remove(dbService.Id);
             }
             else
