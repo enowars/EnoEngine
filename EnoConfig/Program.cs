@@ -260,8 +260,8 @@ public class Program
             {
                 dbService.Name = jsonConfigurationService.Name;
                 dbService.FlagsPerRound = flagVariants * jsonConfigurationService.FlagsPerRoundMultiplier;
-                dbService.NoisesPerRound = flagVariants * jsonConfigurationService.FlagsPerRoundMultiplier;
-                dbService.HavocsPerRound = flagVariants * jsonConfigurationService.FlagsPerRoundMultiplier;
+                dbService.NoisesPerRound = noiseVariants * jsonConfigurationService.NoisesPerRoundMultiplier;
+                dbService.HavocsPerRound = havocVariants * jsonConfigurationService.HavocsPerRoundMultiplier;
                 dbService.FlagVariants = flagVariants;
                 dbService.NoiseVariants = noiseVariants;
                 dbService.HavocVariants = havocVariants;
@@ -276,8 +276,8 @@ public class Program
                     jsonConfigurationService.Id,
                     jsonConfigurationService.Name,
                     jsonConfigurationService.FlagsPerRoundMultiplier * flagVariants,
-                    jsonConfigurationService.FlagsPerRoundMultiplier * noiseVariants,
-                    jsonConfigurationService.FlagsPerRoundMultiplier * havocVariants,
+                    jsonConfigurationService.NoisesPerRoundMultiplier * noiseVariants,
+                    jsonConfigurationService.HavocsPerRoundMultiplier * havocVariants,
                     flagVariants,
                     noiseVariants,
                     havocVariants,
@@ -313,8 +313,9 @@ public class Program
             service.Active = false;
         }
 
+        Console.WriteLine("Saving changes...");
         await dbContext.SaveChangesAsync();
-
+        Console.WriteLine("done");
         return 0;
     }
 
