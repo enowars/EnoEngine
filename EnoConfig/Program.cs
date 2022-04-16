@@ -245,6 +245,7 @@ public class Program
                         return 1;
                     }
 
+                    Console.WriteLine($"Service {jsonConfigurationService.Id} checker sent {infoMessage}");
                     flagVariants = infoMessage.FlagVariants;
                     noiseVariants = infoMessage.NoiseVariants;
                     havocVariants = infoMessage.HavocVariants;
@@ -283,7 +284,7 @@ public class Program
                     havocVariants,
                     jsonConfigurationService.Checkers,
                     jsonConfigurationService.Active);
-                Console.WriteLine($"Adding service {newService}");
+                Console.WriteLine($"Adding service {newService} noiseVariants={noiseVariants} multi={jsonConfigurationService.NoisesPerRoundMultiplier}");
                 dbContext.Services.Add(newService);
             }
 
