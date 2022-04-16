@@ -41,6 +41,6 @@ public class Service
 
     public override string ToString()
     {
-        return $"Service(Id={this.Id}, Name={this.Name}, FlagsPerRound={this.FlagsPerRound}, NoisesPerRound={this.NoisesPerRound}, HavocsPerRound={this.HavocsPerRound}, FlagVariants={this.FlagVariants} NoiseVariants={this.FlagVariants}, HavocVariants={this.HavocVariants}, Active={this.Active})";
+        return $"Service(Id={this.Id}, Name={this.Name}, FlagsPerRound={this.FlagsPerRound}, NoisesPerRound={this.NoisesPerRound}, HavocsPerRound={this.HavocsPerRound}, FlagVariants={this.FlagVariants} NoiseVariants={this.NoiseVariants}, HavocVariants={this.HavocVariants}, Active={this.Active})";
     }
 }
