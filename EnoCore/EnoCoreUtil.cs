@@ -1,7 +1,7 @@
 ﻿namespace EnoCore;
 public class EnoCoreUtil
 {
-    public const string DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";
+    public const string DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffffffZ";
     public static readonly string DataDirectory = $"..{Path.DirectorySeparatorChar}data{Path.DirectorySeparatorChar}";
     public static readonly JsonSerializerOptions CamelCaseEnumConverterOptions = new JsonSerializerOptions
     {
