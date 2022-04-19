@@ -99,6 +99,7 @@ public class Program
             dbConfiguration.CheckedRoundsPerRound = jsonConfiguration.CheckedRoundsPerRound;
             dbConfiguration.RoundLengthInSeconds = jsonConfiguration.RoundLengthInSeconds;
             dbConfiguration.DnsSuffix = jsonConfiguration.DnsSuffix!;
+            dbConfiguration.TeamSubnetBytesLength = jsonConfiguration.TeamSubnetBytesLength;
             dbConfiguration.FlagSigningKey = Encoding.ASCII.GetBytes(jsonConfiguration.FlagSigningKey!);
             dbConfiguration.Encoding = jsonConfiguration.Encoding;
             Console.WriteLine($"Updating configuration {dbConfiguration}");
