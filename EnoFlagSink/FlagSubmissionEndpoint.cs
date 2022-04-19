@@ -159,6 +159,7 @@ public class FlagSubmissionEndpoint
                             }
                             else
                             {
+                                this.logger.LogWarning($"Invalid connection from {((IPEndPoint)client.Client.RemoteEndPoint!).Address}");
                                 var itemBytes = FlagSubmissionResult.Invalid.ToFeedbackBytes();
                                 await client.Client.SendAsync(itemBytes, SocketFlags.None, token);
                                 client.Close();
