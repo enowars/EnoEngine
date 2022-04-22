@@ -155,6 +155,12 @@ public sealed class Program : IDisposable
                     this.logger.LogWarning("LaunchCheckerTask had attackInfo with 0 char in message");
                 }
 
+                if (checkerResult == CheckerResult.INTERNAL_ERROR)
+                {
+                    // Checker protocol spec says we must null this because reasons
+                    errorMessage = null;
+                }
+
                 CheckerTask updatedTask = task with {
                     CheckerResult = checkerResult,
                     ErrorMessage = errorMessage,
