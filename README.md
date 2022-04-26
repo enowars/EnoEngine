@@ -9,9 +9,10 @@ For performance reasons, it's written in C#.
 1. Create a ctf.json (see below)
 2. Make sure the data folder exists (./../data/)
 3. Start up the Database (`docker-compose up -d`) (or run `tmux.sh`)
-4. Run EnoLauncher (`dotnet run -c Release -p EnoLauncher`)
-5. Run EnoFlagSink (`dotnet run -c Release -p EnoFlagSink`)
-6. Once you want to start the CTF (i.e. distribute flags): run EnoEngine (`dotnet run -c Release -p EnoEngine`)
+4. Run EnoConfig to apply the configuration (`dotnet run -p EnoConfig apply`)
+5. Run EnoLauncher (`dotnet run -c Release -p EnoLauncher`)
+6. Run EnoFlagSink (`dotnet run -c Release -p EnoFlagSink`)
+7. Once you want to start the CTF (i.e. distribute flags): run EnoEngine (`dotnet run -c Release -p EnoEngine`)
 
 ## ctf.json Format
 ```ts
