@@ -2,15 +2,15 @@
 
 public class FlagSubmissionClientHandler
 {
-    private const string ProdWelcomeBanner = @"Welcome to the EnoEngine's EnoFlagSink™!
+    private static readonly byte[] ProdWelcomeBanner = Encoding.UTF8.GetBytes(@"Welcome to the EnoEngine's EnoFlagSink™!
 Please submit one flag per line. Responses are NOT guaranteed to be in chronological order.
 
-";
+".Replace("\r", string.Empty));
 
-    private const string DevWelcomeBanner = @"Welcome to the EnoEngine's EnoFlagSink™!
+    private static readonly byte[] DevWelcomeBanner = Encoding.UTF8.GetBytes(@"Welcome to the EnoEngine's EnoFlagSink™!
 Please submit your team id first, and then one flag per line. Responses are NOT guaranteed to be in chronological order.
 
-";
+".Replace("\r", string.Empty));
 
     private readonly byte[] flagSigningKeyBytes;
     private readonly FlagEncoding flagEncoding;
@@ -60,7 +60,7 @@ Please submit your team id first, and then one flag per line. Responses are NOT 
         Socket socket,
         CancellationToken token)
     {
-        await socket.SendAsync(Encoding.UTF8.GetBytes(DevWelcomeBanner), SocketFlags.None, token);
+        await socket.SendAsync(DevWelcomeBanner, SocketFlags.None, token);
         var inputPipe = new Pipe();
         var t1 = Task.Run(() => ReadFromSocket(socket, inputPipe.Writer, token));
         long readTeamId = 0;
@@ -110,7 +110,7 @@ Please submit your team id first, and then one flag per line. Responses are NOT 
         Socket socket,
         CancellationToken token)
     {
-        await socket.SendAsync(Encoding.UTF8.GetBytes(ProdWelcomeBanner), SocketFlags.None, token);
+        await socket.SendAsync(ProdWelcomeBanner, SocketFlags.None, token);
         var inputPipe = new Pipe();
         var readFromSocketTask = Task.Run(() => ReadFromSocket(socket, inputPipe.Writer, token));
         var handler = new FlagSubmissionClientHandler(
