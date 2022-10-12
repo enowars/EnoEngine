@@ -276,6 +276,7 @@ public class Program
             {
                 var newService = new Service(
                     jsonConfigurationService.Id,
+                    jsonConfigurationService.WeightFactor,
                     jsonConfigurationService.Name,
                     jsonConfigurationService.FlagsPerRoundMultiplier * flagVariants,
                     jsonConfigurationService.NoisesPerRoundMultiplier * noiseVariants,

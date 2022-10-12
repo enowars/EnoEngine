@@ -4,6 +4,7 @@ public class Service
 {
     public Service(
         long id,
+        double weightFactor,
         string name,
         long flagsPerRound,
         long noisesPerRound,
@@ -15,6 +16,7 @@ public class Service
         bool active)
     {
         this.Id = id;
+        this.WeightFactor = weightFactor;
         this.Name = name;
         this.FlagsPerRound = flagsPerRound;
         this.NoisesPerRound = noisesPerRound;
@@ -28,6 +30,7 @@ public class Service
 
 #pragma warning disable SA1516 // Elements should be separated by blank line
     public long Id { get; set; }
+    public double WeightFactor { get; set; }
     public string Name { get; set; }
     public long FlagsPerRound { get; set; }
     public long NoisesPerRound { get; set; }
