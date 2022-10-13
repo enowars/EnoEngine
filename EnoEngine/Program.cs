@@ -39,7 +39,7 @@ try
 
     // Go!
     var engine = serviceProvider.GetRequiredService<EnoEngine.EnoEngine>();
-    if (args.Length == 1 && args[0] == MODE_RECALCULATE)
+    if (true || args.Length == 1 && args[0] == MODE_RECALCULATE)
     {
         engine.RunRecalculation().Wait();
     }

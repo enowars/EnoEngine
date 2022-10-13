@@ -65,7 +65,7 @@ internal partial class EnoEngine
                 await this.RecordServiceStates(roundId);
             }
 
-            await this.UpdateScores();
+            await this.UpdateScores(roundId, configuration);
         }
 
         await this.GenerateAttackInfo(roundId, configuration);
@@ -103,7 +103,7 @@ internal partial class EnoEngine
         }
     }
 
-    private async Task UpdateScores()
+    private async Task UpdateScores(long roundId, Configuration configuration)
     {
         Stopwatch stopWatch = new Stopwatch();
         stopWatch.Start();
@@ -111,7 +111,7 @@ internal partial class EnoEngine
         {
             using var scope = this.serviceProvider.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<EnoDb>();
-            await db.UpdateScores();
+            await db.UpdateScores(roundId, configuration);
         }
         catch (Exception e)
         {
