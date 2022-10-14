@@ -26,9 +26,11 @@ public class EnoDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // INSERT ... ON CONFLICT IGNORE
         modelBuilder.Entity<SubmittedFlag>()
             .HasKey(sf => new { sf.FlagServiceId, sf.FlagRoundId, sf.FlagOwnerId, sf.FlagRoundOffset, sf.AttackerTeamId });
 
+        // Firstbloods
         modelBuilder.Entity<SubmittedFlag>()
             .HasIndex(sf => new { sf.FlagServiceId, sf.FlagRoundOffset, sf.Timestamp });
 

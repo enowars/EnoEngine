@@ -623,6 +623,21 @@ public partial class EnoDb
     public async Task<Round> PrepareRecalculation()
     {
         await this.context.Database.ExecuteSqlRawAsync($"delete from \"{nameof(this.context.TeamServicePointsSnapshot)}\";");
+        foreach (var team in await this.context.Teams.Include(e => e.TeamServicePoints).ToListAsync())
+        {
+            team.AttackPoints = 0;
+            team.DefensePoints = 0;
+            team.ServiceLevelAgreementPoints = 0;
+            foreach (var servicePoints in team.TeamServicePoints)
+            {
+                servicePoints.AttackPoints = 0;
+                servicePoints.DefensePoints = 0;
+                servicePoints.ServiceLevelAgreementPoints = 0;
+            }
+        }
+
+        await this.context.SaveChangesAsync();
+
         return await this.context.Rounds
             .OrderByDescending(r => r.Id)
             .Skip(1)

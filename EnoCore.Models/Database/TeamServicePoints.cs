@@ -4,14 +4,14 @@
 /// The points of a particular team in a particular service.
 /// PK: TeamId, ServiceId.
 /// </summary>
-public sealed record TeamServicePoints
+public sealed class TeamServicePoints
 {
     public TeamServicePoints(
         long teamId,
         long serviceId,
-        long attackPoints,
-        long defensePoints,
-        long serviceLevelAgreementPoints,
+        double attackPoints,
+        double defensePoints,
+        double serviceLevelAgreementPoints,
         ServiceStatus status,
         string? errorMessage)
     {
