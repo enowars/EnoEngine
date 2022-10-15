@@ -1,46 +1,23 @@
-﻿using EnoCore.Models.Database;
+﻿using System.Text.RegularExpressions;
+using EnoCore.Models.Database;
+using Microsoft.EntityFrameworkCore;
 
-namespace EnoDatabase;
+namespace EnoDatabase; // #pragma warning disable SA1118
 
+public record TeamResults(long TeamId, long ServiceId, long RoundId, double AttackPoints, double LostDefensePoints, double ServiceLevelAgreementPoints);
 public record Results(long TeamId, long ServiceId, double Points);
-public record SLAResults(long TeamId, long ServiceId, double Points);
+public record SLAResults(
+    long TeamId,
+    long ServiceId,
+    double Points,
+    TeamServicePointsSnapshot? Snapshot,
+    ServiceStatus Status);
 
 public partial class EnoDb
 {
     private const double SLA = 100.0;
     private const double ATTACK = 50.0;
     private const double DEF = -50;
-
-    public async Task<Results[]> GetAttackPoints(long minRoundId, long maxRoundId, double servicesWeightFactor)
-    {
-        var query = this.context.SubmittedFlags
-            .Where(e => e.RoundId <= maxRoundId)
-            .Where(e => e.RoundId >= minRoundId)
-            .GroupBy(submittedFlag => new { submittedFlag.AttackerTeamId, submittedFlag.FlagServiceId }) // all captures by team t in service s
-            .Select(attackerTeamGroup =>
-                new Results(
-                    attackerTeamGroup.Key.AttackerTeamId,
-                    attackerTeamGroup.Key.FlagServiceId,
-                    attackerTeamGroup.Sum(capture => ATTACK
-                        * this.context.Services.Where(e => e.Id == capture.FlagServiceId).Single().WeightFactor
-                        / this.context.Services.Where(e => e.Id == capture.FlagServiceId).Single().FlagsPerRound
-                        / servicesWeightFactor
-                        / this.context.SubmittedFlags // amount of other capturers
-                            .Where(e => e.FlagServiceId == capture.FlagServiceId)
-                            .Where(e => e.FlagRoundId == capture.FlagRoundId)
-                            .Where(e => e.FlagOwnerId == capture.FlagOwnerId)
-                            .Where(e => e.FlagRoundOffset == capture.FlagRoundOffset)
-                            .Count()
-                        / Math.Max(1.0, this.context.RoundTeamServiceStatus // amount of not offline teams, at least 1 TODO: discuss whether not offline teams or all teams
-                            .Where(e => e.ServiceId == capture.FlagServiceId)
-                            .Where(e => e.GameRoundId == capture.FlagRoundId)
-                            .Where(e => e.Status != ServiceStatus.OFFLINE)
-                            .Count()))));
-
-        Console.WriteLine($"{minRoundId} {maxRoundId} {servicesWeightFactor}");
-        Console.WriteLine(query.ToQueryString());
-        return await query.ToArrayAsync();
-    }
 
     public async Task<Results[]> GetDefensePoints(long minRoundId, long maxRoundId, double storeWeightFactor)
     {
@@ -63,197 +40,177 @@ public partial class EnoDb
             .ToArrayAsync();
     }
 
-    public async Task<SLAResults[]> GetSLAPoints(long minRoundId, long maxRoundId, double servicesWeightFactor)
+    public string GetQuery(long minRoundId, long maxRoundId, double storeWeightFactor, double servicesWeightFactor)
     {
-        return await this.context.RoundTeamServiceStatus
-            .Where(e => e.GameRoundId <= maxRoundId)
-            .Where(e => e.GameRoundId >= minRoundId)
-            .GroupBy(e => new { e.TeamId, e.ServiceId })
-            .Select(teamServiceGroup =>
-                new SLAResults(
-                    teamServiceGroup.Key.TeamId,
-                    teamServiceGroup.Key.ServiceId,
-                    teamServiceGroup.Sum(sla => SLA
-                        * this.context.Services.Where(s => s.Id == teamServiceGroup.Key.ServiceId).Single().WeightFactor
+        Debug.Assert(storeWeightFactor > 0, "Invalid store weight");
+        Debug.Assert(servicesWeightFactor > 0, "Invalid services weight");
+        long oldSnapshotRoundId = minRoundId - 1;
+        var query =
+            from t in this.context.Teams
+            from s in this.context.Services
+            select new
+            {
+                TeamId = t.Id,
+                ServiceId = s.Id,
+                RoundId = maxRoundId,
+                AttackPoints = this.context.SubmittedFlags // service, attacker, round
+                    .Where(sf => sf.FlagServiceId == s.Id)
+                    .Where(sf => sf.AttackerTeamId == t.Id)
+                    .Where(sf => sf.RoundId >= minRoundId)
+                    .Where(sf => sf.RoundId <= maxRoundId)
+                    .Sum(sf => ATTACK
+                        * this.context.Services.Where(e => e.Id == s.Id).Single().WeightFactor
+                        / this.context.Services.Where(e => e.Id == s.Id).Single().FlagsPerRound
+                        / servicesWeightFactor
+                        / this.context.SubmittedFlags // service, owner, round (, offset)
+                            .Where(e => e.FlagServiceId == sf.FlagServiceId)
+                            .Where(e => e.FlagOwnerId == sf.FlagOwnerId)
+                            .Where(e => e.FlagRoundId == sf.FlagRoundId)
+                            .Where(e => e.FlagRoundOffset == sf.FlagRoundOffset)
+                            .Count() // Other attackers
+                        / Math.Max(1.0, this.context.RoundTeamServiceStatus // amount of not offline teams, at least 1 TODO: discuss whether not offline teams or all teams
+                            .Where(e => e.ServiceId == sf.FlagServiceId)
+                            .Where(e => e.GameRoundId == sf.FlagRoundId)
+                            .Where(e => e.Status != ServiceStatus.OFFLINE)
+                            .Count()))
+                    + Math.Max(
+                        this.context.TeamServicePointsSnapshot
+                            .Where(e => e.RoundId == oldSnapshotRoundId)
+                            .Where(e => e.TeamId == t.Id)
+                            .Where(e => e.ServiceId == s.Id)
+                            .Single().AttackPoints,
+                        0.0),
+                LostDefensePoints = this.context.SubmittedFlags // service, owner, round
+                    .Where(e => e.FlagServiceId == s.Id)
+                    .Where(e => e.FlagOwnerId == t.Id)
+                    .Where(e => e.RoundId <= maxRoundId)
+                    .Where(e => e.RoundId >= minRoundId)
+                    .Sum(capture => DEF // Lost flags
+                        * this.context.Services.Where(e => e.Id == capture.FlagServiceId).Single().WeightFactor
+                        / storeWeightFactor
+                        / this.context.SubmittedFlags // service, round, offset
+                                .Where(sf => sf.FlagServiceId == capture.FlagServiceId)
+                                .Where(sf => sf.FlagRoundOffset == capture.FlagRoundOffset)
+                                .Where(sf => sf.RoundId == capture.RoundId)
+                                .Count()), // Other victims
+                ServiceLevelAgreementPoints = this.context.RoundTeamServiceStatus
+                    .Where(e => e.GameRoundId <= maxRoundId)
+                    .Where(e => e.GameRoundId >= minRoundId)
+                    .Where(e => e.TeamId == t.Id)
+                    .Where(e => e.ServiceId == s.Id)
+                    .Sum(sla => SLA
+                        * this.context.Services.Where(s => s.Id == s.Id).Single().WeightFactor
                         * (sla.Status == ServiceStatus.OK ? 1 : sla.Status == ServiceStatus.RECOVERING ? 0.5 : 0)
-                        / servicesWeightFactor)))
-                .ToArrayAsync();
+                        / servicesWeightFactor)
+                    + Math.Max(
+                        this.context.TeamServicePointsSnapshot
+                            .Where(e => e.RoundId == oldSnapshotRoundId)
+                            .Where(e => e.TeamId == t.Id)
+                            .Where(e => e.ServiceId == s.Id)
+                            .Single().ServiceLevelAgreementPoints,
+                        0.0),
+                Status = this.context.RoundTeamServiceStatus
+                    .Where(e => e.GameRoundId == maxRoundId)
+                    .Where(e => e.TeamId == t.Id)
+                    .Where(e => e.ServiceId == s.Id)
+                    .Select(e => e.Status)
+                    .Single(),
+                ErrorMessage = this.context.RoundTeamServiceStatus
+                    .Where(e => e.GameRoundId == maxRoundId)
+                    .Where(e => e.TeamId == t.Id)
+                    .Where(e => e.ServiceId == s.Id)
+                    .Select(e => e.ErrorMessage)
+                    .Single(),
+            };
+
+        var queryString = query.ToQueryString();
+        queryString = queryString.Replace("@__maxRoundId_0", maxRoundId.ToString());
+        queryString = queryString.Replace("@__minRoundId_1", minRoundId.ToString());
+        queryString = queryString.Replace("@__servicesWeightFactor_2", servicesWeightFactor.ToString());
+        queryString = queryString.Replace("@__oldSnapshotRoundId_3", (minRoundId - 1).ToString());
+        queryString = queryString.Replace("@__storeWeightFactor_4", storeWeightFactor.ToString());
+        Console.WriteLine($"###\n{queryString}\n###");
+        return queryString;
     }
 
     public async Task UpdateScores(long roundId, Configuration configuration)
     {
-        var sw = new Stopwatch();
-        sw.Start();
         double servicesWeightFactor = await this.context.Services.Where(s => s.Active).SumAsync(s => s.WeightFactor);
         double storeWeightFactor = await this.context.Services.Where(s => s.Active).SumAsync(s => s.WeightFactor * s.FlagVariants);
-        var snapshotRoundId = roundId - configuration.CheckedRoundsPerRound - 5;
-        var newSnapshotRoundId = snapshotRoundId + 1;
+        var snapshotRoundId = roundId - configuration.FlagValidityInRounds - 5;
+        var sw = new Stopwatch();
 
+        // Phase 2: Create new TeamServicePointsSnapshots, if required
         sw.Restart();
-        var recentAttackPoints = await this.GetAttackPoints(newSnapshotRoundId, roundId, servicesWeightFactor);
-        Console.WriteLine($"GetAttackPoints {sw.ElapsedMilliseconds}ms");
-        sw.Restart();
-        var recentDefensePoints = await this.GetDefensePoints(newSnapshotRoundId, roundId, storeWeightFactor);
-        Console.WriteLine($"GetDefensePoints {sw.ElapsedMilliseconds}ms");
-        sw.Restart();
-        var recentSLAPoints = await this.GetSLAPoints(newSnapshotRoundId, roundId, servicesWeightFactor);
-        Console.WriteLine($"GetSLAPoints {sw.ElapsedMilliseconds}ms");
-        sw.Restart();
-
-        // Update TeamServicePoints (and prepare new snapshot, if necessary)
-        foreach (var sla in recentSLAPoints)
+        if (snapshotRoundId > 0)
         {
-            var tsp = await this.context.TeamServicePoints
-                .Where(e => e.TeamId == sla.TeamId)
-                .Where(e => e.ServiceId == sla.ServiceId)
-                .SingleAsync();
-
-            var snapshot = await this.context.TeamServicePointsSnapshot
-                .Where(e => e.TeamId == sla.TeamId)
-                .Where(e => e.ServiceId == sla.ServiceId)
-                .Where(e => e.RoundId == snapshotRoundId)
-                .SingleOrDefaultAsync();
-
-            tsp.ServiceLevelAgreementPoints = sla.Points + (snapshot?.ServiceLevelAgreementPoints ?? 0);
-            tsp.Status = await this.context.RoundTeamServiceStatus
-                .Where(e => e.TeamId == sla.TeamId)
-                .Where(e => e.ServiceId == sla.ServiceId)
-                .Where(e => e.GameRoundId == roundId)
-                .Select(e => e.Status)
-                .SingleAsync();
-
-            if (newSnapshotRoundId > 0)
-            {
-                this.context.TeamServicePointsSnapshot.Add(
-                    new TeamServicePointsSnapshot(
-                        tsp.TeamId,
-                        tsp.ServiceId,
-                        snapshot?.AttackPoints ?? 0,
-                        snapshot?.LostDefensePoints ?? 0,
-                        snapshot?.ServiceLevelAgreementPoints ?? 0,
-                        newSnapshotRoundId));
-            }
+            var query = this.GetQuery(snapshotRoundId, snapshotRoundId, storeWeightFactor, servicesWeightFactor);
+            var phase2QueryRaw = @$"
+WITH cte AS (
+    SELECT ""TeamId"", ""ServiceId"", ""RoundId"", ""AttackPoints"", ""LostDefensePoints"", ""ServiceLevelAgreementPoints""
+    FROM (
+-----------------
+{query}
+-----------------
+    ) as k
+)
+INSERT INTO ""TeamServicePointsSnapshot"" (""TeamId"", ""ServiceId"", ""RoundId"", ""AttackPoints"", ""LostDefensePoints"", ""ServiceLevelAgreementPoints"") -- Mind that the order is important!
+SELECT * FROM cte
+";
+            await this.context.Database.ExecuteSqlRawAsync(phase2QueryRaw);
         }
 
-        Console.WriteLine($"Update SLA {sw.ElapsedMilliseconds}");
-        sw.Restart();
+        Console.WriteLine($"Phase 2 done in {sw.ElapsedMilliseconds}ms");
 
-        foreach (var attack in recentAttackPoints)
+        // Phase 3: Update TeamServicePoints
+        sw.Restart();
+        var phase3Query = this.GetQuery(snapshotRoundId + 1, roundId, storeWeightFactor, servicesWeightFactor);
+        var phase3QueryRaw = @$"
+WITH cte AS (
+-----------------
+{phase3Query}
+-----------------
+)
+UPDATE
+    ""TeamServicePoints""
+SET
+    ""AttackPoints"" = cte.""AttackPoints"",
+    ""DefensePoints"" = cte.""LostDefensePoints"",
+    ""ServiceLevelAgreementPoints"" = cte.""ServiceLevelAgreementPoints"",
+    ""Status"" = cte.""Status"",
+    ""ErrorMessage"" = cte.""ErrorMessage""
+FROM cte
+WHERE
+    ""TeamServicePoints"".""TeamId"" = cte.""TeamId"" AND
+    ""TeamServicePoints"".""ServiceId"" = cte.""ServiceId""
+;";
+        await this.context.Database.ExecuteSqlRawAsync(phase3QueryRaw);
+        Console.WriteLine($"Phase 3 done in {sw.ElapsedMilliseconds}ms");
+
+        // Phase 4: Update Teams
+        sw.Restart();
+        foreach (var team in await this.context.Teams.ToArrayAsync())
         {
-            var tsp = await this.context.TeamServicePoints
-                .Where(e => e.TeamId == attack.TeamId)
-                .Where(e => e.ServiceId == attack.ServiceId)
-                .SingleAsync();
-
-            var snapshot = await this.context.TeamServicePointsSnapshot
-                .Where(e => e.TeamId == attack.TeamId)
-                .Where(e => e.ServiceId == attack.ServiceId)
-                .Where(e => e.RoundId == snapshotRoundId)
-                .SingleOrDefaultAsync();
-
-            tsp.AttackPoints = attack.Points + (snapshot?.AttackPoints ?? 0);
-        }
-
-        Console.WriteLine($"Update Attack {sw.ElapsedMilliseconds}ms");
-        sw.Restart();
-
-        foreach (var def in recentDefensePoints)
-        {
-            var tsp = await this.context.TeamServicePoints
-                .Where(e => e.TeamId == def.TeamId)
-                .Where(e => e.ServiceId == def.ServiceId)
-                .SingleAsync();
-
-            var snapshot = await this.context.TeamServicePointsSnapshot
-                .Where(e => e.TeamId == def.TeamId)
-                .Where(e => e.ServiceId == def.ServiceId)
-                .Where(e => e.RoundId == snapshotRoundId)
-                .SingleOrDefaultAsync();
-
-            tsp.DefensePoints = def.Points + (snapshot?.LostDefensePoints ?? 0);
-        }
-
-        Console.WriteLine($"Update Defense {sw.ElapsedMilliseconds}ms");
-        sw.Restart();
-
-        await this.context.SaveChangesAsync();
-
-        Console.WriteLine($"SaveChanges {sw.ElapsedMilliseconds}ms");
-        sw.Restart();
-
-        // Update Teams
-        var teams = await this.context.Teams.ToArrayAsync();
-        foreach (var t in teams)
-        {
-            t.AttackPoints = this.context.TeamServicePoints
-                .Where(e => e.TeamId == t.Id)
+            team.AttackPoints = await this.context.TeamServicePoints
+                .Where(e => e.TeamId == team.Id)
                 .Select(e => e.AttackPoints)
-                .Sum();
+                .SumAsync();
 
-            t.ServiceLevelAgreementPoints = this.context.TeamServicePoints
-                .Where(e => e.TeamId == t.Id)
-                .Select(e => e.ServiceLevelAgreementPoints)
-                .Sum();
-
-            t.DefensePoints = this.context.TeamServicePoints
-                .Where(e => e.TeamId == t.Id)
+            team.DefensePoints = await this.context.TeamServicePoints
+                .Where(e => e.TeamId == team.Id)
                 .Select(e => e.DefensePoints)
-                .Sum();
+                .SumAsync();
 
-            t.TotalPoints = t.AttackPoints + t.ServiceLevelAgreementPoints + t.DefensePoints;
+            team.ServiceLevelAgreementPoints = await this.context.TeamServicePoints
+                .Where(e => e.TeamId == team.Id)
+                .Select(e => e.ServiceLevelAgreementPoints)
+                .SumAsync();
+
+            team.TotalPoints = team.AttackPoints + team.DefensePoints + team.ServiceLevelAgreementPoints;
         }
-
-        Console.WriteLine($"Update Teams {sw.ElapsedMilliseconds}ms");
-        sw.Restart();
-
-        // Update new snapshot
-        if (newSnapshotRoundId >= 0)
-        {
-            var stabilizedAttackPoints = await this.GetAttackPoints(newSnapshotRoundId, newSnapshotRoundId, servicesWeightFactor);
-            var stabilizedDefensePoints = await this.GetDefensePoints(newSnapshotRoundId, newSnapshotRoundId, storeWeightFactor);
-            var stabilizedSLAPoints = await this.GetSLAPoints(newSnapshotRoundId, newSnapshotRoundId, servicesWeightFactor);
-
-            foreach (var attack in stabilizedAttackPoints)
-            {
-                var newSnapshot = await this.context.TeamServicePointsSnapshot
-                    .Where(e => e.TeamId == attack.TeamId)
-                    .Where(e => e.ServiceId == attack.ServiceId)
-                    .Where(e => e.RoundId == newSnapshotRoundId)
-                    .SingleAsync();
-
-                newSnapshot.AttackPoints += attack.Points;
-            }
-
-            foreach (var def in stabilizedDefensePoints)
-            {
-                var newSnapshot = await this.context.TeamServicePointsSnapshot
-                    .Where(e => e.TeamId == def.TeamId)
-                    .Where(e => e.ServiceId == def.ServiceId)
-                    .Where(e => e.RoundId == newSnapshotRoundId)
-                    .SingleAsync();
-
-                newSnapshot.LostDefensePoints += def.Points;
-            }
-
-            foreach (var sla in stabilizedSLAPoints)
-            {
-                var newSnapshot = await this.context.TeamServicePointsSnapshot
-                    .Where(e => e.TeamId == sla.TeamId)
-                    .Where(e => e.ServiceId == sla.ServiceId)
-                    .Where(e => e.RoundId == newSnapshotRoundId)
-                    .SingleAsync();
-
-                newSnapshot.ServiceLevelAgreementPoints += sla.Points;
-            }
-        }
-
-        Console.WriteLine($"Update Snapshot {sw.ElapsedMilliseconds}ms");
-        sw.Restart();
 
         await this.context.SaveChangesAsync();
-
-        Console.WriteLine($"SaveChanges {sw.ElapsedMilliseconds}ms");
-        sw.Restart();
+        Console.WriteLine($"Phase 4 done in {sw.ElapsedMilliseconds}ms");
     }
 
     public async Task<Scoreboard> GetCurrentScoreboard(long roundId)
