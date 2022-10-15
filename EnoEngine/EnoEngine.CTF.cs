@@ -65,8 +65,7 @@ internal partial class EnoEngine
                 await this.RecordServiceStates(roundId);
             }
 
-            await this.CalculateServicePoints(roundId, configuration);
-            await this.CalculateTotalPoints();
+            await this.UpdateScores(roundId, configuration);
         }
 
         await this.GenerateAttackInfo(roundId, configuration);
@@ -80,62 +79,6 @@ internal partial class EnoEngine
         jsonStopWatch.Stop();
         this.logger.LogInformation($"Scoreboard Generation Took {jsonStopWatch.ElapsedMilliseconds} ms");
         return DateTime.UtcNow;
-    }
-
-    private async Task CalculateTotalPoints()
-    {
-        Stopwatch stopWatch = new Stopwatch();
-        stopWatch.Start();
-        try
-        {
-            await this.databaseUtil.RetryScopedDatabaseAction(
-                db => db.CalculateTotalPoints());
-        }
-        catch (Exception e)
-        {
-            this.logger.LogError($"CalculateTotalPoints failed because: {e}");
-        }
-        finally
-        {
-            stopWatch.Stop();
-            this.logger.LogInformation($"{nameof(this.CalculateTotalPoints)} Took {stopWatch.ElapsedMilliseconds} ms");
-
-            // TODO EnoLogger.LogStatistics(CalculateTotalPointsFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
-        }
-    }
-
-    private async Task CalculateServicePoints(long roundId, Configuration configuration)
-    {
-        Stopwatch stopWatch = new Stopwatch();
-        stopWatch.Start();
-        try
-        {
-            var (newLatestSnapshotRoundId, oldSnapshotRoundId, services, teams) = await this.databaseUtil.RetryScopedDatabaseAction(
-                db => db.GetPointCalculationFrame(roundId, configuration));
-
-            var servicePointsTasks = new List<Task>(services.Length);
-            foreach (var service in services)
-            {
-                servicePointsTasks.Add(Task.Run(async () =>
-                {
-                    await this.databaseUtil.RetryScopedDatabaseAction(
-                        db => db.CalculateTeamServicePoints(teams, roundId, service, oldSnapshotRoundId, newLatestSnapshotRoundId));
-                }));
-            }
-
-            await Task.WhenAll(servicePointsTasks);
-        }
-        catch (Exception e)
-        {
-            this.logger.LogError($"CalculateServicePoints failed because: {e}");
-        }
-        finally
-        {
-            stopWatch.Stop();
-            this.logger.LogInformation($"{nameof(this.CalculateServicePoints)} Took {stopWatch.ElapsedMilliseconds} ms");
-
-            // TODO EnoLogger.LogStatistics(CalculateServicePointsFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
-        }
     }
 
     private async Task RecordServiceStates(long roundId)
@@ -158,6 +101,25 @@ internal partial class EnoEngine
             // TODO EnoLogger.LogStatistics(RecordServiceStatesFinishedMessage.Create(roundId, stopWatch.ElapsedMilliseconds));
             this.logger.LogInformation($"RecordServiceStates took {stopWatch.ElapsedMilliseconds}ms");
         }
+    }
+
+    private async Task UpdateScores(long roundId, Configuration configuration)
+    {
+        Stopwatch stopWatch = new Stopwatch();
+        stopWatch.Start();
+        try
+        {
+            using var scope = this.serviceProvider.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<EnoDb>();
+            await db.UpdateScores(roundId, configuration);
+        }
+        catch (Exception e)
+        {
+            this.logger.LogError($"UpdateScores failed because: {e}");
+        }
+
+        stopWatch.Stop();
+        this.logger.LogInformation($"UpdateScores took {stopWatch.ElapsedMilliseconds}ms");
     }
 
     private async Task GenerateAttackInfo(long roundId, Configuration configuration)

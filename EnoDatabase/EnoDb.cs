@@ -623,6 +623,7 @@ public partial class EnoDb
     public async Task<Round> PrepareRecalculation()
     {
         await this.context.Database.ExecuteSqlRawAsync($"delete from \"{nameof(this.context.TeamServicePointsSnapshot)}\";");
+
         return await this.context.Rounds
             .OrderByDescending(r => r.Id)
             .Skip(1)

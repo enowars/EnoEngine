@@ -26,9 +26,19 @@ public class EnoDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // INSERT ... ON CONFLICT IGNORE
         modelBuilder.Entity<SubmittedFlag>()
             .HasKey(sf => new { sf.FlagServiceId, sf.FlagRoundId, sf.FlagOwnerId, sf.FlagRoundOffset, sf.AttackerTeamId });
 
+        // Captured flags
+        modelBuilder.Entity<SubmittedFlag>()
+            .HasIndex(sf => new { sf.FlagServiceId, sf.AttackerTeamId, sf.RoundId });
+
+        // Other attackers, lost flags
+        modelBuilder.Entity<SubmittedFlag>()
+            .HasIndex(sf => new { sf.FlagServiceId, sf.FlagOwnerId, sf.RoundId, sf.FlagRoundOffset });
+
+        // Firstbloods
         modelBuilder.Entity<SubmittedFlag>()
             .HasIndex(sf => new { sf.FlagServiceId, sf.FlagRoundOffset, sf.Timestamp });
 
@@ -37,6 +47,10 @@ public class EnoDbContext : DbContext
 
         modelBuilder.Entity<RoundTeamServiceStatus>()
             .HasKey(rtss => new { rtss.ServiceId, rtss.TeamId, rtss.GameRoundId });
+
+        // Exploitable teams
+        modelBuilder.Entity<RoundTeamServiceStatus>()
+            .HasIndex(rtss => new { rtss.ServiceId, rtss.GameRoundId, rtss.Status });
 
         modelBuilder.Entity<TeamServicePointsSnapshot>()
             .HasKey(sss => new { sss.ServiceId, sss.RoundId, sss.TeamId });
