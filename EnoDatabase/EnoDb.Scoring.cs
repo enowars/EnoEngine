@@ -16,29 +16,8 @@ public record SLAResults(
 public partial class EnoDb
 {
     private const double SLA = 100.0;
-    private const double ATTACK = 50.0;
+    private const double ATTACK = 400.0;
     private const double DEF = -50;
-
-    public async Task<Results[]> GetDefensePoints(long minRoundId, long maxRoundId, double storeWeightFactor)
-    {
-        return await this.context.SubmittedFlags
-            .Where(e => e.RoundId <= maxRoundId)
-            .Where(e => e.RoundId >= minRoundId)
-            .GroupBy(submittedFlag => new { submittedFlag.FlagOwnerId, submittedFlag.FlagServiceId })
-            .Select(ownerTeamGroup =>
-                new Results(
-                    ownerTeamGroup.Key.FlagOwnerId,
-                    ownerTeamGroup.Key.FlagServiceId,
-                    ownerTeamGroup.Sum(capture => DEF
-                        * this.context.Services.Where(e => e.Id == capture.FlagServiceId).Single().WeightFactor
-                        / storeWeightFactor
-                        / this.context.SubmittedFlags
-                            .Where(sf => sf.FlagServiceId == capture.FlagServiceId)
-                            .Where(sf => sf.FlagRoundOffset == capture.FlagRoundOffset)
-                            .Where(sf => sf.RoundId == capture.RoundId)
-                            .Count())))
-            .ToArrayAsync();
-    }
 
     public string GetQuery(long minRoundId, long maxRoundId, double storeWeightFactor, double servicesWeightFactor)
     {
@@ -80,19 +59,25 @@ public partial class EnoDb
                             .Where(e => e.ServiceId == s.Id)
                             .Single().AttackPoints,
                         0.0),
-                LostDefensePoints = this.context.SubmittedFlags // service, owner, round
-                    .Where(e => e.FlagServiceId == s.Id)
-                    .Where(e => e.FlagOwnerId == t.Id)
-                    .Where(e => e.RoundId <= maxRoundId)
-                    .Where(e => e.RoundId >= minRoundId)
-                    .Sum(capture => DEF // Lost flags
-                        * this.context.Services.Where(e => e.Id == capture.FlagServiceId).Single().WeightFactor
-                        / storeWeightFactor
-                        / this.context.SubmittedFlags // service, round, offset
-                                .Where(sf => sf.FlagServiceId == capture.FlagServiceId)
-                                .Where(sf => sf.FlagRoundOffset == capture.FlagRoundOffset)
-                                .Where(sf => sf.RoundId == capture.RoundId)
-                                .Count()), // Other victims
+                LostDefensePoints = DEF 
+                    * this.context.Services.Where(e => e.Id == s.Id).Single().WeightFactor
+                    / this.context.Services.Where(e => e.Id == s.Id).Single().FlagsPerRound
+                    / servicesWeightFactor
+                    * this.context.SubmittedFlags // service, owner, round
+                        .Where(e => e.FlagServiceId == s.Id)
+                        .Where(e => e.FlagOwnerId == t.Id)
+                        .Where(e => e.RoundId <= maxRoundId)
+                        .Where(e => e.RoundId >= minRoundId)
+                        .Select(e => new { e.FlagServiceId, e.FlagOwnerId, e.RoundId, e.FlagRoundOffset })
+                        .Distinct()
+                        .Count()
+                    + Math.Min(
+                        this.context.TeamServicePointsSnapshot
+                            .Where(e => e.RoundId == oldSnapshotRoundId)
+                            .Where(e => e.TeamId == t.Id)
+                            .Where(e => e.ServiceId == s.Id)
+                            .Single().LostDefensePoints,
+                        0.0),
                 ServiceLevelAgreementPoints = this.context.RoundTeamServiceStatus
                     .Where(e => e.GameRoundId <= maxRoundId)
                     .Where(e => e.GameRoundId >= minRoundId)

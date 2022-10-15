@@ -115,7 +115,7 @@ internal partial class EnoEngine
         }
         catch (Exception e)
         {
-            this.logger.LogError($"RecordServiceStates failed because: {e}");
+            this.logger.LogError($"UpdateScores failed because: {e}");
         }
 
         stopWatch.Stop();
