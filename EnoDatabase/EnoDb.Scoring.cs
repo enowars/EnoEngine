@@ -59,7 +59,7 @@ public partial class EnoDb
                             .Where(e => e.ServiceId == s.Id)
                             .Single().AttackPoints,
                         0.0),
-                LostDefensePoints = DEF 
+                LostDefensePoints = (DEF
                     * this.context.Services.Where(e => e.Id == s.Id).Single().WeightFactor
                     / this.context.Services.Where(e => e.Id == s.Id).Single().FlagsPerRound
                     / servicesWeightFactor
@@ -69,8 +69,8 @@ public partial class EnoDb
                         .Where(e => e.RoundId <= maxRoundId)
                         .Where(e => e.RoundId >= minRoundId)
                         .Select(e => new { e.FlagServiceId, e.FlagOwnerId, e.RoundId, e.FlagRoundOffset })
-                        .Distinct()
-                        .Count()
+                        .Distinct() // Lost flags
+                        .Count())
                     + Math.Min(
                         this.context.TeamServicePointsSnapshot
                             .Where(e => e.RoundId == oldSnapshotRoundId)

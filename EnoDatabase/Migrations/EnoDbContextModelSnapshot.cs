@@ -17,7 +17,7 @@ namespace EnoDatabase.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.1")
+                .HasAnnotation("ProductVersion", "6.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -187,6 +187,8 @@ namespace EnoDatabase.Migrations
 
                     b.HasKey("ServiceId", "TeamId", "GameRoundId");
 
+                    b.HasIndex("ServiceId", "GameRoundId", "Status");
+
                     b.ToTable("RoundTeamServiceStatus");
                 });
 
@@ -263,7 +265,11 @@ namespace EnoDatabase.Migrations
 
                     b.HasKey("FlagServiceId", "FlagRoundId", "FlagOwnerId", "FlagRoundOffset", "AttackerTeamId");
 
+                    b.HasIndex("FlagServiceId", "AttackerTeamId", "RoundId");
+
                     b.HasIndex("FlagServiceId", "FlagRoundOffset", "Timestamp");
+
+                    b.HasIndex("FlagServiceId", "FlagOwnerId", "RoundId", "FlagRoundOffset");
 
                     b.ToTable("SubmittedFlags");
                 });

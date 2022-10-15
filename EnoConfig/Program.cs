@@ -57,6 +57,10 @@ public class Program
 
         var rootCommand = new RootCommand();
 
+        var migrateDbCommand = new Command("migratedb", "Apply db migrations");
+        migrateDbCommand.Handler = CommandHandler.Create(program.MigrateDb);
+        rootCommand.AddCommand(migrateDbCommand);
+
         var applyCommand = new Command("apply", "Apply configuration to database");
         applyCommand.AddOption(new Option<FileInfo>("--input", () => new FileInfo("ctf.json"), "Path to configuration file"));
         applyCommand.AddOption(new Option<int?>("--assume_variants", "Use the given value as the amount of variants instead of contacting the checkers"));
@@ -75,6 +79,14 @@ public class Program
         rootCommand.AddCommand(roundWarpCommand);
 
         return rootCommand.InvokeAsync(args).Result;
+    }
+
+    public async Task<int> MigrateDb()
+    {
+        using var scope = this.serviceProvider.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<EnoDbContext>();
+        await dbContext.Database.MigrateAsync();
+        return 0;
     }
 
     public async Task<int> Apply(FileInfo input, int? assume_variants)
