@@ -1,12 +1,14 @@
 ﻿namespace EnoConfig;
 
 using System;
+using System.Buffers;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -57,6 +59,12 @@ public class Program
 
         var rootCommand = new RootCommand();
 
+        var flagInfoCommand = new Command("flaginfo", "Show flag information");
+        flagInfoCommand.AddOption(new Option<FileInfo>("--input", () => new FileInfo("ctf.json"), "Path to configuration file"));
+        flagInfoCommand.AddArgument(new Argument<string>("flag"));
+        flagInfoCommand.Handler = CommandHandler.Create<FileInfo, string>(async (input, flag) => await program.FlagInfo(input, flag));
+        rootCommand.AddCommand(flagInfoCommand);
+
         var migrateDbCommand = new Command("migratedb", "Apply db migrations");
         migrateDbCommand.Handler = CommandHandler.Create(program.MigrateDb);
         rootCommand.AddCommand(migrateDbCommand);
@@ -79,6 +87,48 @@ public class Program
         rootCommand.AddCommand(roundWarpCommand);
 
         return rootCommand.InvokeAsync(args).Result;
+    }
+
+    public async Task<int> FlagInfo(FileInfo input, string flagString)
+    {
+        var jsonConfiguration = LoadConfig(input);
+        if (jsonConfiguration == null)
+        {
+            return 1;
+        }
+
+        using var scope = this.serviceProvider.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<EnoDbContext>();
+        var flag = Flag.Parse(new ReadOnlySequence<byte>(Encoding.ASCII.GetBytes(flagString)), Encoding.ASCII.GetBytes(jsonConfiguration.FlagSigningKey!), FlagEncoding.Legacy, null);
+        if (flag == null)
+        {
+            Console.Error.WriteLine("Could not parse flag");
+            return 1;
+        }
+
+        var owner = await dbContext.Teams
+            .Where(e => e.Id == flag.OwnerId)
+            .SingleAsync();
+        var attacks = await dbContext.SubmittedFlags
+            .Where(e => e.FlagServiceId == flag.ServiceId)
+            .Where(e => e.FlagRoundOffset == flag.RoundOffset)
+            .Where(e => e.FlagOwnerId == flag.OwnerId)
+            .Where(e => e.FlagRoundId == flag.RoundId)
+            .Select(sf => new
+            {
+                Attacker = dbContext.Teams.Where(e => e.Id == sf.AttackerTeamId).Single(),
+                Timestamp = sf.Timestamp,
+            })
+            .OrderBy(e => e.Timestamp)
+            .ToArrayAsync();
+
+        Console.WriteLine($"{flagString} (Owner='{owner.Name}', Id={owner.Id}) has been captured {attacks.Length} times");
+        foreach (var attack in attacks)
+        {
+            Console.WriteLine($"{attack.Timestamp.ToString(EnoCoreUtil.DateTimeFormat)}\t{attack.Attacker.Name} (Id={attack.Attacker.Id})");
+        }
+
+        return 0;
     }
 
     public async Task<int> MigrateDb()

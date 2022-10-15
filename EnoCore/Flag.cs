@@ -108,7 +108,7 @@ public sealed record Flag(
         };
     }
 
-    public static Flag? Parse(ReadOnlySequence<byte> line, byte[] signingKey, FlagEncoding encoding, ILogger logger)
+    public static Flag? Parse(ReadOnlySequence<byte> line, byte[] signingKey, FlagEncoding encoding, ILogger? logger)
     {
         return encoding switch
         {
@@ -118,7 +118,7 @@ public sealed record Flag(
         };
     }
 
-    private static Flag? ParseUtf(ReadOnlySequence<byte> line, byte[] signingKey, ILogger logger)
+    private static Flag? ParseUtf(ReadOnlySequence<byte> line, byte[] signingKey, ILogger? logger)
     {
         try
         {
@@ -162,7 +162,7 @@ public sealed record Flag(
         }
         catch (Exception e)
         {
-            logger.LogError(e.ToFancyStringWithCaller());
+            logger?.LogError(e.ToFancyStringWithCaller());
             return null;
         }
     }
@@ -192,7 +192,7 @@ public sealed record Flag(
             // Showtime!
             if (!flagSignature.SequenceEqual(computedSignature))
             {
-                return null;
+                return new Flag(ownerId, serviceId, roundOffset, roundId); // TODO REMOVE return null;
             }
             else
             {
