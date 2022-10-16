@@ -192,7 +192,7 @@ public sealed record Flag(
             // Showtime!
             if (!flagSignature.SequenceEqual(computedSignature))
             {
-                return new Flag(ownerId, serviceId, roundOffset, roundId); // TODO REMOVE return null;
+                return null;
             }
             else
             {
