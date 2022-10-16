@@ -5,6 +5,7 @@
     "roundLengthInSeconds": 60,
     "teamSubnetBytesLength": 16,
     "flagSigningKey": "TODO",
+    "dnsSuffix": "bambi.ovh",
     "teams": [{
         "id": 1,
         "name": "teamname1",
