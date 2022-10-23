@@ -38,20 +38,15 @@ public partial class EnoDb
                     .Where(sf => sf.RoundId >= minRoundId)
                     .Where(sf => sf.RoundId <= maxRoundId)
                     .Sum(sf => ATTACK
-                        * this.context.Services.Where(e => e.Id == s.Id).Single().WeightFactor
+                        * this.context.Services.Where(e => e.Id == s.Id).Single().WeightFactor / servicesWeightFactor // Service Weight Scaling
                         / this.context.Services.Where(e => e.Id == s.Id).Single().FlagsPerRound
-                        / servicesWeightFactor
                         / this.context.SubmittedFlags // service, owner, round (, offset)
                             .Where(e => e.FlagServiceId == sf.FlagServiceId)
                             .Where(e => e.FlagOwnerId == sf.FlagOwnerId)
                             .Where(e => e.FlagRoundId == sf.FlagRoundId)
                             .Where(e => e.FlagRoundOffset == sf.FlagRoundOffset)
                             .Count() // Other attackers
-                        / Math.Max(1.0, this.context.RoundTeamServiceStatus // amount of not offline teams, at least 1 TODO: discuss whether not offline teams or all teams
-                            .Where(e => e.ServiceId == sf.FlagServiceId)
-                            .Where(e => e.GameRoundId == sf.FlagRoundId)
-                            .Where(e => e.Status != ServiceStatus.OFFLINE)
-                            .Count()))
+                        / this.context.Teams.Where(e => e.Active).Count())
                     + Math.Max(
                         this.context.TeamServicePointsSnapshot
                             .Where(e => e.RoundId == oldSnapshotRoundId)
@@ -60,9 +55,8 @@ public partial class EnoDb
                             .Single().AttackPoints,
                         0.0),
                 LostDefensePoints = (DEF
-                    * this.context.Services.Where(e => e.Id == s.Id).Single().WeightFactor
+                    * this.context.Services.Where(e => e.Id == s.Id).Single().WeightFactor / servicesWeightFactor
                     / this.context.Services.Where(e => e.Id == s.Id).Single().FlagsPerRound
-                    / servicesWeightFactor
                     * this.context.SubmittedFlags // service, owner, round
                         .Where(e => e.FlagServiceId == s.Id)
                         .Where(e => e.FlagOwnerId == t.Id)
