@@ -57,12 +57,12 @@ public partial class EnoDb
                 LostDefensePoints = (DEF
                     * this.context.Services.Where(e => e.Id == s.Id).Single().WeightFactor / servicesWeightFactor
                     / this.context.Services.Where(e => e.Id == s.Id).Single().FlagsPerRound
-                    * this.context.SubmittedFlags // service, owner, round
+                    * this.context.SubmittedFlags // service, owner, round //TODO recheck index
                         .Where(e => e.FlagServiceId == s.Id)
                         .Where(e => e.FlagOwnerId == t.Id)
-                        .Where(e => e.RoundId <= maxRoundId)
-                        .Where(e => e.RoundId >= minRoundId)
-                        .Select(e => new { e.FlagServiceId, e.FlagOwnerId, e.RoundId, e.FlagRoundOffset })
+                        .Where(e => e.FlagRoundId <= maxRoundId)
+                        .Where(e => e.FlagRoundId >= minRoundId)
+                        .Select(e => new { e.FlagServiceId, e.FlagOwnerId, e.FlagRoundId, e.FlagRoundOffset })
                         .Distinct() // Lost flags
                         .Count())
                     + Math.Min(
