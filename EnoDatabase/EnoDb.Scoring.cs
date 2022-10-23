@@ -60,8 +60,8 @@ public partial class EnoDb
                     * this.context.SubmittedFlags // service, owner, round //TODO recheck index
                         .Where(e => e.FlagServiceId == s.Id)
                         .Where(e => e.FlagOwnerId == t.Id)
-                        .Where(e => e.FlagRoundId <= maxRoundId)
-                        .Where(e => e.FlagRoundId >= minRoundId)
+                        .Where(e => e.RoundId <= maxRoundId)
+                        .Where(e => e.RoundId >= minRoundId)
                         .Select(e => new { e.FlagServiceId, e.FlagOwnerId, e.FlagRoundId, e.FlagRoundOffset })
                         .Distinct() // Lost flags
                         .Count())
