@@ -57,7 +57,7 @@ public partial class EnoDb
                 LostDefensePoints = (DEF
                     * this.context.Services.Where(e => e.Id == s.Id).Single().WeightFactor / servicesWeightFactor
                     / this.context.Services.Where(e => e.Id == s.Id).Single().FlagsPerRound
-                    * this.context.SubmittedFlags // service, owner, round //TODO recheck index
+                    * this.context.SubmittedFlags // service, owner, round
                         .Where(e => e.FlagServiceId == s.Id)
                         .Where(e => e.FlagOwnerId == t.Id)
                         .Where(e => e.RoundId <= maxRoundId)
@@ -108,7 +108,7 @@ public partial class EnoDb
         queryString = queryString.Replace("@__servicesWeightFactor_2", servicesWeightFactor.ToString());
         queryString = queryString.Replace("@__oldSnapshotRoundId_3", (minRoundId - 1).ToString());
         queryString = queryString.Replace("@__storeWeightFactor_4", storeWeightFactor.ToString());
-        Console.WriteLine($"###\n{queryString}\n###");
+        // Console.WriteLine($"###\n{queryString}\n###");
         return queryString;
     }
 
