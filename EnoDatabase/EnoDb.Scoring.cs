@@ -108,7 +108,6 @@ public partial class EnoDb
         queryString = queryString.Replace("@__servicesWeightFactor_2", servicesWeightFactor.ToString());
         queryString = queryString.Replace("@__oldSnapshotRoundId_3", (minRoundId - 1).ToString());
         queryString = queryString.Replace("@__storeWeightFactor_4", storeWeightFactor.ToString());
-        // Console.WriteLine($"###\n{queryString}\n###");
         return queryString;
     }
 
