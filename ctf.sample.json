@@ -4,7 +4,7 @@
     "checkedRoundsPerRound": 3,
     "roundLengthInSeconds": 60,
     "dnsSuffix": "eno.host",
-    "teamSubnetBytesLength": 16,
+    "teamSubnetBytesLength": 15,
     "flagSigningKey": "ir7PRm0SzqzA0lmFyBfUv68E6Yb7cjbJDp6dummqwr0Od70Sar7P27HVY6oc8PuW",
     "teams": [{
         "id": 1,
