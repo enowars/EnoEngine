@@ -29,11 +29,11 @@
     }],
     "services": [{
         "id": 1,
-        "name": "WASP",
+        "name": "CRY_STORE",
         "flagsPerRoundMultiplier": 1,
         "noisesPerRoundMultiplier": 1,
         "havocsPerRoundMultiplier": 1,
         "weightFactor": 1,
-        "checkers": ["http://[::1]:8000"]
+        "checkers": ["http://192.168.1.1:8005"]
     }]
 }
