@@ -3,7 +3,7 @@
     "flagValidityInRounds": 2,
     "checkedRoundsPerRound": 3,
     "roundLengthInSeconds": 60,
-    "teamSubnetBytesLength": 16,
+    "teamSubnetBytesLength": 15,
     "flagSigningKey": "TODO",
     "dnsSuffix": "bambi.ovh",
     "teams": [{
