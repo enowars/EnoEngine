@@ -1,6 +1,7 @@
 services:
   enopostgres:
     image: postgres:15
+    restart: unless-stopped
     environment:
       POSTGRES_USER: docker
       POSTGRES_PASSWORD: docker
