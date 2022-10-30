@@ -37,12 +37,12 @@
         "checkers": ["http://192.168.1.1:5008"]
     },{
         "id": 2,
-        "name": "CatchBox",
+        "name": "Catchbox",
         "flagsPerRoundMultiplier": 1,
         "noisesPerRoundMultiplier": 1,
         "havocsPerRoundMultiplier": 1,
         "weightFactor": 1,
-        "checkers": ["http://192.168.1.2:9091"]
+        "checkers": ["http://192.168.1.2:9092"]
     },{
         "id": 3,
         "name": "Fireworx",
