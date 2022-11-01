@@ -8,24 +8,44 @@
     "flagSigningKey": "ir7PRm0SzqzA0lmFyBfUv68E6Yb7cjbJDp6dummqwr0Od70Sar7P27HVY6oc8PuW",
     "teams": [{
         "id": 1,
-        "name": "teamname1",
+        "name": "Kleinmazama",
         "teamSubnet": "::ffff:10.1.1.0",
         "address": "10.1.1.1"
     },{
         "id": 2,
-        "name": "teamname2",
+        "name": "Wapiti",
         "teamSubnet": "::ffff:10.1.2.0",
         "address": "10.1.2.1"
     },{
         "id": 3,
-        "name": "teamname3",
+        "name": "Karibu",
         "teamSubnet": "::ffff:10.1.3.0",
         "address": "10.1.3.1"
     },{
         "id": 4,
-        "name": "teamname4",
+        "name": "Pudu",
         "teamSubnet": "::ffff:10.1.4.0",
         "address": "10.1.4.1"
+    },{
+        "id": 5,
+        "name": "Elch",
+        "teamSubnet": "::ffff:10.1.5.0",
+        "address": "10.1.5.1"
+    },{
+        "id": 6,
+        "name": "Wasserreh",
+        "teamSubnet": "::ffff:10.1.6.0",
+        "address": "10.1.6.1"
+    },{
+        "id": 7,
+        "name": "Leierhirsch",
+        "teamSubnet": "::ffff:10.1.7.0",
+        "address": "10.1.7.1"
+    },{
+        "id": 8,
+        "name": "Barasingha",
+        "teamSubnet": "::ffff:10.1.8.0",
+        "address": "10.1.8.1"
     }],
     "services": [{
         "id": 1,
