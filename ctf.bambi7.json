@@ -1,33 +1,537 @@
 {
-    "title": "Bambi CTF #7",
-    "flagValidityInRounds": 2,
-    "checkedRoundsPerRound": 3,
-    "roundLengthInSeconds": 60,
-    "teamSubnetBytesLength": 15,
-    "flagSigningKey": "TODO",
-    "dnsSuffix": "bambi.ovh",
-    "teams": [{
-        "id": 1,
-        "name": "teamname1",
-        "teamSubnet": "::ffff:10.1.1.0",
-        "address": "10.1.1.1"
-    },{
-        "id": 2,
-        "name": "teamname2",
-        "teamSubnet": "::ffff:10.1.2.0",
-        "address": "10.1.2.1"
-    },{
-        "id": 3,
-        "name": "teamname3",
-        "teamSubnet": "::ffff:10.1.3.0",
-        "address": "10.1.3.1"
-    },{
-        "id": 4,
-        "name": "teamname4",
-        "teamSubnet": "::ffff:10.1.4.0",
-        "address": "10.1.4.1"
-    }],
-    "services": [{
+  "title": "Bambi CTF 7",
+  "flagValidityInRounds": 10,
+  "checkedRoundsPerRound": 3,
+  "roundLengthInSeconds": 60,
+  "dnsSuffix": ".bambi.ovh",
+  "teamSubnetBytesLength": 15,
+  "flagSigningKey": "wsf43fewdsfsfvbghjkuioui87zsdfsdf34fsdfsdf",
+  "encoding": "Legacy",
+  "teams": [
+    {
+      "id": 1,
+      "name": "ENOOPFLAG",
+      "address": "10.1.1.1",
+      "teamSubnet": "::ffff:10.1.1.0",
+      "logoUrl": "https://ctftime.org//media/team/enoflag-shield.png",
+      "countryCode": "DE",
+      "active": true
+    },
+    {
+      "id": 2,
+      "name": "pastabase64",
+      "address": "10.1.2.1",
+      "teamSubnet": "::ffff:10.1.2.0",
+      "logoUrl": "https://ctftime.org//media/team/pb.jpeg",
+      "countryCode": "AR",
+      "active": true
+    },
+    {
+      "id": 3,
+      "name": "wetox",
+      "address": "10.1.3.1",
+      "teamSubnet": "::ffff:10.1.3.0",
+      "logoUrl": "https://ctftime.org//media/team/%D0%A1%D0%BD%D0%B8%D0%BC%D0%BE%D0%BA_%D1%8D%D0%BA%D1%80%D0%B0%D0%BD%D0%B0_2020-09-07_221819_3.jpg",
+      "countryCode": "RU",
+      "active": true
+    },
+    {
+      "id": 5,
+      "name": "DragonSec SI",
+      "address": "10.1.5.1",
+      "teamSubnet": "::ffff:10.1.5.0",
+      "logoUrl": "https://ctftime.org//media/team/dsec_logo.png",
+      "countryCode": "SI",
+      "active": true
+    },
+    {
+      "id": 6,
+      "name": "fibonhack",
+      "address": "10.1.6.1",
+      "teamSubnet": "::ffff:10.1.6.0",
+      "logoUrl": "https://ctftime.org//media/team/finale-perdavvero-round.png",
+      "countryCode": "IT",
+      "active": true
+    },
+    {
+      "id": 7,
+      "name": "CyberTaskForce Zero",
+      "address": "10.1.7.1",
+      "teamSubnet": "::ffff:10.1.7.0",
+      "logoUrl": "",
+      "countryCode": "DE",
+      "active": true
+    },
+    {
+      "id": 10,
+      "name": "Char limit",
+      "address": "10.1.10.1",
+      "teamSubnet": "::ffff:10.1.10.0",
+      "logoUrl": "",
+      "countryCode": "DE",
+      "active": true
+    },
+    {
+      "id": 11,
+      "name": "M.I.S.T.",
+      "address": "10.1.11.1",
+      "teamSubnet": "::ffff:10.1.11.0",
+      "logoUrl": "https://ctftime.org//media/team/Logo_MIST_s_2.jpg",
+      "countryCode": "DE",
+      "active": true
+    },
+    {
+      "id": 12,
+      "name": "Red Cadets",
+      "address": "10.1.12.1",
+      "teamSubnet": "::ffff:10.1.12.0",
+      "logoUrl": "https://ctftime.org//media/team/logo_vampir.jpg",
+      "countryCode": "RU",
+      "active": true
+    },
+    {
+      "id": 13,
+      "name": "Pwn17",
+      "address": "10.1.13.1",
+      "teamSubnet": "::ffff:10.1.13.0",
+      "logoUrl": "https://ctftime.org//media/team/Pwn17-logo.jpg",
+      "countryCode": "",
+      "active": true
+    },
+    {
+      "id": 15,
+      "name": "Les Pires Hat",
+      "address": "10.1.15.1",
+      "teamSubnet": "::ffff:10.1.15.0",
+      "logoUrl": "https://ctftime.org//media/team/unknown_10.png",
+      "countryCode": "FR",
+      "active": true
+    },
+    {
+      "id": 16,
+      "name": "Ulisse",
+      "address": "10.1.16.1",
+      "teamSubnet": "::ffff:10.1.16.0",
+      "logoUrl": "https://ctftime.org//media/team/photo_2019-04-29_09-36-10.jpg",
+      "countryCode": "IT",
+      "active": true
+    },
+    {
+      "id": 18,
+      "name": "APTduoquadra",
+      "address": "10.1.18.1",
+      "teamSubnet": "::ffff:10.1.18.0",
+      "logoUrl": "https://ctftime.org//media/team/halloween_logo.jpg",
+      "countryCode": "FR",
+      "active": true
+    },
+    {
+      "id": 19,
+      "name": "saarsec",
+      "address": "10.1.19.1",
+      "teamSubnet": "::ffff:10.1.19.0",
+      "logoUrl": "https://ctftime.org//media/team/saarsec_1.png",
+      "countryCode": "DE",
+      "active": true
+    },
+    {
+      "id": 20,
+      "name": "void* vikings",
+      "address": "10.1.20.1",
+      "teamSubnet": "::ffff:10.1.20.0",
+      "logoUrl": "https://ctftime.org//media/team/Void_Vikings_with_background_1.png",
+      "countryCode": "US",
+      "active": true
+    },
+    {
+      "id": 21,
+      "name": "AmTrain",
+      "address": "10.1.21.1",
+      "teamSubnet": "::ffff:10.1.21.0",
+      "logoUrl": "https://ctftime.org//media/team/AmTrain_1.jpg",
+      "countryCode": "CN",
+      "active": true
+    },
+    {
+      "id": 24,
+      "name": "Radboud Institute of Pwning",
+      "address": "10.1.24.1",
+      "teamSubnet": "::ffff:10.1.24.0",
+      "logoUrl": "https://ctftime.org//media/team/logo_385.png",
+      "countryCode": "NL",
+      "active": true
+    },
+    {
+      "id": 26,
+      "name": "NoPwn4OldMen",
+      "address": "10.1.26.1",
+      "teamSubnet": "::ffff:10.1.26.0",
+      "logoUrl": "",
+      "countryCode": "HU",
+      "active": true
+    },
+    {
+      "id": 29,
+      "name": "DynamicDuo",
+      "address": "10.1.29.1",
+      "teamSubnet": "::ffff:10.1.29.0",
+      "logoUrl": "https://ctftime.org//media/team/batman.jpg",
+      "countryCode": "DE",
+      "active": true
+    },
+    {
+      "id": 31,
+      "name": "Yupsilon",
+      "address": "10.1.31.1",
+      "teamSubnet": "::ffff:10.1.31.0",
+      "logoUrl": "https://ctftime.org//media/team/20211017_103217_0000.png",
+      "countryCode": "IT",
+      "active": true
+    },
+    {
+      "id": 32,
+      "name": "DU4L.org",
+      "address": "10.1.32.1",
+      "teamSubnet": "::ffff:10.1.32.0",
+      "logoUrl": "https://ctftime.org//media/team/favicon_17.png",
+      "countryCode": "DE",
+      "active": true
+    },
+    {
+      "id": 33,
+      "name": "TU Delft CTF Team",
+      "address": "10.1.33.1",
+      "teamSubnet": "::ffff:10.1.33.0",
+      "logoUrl": "",
+      "countryCode": "NL",
+      "active": true
+    },
+    {
+      "id": 34,
+      "name": "Unit336",
+      "address": "10.1.34.1",
+      "teamSubnet": "::ffff:10.1.34.0",
+      "logoUrl": "",
+      "countryCode": "DE",
+      "active": true
+    },
+    {
+      "id": 35,
+      "name": "ECSC Team Greece",
+      "address": "10.1.35.1",
+      "teamSubnet": "::ffff:10.1.35.0",
+      "logoUrl": "",
+      "countryCode": "GR",
+      "active": true
+    },
+    {
+      "id": 36,
+      "name": "um_ctf_team",
+      "address": "10.1.36.1",
+      "teamSubnet": "::ffff:10.1.36.0",
+      "logoUrl": "https://ctftime.org//media/team/UM-CTF-team-white.png",
+      "countryCode": "MT",
+      "active": true
+    },
+    {
+      "id": 37,
+      "name": "Vim Appreciation Society",
+      "address": "10.1.37.1",
+      "teamSubnet": "::ffff:10.1.37.0",
+      "logoUrl": "",
+      "countryCode": "US",
+      "active": true
+    },
+    {
+      "id": 38,
+      "name": "Starjammers2",
+      "address": "10.1.38.1",
+      "teamSubnet": "::ffff:10.1.38.0",
+      "logoUrl": "",
+      "countryCode": "",
+      "active": true
+    },
+    {
+      "id": 39,
+      "name": "N0N@me13",
+      "address": "10.1.39.1",
+      "teamSubnet": "::ffff:10.1.39.0",
+      "logoUrl": "https://ctftime.org//media/team/N0NameLogo.png",
+      "countryCode": "RU",
+      "active": true
+    },
+    {
+      "id": 40,
+      "name": "[G0PPA C0D3S]",
+      "address": "10.1.40.1",
+      "teamSubnet": "::ffff:10.1.40.0",
+      "logoUrl": "https://ctftime.org//media/team/bootlogo.png",
+      "countryCode": "RU",
+      "active": true
+    },
+    {
+      "id": 42,
+      "name": "Sp33d_0f_T1m3",
+      "address": "10.1.42.1",
+      "teamSubnet": "::ffff:10.1.42.0",
+      "logoUrl": "https://ctftime.org//media/team/sot_finish.png",
+      "countryCode": "VN",
+      "active": true
+    },
+    {
+      "id": 43,
+      "name": "WE_0WN_Y0U",
+      "address": "10.1.43.1",
+      "teamSubnet": "::ffff:10.1.43.0",
+      "logoUrl": "https://ctftime.org//media/team/logo_square_256x256_whitebg.png",
+      "countryCode": "AT",
+      "active": true
+    },
+    {
+      "id": 45,
+      "name": "FlexSurfing",
+      "address": "10.1.45.1",
+      "teamSubnet": "::ffff:10.1.45.0",
+      "logoUrl": "https://ctftime.org//media/team/FluxFingers-Symbol-Squered-Blue-Green-512px.png",
+      "countryCode": "DE",
+      "active": true
+    },
+    {
+      "id": 46,
+      "name": "Team Risotto",
+      "address": "10.1.46.1",
+      "teamSubnet": "::ffff:10.1.46.0",
+      "logoUrl": "",
+      "countryCode": "IT",
+      "active": true
+    },
+    {
+      "id": 47,
+      "name": "Kleinmazama",
+      "address": "10.1.47.1",
+      "teamSubnet": "::ffff:10.1.47.0",
+      "logoUrl": "https://ctftime.org//media/team/1280px-Mazama_rufina1.JPG",
+      "countryCode": "DE",
+      "active": true
+    },
+    {
+      "id": 48,
+      "name": "HgbSec",
+      "address": "10.1.48.1",
+      "teamSubnet": "::ffff:10.1.48.0",
+      "logoUrl": "https://ctftime.org//media/team/HgbSec_150_1.png",
+      "countryCode": "AT",
+      "active": true
+    },
+    {
+      "id": 49,
+      "name": "Team Salmon",
+      "address": "10.1.49.1",
+      "teamSubnet": "::ffff:10.1.49.0",
+      "logoUrl": "",
+      "countryCode": "EE",
+      "active": true
+    },
+    {
+      "id": 50,
+      "name": "Team Stroopwafel",
+      "address": "10.1.50.1",
+      "teamSubnet": "::ffff:10.1.50.0",
+      "logoUrl": "",
+      "countryCode": "NL",
+      "active": true
+    },
+    {
+      "id": 51,
+      "name": "Team Sachertorte",
+      "address": "10.1.51.1",
+      "teamSubnet": "::ffff:10.1.51.0",
+      "logoUrl": "",
+      "countryCode": "AT",
+      "active": true
+    },
+    {
+      "id": 52,
+      "name": "\uD83D\uDC38 rop hoppers \uD83D\uDC38",
+      "address": "10.1.52.1",
+      "teamSubnet": "::ffff:10.1.52.0",
+      "logoUrl": "https://ctftime.org//media/team/frog.jpeg",
+      "countryCode": "DE",
+      "active": true
+    },
+    {
+      "id": 53,
+      "name": "Pudu",
+      "address": "10.1.53.1",
+      "teamSubnet": "::ffff:10.1.53.0",
+      "logoUrl": "",
+      "countryCode": "DE",
+      "active": true
+    },
+    {
+      "id": 54,
+      "name": "l33t1m",
+      "address": "10.1.54.1",
+      "teamSubnet": "::ffff:10.1.54.0",
+      "logoUrl": "",
+      "countryCode": "RU",
+      "active": true
+    },
+    {
+      "id": 55,
+      "name": "PulciGe",
+      "address": "10.1.55.1",
+      "teamSubnet": "::ffff:10.1.55.0",
+      "logoUrl": "https://ctftime.org//media/team/logo_393.png",
+      "countryCode": "IT",
+      "active": true
+    },
+    {
+      "id": 56,
+      "name": "FaKappa",
+      "address": "10.1.56.1",
+      "teamSubnet": "::ffff:10.1.56.0",
+      "logoUrl": "https://ctftime.org//media/team/bb75dc98-eb35-426a-8125-9c41c631a06e1.png",
+      "countryCode": "RU",
+      "active": true
+    },
+    {
+      "id": 59,
+      "name": "FAUST",
+      "address": "10.1.59.1",
+      "teamSubnet": "::ffff:10.1.59.0",
+      "logoUrl": "https://ctftime.org//media/team/logo-ohne-text-quadratisch-small.png",
+      "countryCode": "DE",
+      "active": true
+    },
+    {
+      "id": 61,
+      "name": "Tower of Hanoi",
+      "address": "10.1.61.1",
+      "teamSubnet": "::ffff:10.1.61.0",
+      "logoUrl": "https://ctftime.org//media/team/toh.jpg",
+      "countryCode": "IT",
+      "active": true
+    },
+    {
+      "id": 62,
+      "name": "DSUniPi",
+      "address": "10.1.62.1",
+      "teamSubnet": "::ffff:10.1.62.0",
+      "logoUrl": "",
+      "countryCode": "GR",
+      "active": true
+    },
+    {
+      "id": 65,
+      "name": "c0reAccess",
+      "address": "10.1.65.1",
+      "teamSubnet": "::ffff:10.1.65.0",
+      "logoUrl": "",
+      "countryCode": "FI",
+      "active": true
+    },
+    {
+      "id": 66,
+      "name": "Wapiti",
+      "address": "10.1.66.1",
+      "teamSubnet": "::ffff:10.1.66.0",
+      "logoUrl": "https://ctftime.org//media/team/wapiti.jpg",
+      "countryCode": "",
+      "active": true
+    },
+    {
+      "id": 67,
+      "name": "SiBears",
+      "address": "10.1.67.1",
+      "teamSubnet": "::ffff:10.1.67.0",
+      "logoUrl": "https://ctftime.org//media/team/sibears.jpg",
+      "countryCode": "RU",
+      "active": true
+    },
+    {
+      "id": 70,
+      "name": "Leet-Hirsch",
+      "address": "10.1.70.1",
+      "teamSubnet": "::ffff:10.1.70.0",
+      "logoUrl": "",
+      "countryCode": "DE",
+      "active": true
+    },
+    {
+      "id": 72,
+      "name": "Karibu",
+      "address": "10.1.72.1",
+      "teamSubnet": "::ffff:10.1.72.0",
+      "logoUrl": "https://ctftime.org//media/team/karibu.png",
+      "countryCode": "CA",
+      "active": true
+    },
+    {
+      "id": 73,
+      "name": "Rentier",
+      "address": "10.1.73.1",
+      "teamSubnet": "::ffff:10.1.73.0",
+      "logoUrl": "https://ctftime.org//media/team/reindeer.png",
+      "countryCode": "DE",
+      "active": true
+    },
+    {
+      "id": 74,
+      "name": "StrongWind1",
+      "address": "10.1.74.1",
+      "teamSubnet": "::ffff:10.1.74.0",
+      "logoUrl": "",
+      "countryCode": "US",
+      "active": true
+    },
+    {
+      "id": 75,
+      "name": "WhEr3Flag",
+      "address": "10.1.75.1",
+      "teamSubnet": "::ffff:10.1.75.0",
+      "logoUrl": "",
+      "countryCode": "CH",
+      "active": true
+    },
+    {
+      "id": 76,
+      "name": "Phish2Own",
+      "address": "10.1.76.1",
+      "teamSubnet": "::ffff:10.1.76.0",
+      "logoUrl": "https://ctftime.org//media/team/p2o-squared.png",
+      "countryCode": "DE",
+      "active": true
+    },
+    {
+      "id": 77,
+      "name": "Bulba Hackers",
+      "address": "10.1.77.1",
+      "teamSubnet": "::ffff:10.1.77.0",
+      "logoUrl": "https://ctftime.org//media/team/pic_1.png",
+      "countryCode": "BY",
+      "active": true
+    },
+    {
+      "id": 78,
+      "name": "havce",
+      "address": "10.1.78.1",
+      "teamSubnet": "::ffff:10.1.78.0",
+      "logoUrl": "https://ctftime.org//media/team/Havce.jpg",
+      "countryCode": "IT",
+      "active": true
+    },
+    {
+      "id": 79,
+      "name": "Cervus elaphus",
+      "address": "10.1.79.1",
+      "teamSubnet": "::ffff:10.1.79.0",
+      "logoUrl": "",
+      "countryCode": "DE",
+      "active": true
+    }
+  ],
+  "services": [{
         "id": 1,
         "name": "bambi-notes",
         "flagsPerRoundMultiplier": 1,
