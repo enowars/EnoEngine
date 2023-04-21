@@ -1,0 +1,125 @@
+{
+    "title": "Bambi CTF 7",
+    "flagValidityInRounds": 10,
+    "checkedRoundsPerRound": 3,
+    "roundLengthInSeconds": 60,
+    "dnsSuffix": ".bambi.ovh",
+    "teamSubnetBytesLength": 15,
+    "flagSigningKey": "wsf43fewdsfsfvbghjkuioui87zsdfsdf34fsdfsdf",
+    "encoding": "Legacy",
+    "teams": [
+        {
+            "id": 1,
+            "name": "ENOOPFLAG",
+            "address": "10.1.1.1",
+            "teamSubnet": "::ffff:10.1.1.0",
+            "logoUrl": "https://ctftime.org//media/team/enoflag-shield.png",
+            "active": true
+        },
+        {
+            "id": 2,
+            "name": "Rentier",
+            "address": "10.1.2.1",
+            "teamSubnet": "::ffff:10.1.2.0",
+            "logoUrl": "https://ctftime.org/media/cache/9b/2d/9b2dff107d92e80a5d92909023bb5df3.png",
+            "active": true
+        },
+        {
+            "id": 3,
+            "name": "Kleinmazama",
+            "address": "10.1.3.1",
+            "teamSubnet": "::ffff:10.1.3.0",
+            "logoUrl": "https://ctftime.org/media/cache/fb/b9/fbb9b348ee8261cd1108a88c2028dcc3.png",
+            "active": true
+        },
+        {
+            "id": 4,
+            "name": "Pudu",
+            "address": "10.1.4.1",
+            "teamSubnet": "::ffff:10.1.4.0",
+            "active": true
+        },
+        {
+            "id": 5,
+            "name": "Wapiti",
+            "address": "10.1.5.1",
+            "teamSubnet": "::ffff:10.1.5.0",
+            "active": true
+        },
+        {
+            "id": 6,
+            "name": "Karibu",
+            "address": "10.1.6.1",
+            "teamSubnet": "::ffff:10.1.6.0",
+            "logoUrl": "https://ctftime.org/media/cache/c4/06/c406054c8bee01fbdfcfbff6e6825dfd.png",
+            "active": true
+        },
+        {
+            "id": 7,
+            "name": "Muntjak",
+            "address": "10.1.7.1",
+            "teamSubnet": "::ffff:10.1.7.0",
+            "active": true
+        },
+        {
+            "id": 8,
+            "name": "Sambar",
+            "address": "10.1.8.1",
+            "teamSubnet": "::ffff:10.1.8.0",
+            "active": true
+        },
+        {
+            "id": 9,
+            "name": "Karibu",
+            "address": "10.1.9.1",
+            "teamSubnet": "::ffff:10.1.9.0",
+            "active": true
+        }
+    ],
+    "services": [
+        {
+            "id": 1,
+            "name": "bambi-notes",
+            "flagsPerRoundMultiplier": 1,
+            "noisesPerRoundMultiplier": 1,
+            "havocsPerRoundMultiplier": 1,
+            "weightFactor": 1,
+            "checkers": [
+                "http://192.168.1.1:5008"
+            ]
+        },
+        {
+            "id": 2,
+            "name": "Catchbox",
+            "flagsPerRoundMultiplier": 1,
+            "noisesPerRoundMultiplier": 1,
+            "havocsPerRoundMultiplier": 1,
+            "weightFactor": 1,
+            "checkers": [
+                "http://192.168.1.2:9092"
+            ]
+        },
+        {
+            "id": 3,
+            "name": "Fireworx",
+            "flagsPerRoundMultiplier": 1,
+            "noisesPerRoundMultiplier": 1,
+            "havocsPerRoundMultiplier": 1,
+            "weightFactor": 1,
+            "checkers": [
+                "http://192.168.1.3:1813"
+            ]
+        },
+        {
+            "id": 4,
+            "name": "MouseAndScreen",
+            "flagsPerRoundMultiplier": 1,
+            "noisesPerRoundMultiplier": 1,
+            "havocsPerRoundMultiplier": 1,
+            "weightFactor": 1,
+            "checkers": [
+                "http://192.168.1.4:5006"
+            ]
+        }
+    ]
+}
