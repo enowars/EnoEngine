@@ -16,7 +16,7 @@ public record SLAResults(
 public partial class EnoDb
 {
     private const double SLA = 100.0;
-    private const double ATTACK = 400.0;
+    private const double ATTACK = 1000.0;
     private const double DEF = -50;
 
     public string GetQuery(long minRoundId, long maxRoundId, double storeWeightFactor, double servicesWeightFactor)
