@@ -40,6 +40,7 @@ public partial class EnoDb
                     .Sum(sf => ATTACK
                         * this.context.Services.Where(e => e.Id == service.Id).Single().WeightFactor / servicesWeightFactor // Service Weight Scaling
                         / this.context.Services.Where(e => e.Id == service.Id).Single().FlagsPerRound
+                        / this.context.Services.Where(e => e.Id == service.Id).Single().FlagVariants
                         / this.context.SubmittedFlags // service, owner, round (, offset)
                             .Where(e => e.FlagServiceId == sf.FlagServiceId)
                             .Where(e => e.FlagOwnerId == sf.FlagOwnerId)
