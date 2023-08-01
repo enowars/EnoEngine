@@ -271,6 +271,12 @@ public class Program
                 return 1;
             }
 
+            if (jsonConfigurationService.WeightFactor == 0)
+            {
+                Console.Error.WriteLine($"Service weight must not be 0 (service {jsonConfigurationService.Id}).");
+                return 1;
+            }
+
             if (jsonConfigurationService.Checkers is null)
             {
                 Console.Error.WriteLine($"Service checkers must not be null (service {jsonConfigurationService.Id}).");
@@ -331,6 +337,7 @@ public class Program
                 dbService.HavocVariants = havocVariants;
                 dbService.Active = jsonConfigurationService.Active;
                 dbService.Checkers = jsonConfigurationService.Checkers;
+                dbService.WeightFactor = jsonConfigurationService.WeightFactor;
                 Console.WriteLine($"Updating service {dbService}");
                 dbServices.Remove(dbService.Id);
             }
