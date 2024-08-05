@@ -17,7 +17,7 @@
 
         public FileQueue(string filename, CancellationToken cancelToken)
         {
-            this.writer = new StreamWriter(new GZipStream(new FileStream(filename, FileMode::Append), CompressionMode.Compress));
+            this.writer = new StreamWriter(new GZipStream(new FileStream(filename, FileMode.Append), CompressionMode.Compress));
             this.cancelToken = cancelToken;
             Task.Run(this.WriterTask, cancelToken);
         }
