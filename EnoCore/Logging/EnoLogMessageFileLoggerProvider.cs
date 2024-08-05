@@ -14,7 +14,7 @@
         public EnoLogMessageFileLoggerProvider(string tool, CancellationToken token)
         {
             this.tool = tool;
-            this.queue = new FileQueue($"../data/{tool}.log", token);
+            this.queue = new FileQueue($"../data/{tool}.log.gz", token);
         }
 
         public IExternalScopeProvider? ScopeProvider { get; internal set; }
