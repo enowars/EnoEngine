@@ -4,6 +4,7 @@
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.IO;
+    using System.IO.Compression;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
@@ -16,7 +17,7 @@
 
         public FileQueue(string filename, CancellationToken cancelToken)
         {
-            this.writer = new StreamWriter(filename);
+            this.writer = new StreamWriter(new GZipStream(new FileStream(filename, FileMode.Append), CompressionMode.Compress));
             this.cancelToken = cancelToken;
             Task.Run(this.WriterTask, cancelToken);
         }
