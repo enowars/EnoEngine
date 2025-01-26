@@ -160,9 +160,8 @@ public sealed record Flag(
                 return new Flag(ownerId, serviceId, roundOffset, roundId);
             }
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            logger?.LogError(e.ToFancyStringWithCaller());
             return null;
         }
     }
