@@ -168,7 +168,7 @@ public partial class EnoDb
                     i += 1;
                 }
 
-                this.FisherYatesShuffleTaskStarts(currentTasks);
+                FisherYatesShuffleTaskStarts(currentTasks);
                 tasks.AddRange(currentTasks);
             }
         }
@@ -237,7 +237,7 @@ public partial class EnoDb
                     i += 1;
                 }
 
-                this.FisherYatesShuffleTaskStarts(currentTasks);
+                FisherYatesShuffleTaskStarts(currentTasks);
                 tasks.AddRange(currentTasks);
             }
         }
@@ -306,7 +306,7 @@ public partial class EnoDb
                     i += 1;
                 }
 
-                this.FisherYatesShuffleTaskStarts(currentTasks);
+                FisherYatesShuffleTaskStarts(currentTasks);
                 tasks.AddRange(currentTasks);
             }
         }
@@ -375,7 +375,7 @@ public partial class EnoDb
                     i += 1;
                 }
 
-                this.FisherYatesShuffleTaskStarts(currentTasks);
+                FisherYatesShuffleTaskStarts(currentTasks);
                 tasks.AddRange(currentTasks);
             }
         }
@@ -448,7 +448,7 @@ public partial class EnoDb
                         i += 1;
                     }
 
-                    this.FisherYatesShuffleTaskStarts(currentTasks);
+                    FisherYatesShuffleTaskStarts(currentTasks);
                     tasks.AddRange(currentTasks);
                 }
             }
@@ -518,7 +518,7 @@ public partial class EnoDb
                     i += 1;
                 }
 
-                this.FisherYatesShuffleTaskStarts(currentTasks);
+                FisherYatesShuffleTaskStarts(currentTasks);
                 tasks.AddRange(currentTasks);
             }
         }
@@ -630,14 +630,7 @@ public partial class EnoDb
             .FirstAsync();
     }
 
-    private async Task InsertCheckerTasks(IEnumerable<CheckerTask> tasks)
-    {
-        this.logger.LogDebug($"InsertCheckerTasks inserting {tasks.Count()} tasks");
-        this.context.AddRange(tasks);
-        await this.context.SaveChangesAsync();
-    }
-
-    private void FisherYatesShuffleTaskStarts(List<CheckerTask> tasks)
+    private static void FisherYatesShuffleTaskStarts(List<CheckerTask> tasks)
     {
         Random random = new Random();
         for (int i = 0; i < (tasks.Count - 1); i++)
@@ -655,5 +648,12 @@ public partial class EnoDb
                 StartTime = task.StartTime,
             };
         }
+    }
+
+    private async Task InsertCheckerTasks(IEnumerable<CheckerTask> tasks)
+    {
+        this.logger.LogDebug($"InsertCheckerTasks inserting {tasks.Count()} tasks");
+        this.context.AddRange(tasks);
+        await this.context.SaveChangesAsync();
     }
 }
