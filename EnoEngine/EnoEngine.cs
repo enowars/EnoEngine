@@ -38,6 +38,7 @@ internal partial class EnoEngine
 
         for (int i = 1; i <= lastFinishedRound.Id; i++)
         {
+            this.logger.LogInformation("Calculating round {}", i);
             await this.HandleRoundEnd(i, config, true);
         }
     }
