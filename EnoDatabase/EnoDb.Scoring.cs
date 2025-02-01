@@ -19,7 +19,7 @@ public partial class EnoDb
     private const double ATTACK = 1000.0;
     private const double DEF = -50;
 
-    public string GetQuery(EnoDbContext ctx, long minRoundId, long maxRoundId, double storeWeightFactor, double servicesWeightFactor, long teamId, long serviceId)
+    public string GetQuery(EnoDbContext ctx, long minRoundId, long maxRoundId, double storeWeightFactor, double servicesWeightFactor, long teamId)
     {
         Debug.Assert(storeWeightFactor > 0, "Invalid store weight");
         Debug.Assert(servicesWeightFactor > 0, "Invalid services weight");
@@ -33,17 +33,17 @@ public partial class EnoDb
             select new
             {
                 TeamId = teamId,
-                ServiceId = serviceId,
+                ServiceId = service.Id,
                 RoundId = maxRoundId,
                 AttackPoints = ctx.SubmittedFlags // service, attacker, round
-                    .Where(sf => sf.FlagServiceId == serviceId)
+                    .Where(sf => sf.FlagServiceId == service.Id)
                     .Where(sf => sf.AttackerTeamId == teamId)
                     .Where(sf => sf.RoundId <= maxRoundId)
                     .Where(sf => sf.RoundId >= minRoundId)
                     .Sum(sf => ATTACK
-                        * ctx.Services.Where(e => e.Id == serviceId).Single().WeightFactor / servicesWeightFactor // Service Weight Scaling
-                        / ctx.Services.Where(e => e.Id == serviceId).Single().FlagsPerRound
-                        / ctx.Services.Where(e => e.Id == serviceId).Single().FlagVariants
+                        * ctx.Services.Where(e => e.Id == service.Id).Single().WeightFactor / servicesWeightFactor // Service Weight Scaling
+                        / ctx.Services.Where(e => e.Id == service.Id).Single().FlagsPerRound
+                        / ctx.Services.Where(e => e.Id == service.Id).Single().FlagVariants
                         / ctx.SubmittedFlags // service, owner, round (, offset)
                             .Where(e => e.FlagServiceId == sf.FlagServiceId)
                             .Where(e => e.FlagOwnerId == sf.FlagOwnerId)
@@ -55,14 +55,14 @@ public partial class EnoDb
                         ctx.TeamServicePointsSnapshot
                             .Where(e => e.RoundId == oldSnapshotRoundId)
                             .Where(e => e.TeamId == teamId)
-                            .Where(e => e.ServiceId == serviceId)
+                            .Where(e => e.ServiceId == service.Id)
                             .Single().AttackPoints,
                         0.0),
                 LostDefensePoints = (DEF
-                    * ctx.Services.Where(e => e.Id == serviceId).Single().WeightFactor / servicesWeightFactor
-                    / ctx.Services.Where(e => e.Id == serviceId).Single().FlagsPerRound
+                    * ctx.Services.Where(e => e.Id == service.Id).Single().WeightFactor / servicesWeightFactor
+                    / ctx.Services.Where(e => e.Id == service.Id).Single().FlagsPerRound
                     * ctx.SubmittedFlags // service, owner, round
-                        .Where(e => e.FlagServiceId == serviceId)
+                        .Where(e => e.FlagServiceId == service.Id)
                         .Where(e => e.FlagOwnerId == teamId)
                         .Where(e => e.FlagRoundId <= maxRoundId)
                         .Where(e => e.FlagRoundId >= minRoundId)
@@ -73,14 +73,14 @@ public partial class EnoDb
                         ctx.TeamServicePointsSnapshot
                             .Where(e => e.RoundId == oldSnapshotRoundId)
                             .Where(e => e.TeamId == teamId)
-                            .Where(e => e.ServiceId == serviceId)
+                            .Where(e => e.ServiceId == service.Id)
                             .Single().LostDefensePoints,
                         0.0),
                 ServiceLevelAgreementPoints = ctx.RoundTeamServiceStatus
                     .Where(e => e.GameRoundId <= maxRoundId)
                     .Where(e => e.GameRoundId >= minRoundId)
                     .Where(e => e.TeamId == teamId)
-                    .Where(e => e.ServiceId == serviceId)
+                    .Where(e => e.ServiceId == service.Id)
                     .Sum(sla => SLA
                         * ctx.Services.Where(s => s.Id == s.Id).Single().WeightFactor
                         * (sla.Status == ServiceStatus.OK ? 1 : sla.Status == ServiceStatus.RECOVERING ? 0.5 : 0)
@@ -89,32 +89,32 @@ public partial class EnoDb
                         ctx.TeamServicePointsSnapshot
                             .Where(e => e.RoundId == oldSnapshotRoundId)
                             .Where(e => e.TeamId == teamId)
-                            .Where(e => e.ServiceId == serviceId)
+                            .Where(e => e.ServiceId == service.Id)
                             .Single().ServiceLevelAgreementPoints,
                         0.0),
                 Status = ctx.RoundTeamServiceStatus
                     .Where(e => e.GameRoundId == maxRoundId)
                     .Where(e => e.TeamId == teamId)
-                    .Where(e => e.ServiceId == serviceId)
+                    .Where(e => e.ServiceId == service.Id)
                     .Select(e => e.Status)
                     .Single(),
                 ErrorMessage = ctx.RoundTeamServiceStatus
                     .Where(e => e.GameRoundId == maxRoundId)
                     .Where(e => e.TeamId == teamId)
-                    .Where(e => e.ServiceId == serviceId)
+                    .Where(e => e.ServiceId == service.Id)
                     .Select(e => e.ErrorMessage)
                     .Single(),
             };
 
         var queryString = query.ToQueryString();
 
-        queryString = queryString.Replace("@__serviceId_0", serviceId.ToString());
-        queryString = queryString.Replace("@__teamId_1", teamId.ToString());
-        queryString = queryString.Replace("@__maxRoundId_2", maxRoundId.ToString());
-        queryString = queryString.Replace("@__minRoundId_3", minRoundId.ToString());
-        queryString = queryString.Replace("@__servicesWeightFactor_4", servicesWeightFactor.ToString());
-        queryString = queryString.Replace("@__oldSnapshotRoundId_5", (minRoundId - 1).ToString());
-        queryString = queryString.Replace("@__storeWeightFactor_6", storeWeightFactor.ToString());
+        //queryString = queryString.Replace("@__serviceId_0", serviceId.ToString());
+        queryString = queryString.Replace("@__teamId_0", teamId.ToString());
+        queryString = queryString.Replace("@__maxRoundId_1", maxRoundId.ToString());
+        queryString = queryString.Replace("@__minRoundId_2", minRoundId.ToString());
+        queryString = queryString.Replace("@__servicesWeightFactor_3", servicesWeightFactor.ToString());
+        queryString = queryString.Replace("@__oldSnapshotRoundId_4", (minRoundId - 1).ToString());
+        queryString = queryString.Replace("@__storeWeightFactor_5", storeWeightFactor.ToString());
         return queryString;
     }
 
@@ -132,9 +132,9 @@ public partial class EnoDb
         {
             tasks = new List<Task>();
             foreach (var team in await this.context.Teams.ToArrayAsync()) {
-                foreach (var service in await this.context.Services.ToArrayAsync()) {
+                //foreach (var service in await this.context.Services.ToArrayAsync()) {
                     var ctx = contextFactory.CreateDbContext();
-                    var query = this.GetQuery(ctx, newSnapshotRoundId, newSnapshotRoundId, storeWeightFactor, servicesWeightFactor, team.Id, service.Id);
+                    var query = this.GetQuery(ctx, newSnapshotRoundId, newSnapshotRoundId, storeWeightFactor, servicesWeightFactor, team.Id);
                     var phase2QueryRaw = @$"
 WITH cte AS (
     SELECT ""TeamId"", ""ServiceId"", ""RoundId"", ""AttackPoints"", ""LostDefensePoints"", ""ServiceLevelAgreementPoints""
@@ -151,7 +151,7 @@ SELECT * FROM cte
                         await ctx.Database.ExecuteSqlRawAsync(phase2QueryRaw);
                         ctx.Dispose();
                     }));
-                }
+                //}
             }
             await Task.WhenAll(tasks);
         }
@@ -161,9 +161,9 @@ SELECT * FROM cte
         sw.Restart();
         tasks = new List<Task>();
         foreach (var team in await this.context.Teams.ToArrayAsync()) {
-            foreach (var service in await this.context.Services.ToArrayAsync()) {
+            //foreach (var service in await this.context.Services.ToArrayAsync()) {
                 var ctx = contextFactory.CreateDbContext();
-                var phase3Query = this.GetQuery(ctx, newSnapshotRoundId + 1, roundId, storeWeightFactor, servicesWeightFactor, team.Id, service.Id);
+                var phase3Query = this.GetQuery(ctx, newSnapshotRoundId + 1, roundId, storeWeightFactor, servicesWeightFactor, team.Id);
                 var phase3QueryRaw = @$"
 WITH cte AS (
 -----------------
@@ -187,7 +187,7 @@ WHERE
                     await ctx.Database.ExecuteSqlRawAsync(phase3QueryRaw);
                     ctx.Dispose();
                 }));
-            }
+            //}
         }
         await Task.WhenAll(tasks);
         Console.WriteLine($"Phase 3 done in {sw.ElapsedMilliseconds}ms");
