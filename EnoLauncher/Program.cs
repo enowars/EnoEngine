@@ -161,7 +161,8 @@ public sealed class Program : IDisposable
                     errorMessage = null;
                 }
 
-                CheckerTask updatedTask = task with {
+                CheckerTask updatedTask = task with
+                {
                     CheckerResult = checkerResult,
                     ErrorMessage = errorMessage,
                     AttackInfo = attackInfo,
