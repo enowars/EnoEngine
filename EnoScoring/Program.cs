@@ -45,6 +45,7 @@ internal class EnoScoring
         logger.LogInformation("EnoScoring starting");
         using var debugCtx = await this.dbContextFactory.CreateDbContextAsync(ScoringCancelSource.Token);
         //await debugCtx.Database.MigrateAsync(ScoringCancelSource.Token);
+        await debugCtx.Rounds.Where(e => e.Id > 400).ExecuteUpdateAsync(e => e.SetProperty(e => e.Status, RoundStatus.Finished));
 
         logger.LogInformation("EnoScoring looping");
         try
@@ -67,7 +68,7 @@ internal class EnoScoring
                 await this.DoCurrentScoreboard(round.Id);
                 await debugCtx.Rounds.Where(e => e.Id == round.Id).ExecuteUpdateAsync(e => e.SetProperty(e => e.Status, RoundStatus.Scored));
                 stopWatch.Stop();
-                this.logger.LogInformation("Scoring round {} took {}s", round.Id, stopWatch.ElapsedMilliseconds / 1000);
+                this.logger.LogInformation("Scoring round {} took {}ms", round.Id, stopWatch.ElapsedMilliseconds);
             }
         }
         catch (OperationCanceledException)
@@ -105,14 +106,13 @@ internal class EnoScoring
     /// <returns></returns>
     private async Task DoRoundTeamServiceStates(long roundId, EnoStatistics statistics)
     {
+        var sw = Stopwatch.StartNew();
         using var ctx = this.dbContextFactory.CreateDbContext();
         await ctx.RoundTeamServiceStatus.Where(e => e.GameRoundId >= roundId).ExecuteDeleteAsync(ScoringCancelSource.Token);
         var teams = await ctx.Teams.AsNoTracking().ToArrayAsync();
         var services = await ctx.Services.AsNoTracking().ToArrayAsync();
 
         var currentRoundWorstResults = new Dictionary<(long ServiceId, long TeamId), CheckerTask?>();
-        var sw = new Stopwatch();
-        sw.Start();
         var currentTasks = await ctx.CheckerTasks
             .TagWith("CalculateRoundTeamServiceStates:currentRoundTasks")
             .Where(ct => ct.CurrentRoundId == roundId)
@@ -131,7 +131,6 @@ internal class EnoScoring
 
         sw.Stop();
         statistics.LogCheckerTaskAggregateMessage(roundId, sw.ElapsedMilliseconds);
-        this.logger.LogInformation($"CalculateRoundTeamServiceStates: Data Aggregation for {teams.Length} Teams and {services.Length} Services took {sw.ElapsedMilliseconds}ms");
 
         var oldRoundsWorstResults = await ctx.CheckerTasks
             .TagWith("CalculateRoundTeamServiceStates:oldRoundsTasks")
@@ -184,24 +183,25 @@ internal class EnoScoring
 
         ctx.RoundTeamServiceStatus.AddRange(newRoundTeamServiceStatus.Values);
         await ctx.SaveChangesAsync();
+        this.logger.LogInformation($"{nameof(DoRoundTeamServiceStates)} took {sw.ElapsedMilliseconds}ms");
     }
     #endregion
 
     #region Phase 2 (Scores)
     private async Task DoScores(long roundId, Configuration configuration)
     {
+        var sw = Stopwatch.StartNew();
         using var ctx = this.dbContextFactory.CreateDbContext();
         double servicesWeightFactor = await ctx.Services.Where(s => s.Active).SumAsync(s => s.WeightFactor);
         double storeWeightFactor = await ctx.Services.Where(s => s.Active).SumAsync(s => s.WeightFactor * s.FlagVariants);
         var newSnapshotRoundId = roundId - configuration.FlagValidityInRounds - 5;
         await ctx.TeamServicePointsSnapshot.Where(e => e.RoundId >= newSnapshotRoundId).ExecuteDeleteAsync(ScoringCancelSource.Token);
-        var sw = new Stopwatch();
 
         // Phase 2: Create new TeamServicePointsSnapshots, if required
         sw.Restart();
         if (newSnapshotRoundId > 0)
         {
-            var query = this.GetQuery(newSnapshotRoundId, newSnapshotRoundId, storeWeightFactor, servicesWeightFactor);
+            var query = this.GetQuery(ctx, newSnapshotRoundId, newSnapshotRoundId, storeWeightFactor, servicesWeightFactor);
             var phase2QueryRaw = @$"
 WITH cte AS (
     SELECT ""TeamId"", ""ServiceId"", ""RoundId"", ""AttackPoints"", ""LostDefensePoints"", ""ServiceLevelAgreementPoints""
@@ -217,11 +217,7 @@ SELECT * FROM cte
             await ctx.Database.ExecuteSqlRawAsync(phase2QueryRaw);
         }
 
-        Console.WriteLine($"Phase 2 done in {sw.ElapsedMilliseconds}ms");
-
-        // Phase 3: Update TeamServicePoints
-        sw.Restart();
-        var phase3Query = this.GetQuery(newSnapshotRoundId + 1, roundId, storeWeightFactor, servicesWeightFactor);
+        var phase3Query = this.GetQuery(ctx, newSnapshotRoundId + 1, roundId, storeWeightFactor, servicesWeightFactor);
         var phase3QueryRaw = @$"
 WITH cte AS (
 -----------------
@@ -242,10 +238,7 @@ WHERE
     ""TeamServicePoints"".""ServiceId"" = cte.""ServiceId""
 ;";
         await ctx.Database.ExecuteSqlRawAsync(phase3QueryRaw);
-        Console.WriteLine($"Phase 3 done in {sw.ElapsedMilliseconds}ms");
 
-        // Phase 4: Update Teams
-        sw.Restart();
         foreach (var team in await ctx.Teams.ToArrayAsync())
         {
             team.AttackPoints = await ctx.TeamServicePoints
@@ -267,12 +260,11 @@ WHERE
         }
 
         await ctx.SaveChangesAsync();
-        Console.WriteLine($"Phase 4 done in {sw.ElapsedMilliseconds}ms");
+        this.logger.LogInformation($"{nameof(DoScores)} took {sw.ElapsedMilliseconds}ms");
     }
 
-    private string GetQuery(long minRoundId, long maxRoundId, double storeWeightFactor, double servicesWeightFactor)
+    private string GetQuery(EnoDbContext ctx, long minRoundId, long maxRoundId, double storeWeightFactor, double servicesWeightFactor)
     {
-        using var ctx = this.dbContextFactory.CreateDbContext();
         Debug.Assert(storeWeightFactor > 0, "Invalid store weight");
         Debug.Assert(servicesWeightFactor > 0, "Invalid services weight");
         long oldSnapshotRoundId = minRoundId - 1;
@@ -368,9 +360,12 @@ WHERE
     #region Phase 3 (Attack Info)
     private async Task DoAttackInfo(long roundId, Configuration configuration)
     {
+        var sw = Stopwatch.StartNew();
+        using var ctx = this.dbContextFactory.CreateDbContext();
         var attackInfo = await this.GetAttackInfo(roundId, configuration.FlagValidityInRounds);
         var json = JsonSerializer.Serialize(attackInfo, EnoCoreUtil.CamelCaseEnumConverterOptions);
         File.WriteAllText($"{EnoCoreUtil.DataDirectory}attack.json", json);
+        this.logger.LogInformation($"{nameof(DoAttackInfo)} took {sw.ElapsedMilliseconds}ms");
     }
 
     private async Task<AttackInfo> GetAttackInfo(long roundId, long flagValidityInRounds)
@@ -446,26 +441,21 @@ WHERE
     #region Phase 4 (Scoreboard)
     private async Task DoCurrentScoreboard(long roundId)
     {
+        var sw = Stopwatch.StartNew();
         using var ctx = this.dbContextFactory.CreateDbContext();
-        var sw = new Stopwatch();
-        sw.Start();
-        this.logger.LogInformation($"{nameof(this.DoCurrentScoreboard)} Started Scoreboard Generation");
         var teams = ctx.Teams
             .Include(t => t.TeamServicePoints)
             .AsNoTracking()
             .OrderByDescending(t => t.TotalPoints)
             .ToList();
-        this.logger.LogInformation($"{nameof(this.DoCurrentScoreboard)} Fetched teams after: {sw.ElapsedMilliseconds}ms");
         var round = await ctx.Rounds
             .AsNoTracking()
             .Where(r => r.Id == roundId)
             .FirstOrDefaultAsync();
-        this.logger.LogInformation($"{nameof(this.DoCurrentScoreboard)} Fetched round after: {sw.ElapsedMilliseconds}ms");
         var services = ctx.Services
             .AsNoTracking()
             .OrderBy(s => s.Id)
             .ToList();
-        this.logger.LogInformation($"{nameof(this.DoCurrentScoreboard)} Fetched services after: {sw.ElapsedMilliseconds}ms");
 
         var scoreboardTeams = new List<ScoreboardTeam>();
         var scoreboardServices = new List<ScoreboardService>();
@@ -508,8 +498,6 @@ WHERE
                     .ToArray()));
         }
 
-        this.logger.LogInformation($"{nameof(this.DoCurrentScoreboard)} Iterated services after: {sw.ElapsedMilliseconds}ms");
-
         foreach (var team in teams)
         {
             scoreboardTeams.Add(new ScoreboardTeam(
@@ -532,8 +520,6 @@ WHERE
                 .ToArray()));
         }
 
-        this.logger.LogInformation($"{nameof(this.DoCurrentScoreboard)} Iterated teams after: {sw.ElapsedMilliseconds}ms");
-
         var scoreboard = new Scoreboard(
             roundId,
             round?.Begin!.Value.ToString(EnoCoreUtil.DateTimeFormat),
@@ -541,11 +527,11 @@ WHERE
             string.Empty, // TODO
             scoreboardServices.ToArray(),
             scoreboardTeams.ToArray());
-        this.logger.LogInformation($"{nameof(this.DoCurrentScoreboard)} Finished after: {sw.ElapsedMilliseconds}ms");
 
         var json = JsonSerializer.Serialize(scoreboard, EnoCoreUtil.CamelCaseEnumConverterOptions);
         File.WriteAllText($"{EnoCoreUtil.DataDirectory}scoreboard{round!.Id}.json", json);
         File.WriteAllText($"{EnoCoreUtil.DataDirectory}scoreboard.json", json);
+        this.logger.LogInformation($"{nameof(this.DoCurrentScoreboard)} took: {sw.ElapsedMilliseconds}ms");
     }
     #endregion
 
@@ -559,7 +545,11 @@ WHERE
                 {
                     loggingBuilder.SetMinimumLevel(LogLevel.Debug);
                     loggingBuilder.AddFilter(DbLoggerCategory.Name, LogLevel.None);
-                    loggingBuilder.AddConsole();
+                    loggingBuilder.AddSimpleConsole(options =>
+                    {
+                        options.SingleLine = true;
+                        options.TimestampFormat = "HH:mm:ss ";
+                    });
                     loggingBuilder.AddProvider(new EnoLogMessageFileLoggerProvider("EnoScoring", ScoringCancelSource.Token));
                 })
                 .AddSingleton<EnoScoring>()
