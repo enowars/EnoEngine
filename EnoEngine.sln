@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.28803.352
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35707.178
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EnoEngine", "EnoEngine\EnoEngine.csproj", "{3574123C-85D5-4A75-8F24-66736C072E8B}"
 EndProject
@@ -28,6 +28,11 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EnoCore.Models", "EnoCore.Models\EnoCore.Models.csproj", "{A58F96E1-580E-47D3-8F0A-4C937516F49E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnoConfig", "EnoConfig\EnoConfig.csproj", "{C4BD7621-4EB3-47A6-B0D2-78F68FC7E100}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnoScoring", "EnoScoring\EnoScoring.csproj", "{0B387D85-F608-4FF4-87CA-BBBD39A8A6C9}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0B819339-3BEF-4D7F-9828-B54B132ED79F} = {0B819339-3BEF-4D7F-9828-B54B132ED79F}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -67,6 +72,10 @@ Global
 		{C4BD7621-4EB3-47A6-B0D2-78F68FC7E100}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C4BD7621-4EB3-47A6-B0D2-78F68FC7E100}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C4BD7621-4EB3-47A6-B0D2-78F68FC7E100}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0B387D85-F608-4FF4-87CA-BBBD39A8A6C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B387D85-F608-4FF4-87CA-BBBD39A8A6C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B387D85-F608-4FF4-87CA-BBBD39A8A6C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B387D85-F608-4FF4-87CA-BBBD39A8A6C9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

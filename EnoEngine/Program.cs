@@ -39,19 +39,7 @@ try
 
     // Go!
     var engine = serviceProvider.GetRequiredService<EnoEngine.EnoEngine>();
-    if (args.Length == 1 && args[0] == MODE_RECALCULATE)
-    {
-        engine.RunRecalculation().Wait();
-    }
-    else if (args.Length == 0)
-    {
-        engine.RunContest().Wait();
-    }
-    else
-    {
-        Console.WriteLine("Invalid arguments");
-        return 1;
-    }
+    engine.RunContest().Wait();
 }
 finally
 {

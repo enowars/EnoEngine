@@ -1,6 +1,6 @@
 ﻿namespace EnoFlagSink;
 
-public class FlagSubmissionEndpoint
+public class FlagSubmissionEndpoint : IDisposable
 {
     private const int MaxLineLength = 200;
     private const int SubmissionBatchSize = 500;
@@ -260,5 +260,10 @@ public class FlagSubmissionEndpoint
         {
             this.logger.LogCritical($"InsertSubmissionsLoop failed: {e.ToFancyStringWithCaller()}");
         }
+    }
+
+    public void Dispose()
+    {
+        throw new NotImplementedException();
     }
 }
