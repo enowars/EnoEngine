@@ -214,7 +214,18 @@ public class FlagSubmissionEndpoint
                             for (int i = 0; i < orderedSubReqs.Length; i++)
                             {
                                 var subReq = orderedSubReqs[i];
-                                await subReq.Writer.WriteAsync((subReq.FlagString, results[i]), token);
+                                try
+                                {
+                                    await subReq.Writer.WriteAsync((subReq.FlagString, results[i]), token);
+                                }
+                                catch (ChannelClosedException)
+                                {
+                                    // Client disconnected before we could deliver the result; drop it.
+                                }
+                                catch (Exception e)
+                                {
+                                    this.logger.LogWarning(e.ToFancyString());
+                                }
                             }
 
                             submissions.Clear();
