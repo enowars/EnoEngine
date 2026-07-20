@@ -111,10 +111,12 @@ internal partial class EnoEngine
         {
             using var scope = this.serviceProvider.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<EnoDb>();
-            await db.UpdateScores(roundId, configuration);
+            IDbContextFactory<EnoDbContext> contextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<EnoDbContext>>();
+            await db.UpdateScores(contextFactory, roundId, configuration);
         }
         catch (Exception e)
         {
+            throw e;
             this.logger.LogError($"UpdateScores failed because: {e}");
         }
 

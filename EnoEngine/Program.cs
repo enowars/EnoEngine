@@ -22,6 +22,10 @@ try
         .AddSingleton(new EnoStatistics(nameof(EnoEngine)))
         .AddScoped<EnoDatabase.EnoDb>()
         .AddSingleton<EnoEngine.EnoEngine>()
+        .AddDbContextFactory<EnoDbContext>(
+            options => {
+                options.UseNpgsql(EnoDbContext.PostgresConnectionString);
+            })
         .AddDbContextPool<EnoDbContext>(
             options =>
             {

@@ -19,112 +19,123 @@ public partial class EnoDb
     private const double ATTACK = 1000.0;
     private const double DEF = -50;
 
-    public string GetQuery(long minRoundId, long maxRoundId, double storeWeightFactor, double servicesWeightFactor)
+    public string GetQuery(EnoDbContext ctx, long minRoundId, long maxRoundId, double storeWeightFactor, double servicesWeightFactor, long teamId)
     {
         Debug.Assert(storeWeightFactor > 0, "Invalid store weight");
         Debug.Assert(servicesWeightFactor > 0, "Invalid services weight");
         long oldSnapshotRoundId = minRoundId - 1;
+
+        var sw = new Stopwatch();
+        sw.Restart();
         var query =
-            from team in this.context.Teams
-            from service in this.context.Services
+            from team in ctx.Teams
+            from service in ctx.Services
             select new
             {
-                TeamId = team.Id,
+                TeamId = teamId,
                 ServiceId = service.Id,
                 RoundId = maxRoundId,
-                AttackPoints = this.context.SubmittedFlags // service, attacker, round
+                AttackPoints = ctx.SubmittedFlags // service, attacker, round
                     .Where(sf => sf.FlagServiceId == service.Id)
-                    .Where(sf => sf.AttackerTeamId == team.Id)
+                    .Where(sf => sf.AttackerTeamId == teamId)
                     .Where(sf => sf.RoundId <= maxRoundId)
                     .Where(sf => sf.RoundId >= minRoundId)
                     .Sum(sf => ATTACK
-                        * this.context.Services.Where(e => e.Id == service.Id).Single().WeightFactor / servicesWeightFactor // Service Weight Scaling
-                        / this.context.Services.Where(e => e.Id == service.Id).Single().FlagsPerRound
-                        / this.context.Services.Where(e => e.Id == service.Id).Single().FlagVariants
-                        / this.context.SubmittedFlags // service, owner, round (, offset)
+                        * ctx.Services.Where(e => e.Id == service.Id).Single().WeightFactor / servicesWeightFactor // Service Weight Scaling
+                        / ctx.Services.Where(e => e.Id == service.Id).Single().FlagsPerRound
+                        / ctx.Services.Where(e => e.Id == service.Id).Single().FlagVariants
+                        / ctx.SubmittedFlags // service, owner, round (, offset)
                             .Where(e => e.FlagServiceId == sf.FlagServiceId)
                             .Where(e => e.FlagOwnerId == sf.FlagOwnerId)
                             .Where(e => e.FlagRoundId == sf.FlagRoundId)
                             .Where(e => e.FlagRoundOffset == sf.FlagRoundOffset)
                             .Count() // Other attackers
-                        / this.context.Teams.Where(e => e.Active).Count())
+                        / ctx.Teams.Where(e => e.Active).Count())
                     + Math.Max(
-                        this.context.TeamServicePointsSnapshot
+                        ctx.TeamServicePointsSnapshot
                             .Where(e => e.RoundId == oldSnapshotRoundId)
-                            .Where(e => e.TeamId == team.Id)
+                            .Where(e => e.TeamId == teamId)
                             .Where(e => e.ServiceId == service.Id)
                             .Single().AttackPoints,
                         0.0),
                 LostDefensePoints = (DEF
-                    * this.context.Services.Where(e => e.Id == service.Id).Single().WeightFactor / servicesWeightFactor
-                    / this.context.Services.Where(e => e.Id == service.Id).Single().FlagsPerRound
-                    * this.context.SubmittedFlags // service, owner, round
+                    * ctx.Services.Where(e => e.Id == service.Id).Single().WeightFactor / servicesWeightFactor
+                    / ctx.Services.Where(e => e.Id == service.Id).Single().FlagsPerRound
+                    * ctx.SubmittedFlags // service, owner, round
                         .Where(e => e.FlagServiceId == service.Id)
-                        .Where(e => e.FlagOwnerId == team.Id)
+                        .Where(e => e.FlagOwnerId == teamId)
                         .Where(e => e.FlagRoundId <= maxRoundId)
                         .Where(e => e.FlagRoundId >= minRoundId)
                         .Select(e => new { e.FlagServiceId, e.FlagOwnerId, e.FlagRoundId, e.FlagRoundOffset })
                         .Distinct() // Lost flags
                         .Count())
                     + Math.Min(
-                        this.context.TeamServicePointsSnapshot
+                        ctx.TeamServicePointsSnapshot
                             .Where(e => e.RoundId == oldSnapshotRoundId)
-                            .Where(e => e.TeamId == team.Id)
+                            .Where(e => e.TeamId == teamId)
                             .Where(e => e.ServiceId == service.Id)
                             .Single().LostDefensePoints,
                         0.0),
-                ServiceLevelAgreementPoints = this.context.RoundTeamServiceStatus
+                ServiceLevelAgreementPoints = ctx.RoundTeamServiceStatus
                     .Where(e => e.GameRoundId <= maxRoundId)
                     .Where(e => e.GameRoundId >= minRoundId)
-                    .Where(e => e.TeamId == team.Id)
+                    .Where(e => e.TeamId == teamId)
                     .Where(e => e.ServiceId == service.Id)
                     .Sum(sla => SLA
-                        * this.context.Services.Where(s => s.Id == s.Id).Single().WeightFactor
+                        * ctx.Services.Where(s => s.Id == s.Id).Single().WeightFactor
                         * (sla.Status == ServiceStatus.OK ? 1 : sla.Status == ServiceStatus.RECOVERING ? 0.5 : 0)
                         / servicesWeightFactor)
                     + Math.Max(
-                        this.context.TeamServicePointsSnapshot
+                        ctx.TeamServicePointsSnapshot
                             .Where(e => e.RoundId == oldSnapshotRoundId)
-                            .Where(e => e.TeamId == team.Id)
+                            .Where(e => e.TeamId == teamId)
                             .Where(e => e.ServiceId == service.Id)
                             .Single().ServiceLevelAgreementPoints,
                         0.0),
-                Status = this.context.RoundTeamServiceStatus
+                Status = ctx.RoundTeamServiceStatus
                     .Where(e => e.GameRoundId == maxRoundId)
-                    .Where(e => e.TeamId == team.Id)
+                    .Where(e => e.TeamId == teamId)
                     .Where(e => e.ServiceId == service.Id)
                     .Select(e => e.Status)
                     .Single(),
-                ErrorMessage = this.context.RoundTeamServiceStatus
+                ErrorMessage = ctx.RoundTeamServiceStatus
                     .Where(e => e.GameRoundId == maxRoundId)
-                    .Where(e => e.TeamId == team.Id)
+                    .Where(e => e.TeamId == teamId)
                     .Where(e => e.ServiceId == service.Id)
                     .Select(e => e.ErrorMessage)
                     .Single(),
             };
 
         var queryString = query.ToQueryString();
-        queryString = queryString.Replace("@__maxRoundId_0", maxRoundId.ToString());
-        queryString = queryString.Replace("@__minRoundId_1", minRoundId.ToString());
-        queryString = queryString.Replace("@__servicesWeightFactor_2", servicesWeightFactor.ToString());
-        queryString = queryString.Replace("@__oldSnapshotRoundId_3", (minRoundId - 1).ToString());
-        queryString = queryString.Replace("@__storeWeightFactor_4", storeWeightFactor.ToString());
+
+        //queryString = queryString.Replace("@__serviceId_0", serviceId.ToString());
+        queryString = queryString.Replace("@__teamId_0", teamId.ToString());
+        queryString = queryString.Replace("@__maxRoundId_1", maxRoundId.ToString());
+        queryString = queryString.Replace("@__minRoundId_2", minRoundId.ToString());
+        queryString = queryString.Replace("@__servicesWeightFactor_3", servicesWeightFactor.ToString());
+        queryString = queryString.Replace("@__oldSnapshotRoundId_4", (minRoundId - 1).ToString());
+        queryString = queryString.Replace("@__storeWeightFactor_5", storeWeightFactor.ToString());
         return queryString;
     }
 
-    public async Task UpdateScores(long roundId, Configuration configuration)
+    public async Task UpdateScores(IDbContextFactory<EnoDbContext> contextFactory, long roundId, Configuration configuration)
     {
         double servicesWeightFactor = await this.context.Services.Where(s => s.Active).SumAsync(s => s.WeightFactor);
         double storeWeightFactor = await this.context.Services.Where(s => s.Active).SumAsync(s => s.WeightFactor * s.FlagVariants);
         var newSnapshotRoundId = roundId - configuration.FlagValidityInRounds - 5;
         var sw = new Stopwatch();
+        List<Task> tasks;
 
         // Phase 2: Create new TeamServicePointsSnapshots, if required
         sw.Restart();
         if (newSnapshotRoundId > 0)
         {
-            var query = this.GetQuery(newSnapshotRoundId, newSnapshotRoundId, storeWeightFactor, servicesWeightFactor);
-            var phase2QueryRaw = @$"
+            tasks = new List<Task>();
+            foreach (var team in await this.context.Teams.ToArrayAsync()) {
+                //foreach (var service in await this.context.Services.ToArrayAsync()) {
+                    var ctx = contextFactory.CreateDbContext();
+                    var query = this.GetQuery(ctx, newSnapshotRoundId, newSnapshotRoundId, storeWeightFactor, servicesWeightFactor, team.Id);
+                    var phase2QueryRaw = @$"
 WITH cte AS (
     SELECT ""TeamId"", ""ServiceId"", ""RoundId"", ""AttackPoints"", ""LostDefensePoints"", ""ServiceLevelAgreementPoints""
     FROM (
@@ -136,15 +147,24 @@ WITH cte AS (
 INSERT INTO ""TeamServicePointsSnapshot"" (""TeamId"", ""ServiceId"", ""RoundId"", ""AttackPoints"", ""LostDefensePoints"", ""ServiceLevelAgreementPoints"") -- Mind that the order is important!
 SELECT * FROM cte
 ";
-            await this.context.Database.ExecuteSqlRawAsync(phase2QueryRaw);
+                    tasks.Add(Task.FromResult(async () => {
+                        await ctx.Database.ExecuteSqlRawAsync(phase2QueryRaw);
+                        ctx.Dispose();
+                    }));
+                //}
+            }
+            await Task.WhenAll(tasks);
         }
-
         Console.WriteLine($"Phase 2 done in {sw.ElapsedMilliseconds}ms");
 
         // Phase 3: Update TeamServicePoints
         sw.Restart();
-        var phase3Query = this.GetQuery(newSnapshotRoundId + 1, roundId, storeWeightFactor, servicesWeightFactor);
-        var phase3QueryRaw = @$"
+        tasks = new List<Task>();
+        foreach (var team in await this.context.Teams.ToArrayAsync()) {
+            //foreach (var service in await this.context.Services.ToArrayAsync()) {
+                var ctx = contextFactory.CreateDbContext();
+                var phase3Query = this.GetQuery(ctx, newSnapshotRoundId + 1, roundId, storeWeightFactor, servicesWeightFactor, team.Id);
+                var phase3QueryRaw = @$"
 WITH cte AS (
 -----------------
 {phase3Query}
@@ -162,8 +182,14 @@ FROM cte
 WHERE
     ""TeamServicePoints"".""TeamId"" = cte.""TeamId"" AND
     ""TeamServicePoints"".""ServiceId"" = cte.""ServiceId""
-;";
-        await this.context.Database.ExecuteSqlRawAsync(phase3QueryRaw);
+;";         
+                tasks.Add(Task.FromResult(async () => {
+                    await ctx.Database.ExecuteSqlRawAsync(phase3QueryRaw);
+                    ctx.Dispose();
+                }));
+            //}
+        }
+        await Task.WhenAll(tasks);
         Console.WriteLine($"Phase 3 done in {sw.ElapsedMilliseconds}ms");
 
         // Phase 4: Update Teams
