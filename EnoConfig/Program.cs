@@ -82,10 +82,6 @@ public class Program
         debugFlagsCommand.Handler = CommandHandler.Create<int, FlagEncoding, string>(async (round, encoding, signing_key) => await program.Flags(round, encoding, signing_key));
         rootCommand.AddCommand(debugFlagsCommand);
 
-        var roundWarpCommand = new Command("newround", "Start new round");
-        roundWarpCommand.Handler = CommandHandler.Create(program.NewRound);
-        rootCommand.AddCommand(roundWarpCommand);
-
         return rootCommand.InvokeAsync(args).Result;
     }
 
@@ -411,43 +407,6 @@ public class Program
                 }
             }
         }
-
-        return 0;
-    }
-
-    public async Task<int> NewRound()
-    {
-        using var scope = this.serviceProvider.CreateScope();
-        using var dbContext = scope.ServiceProvider.GetRequiredService<EnoDbContext>();
-        var lastRound = await dbContext.Rounds
-            .OrderByDescending(r => r.Id)
-            .FirstOrDefaultAsync();
-
-        Round round;
-        if (lastRound != null)
-        {
-            round = new Round(
-                lastRound.Id + 1,
-                DateTime.UtcNow,
-                DateTime.UtcNow,
-                DateTime.UtcNow,
-                DateTime.UtcNow,
-                DateTime.UtcNow);
-        }
-        else
-        {
-            round = new Round(
-                1,
-                DateTime.UtcNow,
-                DateTime.UtcNow,
-                DateTime.UtcNow,
-                DateTime.UtcNow,
-                DateTime.UtcNow);
-        }
-
-        Console.WriteLine($"Adding round {round}");
-        dbContext.Add(round);
-        await dbContext.SaveChangesAsync();
 
         return 0;
     }

@@ -17,7 +17,7 @@ namespace EnoDatabase.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.7")
+                .HasAnnotation("ProductVersion", "9.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -148,20 +148,14 @@ namespace EnoDatabase.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
-                    b.Property<DateTimeOffset>("Begin")
+                    b.Property<DateTimeOffset?>("Begin")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTimeOffset>("End")
+                    b.Property<DateTimeOffset?>("End")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTimeOffset>("Quarter2")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset>("Quarter3")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset>("Quarter4")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -203,7 +197,7 @@ namespace EnoDatabase.Migrations
                     b.Property<bool>("Active")
                         .HasColumnType("boolean");
 
-                    b.Property<string[]>("Checkers")
+                    b.PrimitiveCollection<string[]>("Checkers")
                         .IsRequired()
                         .HasColumnType("text[]");
 

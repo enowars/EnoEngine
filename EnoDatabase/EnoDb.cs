@@ -1,4 +1,6 @@
-﻿namespace EnoDatabase;
+﻿using System.Threading;
+
+namespace EnoDatabase;
 
 public partial class EnoDb
 {
@@ -51,10 +53,8 @@ public partial class EnoDb
         var round = new Round(
             roundId,
             begin,
-            q2,
-            q3,
-            q4,
-            end);
+            end,
+            RoundStatus.Prepared);
         this.context.Rounds.Add(round);
         await this.context.SaveChangesAsync();
         return round;
@@ -106,6 +106,14 @@ public partial class EnoDb
         return round;
     }
 
+    public async Task<Round?> GetFirstUnscoreRound(CancellationToken token)
+    {
+        return await this.context.Rounds
+            .OrderBy(f => f.Id)
+            .Where(e => e.Status == RoundStatus.Finished)
+            .FirstOrDefaultAsync(token);
+    }
+
     public async Task InsertPutFlagsTasks(
         Round round,
         Team[] activeTeams,
@@ -155,7 +163,7 @@ public partial class EnoDb
                         round.Id,
                         round.Id,
                         new Flag(team.Id, service.Id, variantIndex, round.Id).ToString(configuration.FlagSigningKey, configuration.Encoding),
-                        taskStart.AddSeconds(taskOffset),
+                        taskStart!.Value.AddSeconds(taskOffset),
                         (int)(quarterLength * 1000),
                         configuration.RoundLengthInSeconds,
                         variantIndex,
@@ -196,7 +204,7 @@ public partial class EnoDb
         }
 
         var tasks = new List<CheckerTask>(tasksCount);
-        var taskStart = round.Begin;
+        var taskStart = round.Begin!.Value;
         double teamStepLength = (quarterLength - 2) / activeTeams.Length;
         double serviceStepLength = teamStepLength / activeServices.Length;
         foreach (var service in activeServices)
@@ -293,7 +301,7 @@ public partial class EnoDb
                         round.Id,
                         round.Id,
                         null,
-                        taskStart.AddSeconds(taskOffset),
+                        taskStart.Value.AddSeconds(taskOffset),
                         (int)(quarterLength * 1000),
                         configuration.RoundLengthInSeconds,
                         variantIndex,
@@ -333,6 +341,7 @@ public partial class EnoDb
             return;
         }
 
+        /*TODO
         var tasks = new List<CheckerTask>(tasksCount);
         var taskStart = round.Quarter3;
         double teamStepLength = (quarterLength - 2) / activeTeams.Length;
@@ -381,6 +390,7 @@ public partial class EnoDb
         }
 
         await this.InsertCheckerTasks(tasks);
+        */
     }
 
     public async Task InsertRetrieveOldFlagsTasks(
@@ -406,6 +416,7 @@ public partial class EnoDb
         }
 
         var tasks = new List<CheckerTask>(tasksCount);
+        /*TODO
         var taskStart = round.Quarter2;
 
         for (long oldRoundId = round.Id - 1; oldRoundId > (round.Id - configuration.CheckedRoundsPerRound) && oldRoundId > 0; oldRoundId--)
@@ -455,6 +466,7 @@ public partial class EnoDb
         }
 
         await this.InsertCheckerTasks(tasks);
+        */
     }
 
     public async Task InsertRetrieveCurrentNoisesTasks(
@@ -476,6 +488,7 @@ public partial class EnoDb
             return;
         }
 
+        /*TODO
         var tasks = new List<CheckerTask>(tasksCount);
         var taskStart = round.Quarter3;
         double teamStepLength = (quarterLength - 2) / activeTeams.Length;
@@ -524,86 +537,7 @@ public partial class EnoDb
         }
 
         await this.InsertCheckerTasks(tasks);
-    }
-
-    public async Task CalculateRoundTeamServiceStates(IServiceProvider serviceProvider, long roundId, EnoStatistics statistics)
-    {
-        var teams = await this.context.Teams.AsNoTracking().ToArrayAsync();
-        var services = await this.context.Services.AsNoTracking().ToArrayAsync();
-
-        var currentRoundWorstResults = new Dictionary<(long ServiceId, long TeamId), CheckerTask?>();
-        var sw = new Stopwatch();
-        sw.Start();
-        var foo = await this.context.CheckerTasks
-                        .TagWith("CalculateRoundTeamServiceStates:currentRoundTasks")
-                        .Where(ct => ct.CurrentRoundId == roundId)
-                        .Where(ct => ct.RelatedRoundId == roundId)
-                        .OrderBy(ct => ct.CheckerResult)
-                        .ThenBy(ct => ct.StartTime)
-                        .ToListAsync();
-        foreach (var e in foo)
-        {
-            if (!currentRoundWorstResults.ContainsKey((e.ServiceId, e.TeamId)))
-            {
-                currentRoundWorstResults[(e.ServiceId, e.TeamId)] = e;
-            }
-        }
-
-        sw.Stop();
-        statistics.LogCheckerTaskAggregateMessage(roundId, sw.ElapsedMilliseconds);
-        this.logger.LogInformation($"CalculateRoundTeamServiceStates: Data Aggregation for {teams.Length} Teams and {services.Length} Services took {sw.ElapsedMilliseconds}ms");
-
-        var oldRoundsWorstResults = await this.context.CheckerTasks
-            .TagWith("CalculateRoundTeamServiceStates:oldRoundsTasks")
-            .Where(ct => ct.CurrentRoundId == roundId)
-            .Where(ct => ct.RelatedRoundId != roundId)
-            .GroupBy(ct => new { ct.ServiceId, ct.TeamId })
-            .Select(g => new { g.Key, WorstResult = g.Min(ct => ct.CheckerResult) })
-            .AsNoTracking()
-            .ToDictionaryAsync(g => g.Key, g => g.WorstResult);
-
-        var newRoundTeamServiceStatus = new Dictionary<(long ServiceId, long TeamId), RoundTeamServiceStatus>();
-        foreach (var team in teams)
-        {
-            foreach (var service in services)
-            {
-                var key2 = (service.Id, team.Id);
-                var key = new { ServiceId = service.Id, TeamId = team.Id };
-                ServiceStatus status = ServiceStatus.INTERNAL_ERROR;
-                string? message = null;
-                if (currentRoundWorstResults.ContainsKey(key2))
-                {
-                    if (currentRoundWorstResults[key2] != null)
-                    {
-                        status = currentRoundWorstResults[key2]!.CheckerResult.AsServiceStatus();
-                        message = currentRoundWorstResults[key2]!.ErrorMessage;
-                    }
-                    else
-                    {
-                        status = ServiceStatus.OK;
-                        message = null;
-                    }
-                }
-
-                if (status == ServiceStatus.OK && oldRoundsWorstResults.ContainsKey(key))
-                {
-                    if (oldRoundsWorstResults[key] != CheckerResult.OK)
-                    {
-                        status = ServiceStatus.RECOVERING;
-                    }
-                }
-
-                newRoundTeamServiceStatus[(key.ServiceId, key.TeamId)] = new RoundTeamServiceStatus(
-                    status,
-                    message,
-                    key.TeamId,
-                    key.ServiceId,
-                    roundId);
-            }
-        }
-
-        this.context.RoundTeamServiceStatus.AddRange(newRoundTeamServiceStatus.Values);
-        await this.context.SaveChangesAsync();
+        */
     }
 
     public async Task UpdateTaskCheckerTaskResults(Memory<CheckerTask> tasks)

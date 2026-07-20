@@ -9,3 +9,4 @@ ctf.*.json
 data
 obj
 *.binlog
+/data_bk
