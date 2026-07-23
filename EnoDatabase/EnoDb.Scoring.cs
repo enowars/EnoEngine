@@ -226,6 +226,7 @@ WHERE
                 var fb = await this.context.SubmittedFlags
                     .Where(sf => sf.FlagServiceId == service.Id)
                     .Where(sf => sf.FlagRoundOffset == i)
+                    .Where(sf => sf.RoundId <= roundId)
                     .OrderBy(sf => sf.Timestamp)
                     .FirstOrDefaultAsync();
 

@@ -36,7 +36,7 @@ internal partial class EnoEngine
         var lastFinishedRound = await this.databaseUtil.RetryScopedDatabaseAction(db => db.PrepareRecalculation());
         var config = await this.databaseUtil.ExecuteScopedDatabaseAction(db => db.RetrieveConfiguration());
 
-        for (int i = 1; i <= lastFinishedRound.Id; i++)
+        for (int i = 0; i <= lastFinishedRound.Id; i++)
         {
             this.logger.LogInformation("Calculating round {}", i);
             await this.HandleRoundEnd(i, config, true);

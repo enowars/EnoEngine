@@ -624,6 +624,11 @@ public partial class EnoDb
     {
         await this.context.Database.ExecuteSqlRawAsync($"delete from \"{nameof(this.context.TeamServicePointsSnapshot)}\";");
 
+        await this.context.Database.ExecuteSqlRawAsync(
+            $"update \"{nameof(this.context.Teams)}\" set \"TotalPoints\" = 0, \"AttackPoints\" = 0, \"DefensePoints\" = 0, \"ServiceLevelAgreementPoints\" = 0;");
+        await this.context.Database.ExecuteSqlRawAsync(
+            $"update \"{nameof(this.context.TeamServicePoints)}\" set \"AttackPoints\" = 0, \"DefensePoints\" = 0, \"ServiceLevelAgreementPoints\" = 0, \"Status\" = {(int)ServiceStatus.OK}, \"ErrorMessage\" = NULL;");
+
         return await this.context.Rounds
             .OrderByDescending(r => r.Id)
             .Skip(1)
